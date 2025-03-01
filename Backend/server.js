@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
@@ -5,18 +7,11 @@ import authRoute from "./routes/auth.routes.js"
 import connectDB from "./config/db.config.js";
 
 
+
 const app = express();
 app.use(cors());
+
 app.use(bodyParser.json(), bodyParser.urlencoded({ extended: true }));
-
-
-
-const corsOptions = {
-    origin: "http://localhost:5173",
-    methods: '*',
-    allowedHeaders: '*',
-}
-
 
 
 // Routes
