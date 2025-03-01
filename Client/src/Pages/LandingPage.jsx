@@ -2,31 +2,26 @@ import React from "react";
 import { useState } from "react";
 import { MdLanguage } from "react-icons/md";
 import { IoIosLogIn } from "react-icons/io";
-import skydiving from "../assets/skydiving.mp4";
-export const LandingPage = () => {
+// import skydiving from "../assets/skydiving.mp4";
+import { useNavigate } from "react-router-dom";
+import  mock_adventure  from "../Data/mock_adventure";
+export default function LandingPage () {
+  const Navigate = useNavigate();
+  const adventures = mock_adventure
 
-
-  const adventures = [
-    {
-        title: "Sky Diving",
-        desp: "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nihil quibusdam rem deleniti impedit quidem libero, alias beatae possimus accusantium fugiat!",
-        img: "https://oklahomaskydiving.com/wp-content/uploads/Skydiving-Oklahoma-Weight-Limit.jpg"
-    },
-    {
-        title: "Sky Diving",
-        desp: "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nihil quibusdam rem deleniti impedit quidem libero, alias beatae possimus accusantium fugiat!",
-        img: "https://oklahomaskydiving.com/wp-content/uploads/Skydiving-Oklahoma-Weight-Limit.jpg"
-    },
-    {
-        title: "Sky Diving",
-        desp: "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nihil quibusdam rem deleniti impedit quidem libero, alias beatae possimus accusantium fugiat!",
-        img: "https://oklahomaskydiving.com/wp-content/uploads/Skydiving-Oklahoma-Weight-Limit.jpg"
-    }
-]
+  const [adventure, setadventure] = useState("");
+  const [location, setLocation] = useState("");
+  const [date, setDate] = useState("");
   const [openLaguage, setOpenLanguage] = useState(false);
+
+  const handleNavigate = () => {
+    Navigate(
+      `/browse?adventure=${adventure}&location=${location}&date=${date}`
+    );
+  };
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="bg absolute -z-50 ">
+      {/* <div className="bg absolute -z-50 ">
         <video
           src={skydiving}
           autoPlay
@@ -34,7 +29,7 @@ export const LandingPage = () => {
           muted
           className="w-full object-cover"
         />
-      </div>
+      </div> */}
       <nav className="w-full fixed h-fit  z-50">
         <div className="bg-black w-[90%]  m-auto mt-5  text-white px-3 py-3 rounded-xl">
           <div className="container mx-auto flex justify-between items-center">
@@ -61,7 +56,9 @@ export const LandingPage = () => {
                 <li>Explore</li>
                 <li>Mission</li>
                 <li>
-                  <IoIosLogIn className="text-3xl" />
+                  <a href="/login">
+                    <IoIosLogIn className="text-3xl" />
+                  </a>
                 </li>
               </ul>
             </div>
@@ -72,23 +69,38 @@ export const LandingPage = () => {
       <section className="m-auto   flex bg-white px-8 py-6 flex-col w-[90%] h-fit rounded-3xl ">
         <div className="search-bar flex items-center justify-around w-full">
           <div className="location w-fit">
-            <select className="bg-white text-black p-2 rounded-lg">
-              <option value="en">Select Location</option>
-              <option value="es">Paris</option>
-              <option value="fr">Duabi</option>
-            </select>
+            <input
+              onChange={(e) => {
+                setLocation(e.target.value);
+              }}
+              className="bg-white text-black p-2 rounded-lg"
+              type="text"
+              placeholder="Search Location"
+            >
+            </input>
           </div>
           <div className="adventure">
-            <select className="bg-white text-black p-2 rounded-lg">
-              <option value="en">Select Adventure</option>
-              <option value="es">Sky Diving</option>
-              <option value="fr">Scuba Diving</option>
+            <select
+              onChange={(e) => {
+                setadventure(e.target.value);
+              }}
+              className="bg-white text-black p-2 rounded-lg"
+            >
+              <option value="all">Select Adventure</option>
+              {adventures.map((adventure, index) => (
+                <option key={index} value={adventure.name}>
+                  {adventure.name}
+                </option>
+              ))}
             </select>
           </div>
           <div className="date">
             <input
               type="date"
               placeholder="Select Date"
+              onChange={(e) => {
+                setDate(e.target.value);
+              }}
               className="bg-white text-black p-2 rounded-lg"
             />
           </div>
@@ -100,36 +112,45 @@ export const LandingPage = () => {
             />
           </div>
           <div className="search">
-            <button className="bg-black text-white p-2 rounded-lg">
+            <button
+              onClick={handleNavigate}
+              className="bg-black text-white p-2 rounded-lg"
+            >
               Begin Adventure
             </button>
           </div>
         </div>
       </section>
-        <div className="explore absolute mt-[100vh]  w-full bg-white px-8 py-8">
-                <div className="content">
-                    <div className="title text-3xl">
-                        <h1 className="font-bold tracking-widest w-fit border-b border-gray-400">Explore Our Featured Adventures</h1>
-                    </div>
-                    <div className="adventures  flex">
-                        <div className="cards flex py-4">
-                            {adventures.map((adventure, index) => (
-                                <div className="card p-4" key={index}>
-                                    <div className="img w-full">
-                                        <img src={adventure.img} className="w-full h-[250px] rounded-3xl"  alt="" />
-                                    </div>
-                                    <div className="title">
-                                        <h1 className="font-bold text-2xl">{adventure.title}</h1>
-                                    </div>
-                                    <div className="desp">
-                                        <p>{adventure.desp}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+      <div className="explore absolute mt-[100vh]  w-full bg-white px-8 py-8">
+        <div className="content">
+          <div className="title text-3xl">
+            <h1 className="font-bold tracking-widest w-fit border-b border-gray-400">
+              Explore Our Featured Adventures
+            </h1>
+          </div>
+          <div className="adventures  flex">
+            <div className="cards flex py-4">
+              {/* {adventures.map((adventure, index) => (
+                <div className="card p-4" key={index}>
+                  <div className="img w-full">
+                    <img
+                      src={adventure.img}
+                      className="w-full"
+                      alt=""
+                    />
+                  </div>
+                  <div className="title">
+                    <h1 className="">{adventure.name}</h1>
+                  </div>
+                  <div className="desp">
+                    <p>{adventure.description}</p>
+                  </div>
                 </div>
+              ))} */}
+            </div>
+          </div>
         </div>
+      </div>
     </div>
   );
 };

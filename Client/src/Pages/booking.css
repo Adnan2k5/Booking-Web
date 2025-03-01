@@ -1,0 +1,143 @@
+@keyframes pulse {
+    0%,
+    100% {
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  @keyframes glowing-1 {
+    0%,
+    100% {
+      opacity: 0.3;
+      transform: translate(0, 0);
+    }
+    50% {
+      opacity: 0.5;
+      transform: translate(20px, 20px);
+    }
+  }
+  
+  @keyframes glowing-2 {
+    0%,
+    100% {
+      opacity: 0.3;
+      transform: translate(0, 0);
+    }
+    50% {
+      opacity: 0.5;
+      transform: translate(-20px, -20px);
+    }
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .animate-glowing-1 {
+    animation: glowing-1 10s ease-in-out infinite;
+  }
+  
+  .animate-glowing-2 {
+    animation: glowing-2 10s ease-in-out infinite;
+  }
+  
+  :root {
+    --primary-color: purple;
+    --secondary-color: cyan;
+    --bg-color: #0a0b1e;
+    --grid-color: #1a1a3a;
+  
+    --purple-rgb: 168, 85, 247;
+    --cyan-rgb: 6, 182, 212;
+    --green-rgb: 34, 197, 94;
+    --yellow-rgb: 234, 179, 8;
+    --orange-rgb: 249, 115, 22;
+    --pink-rgb: 236, 72, 153;
+    --blue-rgb: 59, 130, 246;
+    --teal-rgb: 20, 184, 166;
+  }
+  
+  /* Custom styling for the antd modal to match web3 theme */
+  .web3-modal .ant-modal-content {
+    background-color: var(--bg-color);
+    border: 1px solid rgba(var(--purple-rgb), 0.2);
+    border-radius: 16px;
+    box-shadow: 0 0 20px rgba(var(--purple-rgb), 0.2);
+  }
+  
+  .web3-modal .ant-modal-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(var(--purple-rgb), 0.2);
+    padding: 16px 24px;
+  }
+  
+  .web3-modal .ant-modal-title {
+    color: white;
+  }
+  
+  .web3-modal .ant-modal-close {
+    color: rgba(var(--purple-rgb), 0.6);
+  }
+  
+  .web3-modal .ant-modal-close:hover {
+    color: rgba(var(--purple-rgb), 1);
+  }
+  
+  .web3-modal .ant-modal-body {
+    padding: 24px;
+    color: white;
+  }
+  
+  
+  /* Custom styles for the professional booking website */
+  body {
+    font-family: "Inter", sans-serif;
+  }
+  
+  .professional-modal .ant-modal-content {
+    border-radius: 8px;
+  }
+  
+  .professional-modal .ant-modal-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 16px 24px;
+  }
+  
+  .professional-modal .ant-modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+  }
+  
+  .professional-modal .ant-modal-close {
+    color: #6b7280;
+  }
+  
+  .professional-modal .ant-modal-close:hover {
+    color: #4b5563;
+  }
+  
+  .professional-modal .ant-modal-body {
+    padding: 24px;
+  }
+  
+  /* Add any additional custom styles here */
+  
+  
