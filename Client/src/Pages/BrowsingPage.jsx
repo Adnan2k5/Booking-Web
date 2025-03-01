@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import mock_adventure from "../Data/mock_adventure.json";
 import {
   Popover,
@@ -12,9 +12,20 @@ import { Calendar } from "../components/ui/calendar";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { MapPin, Star, Delete, User } from "lucide-react";
+import { getAdventure } from "../Api/adventure";
 
-export default function BrowsingPage (){
-  const adv = mock_adventure;
+export default function BrowsingPage() {
+  const [fetchedAdventures, setFetchedAdventures] = useState([]);
+  useEffect(() => {
+    getAdventure().then((data) => {
+      if (data != null) {
+        setFetchedAdventures(data);
+      }
+    });
+  }, []);
+
+  const adv = [...mock_adventure, ...fetchedAdventures];
+
   const location = useLocation();
   const query = new URLSearchParams(location?.search);
   const [adventure, setAdventure] = useState(
@@ -31,13 +42,20 @@ export default function BrowsingPage (){
       !loc ||
       loc === "all" ||
       adventureItem.location.toLowerCase().includes(loc);
-      const matchesDate = !date || format(new Date(adventureItem.date), "yyyy/MM/dd") === format(new Date(date), "yyyy/MM/dd");
+    const matchesDate =
+      !date ||
+      format(new Date(adventureItem.date), "yyyy/MM/dd") ===
+        format(new Date(date), "yyyy/MM/dd");
     return (
       (adventure ? matchesAdventure : true) &&
       (loc ? matchesLoc : true) &&
       (date ? matchesDate : true)
     );
   });
+  const Navigate = useNavigate();
+  const onBook = (id) => {
+    Navigate(`/booking/?id=${id}`);
+  };
 
   return (
     <div className="min-h-screen bg-black bg-grid backdrop-blur-xl glow text-white p-6 relative overflow-hidden">
@@ -107,7 +125,7 @@ export default function BrowsingPage (){
                   selected={date}
                   onSelect={(selectedDate) => {
                     if (selectedDate) {
-                      setDate(selectedDate); 
+                      setDate(selectedDate);
                     }
                   }}
                   initialFocus
@@ -137,7 +155,7 @@ export default function BrowsingPage (){
             <div className="grid grid-cols-2 gap-6">
               {filteredAdventures.map((adventure) => (
                 <div
-                  key={adventure.id}
+                  key={adventure._id}
                   className="bg-gray-800/50 backdrop-blur-md rounded-xl overflow-hidden border border-gray-700/50"
                 >
                   <img
@@ -149,29 +167,37 @@ export default function BrowsingPage (){
                     <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
                       <span>{adventure.location}</span>
                       <span>•</span>
-                      <span>{adventure.date ? adventure.date : "20/2/25"}</span>
+                      <span>
+                        {adventure.date
+                          ? format(new Date(adventure.date), "MM/dd/yyyy")
+                          : "20/2/25"}
+                      </span>
                     </div>
                     <h3 className="font-semibold text-2xl mb-2 text-white">
                       {adventure.name}
                     </h3>
-                    <div className="flex items-center gap-1 mb-4">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                        />
-                      ))}
-                      <span className="text-sm ml-1 text-gray-400">4.8</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <span className="text-2xl font-semibold text-white">
-                          ${adventure.price}
-                        </span>
-                        <span className="text-gray-400"> / person</span>
+                    <div className="flex items-center justify-between gap-1 mb-4">
+                      <div className="review flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                          />
+                        ))}
+                        <span className="text-sm ml-1 text-gray-400">4.8</span>
                       </div>
-                      <div className="text-green-400">+{adventure.exp} EXP</div>
+                      <div className="book">
+                        <span
+                          onClick={() => {
+                            onBook(adventure.id);
+                          }}
+                          className="text-white bg-gradient-to-tr px-3 py-2 cursor-pointer rounded-lg from-[#37035C] to-[#005768]"
+                        >
+                          Book Now
+                        </span>
+                      </div>
                     </div>
+                      <div className="text-green-400 text-right">+{adventure.exp} EXP</div>
                   </div>
                 </div>
               ))}
@@ -181,4 +207,4 @@ export default function BrowsingPage (){
       </div>
     </div>
   );
-};
+}
