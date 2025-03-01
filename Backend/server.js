@@ -1,8 +1,10 @@
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
-import route from "./Routes/authRoutes.js"
-import connectDB from "./Config/Db.js";
+import authRoute from "./routes/auth.routes.js"
+import connectDB from "./config/db.config.js";
+
+
 const app = express();
 app.use(cors());
 app.use(bodyParser.json(), bodyParser.urlencoded({ extended: true }));
@@ -15,15 +17,18 @@ const corsOptions = {
     allowedHeaders: '*',
 }
 
-const PORT = process.env.PORT || 8080;
+
+
+// Routes
+app.use("/api/auth", authRoute);
+
 
 app.get("/", (req,res)=>{
     res.send("Welcome to the server");
 })
 
 
-app.use("/api/auth", route);
-
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, ()=>{
     console.log(`Server is running on port ${PORT}`);
     connectDB();

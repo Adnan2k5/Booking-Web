@@ -12,6 +12,7 @@
   "dependencies": {
     "@clerk/clerk-react": "^5.22.9",
     "@tailwindcss/vite": "^4.0.2",
+    "client": "file:",
     "dotenv": "^16.4.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
