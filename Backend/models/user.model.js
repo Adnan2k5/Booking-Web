@@ -27,6 +27,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password is Required"],
     },
+    refreshToken: {String},
     role: {
       type: String,
       enum: ["user"],
@@ -66,7 +67,7 @@ userSchema.methods.generateAccessToken = function() {
   return jwt.sign(
       {
           _id: this._id,
-          emailId: this.emailId,
+          email: this.email,
       },
       process.env.ACCESS_TOKEN_SECRET,
       {
