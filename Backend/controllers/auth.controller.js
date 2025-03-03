@@ -93,15 +93,16 @@ const verifyOtp = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid OTP");
     }
 
-    await Otp.deleteMany({ userId: user._id });
+    otpExist.verified = true;
+
+    await otpExist.save();
 
     user.verified = true;
 
-    user.save();
+    await user.save();
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
 
-    
     // Convert the Mongoose document to a plain JavaScript object
     const userObject = user.toObject();
 
@@ -229,5 +230,78 @@ const loginUser = asyncHandler(async (req, res) => {
         );
 });
 
+const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
 
-export { registerUser, verifyOtp, resendOtp, loginUser };
+    if (email?.trim() === "" || !email) {
+        throw new ApiError(400, "Email is Required");
+    }
+
+    const user = await User.findOne({ email: email });
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000);
+
+    await Otp.deleteMany({ userId: user._id });
+
+    await Otp.create({
+        userId: user._id,
+        otp: otpCode,
+    });
+
+    sendEmail({
+        from: process.env.SMTP_EMAIL,
+        to: email,
+        subject: "Reset Password",
+        text: `Hello ${email}, Your OTP for verification is ${otpCode}`,
+    });
+
+    res.status(200).json(
+        new ApiResponse(200, {
+            email: email,
+        }, "OTP sent Succesfully"),
+    );
+});
+
+const updatePassword = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+
+    if ((email?.trim() === "" || !email) || (password?.trim() === "" || !password)) {
+        throw new ApiError(400, "Email and Password are Required");
+    }
+
+    const user = await User.findOne({ email: email });
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const otpExist = await Otp.findOne({ userId: user._id });
+
+    if (!otpExist) {
+        throw new ApiError(402, "User not Authorized");
+    }
+
+    if (!otpExist.verified) {
+        throw new ApiError(403, "User not verified");
+    }
+
+    user.password = password;
+
+    await user.save();
+    
+    await Otp.deleteMany({ userId: user._id });
+
+    res.status(200).json(
+        new ApiResponse(200, {
+            email: email,
+        }, "Password Updated Successfully"),
+    );
+});
+
+
+
+export { registerUser, verifyOtp, resendOtp, loginUser, forgotPassword, updatePassword };
