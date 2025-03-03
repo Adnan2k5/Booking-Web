@@ -1,4 +1,5 @@
 import {User} from '../models/user.model.js';
+import { Otp } from '../models/otp.model.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -21,13 +22,20 @@ const registerUser = asyncHandler( async (req, res) => {
     const user = await User.create({
         email: email.toLowerCase(),
         password: password,
+    }); 
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000);
+
+    await Otp.create({
+        userId: user._id,
+        otpCode: otpCode,
     });
 
     sendEmail({
         from: process.env.SMTP_EMAIL,
         to: email,
-        subject: "Account Created",
-        text: `Hello ${email}, Your account has been created successfully`,
+        subject: "Verify OTP",
+        text: `Hello ${email}, Your OTP for verification is ${otpCode}`,
     });
 
     const createdUser = await User.findById(user._id).select(
