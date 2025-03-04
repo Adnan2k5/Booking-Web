@@ -2,7 +2,7 @@ import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { Toaster } from 'sonner';
-const Booking = lazy(()=>import('./Pages/Booking'));
+import {Booking} from './Pages/Booking';
 const LoginPage = lazy(()=>import('./Pages/LoginPage'));
 const LandingPage = lazy(()=>import('./Pages/LandingPage'));
 const BrowsingPage = lazy(()=>import('./Pages/BrowsingPage'));

@@ -19,3 +19,33 @@ export const VerifyUser = async (data, dispatch) => {
         return res.status;
     }
 }
+
+
+export const UserLogin = async (data, dispatch) => {
+    const res = await axiosClient.post("/api/auth/login", data);
+    if(res.data.statusCode === 200){
+        dispatch(loginSuccess(res.data.data));
+        return res.data.statusCode;
+    }
+    return res.data.statusCode;
+}
+
+export const ResendOtp = async (email) => {
+    try{
+        const data = {email: email}
+        const res = await axiosClient.post("/api/auth/resendOtp", data);
+    }
+    catch(err){
+        console.log(err);
+        if(err.response){
+            if(err.response.status === 403){
+                return err.response.status;
+            }
+        }
+    }
+    
+}
+
+
+
+

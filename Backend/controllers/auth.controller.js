@@ -140,15 +140,12 @@ const verifyOtp = asyncHandler(async (req, res) => {
 
 const resendOtp = asyncHandler(async (req, res) => {
     const { email } = req.body;
-
-    const user = User.findOne({ email: email });
-
+    const user = await User.findOne({ email: email });
     if (!user) {
         throw new ApiError(404, "User not found");
     }
 
     const otpCode = Math.floor(100000 + Math.random() * 900000);
-
     await Otp.deleteMany({ userId: user._id });
 
     await Otp.create({
