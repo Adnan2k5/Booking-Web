@@ -302,6 +302,22 @@ const updatePassword = asyncHandler(async (req, res) => {
     );
 });
 
+const signInWithGoogle = asyncHandler(async (req, res) => {
+
+});
+
+const signInWithApple = asyncHandler(async (req, res) => {
+
+});
+
+const signInWithLinkedin = asyncHandler(async (req, res) => {
+
+});
+
+const signInWithFacebook = asyncHandler(async (req, res) => {
+
+});
 
 
-export { registerUser, verifyOtp, resendOtp, loginUser, forgotPassword, updatePassword };
+
+export { registerUser, verifyOtp, resendOtp, loginUser, forgotPassword, updatePassword, signInWithGoogle, signInWithApple, signInWithLinkedin, signInWithFacebook };
