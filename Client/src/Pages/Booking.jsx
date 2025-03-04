@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import mock_adventure from "../Data/mock_adventure.json";
 import mock_instructor from "../Data/mock_instructor.json";
-import { DollarSign, Star, MapPin, Clock } from "lucide-react";
+import { DollarSign, Star, MapPin, Clock, ArrowRight, ArrowLeft } from "lucide-react";
 import { Checkbox } from "../components/ui/checkbox";
 import { Modal } from "antd";
 import "../../src/index.css";
@@ -86,6 +86,10 @@ export const Booking = () => {
     console.log("Booking confirmed:", bookingSummary);
   };
 
+  const GoBack = () => {
+    window.history.back();
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -95,7 +99,7 @@ export const Booking = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 text-gray-800">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -109,8 +113,8 @@ export const Booking = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">
-          Book Your Adventure
+        <h1 className="text-3xl font-bold text-gray-800 mb-8 flex items-center gap-2">
+         <ArrowLeft className="cursor-pointer" onClick={GoBack}/> Book Your Adventure
         </h1>
 
         <div className="flex flex-col lg:flex-row gap-8">

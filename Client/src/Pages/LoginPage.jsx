@@ -4,14 +4,19 @@ import { Eye, EyeClosed, Lock, LogInIcon, Phone } from "lucide-react";
 import google from "../assets/google.png";
 import { MdEmail } from "react-icons/md";
 import { useForm } from "react-hook-form";
-import { UserRegister, VerifyUser } from "../Api/UserAuth";
+import { ResendOtp, UserLogin, UserRegister, VerifyUser } from "../Api/UserAuth";
 import { Modal } from "antd";
-import { InputOTPSlot, InputOTP, InputOTPGroup   } from "../components/ui/input-otp";
+import {
+  InputOTPSlot,
+  InputOTP,
+  InputOTPGroup,
+} from "../components/ui/input-otp";
 import { toast } from "sonner";
+import { set } from "date-fns";
 // import bgvideo from "../assets/skydiving.mp4"
 export default function LoginPage() {
   const dispatch = useDispatch();
-  const {user , loading, error} = useSelector(state => state.user);
+  const { user, loading, error } = useSelector((state) => state.user);
   const [viewPassword, setViewPassword] = useState(false);
   const [usingPhone, setUsingPhone] = useState(false);
   const [signup, setSignup] = useState(false);
@@ -20,38 +25,50 @@ export default function LoginPage() {
   const [value, setValue] = useState("");
   const [email, setEmail] = useState("");
   const onSubmit = async (data) => {
-    if (signup) {
-      setEmail(data.email);
-      const res = await UserRegister(data);
-      if(res === 201){
-        setopenOtp(true)
+    try {
+      if (signup) {
+        setEmail(data.email);
+        const res = await UserRegister(data);
+        if (res === 201) {
+          setopenOtp(true);
+        } else if (res === 409) {
+          toast("User Already Exists");
+        }
+        reset();
+      } else {
+        const res = await UserLogin(data, dispatch);
+        setEmail(data.email);
+        if (res === 200) {
+          toast("Login Successfull");
+        }
       }
-      else if(res === 409){
-        toast("User Already Exists")
+    } catch (err) {
+      if(err.response){
+        if(err.response.status === 403){
+          toast("User Not Verified", email);
+          setEmail(data.email);
+          setopenOtp(true);
+          ResendOtp(data.email);
+        }
       }
-      reset();
-    } else {
-      console.log(data, "User Signed In");
-      reset();
     }
   };
   const verifyOtp = async () => {
-    const data = {email, otp: value}
+    const data = { email, otp: value };
     const res = await VerifyUser(data, dispatch);
-    if(res === 200){
+    if (res === 200) {
       toast("Email Verified Successfully");
       setopenOtp(false);
       setValue("");
-    }
-    else if(res === 400){
+    } else if (res === 400) {
       toast("Invalid Otp");
     }
   };
 
   const cancel = () => {
     setopenOtp(false);
-    setValue("")
-  }
+    setValue("");
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-5">
@@ -65,13 +82,12 @@ export default function LoginPage() {
         /> */}
       </div>
       <div className="login relative  bg-gradient-to-b from-[#CEF2FF] to-white rounded-xl shadow-lg flex flex-col items-center justify-items-end  md:py-8 md:px-10 lg:w-1/2 py-4">
-        <Modal
-          open={openOtp}
-          footer={null}
-          onCancel={cancel}
-        >
+        <Modal open={openOtp} footer={null} onCancel={cancel}>
           <div className="space-y-2 flex flex-col items-center gap-4">
-            <h1>Enter One-Time Password sent on <span className="text-blue-500">{email}</span></h1>
+            <h1>
+              Enter One-Time Password sent on{" "}
+              <span className="text-blue-500">{email}</span>
+            </h1>
             <InputOTP
               maxLength={6}
               value={value}
@@ -86,7 +102,10 @@ export default function LoginPage() {
                 <InputOTPSlot index={5} />
               </InputOTPGroup>
             </InputOTP>
-            <button onClick={verifyOtp} className="bg-black text-white rounded-2xl py-2 w-full">
+            <button
+              onClick={verifyOtp}
+              className="bg-black text-white rounded-2xl py-2 w-full"
+            >
               Verify OTP
             </button>
           </div>
