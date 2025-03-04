@@ -1,26 +1,57 @@
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Eye, EyeClosed, Lock, LogInIcon, Phone } from "lucide-react";
 import google from "../assets/google.png";
 import { MdEmail } from "react-icons/md";
 import { useForm } from "react-hook-form";
+import { UserRegister, VerifyUser } from "../Api/UserAuth";
+import { Modal } from "antd";
+import { InputOTPSlot, InputOTP, InputOTPGroup   } from "../components/ui/input-otp";
+import { toast } from "sonner";
 // import bgvideo from "../assets/skydiving.mp4"
 export default function LoginPage() {
+  const dispatch = useDispatch();
+  const {user , loading, error} = useSelector(state => state.user);
   const [viewPassword, setViewPassword] = useState(false);
   const [usingPhone, setUsingPhone] = useState(false);
   const [signup, setSignup] = useState(false);
-  const {register, handleSubmit, reset} = useForm();
-  
-  const onSubmit = (data) => {
-    if(signup){
-      console.log(data, "User Signed Up");
+  const { register, handleSubmit, reset } = useForm();
+  const [openOtp, setopenOtp] = useState(false);
+  const [value, setValue] = useState("");
+  const [email, setEmail] = useState("");
+  const onSubmit = async (data) => {
+    if (signup) {
+      setEmail(data.email);
+      const res = await UserRegister(data);
+      if(res === 201){
+        setopenOtp(true)
+      }
+      else if(res === 409){
+        toast("User Already Exists")
+      }
       reset();
-    }
-    else{
+    } else {
       console.log(data, "User Signed In");
       reset();
     }
-  }
+  };
+  const verifyOtp = async () => {
+    const data = {email, otp: value}
+    const res = await VerifyUser(data, dispatch);
+    if(res === 200){
+      toast("Email Verified Successfully");
+      setopenOtp(false);
+      setValue("");
+    }
+    else if(res === 400){
+      toast("Invalid Otp");
+    }
+  };
 
+  const cancel = () => {
+    setopenOtp(false);
+    setValue("")
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-5">
@@ -34,6 +65,33 @@ export default function LoginPage() {
         /> */}
       </div>
       <div className="login relative  bg-gradient-to-b from-[#CEF2FF] to-white rounded-xl shadow-lg flex flex-col items-center justify-items-end  md:py-8 md:px-10 lg:w-1/2 py-4">
+        <Modal
+          open={openOtp}
+          footer={null}
+          onCancel={cancel}
+        >
+          <div className="space-y-2 flex flex-col items-center gap-4">
+            <h1>Enter One-Time Password sent on <span className="text-blue-500">{email}</span></h1>
+            <InputOTP
+              maxLength={6}
+              value={value}
+              onChange={(value) => setValue(value)}
+            >
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
+            <button onClick={verifyOtp} className="bg-black text-white rounded-2xl py-2 w-full">
+              Verify OTP
+            </button>
+          </div>
+        </Modal>
+
         <div className="form w-full flex flex-col">
           <div className="header flex flex-col items-center gap-4">
             <div className="icon bg-white rounded-2xl shadow-[#a4e0f6] shadow-lg p-4">
@@ -43,7 +101,10 @@ export default function LoginPage() {
               {signup ? "Sign Up" : "Sign In"}
             </h1>
           </div>
-          <form onSubmit={handleSubmit(onSubmit)} className="Form md:px-12 px-5 py-4 gap-2 flex flex-col mt-5">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="Form md:px-12 px-5 py-4 gap-2 flex flex-col mt-5"
+          >
             <div className="email px-4 md:py-5 py-3 bg-gray-200 flex gap-6 items-center rounded-2xl">
               {usingPhone ? (
                 <div className="flex gap-6 items-center">
@@ -56,13 +117,14 @@ export default function LoginPage() {
                   />
                 </div>
               ) : (
-                <div className="flex gap-6 items-center">
+                <div className="flex gap-6 items-center w-full">
                   <MdEmail className="text-gray-600 text-2xl" />
                   <input
                     type="email"
                     placeholder="Email"
                     {...register("email")}
-                    className="w-full bg-transparent h-full outline-none border-none"
+                    autoComplete="off"
+                    className="w-full bg-transparent outline-none border-none"
                   />
                 </div>
               )}
@@ -109,7 +171,17 @@ export default function LoginPage() {
                 onClick={() => setSignup(!signup)}
                 className="text-gray-600 md:text-sm text-xs text-center lg:text-left"
               >
-                {signup ? <p>Already have an account? <span className="text-blue-500">Sign In</span></p> : <p>Don't have an account? <span className="text-blue-500">Sign Up</span></p>}
+                {signup ? (
+                  <p>
+                    Already have an account?{" "}
+                    <span className="text-blue-500">Sign In</span>
+                  </p>
+                ) : (
+                  <p>
+                    Don't have an account?{" "}
+                    <span className="text-blue-500">Sign Up</span>
+                  </p>
+                )}
               </div>
               {!signup && (
                 <p className="text-gray-600 md:text-sm text-xs text-center lg:text-right">
