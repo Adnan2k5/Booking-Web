@@ -12,7 +12,9 @@ export const UserRegister = async (data) => {
 export const VerifyUser = async (data, dispatch) => {
     const res = await axiosClient.post("/api/auth/verifyOtp", data);
     if(res.status === 200){
-        dispatch(loginSuccess(res.data.data))
+        if(dispatch){
+            dispatch(loginSuccess(res.data.data))
+        }
         return res.status;
     }
     else if(res.status === 400){
@@ -57,6 +59,14 @@ export const ForgotPass = async (email) => {
     }
 }
 
-
+export const UpdatePass = async (data) => {
+    try{
+        const res = await axiosClient.post("/api/auth/updatePassword", data);
+        return res;
+    }
+    catch(err){
+        return err;
+    }
+}
 
 

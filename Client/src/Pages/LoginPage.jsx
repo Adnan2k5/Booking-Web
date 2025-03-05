@@ -4,7 +4,7 @@ import { Eye, EyeClosed, Lock, LogInIcon, Phone } from "lucide-react";
 import google from "../assets/google.png";
 import { MdEmail } from "react-icons/md";
 import { useForm } from "react-hook-form";
-import { ResendOtp, UserLogin, UserRegister, VerifyUser } from "../Api/UserAuth";
+import { ResendOtp, UserLogin, UserRegister, VerifyUser } from "../Auth/UserAuth";
 import { Modal } from "antd";
 import {
   InputOTPSlot,
@@ -204,9 +204,9 @@ export default function LoginPage() {
                 )}
               </div>
               {!signup && (
-                <p className="text-gray-600 md:text-sm w-fit text-xs text-center cursor-pointer">
+                <button type="button" onClick={()=>{Navigate('/reset')}} className="text-gray-600 md:text-sm w-fit text-xs text-center cursor-pointer">
                   Forgot password?
-                </p>
+                </button>
               )}
             </div>
             {signup ? (
@@ -224,11 +224,11 @@ export default function LoginPage() {
           <p className="text-gray-500 text-sm text-center">
             {signup ? "Or Sign Up with" : "Or Sign In with"}
           </p>
-          <div className="google">
+          {/* <div className="google">
             <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
               <GoogleLogin/>
             </GoogleOAuthProvider>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

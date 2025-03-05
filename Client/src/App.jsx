@@ -7,7 +7,7 @@ import { ResetPass } from './Pages/ResetPass';
 const LoginPage = lazy(()=>import('./Pages/LoginPage'));
 const LandingPage = lazy(()=>import('./Pages/LandingPage'));
 const BrowsingPage = lazy(()=>import('./Pages/BrowsingPage'));
-import { configDotenv } from 'dotenv';
+import { AuthProvider } from './Auth/AuthProvider';
 
 const App = () => {
   return (
@@ -18,7 +18,8 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<LandingPage />} />
         <Route path='/browse' element={<BrowsingPage />} />
-        <Route path='/booking' element={<Booking />} />
+        {/* <Route path='/booking' element={<AuthProvider><Booking/></AuthProvider>} /> */}
+        <Route path='/booking' element={<Booking/>} />
         <Route path="/reset" element={<ResetPass/>}/>
       </Routes>
       </BrowserRouter>

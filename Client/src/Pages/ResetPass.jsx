@@ -1,24 +1,33 @@
 import { Modal } from 'antd';
-import { ForgotPass, VerifyUser } from '../Api/UserAuth';
+import { ForgotPass, UpdatePass, VerifyUser } from '../Auth/UserAuth';
 import React, {useState} from 'react'
 import { MdEmail } from 'react-icons/md'
 import { toast } from 'sonner'  
 import { InputOTP, InputOTPSlot, InputOTPGroup } from '../components/ui/input-otp'
+import {  useNavigate } from 'react-router-dom';
 export const ResetPass = () => {
     const [email, setEmail] = useState("");
     const [model, setModel] = useState(false);
     const [value, setValue] = useState("");
+    const [pass,setPass] = useState("");
     const [passModel, setPassModel] = useState(false);
-
+    const Navigate = useNavigate();
     const verifyOtp = async () => {
         try {
-            const data = {email: email, otp: value}
+            const data = {email: email, otp: value};
             const res = await VerifyUser(data);
-
-
+            if(res === 200){
+                toast("OTP Verified");
+                setModel(false);
+                setPassModel(true);
+            }
         }
         catch(err){
-            console.log(err);
+            if(err.response){
+                if(err.response.status === 400){
+                    toast("Invalid OTP");
+                }
+            }
         }
     }
     const verify = async () => {
@@ -40,8 +49,17 @@ export const ResetPass = () => {
     }
 
     const update = async () => {
-        console.log("Update Password");
+        const data = {email: email, password: pass};
+        console.log(data);
+        const res = await UpdatePass(data);
+        if(res.data.statusCode === 200){
+            toast("Password Updated Successfully");
+            setPassModel(false);
+            Navigate("/login");
+        }
+
     }
+
   return (
     <div className='min-h-screen bg-gradient-to-b from-[#CEF2FF] to-white flex flex-col justify-center items-center px-[10rem]'>
         
@@ -84,8 +102,8 @@ export const ResetPass = () => {
         </Modal>
         <Modal open={passModel} footer={null} onCancel={()=>{setPassModel(false)}}>
             <div className="space-y-2 flex flex-col items-center gap-4">
-                <input type="password" placeholder="Enter New Password" className='border-2 border-gray-300 md:p-2 p-1 rounded-md w-full'/>
-                <input type="password" placeholder="Enter New Password" className='border-2 border-gray-300 md:p-2 p-1 rounded-md w-full'/>
+                <input type="password" onChange={(e)=>{setPass(e.target.value)}} placeholder="Enter New Password" className='border-2 border-gray-300 md:p-2 p-1 rounded-md w-full'/>
+                <input type="password"  placeholder="Enter New Password" className='border-2 border-gray-300 md:p-2 p-1 rounded-md w-full'/>
                 <button
                     onClick={update}
                     className="bg-black text-white p-2 rounded-md"
