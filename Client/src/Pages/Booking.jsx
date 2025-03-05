@@ -1,16 +1,18 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import mock_adventure from "../Data/mock_adventure.json";
 import mock_instructor from "../Data/mock_instructor.json";
-import { DollarSign, Star, MapPin, Clock, ArrowRight, ArrowLeft } from "lucide-react";
+import {  Star, MapPin, Clock,ArrowLeft } from "lucide-react";
 import { Checkbox } from "../components/ui/checkbox";
+import { useSelector } from "react-redux";
 import { Modal } from "antd";
 import "../../src/index.css";
 import "./booking.css";
+import { Navbar } from "../components/Navbar";
+import { Footer } from "../components/Footer";
 
 export const Booking = () => {
+  const {user} = useSelector((state)=>state.user);
   const adventureList = mock_adventure;
   const location = useLocation();
   const query = new URLSearchParams(location?.search);
@@ -100,18 +102,7 @@ export const Booking = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 text-gray-800">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-6 h-6 text-blue-600" />
-            <span className="text-xl font-bold text-gray-800">
-              Adventure Bookings
-            </span>
-          </div>
-        </div>
-      </header>
-
+      <Navbar/>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-8 flex items-center gap-2">
          <ArrowLeft className="cursor-pointer" onClick={GoBack}/> Book Your Adventure
@@ -120,7 +111,7 @@ export const Booking = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Section - Adventure Details */}
           <div className="w-full lg:w-2/5 space-y-6 flex flex-col justify-between">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div key={adventure.id} className="bg-white rounded-lg shadow-md overflow-hidden">
               {adventure ? (
                 <>
                   <img
@@ -489,36 +480,7 @@ export const Booking = () => {
       </Modal>
 
       {/* Footer */}
-      <footer className="bg-gray-100 mt-12 py-6 px-4">
-        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-blue-600" />
-            <span className="text-lg font-semibold text-gray-800">
-              Adventure Bookings
-            </span>
-          </div>
-          <div className="flex gap-6 text-gray-600">
-            <a
-              href="#"
-              className="hover:text-blue-600 transition-colors duration-300"
-            >
-              Terms
-            </a>
-            <a
-              href="#"
-              className="hover:text-blue-600 transition-colors duration-300"
-            >
-              Privacy
-            </a>
-            <a
-              href="#"
-              className="hover:text-blue-600 transition-colors duration-300"
-            >
-              Support
-            </a>
-          </div>
-        </div>
-      </footer>
+      <Footer/>
     </div>
   );
 };

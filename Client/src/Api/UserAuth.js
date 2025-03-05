@@ -43,7 +43,18 @@ export const ResendOtp = async (email) => {
             }
         }
     }
-    
+}
+
+
+export const ForgotPass = async (email) => {
+    try{
+        const data = {email: email}
+        const res = await axiosClient.post("/api/auth/forgotPassword", data);
+        return res;
+    }
+    catch(err){
+        return err;
+    }
 }
 
 

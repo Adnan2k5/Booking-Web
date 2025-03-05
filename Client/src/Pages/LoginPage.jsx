@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { Eye, EyeClosed, Lock, LogInIcon, Phone } from "lucide-react";
 import google from "../assets/google.png";
 import { MdEmail } from "react-icons/md";
@@ -12,11 +12,10 @@ import {
   InputOTPGroup,
 } from "../components/ui/input-otp";
 import { toast } from "sonner";
-import { set } from "date-fns";
-// import bgvideo from "../assets/skydiving.mp4"
+import { useNavigate } from "react-router-dom";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 export default function LoginPage() {
   const dispatch = useDispatch();
-  const { user, loading, error } = useSelector((state) => state.user);
   const [viewPassword, setViewPassword] = useState(false);
   const [usingPhone, setUsingPhone] = useState(false);
   const [signup, setSignup] = useState(false);
@@ -24,6 +23,7 @@ export default function LoginPage() {
   const [openOtp, setopenOtp] = useState(false);
   const [value, setValue] = useState("");
   const [email, setEmail] = useState("");
+  const Navigate = useNavigate();
   const onSubmit = async (data) => {
     try {
       if (signup) {
@@ -40,6 +40,7 @@ export default function LoginPage() {
         setEmail(data.email);
         if (res === 200) {
           toast("Login Successfull");
+          Navigate("/browse")
         }
       }
     } catch (err) {
@@ -82,7 +83,7 @@ export default function LoginPage() {
         /> */}
       </div>
       <div className="login relative  bg-gradient-to-b from-[#CEF2FF] to-white rounded-xl shadow-lg flex flex-col items-center justify-items-end  md:py-8 md:px-10 lg:w-1/2 py-4">
-        <Modal open={openOtp} footer={null} onCancel={cancel}>
+        <Modal open={openOtp} footer={null} onCancel={()=>{cancel}}>
           <div className="space-y-2 flex flex-col items-center gap-4">
             <h1>
               Enter One-Time Password sent on{" "}
@@ -110,7 +111,6 @@ export default function LoginPage() {
             </button>
           </div>
         </Modal>
-
         <div className="form w-full flex flex-col">
           <div className="header flex flex-col items-center gap-4">
             <div className="icon bg-white rounded-2xl shadow-[#a4e0f6] shadow-lg p-4">
@@ -148,7 +148,8 @@ export default function LoginPage() {
                 </div>
               )}
             </div>
-            <button
+            <button 
+              type="button"
               onClick={() => setUsingPhone(!usingPhone)}
               className="text-gray-600 cursor-pointer w-fit md:text-sm text-xs text-left"
             >
@@ -185,46 +186,48 @@ export default function LoginPage() {
                 />
               </div>
             )}
-            <div className="forgot mt-1 flex flex-col lg:flex-row justify-between">
+            <div className="forgot mt-1 flex flex-col items-center justify-between gap-2">
               <div
                 onClick={() => setSignup(!signup)}
-                className="text-gray-600 md:text-sm text-xs text-center lg:text-left"
+                className="text-gray-600 md:text-sm text-xs text-center"
               >
                 {signup ? (
                   <p>
                     Already have an account?{" "}
-                    <span className="text-blue-500">Sign In</span>
+                    <span className="text-blue-500 cursor-pointer">Sign In</span>
                   </p>
                 ) : (
                   <p>
                     Don't have an account?{" "}
-                    <span className="text-blue-500">Sign Up</span>
+                    <span className="text-blue-500 cursor-pointer">Sign Up</span>
                   </p>
                 )}
               </div>
               {!signup && (
-                <p className="text-gray-600 md:text-sm text-xs text-center lg:text-right">
+                <p className="text-gray-600 md:text-sm w-fit text-xs text-center cursor-pointer">
                   Forgot password?
                 </p>
               )}
             </div>
             {signup ? (
               <div className="button w-full bg-black rounded-2xl">
-                <button className=" w-full text-white  py-2">Sign Up</button>
+                <button type="submit" className=" w-full text-white cursor-pointer  py-2">Sign Up</button>
               </div>
             ) : (
-              <div className="button w-full bg-black rounded-2xl">
-                <button className=" w-full text-white  py-2">Sign In</button>
+              <div className="button w-full bg-black rounded-2xl ">
+                <button type="submit" className=" w-full cursor-pointer text-white  py-2">Sign In</button>
               </div>
             )}
           </form>
         </div>
         <div className="alternate md:mt-3 ">
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 text-sm text-center">
             {signup ? "Or Sign Up with" : "Or Sign In with"}
           </p>
-          <div className="google flex items-center justify-center mt-2">
-            <img src={google} alt="" className="md:w-10 w-6" />
+          <div className="google">
+            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+              <GoogleLogin/>
+            </GoogleOAuthProvider>
           </div>
         </div>
       </div>
