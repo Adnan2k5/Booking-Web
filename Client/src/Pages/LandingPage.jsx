@@ -149,7 +149,7 @@ export default function LandingPage() {
               />
             </div>
             <div className="search w-full sm:w-[45%] md:w-fit">
-              <button onClick={handleNavigate} className="bg-black text-white p-2 rounded-lg w-full">
+              <button onClick={handleNavigate} className="bg-black text-white cursor-pointer p-2 rounded-lg w-full">
                 Begin Adventure
               </button>
             </div>
@@ -166,9 +166,9 @@ export default function LandingPage() {
             </h1>
           </div>
           <div className="adventures flex overflow-x-auto md:overflow-visible py-4">
-            <div className="cards flex flex-nowrap md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="cards flex flex-nowrap md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
               {/* Placeholder cards */}
-              {[1, 2, 3, 4].map((item) => (
+              {[1, 2, 3].map((item) => (
                 <div className="card p-4 min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-md" key={item}>
                   <div className="img w-full h-48 bg-gray-200 rounded-lg"></div>
                   <div className="title mt-2">

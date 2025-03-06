@@ -1,16 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  CalendarIcon,
-  MapPin,
-  Star,
-  X,
-  User,
-  Search,
-  Filter,
-} from "lucide-react";
+import { CalendarIcon, MapPin, Star, X, User, Search, Filter, ArrowLeft } from 'lucide-react';
 import { cn } from "../lib/utils.js";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -20,7 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../components/ui/popover";
-import { Calendar, theme } from "antd";
+import { Calendar } from "antd";
 import {
   Card,
   CardContent,
@@ -40,36 +32,34 @@ import mock_adventure from "../Data/mock_adventure";
 
 export default function BrowsingPage() {
   const location = useLocation();
-  const Navigate = useNavigate();
+  const navigate = useNavigate();
   const query = new URLSearchParams(location?.search);
-  const [isLoading, setIsLoading] = useState(false);
-  // const [fetchedAdventures, setFetchedAdventures] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [adventure, setAdventure] = useState(
     query.get("adventure")?.toLowerCase() || ""
   );
   const [loc, setLoc] = useState(query.get("location")?.toLowerCase() || "");
-  const [date, setDate] = useState(
-    query.get("date") ? new Date(query.get("date")) : undefined
-  );
+  const [date, setDate] = useState(() => {
+    const queryDate = query.get("date");
+    return queryDate ? new Date(queryDate) : undefined;
+  });
 
-  const onPanelChange = (value, mode) => {
-    console.log(value.format('YYYY-MM-DD'), mode);
+  const onPanelChange = (value) => {
+    console.log(value.format('YYYY-MM-DD'));
   };
   
   const wrapperStyle = {
     width: 300,
-    border: `1px solid black`,
+    border: `1px solid #e2e8f0`,
+    borderRadius: '0.375rem',
   };
 
-  // useEffect(() => {
-  //   setIsLoading(true)
-  //   getAdventure().then((data) => {
-  //     if (data != null) {
-  //       setFetchedAdventures(data)
-  //     }
-  //     setIsLoading(false)
-  //   })
-  // }, [])
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const adv = mock_adventure;
 
@@ -82,19 +72,21 @@ export default function BrowsingPage() {
       !loc ||
       loc === "all" ||
       adventureItem.location.toLowerCase().includes(loc);
-    const matchesDate =
-      !date ||
-      format(new Date(adventureItem.date), "yyyy-MM-dd") ===
-        format(date, "yyyy-MM-dd");
-    return (
-      (adventure ? matchesAdventure : true) &&
-      (loc ? matchesLoc : true) &&
-      (date ? matchesDate : true)
-    );
+    
+    // Safe date comparison
+    let matchesDate = true;
+    if (date && date instanceof Date && !isNaN(date)) {
+      const advDate = new Date(adventureItem.date);
+      if (advDate instanceof Date && !isNaN(advDate)) {
+        matchesDate = format(advDate, "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
+      }
+    }
+    
+    return matchesAdventure && matchesLoc && matchesDate;
   });
 
   const onBook = (id) => {
-    Navigate(`/booking?id=${id}`);
+    navigate(`/booking?id=${id}`);
   };
 
   const clearFilter = (type) => {
@@ -112,6 +104,8 @@ export default function BrowsingPage() {
         setAdventure("");
         setLoc("");
         setDate(undefined);
+        break;
+      default:
         break;
     }
   };
@@ -137,11 +131,33 @@ export default function BrowsingPage() {
       },
     },
   };
-  const DateChange = (value) => {
-    setDate(value.format('YYYY-MM-DD'));
-  }
+
+  const handleDateChange = (value) => {
+    if (value) {
+      // Ensure we're working with a proper Date object
+      const selectedDate = new Date(value.format('YYYY-MM-DD'));
+      setDate(selectedDate);
+    } else {
+      setDate(undefined);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    try {
+      // Safely parse the date string
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Invalid date";
+      }
+      return format(date, "MMM dd, yyyy");
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return "Invalid date";
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-100 to-indigo-100 p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-100 to-indigo-100 p-4 sm:p-6 relative overflow-hidden">
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-200 rounded-full opacity-30 blur-[100px]"></div>
         <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-indigo-200 rounded-full opacity-30 blur-[100px]"></div>
@@ -169,10 +185,10 @@ export default function BrowsingPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 bg-gray-600 hover:bg-gray-700"
                 onClick={() => clearFilter("adventure")}
               >
-                <X size={14} />
+                <X size={14} className="text-white" />
               </Button>
             )}
           </div>
@@ -197,10 +213,10 @@ export default function BrowsingPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 bg-gray-600 hover:bg-gray-700"
                 onClick={() => clearFilter("location")}
               >
-                <X size={14} />
+                <X size={14} className="text-white" />
               </Button>
             )}
           </div>
@@ -215,12 +231,18 @@ export default function BrowsingPage() {
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, "PPP") : <span>Pick a date</span>}
+                {date && !isNaN(date.getTime()) 
+                  ? format(date, "PPP") 
+                  : <span>Pick a date</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <div style={wrapperStyle}>
-                <Calendar fullscreen={false} onPanelChange={onPanelChange} onSelect={DateChange} />
+                <Calendar 
+                  fullscreen={false} 
+                  onPanelChange={onPanelChange} 
+                  onSelect={handleDateChange}
+                />
               </div>
               {date && (
                 <div className="p-2 border-t border-gray-100">
@@ -258,6 +280,13 @@ export default function BrowsingPage() {
         </div>
         <div className="mb-6 flex justify-between items-center">
           <div className="flex items-center gap-2">
+            <button 
+              onClick={() => navigate('/')} 
+              className="cursor-pointer p-2 rounded-full hover:bg-white/50 transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeft size={20} />
+            </button>
             <h2 className="text-xl font-semibold text-gray-800">Adventures</h2>
             <Badge variant="outline" className="text-gray-500 bg-white">
               {filteredAdventures.length} results
@@ -271,65 +300,64 @@ export default function BrowsingPage() {
             initial="hidden"
             animate="visible"
           >
-            {isLoading
-              ?
-                Array(6)
-                  .fill(0)
-                  .map((_, index) => (
-                    <div key={`skeleton-${index}`} className="bg-white rounded-xl overflow-hidden shadow-md">
-                      <Skeleton className="w-full h-48" />
-                      <div className="p-4">
-                        <Skeleton className="h-4 w-1/3 mb-2" />
-                        <Skeleton className="h-6 w-3/4 mb-4" />
-                        <Skeleton className="h-4 w-full mb-2" />
-                        <div className="flex justify-between mt-4">
-                          <Skeleton className="h-8 w-20" />
-                          <Skeleton className="h-8 w-24" />
-                        </div>
+            {isLoading 
+              ? Array(6).fill(0).map((_, index) => (
+                <div key={`skeleton-${index}`} className="bg-white rounded-xl overflow-hidden shadow-md">
+                  <Skeleton className="w-full h-48" />
+                  <div className="p-4">
+                    <Skeleton className="h-4 w-1/3 mb-2" />
+                    <Skeleton className="h-6 w-3/4 mb-4" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <div className="flex justify-between mt-4">
+                      <Skeleton className="h-8 w-20" />
+                      <Skeleton className="h-8 w-24" />
+                    </div>
+                  </div>
+                </div>
+              ))
+              : filteredAdventures.map((adventure) => (
+                <motion.div key={adventure.id} variants={itemVariants} layout className="h-full">
+                  <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg hover:translate-y-[-4px]">
+                    <div className="relative h-52 overflow-hidden">
+                      <img
+                        src={adventure.img || "/placeholder.svg"}
+                        alt={adventure.name}
+                        className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                        loading="lazy"
+                      />
+                      <div className="absolute top-3 right-3">
+                        <Badge className="bg-green-500 hover:bg-green-600">+{adventure.exp} EXP</Badge>
                       </div>
                     </div>
-                  ))
-              : filteredAdventures.map((adventure) => (
-                  <motion.div key={adventure.id} variants={itemVariants} layout className="h-full">
-                    <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg hover:translate-y-[-4px]">
-                      <div className="relative h-52 overflow-hidden">
-                        <img
-                          src={adventure.img || "/placeholder.svg"}
-                          alt={adventure.name}
-                          className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
-                        />
-                        <div className="absolute top-3 right-3">
-                          <Badge className="bg-green-500 hover:bg-green-600">+{adventure.exp} EXP</Badge>
-                        </div>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                        <MapPin size={14} />
+                        <span>{adventure.location}</span>
+                        <span className="text-gray-300">•</span>
+                        <span>{formatDate(adventure.date)}</span>
                       </div>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                          <MapPin size={14} />
-                          <span>{adventure.location}</span>
-                          <span className="text-gray-300">•</span>
-                          <span>{format(new Date(adventure.date), "MMM dd, yyyy")}</span>
-                        </div>
-                        <CardTitle className="text-xl font-bold text-gray-800">{adventure.name}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="pb-2">
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star key={star} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          ))}
-                          <span className="text-sm ml-1 text-gray-500">4.8</span>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="pt-2">
-                        <Button
-                          onClick={() => onBook(adventure.id)}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300"
-                        >
-                          Book Now
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  </motion.div>
-                ))}
+                      <CardTitle className="text-xl font-bold text-gray-800">{adventure.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star key={star} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        ))}
+                        <span className="text-sm ml-1 text-gray-500">4.8</span>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="pt-2">
+                      <Button
+                        onClick={() => onBook(adventure.id)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300"
+                      >
+                        Book Now
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              ))
+            }
           </motion.div>
         </AnimatePresence>
         {filteredAdventures.length === 0 && !isLoading && (
