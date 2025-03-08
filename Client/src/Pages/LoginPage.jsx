@@ -14,6 +14,8 @@ import {
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+
 export default function LoginPage() {
   const dispatch = useDispatch();
   const [viewPassword, setViewPassword] = useState(false);
@@ -70,6 +72,13 @@ export default function LoginPage() {
     setopenOtp(false);
     setValue("");
   };
+
+  const onGoogleLoginSucces = (response) => {
+    console.log("Google Login Success:", response);
+    axios.post("http://localhost:8080/api/auth/signInWithGoogle", { token: response.credential }, { withCredentials: true })
+      .then(res => console.log("Backend response:", res.data))
+      .catch(err => console.error("Error:", err));
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-5">
@@ -224,11 +233,11 @@ export default function LoginPage() {
           <p className="text-gray-500 text-sm text-center">
             {signup ? "Or Sign Up with" : "Or Sign In with"}
           </p>
-          {/* <div className="google">
+          <div className="google">
             <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-              <GoogleLogin/>
+              <GoogleLogin onSuccess={onGoogleLoginSucces}/>
             </GoogleOAuthProvider>
-          </div> */}
+          </div>
         </div>
       </div>
     </div>
