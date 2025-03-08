@@ -318,7 +318,7 @@ const signInWithGoogleCallback = asyncHandler(async (req, res) => {
 });
 
 const signInWithApple = asyncHandler(async (req, res) => {
-
+    
 });
 
 const signInWithLinkedin = asyncHandler(async (req, res) => {
