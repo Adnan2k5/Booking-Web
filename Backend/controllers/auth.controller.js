@@ -4,6 +4,7 @@ import ApiResponse from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import sendEmail from '../utils/sendOTP.js';
+import passport from 'passport';
 
 
 const generateAccessAndRefreshTokens = async (user) => {
@@ -299,6 +300,47 @@ const updatePassword = asyncHandler(async (req, res) => {
     );
 });
 
+const signInWithGoogle = asyncHandler(async (req, res) => {
+    passport.authenticate('google', { scope: ['profile', 'email'] });
+});
+
+const signInWithGoogleCallback = asyncHandler(async (req, res) => {
+    const user = req.user;
+    
+    const newUser = User.create({
+        email: user.email,
+        name: user.name,
+    });
+
+    await newUser.save();
+
+    res.redirect(`http://localhost:5173?token=${token}`);
+});
+
+const signInWithApple = asyncHandler(async (req, res) => {
+
+});
+
+const signInWithLinkedin = asyncHandler(async (req, res) => {
+
+});
+
+const signInWithFacebook = asyncHandler(async (req, res) => {
+
+});
 
 
-export { registerUser, verifyOtp, resendOtp, loginUser, forgotPassword, updatePassword };
+
+export { 
+    registerUser,
+    verifyOtp, 
+    resendOtp, 
+    loginUser, 
+    forgotPassword, 
+    updatePassword, 
+    signInWithGoogle, 
+    signInWithApple, 
+    signInWithLinkedin, 
+    signInWithFacebook,
+    signInWithGoogleCallback 
+};
