@@ -4,7 +4,9 @@ import ApiResponse from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import sendEmail from '../utils/sendOTP.js';
-import passport from 'passport';
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 const generateAccessAndRefreshTokens = async (user) => {
@@ -18,7 +20,7 @@ const generateAccessAndRefreshTokens = async (user) => {
         return { accessToken, refreshToken };
     }
     catch (error) {
-    
+
         throw new ApiError(500, "Something went wrong while generating refresh and access token");
     }
 }
@@ -290,7 +292,7 @@ const updatePassword = asyncHandler(async (req, res) => {
     user.password = password;
 
     await user.save();
-    
+
     await Otp.deleteMany({ userId: user._id });
 
     res.status(200).json(
@@ -301,21 +303,20 @@ const updatePassword = asyncHandler(async (req, res) => {
 });
 
 const signInWithGoogle = asyncHandler(async (req, res) => {
-    passport.authenticate('google', { scope: ['profile', 'email'] });
+    const { token } = req.body;
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        console.log(ticket);
+        const payload = ticket.getPayload();
+        res.json({ success: true, user: payload });
+    } catch (error) {
+        throw ApiError(401, "Invalid Token");
+    }
 });
 
-const signInWithGoogleCallback = asyncHandler(async (req, res) => {
-    const user = req.user;
-    
-    const newUser = User.create({
-        email: user.email,
-        name: user.name,
-    });
-
-    await newUser.save();
-
-    res.redirect(`http://localhost:5173?token=${token}`);
-});
 
 const signInWithApple = asyncHandler(async (req, res) => {
 
@@ -331,16 +332,15 @@ const signInWithFacebook = asyncHandler(async (req, res) => {
 
 
 
-export { 
+export {
     registerUser,
-    verifyOtp, 
-    resendOtp, 
-    loginUser, 
-    forgotPassword, 
-    updatePassword, 
-    signInWithGoogle, 
-    signInWithApple, 
-    signInWithLinkedin, 
+    verifyOtp,
+    resendOtp,
+    loginUser,
+    forgotPassword,
+    updatePassword,
+    signInWithGoogle,
+    signInWithApple,
+    signInWithLinkedin,
     signInWithFacebook,
-    signInWithGoogleCallback 
 };

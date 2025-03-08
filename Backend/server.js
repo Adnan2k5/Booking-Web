@@ -1,19 +1,16 @@
 import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import authRoute from "./routes/auth.routes.js"
 import connectDB from "./config/db.config.js";
-import passport from "passport";
-
-dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({origin: "http://localhost:5173", credentials: true}));
 
 app.use(bodyParser.json(), bodyParser.urlencoded({ extended: true }));
-
-app.use(passport.initialize());
 
 // Routes
 app.use("/api/auth", authRoute);
