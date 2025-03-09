@@ -80,6 +80,13 @@ export default function LoginPage() {
       .catch(err => console.error("Error:", err));
   }
 
+
+  const linkedInLogin = () => {
+    const REDIRECT_URI = "http://localhost:5173/auth/signInWithLinkedin";
+    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${import.meta.env.VITE_LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=openid%20profile%20email`;
+    window.location.href = authUrl;
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-5">
       <div className="bg absolute w-full object-cover">
@@ -237,6 +244,7 @@ export default function LoginPage() {
             <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
               <GoogleLogin onSuccess={onGoogleLoginSucces}/>
             </GoogleOAuthProvider>
+            <div onClick={linkedInLogin}>Login With Linkedin</div>
           </div>
         </div>
       </div>
