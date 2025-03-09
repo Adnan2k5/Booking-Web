@@ -5,6 +5,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import sendEmail from '../utils/sendOTP.js';
 import { OAuth2Client } from "google-auth-library";
+import { getLinkedInAccessToken, verifyLinkedInToken } from '../utils/linkedinHandler.js';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -309,11 +310,57 @@ const signInWithGoogle = asyncHandler(async (req, res) => {
             idToken: token,
             audience: process.env.GOOGLE_CLIENT_ID,
         });
-        console.log(ticket);
+
         const payload = ticket.getPayload();
-        res.json({ success: true, user: payload });
+        const { email, name } = payload;
+
+        let user = await User.find({ email: email });
+
+        if (!user) {
+            //Signing In
+            const newUser = await User.create({
+                email: email,
+                name: name,
+                verified: true,
+            });
+
+            await newUser.save();
+
+            user = newUser;
+        }
+
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
+
+        const userObject = user.toObject();
+
+        delete userObject.password;
+        delete userObject.refreshToken;
+        delete userObject.role;
+        delete userObject.verified;
+        delete userObject.createdAt;
+        delete userObject.updatedAt;
+
+        const options = {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None'
+        };
+
+        return res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(
+                    200,
+                    {
+                        user: userObject,
+                        accessToken,
+                    },
+                    "User logged in Successfully",
+                )
+            );
     } catch (error) {
-        throw ApiError(401, "Invalid Token");
+        throw new ApiError(401, "Invalid Token");
     }
 });
 
@@ -323,7 +370,56 @@ const signInWithApple = asyncHandler(async (req, res) => {
 });
 
 const signInWithLinkedin = asyncHandler(async (req, res) => {
+    const { code } = req.body;
+    try {
+        const linkedinAccessToken = await getLinkedInAccessToken(code);
+        const userDetails = await verifyLinkedInToken(linkedinAccessToken);
 
+        let user = await User.findOne({ email: userDetails.email });
+
+        if(!user) {
+            user = await User.create({
+                email: userDetails.email,
+                name: userDetails.name,
+                verified: true,
+            });
+
+            await user.save();
+        }
+
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
+
+        const userObject = user.toObject();
+
+        delete userObject.password;
+        delete userObject.refreshToken;
+        delete userObject.role;
+        delete userObject.verified;
+        delete userObject.createdAt;
+        delete userObject.updatedAt;
+
+        const options = {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None'
+        };
+
+        return res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(
+                    200,
+                    {
+                        user: userObject,
+                        accessToken,
+                    },
+                    "User logged in Successfully",
+                )
+            );
+    } catch (error) {
+        throw new ApiError(401, "Invalid Token");
+    }
 });
 
 const signInWithFacebook = asyncHandler(async (req, res) => {
