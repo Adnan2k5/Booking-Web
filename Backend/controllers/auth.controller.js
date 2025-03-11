@@ -6,6 +6,7 @@ import { ApiError } from '../utils/ApiError.js';
 import sendEmail from '../utils/sendOTP.js';
 import { OAuth2Client } from "google-auth-library";
 import { getLinkedInAccessToken, verifyLinkedInToken } from '../utils/linkedinHandler.js';
+import { getFacebookAccessToken, verifyFacebookToken } from '../utils/facebookHandler.js';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -305,6 +306,11 @@ const updatePassword = asyncHandler(async (req, res) => {
 
 const signInWithGoogle = asyncHandler(async (req, res) => {
     const { token } = req.body;
+
+    if(!token) {
+        throw new ApiError(400, "Token is Required");
+    }
+
     try {
         const ticket = await client.verifyIdToken({
             idToken: token,
@@ -371,6 +377,11 @@ const signInWithApple = asyncHandler(async (req, res) => {
 
 const signInWithLinkedin = asyncHandler(async (req, res) => {
     const { code } = req.body;
+
+    if(!code) {
+        throw new ApiError(400, "Code is Required");
+    }
+
     try {
         const linkedinAccessToken = await getLinkedInAccessToken(code);
         const userDetails = await verifyLinkedInToken(linkedinAccessToken);
@@ -423,7 +434,60 @@ const signInWithLinkedin = asyncHandler(async (req, res) => {
 });
 
 const signInWithFacebook = asyncHandler(async (req, res) => {
+    const { code } = req.body;
+    if(!code) {
+        throw new ApiError(400, "Code is Required");
+    }
 
+    try {
+        const facebookAccessToken = await getFacebookAccessToken(code);
+        const userDetails = await verifyFacebookToken(facebookAccessToken);
+
+        let user = await User.findOne({ email: userDetails.email });
+
+        if(!user) {
+            user = await User.create({
+                email: userDetails.email,
+                name: userDetails.name,
+                verified: true,
+            });
+
+            await user.save();
+        }
+
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
+
+        const userObject = user.toObject();
+
+        delete userObject.password;
+        delete userObject.refreshToken;
+        delete userObject.role;
+        delete userObject.verified;
+        delete userObject.createdAt;
+        delete userObject.updatedAt;
+
+        const options = {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None'
+        };
+
+        return res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(
+                    200,
+                    {
+                        user: userObject,
+                        accessToken,
+                    },
+                    "User logged in Successfully",
+                )
+            );
+    } catch (error) {
+        throw new ApiError(401, "Invalid Token");
+    }
 });
 
 

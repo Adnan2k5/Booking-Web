@@ -87,6 +87,12 @@ export default function LoginPage() {
     window.location.href = authUrl;
   }
 
+  const facebookLogin = () => {
+    const REDIRECT_URI = "http://localhost:5173/auth/signInWithFacebook";
+    const authUrl = `https://www.facebook.com/v11.0/dialog/oauth?client_id=${import.meta.env.VITE_FACEBOOK_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state="{st=state123abc,ds=123456789}"&scope=email,public_profile&response_type=code`;
+    window.location.href = authUrl;
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-5">
       <div className="bg absolute w-full object-cover">
@@ -245,6 +251,7 @@ export default function LoginPage() {
               <GoogleLogin onSuccess={onGoogleLoginSucces}/>
             </GoogleOAuthProvider>
             <div onClick={linkedInLogin}>Login With Linkedin</div>
+            <div onClick={facebookLogin}>Login With Facebook</div>
           </div>
         </div>
       </div>
