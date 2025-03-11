@@ -9,6 +9,7 @@ const LandingPage = lazy(()=>import('./Pages/LandingPage'));
 const BrowsingPage = lazy(()=>import('./Pages/BrowsingPage'));
 import { AuthProvider } from './Auth/AuthProvider';
 import LinkedInCallback from './Auth/LinkedinCallBack';
+import FacebookCallback from './Auth/FacebookCallback';
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/signInWithLinkedin" element={<LinkedInCallback />} />
+        <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
         <Route path="/" element={<LandingPage />} />
         <Route path='/browse' element={<BrowsingPage />} />
         {/* <Route path='/booking' element={<AuthProvider><Booking/></AuthProvider>} /> */}
