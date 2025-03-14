@@ -8,7 +8,19 @@ import { OAuth2Client } from "google-auth-library";
 import { getLinkedInAccessToken, verifyLinkedInToken } from '../utils/linkedinHandler.js';
 import { getFacebookAccessToken, verifyFacebookToken } from '../utils/facebookHandler.js';
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+let client = null;
+
+// Create a function to get the client
+const getOAuthClient = () => {
+    if (!client) {
+        if (!process.env.GOOGLE_CLIENT_ID) {
+            throw new ApiError(500, "Google Client ID is not configured");
+        }
+        client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    }
+    return client;
+};
+
 
 
 const generateAccessAndRefreshTokens = async (user) => {
@@ -307,20 +319,23 @@ const updatePassword = asyncHandler(async (req, res) => {
 const signInWithGoogle = asyncHandler(async (req, res) => {
     const { token } = req.body;
 
-    if(!token) {
-        throw new ApiError(400, "Token is Required");
+    if (!token || typeof token !== "string") {
+        throw new ApiError(400, "Invalid or Missing Token");
     }
 
     try {
+        if (!client) {
+            client = getOAuthClient();
+        }
+
         const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID,
+            idToken: token
         });
 
         const payload = ticket.getPayload();
         const { email, name } = payload;
 
-        let user = await User.find({ email: email });
+        let user = await User.findOne({ email: email });
 
         if (!user) {
             //Signing In
@@ -378,7 +393,7 @@ const signInWithApple = asyncHandler(async (req, res) => {
 const signInWithLinkedin = asyncHandler(async (req, res) => {
     const { code } = req.body;
 
-    if(!code) {
+    if (!code) {
         throw new ApiError(400, "Code is Required");
     }
 
@@ -388,7 +403,7 @@ const signInWithLinkedin = asyncHandler(async (req, res) => {
 
         let user = await User.findOne({ email: userDetails.email });
 
-        if(!user) {
+        if (!user) {
             user = await User.create({
                 email: userDetails.email,
                 name: userDetails.name,
@@ -435,7 +450,7 @@ const signInWithLinkedin = asyncHandler(async (req, res) => {
 
 const signInWithFacebook = asyncHandler(async (req, res) => {
     const { code } = req.body;
-    if(!code) {
+    if (!code) {
         throw new ApiError(400, "Code is Required");
     }
 
@@ -445,7 +460,7 @@ const signInWithFacebook = asyncHandler(async (req, res) => {
 
         let user = await User.findOne({ email: userDetails.email });
 
-        if(!user) {
+        if (!user) {
             user = await User.create({
                 email: userDetails.email,
                 name: userDetails.name,
