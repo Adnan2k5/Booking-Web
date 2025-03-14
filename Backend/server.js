@@ -5,6 +5,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import authRoute from "./routes/auth.routes.js"
+import adventureRoute from "./routes/adventure.routes.js"
 import connectDB from "./config/db.config.js";
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(bodyParser.json(), bodyParser.urlencoded({ extended: true }));
 
 // Routes
 app.use("/api/auth", authRoute);
+app.use("/api/adventure", adventureRoute);
 
 
 const PORT = process.env.PORT || 8080;
