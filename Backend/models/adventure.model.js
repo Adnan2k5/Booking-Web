@@ -40,6 +40,12 @@ const adventureSchema = new mongoose.Schema(
                 ref: "User",
             },
         ],
+        enrolled: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
     },
     {
         timestamps: true,
