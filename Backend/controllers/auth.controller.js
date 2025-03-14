@@ -94,7 +94,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Email and OTP are Required");
     }
 
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email }).select('email phoneNumber name verified role');
 
     if (!user) {
         throw new ApiError(404, "User not found");
@@ -120,18 +120,9 @@ const verifyOtp = asyncHandler(async (req, res) => {
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
 
-    // Convert the Mongoose document to a plain JavaScript object
-    const userObject = user.toObject();
+    user.refreshToken = refreshToken;
 
-    // Remove sensitive fields
-    delete userObject.password;
-    delete userObject.refreshToken;
-    delete userObject.role;
-    delete userObject.verified;
-    delete userObject.createdAt;
-    delete userObject.updatedAt;
-    delete userObject.bookings;
-    delete userObject.reviews;
+    await user.save();
 
     const options = {
         httpOnly: true,
@@ -146,7 +137,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 {
-                    user: userObject,
+                    user: user,
                     accessToken,
                 },
                 "User Verified Successfully",
@@ -157,7 +148,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
 
 const resendOtp = asyncHandler(async (req, res) => {
     const { email } = req.body;
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email }).select('email');
     if (!user) {
         throw new ApiError(404, "User not found");
     }
@@ -192,10 +183,14 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Email and Password are Required");
     }
 
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email }).select('email phoneNumber name verified role password');
 
     if (!user) {
         throw new ApiError(404, "User not found");
+    }
+
+    if(user.password === null || user.password === undefined) {
+        throw new ApiError(400, "User not registered with email and password");
     }
 
     if (!user.verified) {
@@ -210,18 +205,9 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
 
-    // Convert the Mongoose document to a plain JavaScript object
-    const userObject = user.toObject();
+    user.refreshToken = refreshToken;
 
-    // Remove sensitive fields
-    delete userObject.password;
-    delete userObject.refreshToken;
-    delete userObject.role;
-    delete userObject.verified;
-    delete userObject.createdAt;
-    delete userObject.updatedAt;
-    delete userObject.bookings;
-    delete userObject.reviews;
+    await user.save();
 
     const options = {
         httpOnly: true,
@@ -236,7 +222,7 @@ const loginUser = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 {
-                    user: userObject,
+                    user: user,
                     accessToken,
                 },
                 "User logged in Successfully",
@@ -251,7 +237,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Email is Required");
     }
 
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email }).select('email phoneNumber');
 
     if (!user) {
         throw new ApiError(404, "User not found");
@@ -287,7 +273,7 @@ const updatePassword = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Email and Password are Required");
     }
 
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email }).select('email');
 
     if (!user) {
         throw new ApiError(404, "User not found");
@@ -309,6 +295,8 @@ const updatePassword = asyncHandler(async (req, res) => {
 
     await Otp.deleteMany({ userId: user._id });
 
+    console.log(password, "Password Changed");
+
     res.status(200).json(
         new ApiResponse(200, {
             email: email,
@@ -323,66 +311,57 @@ const signInWithGoogle = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid or Missing Token");
     }
 
-    try {
-        if (!client) {
-            client = getOAuthClient();
-        }
 
-        const ticket = await client.verifyIdToken({
-            idToken: token
-        });
-
-        const payload = ticket.getPayload();
-        const { email, name } = payload;
-
-        let user = await User.findOne({ email: email });
-
-        if (!user) {
-            //Signing In
-            const newUser = await User.create({
-                email: email,
-                name: name,
-                verified: true,
-            });
-
-            await newUser.save();
-
-            user = newUser;
-        }
-
-        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
-
-        const userObject = user.toObject();
-
-        delete userObject.password;
-        delete userObject.refreshToken;
-        delete userObject.role;
-        delete userObject.verified;
-        delete userObject.createdAt;
-        delete userObject.updatedAt;
-
-        const options = {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'None'
-        };
-
-        return res.status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
-            .json(
-                new ApiResponse(
-                    200,
-                    {
-                        user: userObject,
-                        accessToken,
-                    },
-                    "User logged in Successfully",
-                )
-            );
-    } catch (error) {
-        throw new ApiError(401, "Invalid Token");
+    if (!client) {
+        client = getOAuthClient();
     }
+
+    const ticket = await client.verifyIdToken({
+        idToken: token
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name } = payload;
+
+    let user = await User.findOne({ email: email });
+
+    if (!user) {
+        //Signing In
+        const newUser = await User.create({
+            email: email,
+            name: name,
+            verified: true,
+        }).select('email phoneNumber name verified role');
+
+        await newUser.save();
+
+        user = newUser;
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
+
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'None'
+    };
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: user,
+                    accessToken,
+                },
+                "User logged in Successfully",
+            )
+        );
 });
 
 
@@ -397,55 +376,48 @@ const signInWithLinkedin = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Code is Required");
     }
 
-    try {
-        const linkedinAccessToken = await getLinkedInAccessToken(code);
-        const userDetails = await verifyLinkedInToken(linkedinAccessToken);
 
-        let user = await User.findOne({ email: userDetails.email });
+    const linkedinAccessToken = await getLinkedInAccessToken(code);
+    const userDetails = await verifyLinkedInToken(linkedinAccessToken);
 
-        if (!user) {
-            user = await User.create({
-                email: userDetails.email,
-                name: userDetails.name,
-                verified: true,
-            });
+    let user = await User.findOne({ email: userDetails.email });
 
-            await user.save();
-        }
+    if (!user) {
+        user = await User.create({
+            email: userDetails.email,
+            name: userDetails.name,
+            verified: true,
+        }).select('email phoneNumber name verified role');
 
-        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
-
-        const userObject = user.toObject();
-
-        delete userObject.password;
-        delete userObject.refreshToken;
-        delete userObject.role;
-        delete userObject.verified;
-        delete userObject.createdAt;
-        delete userObject.updatedAt;
-
-        const options = {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'None'
-        };
-
-        return res.status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
-            .json(
-                new ApiResponse(
-                    200,
-                    {
-                        user: userObject,
-                        accessToken,
-                    },
-                    "User logged in Successfully",
-                )
-            );
-    } catch (error) {
-        throw new ApiError(401, "Invalid Token");
+        await user.save();
     }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
+
+    user.refreshToken = refreshToken;
+
+    await user.save();
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'None'
+    };
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: user,
+                    accessToken,
+                },
+                "User logged in Successfully",
+            )
+        );
+
 });
 
 const signInWithFacebook = asyncHandler(async (req, res) => {
@@ -454,55 +426,43 @@ const signInWithFacebook = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Code is Required");
     }
 
-    try {
-        const facebookAccessToken = await getFacebookAccessToken(code);
-        const userDetails = await verifyFacebookToken(facebookAccessToken);
 
-        let user = await User.findOne({ email: userDetails.email });
+    const facebookAccessToken = await getFacebookAccessToken(code);
+    const userDetails = await verifyFacebookToken(facebookAccessToken);
 
-        if (!user) {
-            user = await User.create({
-                email: userDetails.email,
-                name: userDetails.name,
-                verified: true,
-            });
+    let user = await User.findOne({ email: userDetails.email });
 
-            await user.save();
-        }
+    if (!user) {
+        user = await User.create({
+            email: userDetails.email,
+            name: userDetails.name,
+            verified: true,
+        });
 
-        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
-
-        const userObject = user.toObject();
-
-        delete userObject.password;
-        delete userObject.refreshToken;
-        delete userObject.role;
-        delete userObject.verified;
-        delete userObject.createdAt;
-        delete userObject.updatedAt;
-
-        const options = {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'None'
-        };
-
-        return res.status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
-            .json(
-                new ApiResponse(
-                    200,
-                    {
-                        user: userObject,
-                        accessToken,
-                    },
-                    "User logged in Successfully",
-                )
-            );
-    } catch (error) {
-        throw new ApiError(401, "Invalid Token");
+        await user.save();
     }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'None'
+    };
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: user,
+                    accessToken,
+                },
+                "User logged in Successfully",
+            )
+        );
 });
 
 

@@ -16,6 +16,12 @@ const adventureSchema = new mongoose.Schema(
             type: String,
             required: true,
             trim: true,
+            index: true,
+        },
+        date: {
+            type: Date,
+            required: true,
+            index: true,
         },
         image: {
             type: String,
@@ -27,7 +33,19 @@ const adventureSchema = new mongoose.Schema(
         },
         exp: {
             type: Number,
-        }
+        },
+        instructors: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
+        enrolled: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
     },
     {
         timestamps: true,
