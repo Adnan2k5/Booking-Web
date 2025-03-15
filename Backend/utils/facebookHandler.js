@@ -18,8 +18,8 @@ export const verifyFacebookToken = async (accessToken) => {
 
 
 export const getFacebookAccessToken = async (code) => {
-    const CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
-    const CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET;
+    const CLIENT_ID = process.env.FACEBOOK_CLIENT_ID;
+    const CLIENT_SECRET = process.env.FACEBOOK_CLIENT_SECRET;
     const REDIRECT_URI = "http://localhost:5173/auth/signInWithFacebook";
 
     try {
@@ -34,9 +34,7 @@ export const getFacebookAccessToken = async (code) => {
                 },
             }
         );
-
         const accessToken = tokenResponse.data.access_token;
-
         return accessToken;
     } catch (error) {
         console.error("Error getting Facebook token:", error.response.data);

@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { Eye, EyeClosed, Lock, LogInIcon, Phone } from "lucide-react";
-import google from "../assets/google.png";
+import { useDispatch, useSelector } from "react-redux";
+import { Eye, EyeClosed, Linkedin, Lock, LogInIcon, Phone } from "lucide-react";
 import { MdEmail } from "react-icons/md";
 import { useForm } from "react-hook-form";
-import { ResendOtp, UserLogin, UserRegister, VerifyUser } from "../Auth/UserAuth";
+import { GoogleLoginSuccess, ResendOtp, UserLogin, UserRegister, VerifyUser } from "../Auth/UserAuth";
 import { Modal } from "antd";
 import {
   InputOTPSlot,
@@ -14,10 +13,10 @@ import {
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-import axios from "axios";
 
 export default function LoginPage() {
   const dispatch = useDispatch();
+  const user = useSelector((state) => state.user);
   const [viewPassword, setViewPassword] = useState(false);
   const [usingPhone, setUsingPhone] = useState(false);
   const [signup, setSignup] = useState(false);
@@ -75,11 +74,11 @@ export default function LoginPage() {
 
   const onGoogleLoginSucces = (response) => {
     console.log("Google Login Success:", response);
-    axios.post("http://localhost:8080/api/auth/signInWithGoogle", { token: response.credential }, { withCredentials: true })
-      .then(res => console.log("Backend response:", res.data))
-      .catch(err => console.error("Error:", err));
+    const res = GoogleLoginSuccess(response, dispatch);
+    // axiosClient.post("/api/auth/signInWithGoogle", {token: response.credential}, {withCredentials: true})
+    //   .then(res => )
+    //   .catch(err => console.error("Error:", err));
   }
-
 
   const linkedInLogin = () => {
     const REDIRECT_URI = "http://localhost:5173/auth/signInWithLinkedin";
@@ -92,7 +91,6 @@ export default function LoginPage() {
     const authUrl = `https://www.facebook.com/v11.0/dialog/oauth?client_id=${import.meta.env.VITE_FACEBOOK_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state="{st=state123abc,ds=123456789}"&scope=email,public_profile&response_type=code`;
     window.location.href = authUrl;
   }
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-5">
       <div className="bg absolute w-full object-cover">
@@ -242,15 +240,17 @@ export default function LoginPage() {
             )}
           </form>
         </div>
-        <div className="alternate md:mt-3 ">
+        <div className="alternate ">
           <p className="text-gray-500 text-sm text-center">
             {signup ? "Or Sign Up with" : "Or Sign In with"}
           </p>
-          <div className="google">
+          <div className="google flex gap-5 md:mt-3">
             <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
               <GoogleLogin onSuccess={onGoogleLoginSucces}/>
             </GoogleOAuthProvider>
-            <div onClick={linkedInLogin}>Login With Linkedin</div>
+            <div className="flex gap-2 items-center border px-3 rounded-[5px]" onClick={linkedInLogin}>
+              <Linkedin/>
+            </div>
             <div onClick={facebookLogin}>Login With Facebook</div>
           </div>
         </div>

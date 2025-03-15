@@ -323,19 +323,17 @@ const signInWithGoogle = asyncHandler(async (req, res) => {
     const payload = ticket.getPayload();
     const { email, name } = payload;
 
-    let user = await User.findOne({ email: email });
+    let user = await User.findOne({ email: email }).select('-password');
 
     if (!user) {
-        //Signing In
+        //Signing Up
         const newUser = await User.create({
             email: email,
             name: name,
             verified: true,
-        }).select('email phoneNumber name verified role');
-
+        })
         await newUser.save();
-
-        user = newUser;
+        user = await User.findById(newUser._id).select('email phoneNumber name verified role');
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);

@@ -9,6 +9,8 @@ const LandingPage = lazy(()=>import('./Pages/LandingPage'));
 const BrowsingPage = lazy(()=>import('./Pages/BrowsingPage'));
 import { AuthProvider } from './Auth/AuthProvider';
 import LinkedInCallback from './Auth/LinkedinCallBack';
+import AdminDashboard from './Pages/Admin/AdminDashboard';
+import AdminLayout from './Pages/Admin/Layout';
 import FacebookCallback from './Auth/FacebookCallback';
 
 const App = () => {
@@ -25,6 +27,10 @@ const App = () => {
         {/* <Route path='/booking' element={<AuthProvider><Booking/></AuthProvider>} /> */}
         <Route path='/booking' element={<Booking/>} />
         <Route path="/reset" element={<ResetPass/>}/>
+        <Route path='/admin' element={<AdminLayout/>}>
+          <Route index element={<AdminDashboard/>}/>
+        </Route>
+
       </Routes>
       </BrowserRouter>
     </div>

@@ -70,3 +70,20 @@ export const UpdatePass = async (data) => {
 }
 
 
+export const  GoogleLoginSuccess = async (response, dispatch) => {
+    await axiosClient.post("/api/auth/signInWithGoogle", {token: response.credential}, {withCredentials: true})
+    .then((res)=> {
+        if(res.status === 200){
+            // console.log(res.data.data);
+            dispatch(loginSuccess(res.data.data))
+            return res.status;
+        }
+    })
+    .catch((err) => {
+        return err;
+    })
+
+
+}
+
+

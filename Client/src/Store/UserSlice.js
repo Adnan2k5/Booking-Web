@@ -22,7 +22,7 @@ const userSlice = createSlice({
             state.user = action.payload.user;
             state.error = null;
             state.access_Token = action.payload.accessToken;
-            Cookies.set("accessToken" , action.payload.accessToken, {secure: true});
+            Cookies.set("access_Token" , action.payload.accessToken, {secure: true});
         },
         loginFailure: (state, action) => {
             state.loading = false;
