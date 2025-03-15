@@ -27,19 +27,15 @@ const adventureSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        price: {
-            type: Number,
-            required: true,
-        },
         exp: {
             type: Number,
         },
-        instructors: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "User",
-            },
-        ],
+        instructors:
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
+
         enrolled: [
             {
                 type: mongoose.Schema.Types.ObjectId,

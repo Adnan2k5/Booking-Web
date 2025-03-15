@@ -337,7 +337,6 @@ const signInWithGoogle = asyncHandler(async (req, res) => {
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
-
     user.refreshToken = refreshToken;
     await user.save();
 
