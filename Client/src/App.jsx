@@ -12,8 +12,11 @@ import LinkedInCallback from './Auth/LinkedinCallBack';
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import AdminLayout from './Pages/Admin/Layout';
 import FacebookCallback from './Auth/FacebookCallback';
+import axios from 'axios';
+import { useEffect } from 'react';
 
 const App = () => {
+
   return (
     <div>
       <BrowserRouter>
