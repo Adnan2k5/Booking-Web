@@ -26,7 +26,7 @@ export const createAdventure = asyncHandler(async (req, res) => {
     // Save image to cloudinary
     const mediasUrl = await Promise.all(req.files.medias.map(async (image) => {
         const link = await uploadOnCloudinary(image.path);
-        return link;
+        return link.url;
     }));
 
 
@@ -42,7 +42,7 @@ export const createAdventure = asyncHandler(async (req, res) => {
 
     await newAdventure.save();
 
-    res.status(201).json(ApiResponse(201, newAdventure, 'Adventure created successfully'));
+    res.status(201).json(new ApiResponse(201, newAdventure, 'Adventure created successfully'));
 
 });
 

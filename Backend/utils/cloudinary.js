@@ -1,12 +1,14 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs/promises"; // Use promise-based fs methods
 
-// Configure Cloudinary
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY, 
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+
+const initCloudinary = () => {
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+}
 
 // Upload to Cloudinary function
 const uploadOnCloudinary = async (localFilePath) => {
@@ -19,7 +21,7 @@ const uploadOnCloudinary = async (localFilePath) => {
         console.log("File has been uploaded successfully to Cloudinary", response.url);
         await fs.unlink(localFilePath); // Remove the local file after successful upload
         return response; // Return the response object
-    } 
+    }
     catch (error) {
         console.error("Error uploading to Cloudinary:", error);
 
@@ -45,4 +47,4 @@ const deleteFromCloudinary = async (publicId) => {
     }
 }
 
-export { uploadOnCloudinary, deleteFromCloudinary };
+export { initCloudinary, uploadOnCloudinary, deleteFromCloudinary };
