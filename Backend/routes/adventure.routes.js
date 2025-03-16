@@ -7,7 +7,7 @@ const adventureRoute = express.Router();
 adventureRoute.get('/all', getAdventure);
 adventureRoute.post('/create', upload.fields([
     {
-        name: 'image', maxCount: 1
+        name: 'medias', maxCount: 4
     }
 ]) , createAdventure);
 

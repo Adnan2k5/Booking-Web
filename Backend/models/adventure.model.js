@@ -23,9 +23,20 @@ const adventureSchema = new mongoose.Schema(
             required: true,
             index: true,
         },
-        image: {
-            type: String,
+        medias: {
+            type: [
+                {
+                    type: String,
+                    required: true,
+                }
+            ],
             required: true,
+            validate: {
+                validator: function(v) {
+                    return v.length >= 1;
+                },
+                message: 'At least one media item is required'
+            }
         },
         exp: {
             type: Number,
