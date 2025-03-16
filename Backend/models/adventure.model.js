@@ -30,7 +30,7 @@ const adventureSchema = new mongoose.Schema(
         exp: {
             type: Number,
         },
-        instructors:
+        instructor:
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

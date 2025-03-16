@@ -8,7 +8,11 @@ export const getAdventure = async (req, res) => {
     return res.status(200).json(adventures);
 }
 
-export const createAdventure = async (req, res) => {};
+export const createAdventure = async (req, res) => {
+    const {name, description, location, date, image, exp, instructor} = req.body;
+
+    
+};
 
 export const updateAdventure = async (req, res) => {};
 
