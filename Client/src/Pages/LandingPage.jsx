@@ -1,23 +1,29 @@
-"use client"
-import { useState } from "react"
-import { MdLanguage, MdMenu, MdClose } from "react-icons/md"
-import { IoIosLogIn } from "react-icons/io"
-import { useNavigate } from "react-router-dom"
-import mock_adventure from "../Data/mock_adventure"
+"use client";
+import { useState } from "react";
+import { MdLanguage, MdMenu, MdClose } from "react-icons/md";
+import { IoIosLogIn } from "react-icons/io";
+import { useNavigate } from "react-router-dom";
+import mock_adventure from "../Data/mock_adventure";
+import { useAuth } from "./AuthProvider";
+import { Loader } from "../components/Loader";
 
 export default function LandingPage() {
-  const Navigate = useNavigate()
-  const adventures = mock_adventure
+  const Navigate = useNavigate();
+  const adventures = mock_adventure;
 
-  const [adventure, setadventure] = useState("")
-  const [location, setLocation] = useState("")
-  const [date, setDate] = useState("")
-  const [openLaguage, setOpenLanguage] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [adventure, setadventure] = useState("");
+  const [location, setLocation] = useState("");
+  const [date, setDate] = useState("");
+  const [openLaguage, setOpenLanguage] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleNavigate = () => {
-    Navigate(`/browse?adventure=${adventure}&location=${location}&date=${date}`)
-  }
+    Navigate(
+      `/browse?adventure=${adventure}&location=${location}&date=${date}`
+    );
+  };
+
+  const { user, loading } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -40,8 +46,15 @@ export default function LandingPage() {
 
             {/* Mobile Menu Button */}
             <div className="md:hidden">
-              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white p-2">
-                {mobileMenuOpen ? <MdClose className="text-2xl" /> : <MdMenu className="text-2xl" />}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-white p-2"
+              >
+                {mobileMenuOpen ? (
+                  <MdClose className="text-2xl" />
+                ) : (
+                  <MdMenu className="text-2xl" />
+                )}
               </button>
             </div>
 
@@ -50,7 +63,7 @@ export default function LandingPage() {
               <div className="language-selector relative">
                 <MdLanguage
                   onClick={() => {
-                    setOpenLanguage(!openLaguage)
+                    setOpenLanguage(!openLaguage);
                   }}
                   className="text-white text-2xl cursor-pointer"
                 />
@@ -68,9 +81,15 @@ export default function LandingPage() {
                 <li className="cursor-pointer hover:text-gray-300">Explore</li>
                 <li className="cursor-pointer hover:text-gray-300">Mission</li>
                 <li>
-                  <a href="/login">
-                    <IoIosLogIn className="text-3xl" />
-                  </a>
+                  {loading ? (
+                    <Loader />
+                  ) : user ? (
+                    <p className="w-10 h-10 bg-blue-100 text-black flex items-center justify-center rounded-full">{user?.user?.email.charAt(0).toUpperCase()}</p>
+                  ) : (
+                    <a href="/login">
+                      <IoIosLogIn className="text-3xl" />
+                    </a>
+                  )}
                 </li>
               </ul>
             </div>
@@ -91,10 +110,15 @@ export default function LandingPage() {
                   </select>
                 </li>
                 <li>
-                  <a href="/login" className="flex items-center">
-                    <IoIosLogIn className="text-2xl mr-2" />
-                    Login
-                  </a>
+                {loading ? (
+                    <Loader />
+                  ) : user ? (
+                    <div className="w-8 h-8 bg-blue-100 text-black flex items-center justify-center rounded-full">{user?.user?.email.charAt(0).toUpperCase()}</div>
+                  ) : (
+                    <a href="/login">
+                      <IoIosLogIn className="text-3xl" />
+                    </a>
+                  )}
                 </li>
               </ul>
             </div>
@@ -109,7 +133,7 @@ export default function LandingPage() {
             <div className="location w-full sm:w-[45%] md:w-fit">
               <input
                 onChange={(e) => {
-                  setLocation(e.target.value)
+                  setLocation(e.target.value);
                 }}
                 className="bg-white text-black p-2 rounded-lg border border-gray-300 w-full"
                 type="text"
@@ -119,7 +143,7 @@ export default function LandingPage() {
             <div className="adventure w-full sm:w-[45%] md:w-fit">
               <select
                 onChange={(e) => {
-                  setadventure(e.target.value)
+                  setadventure(e.target.value);
                 }}
                 className="bg-white text-black p-2 rounded-lg border border-gray-300 w-full"
               >
@@ -136,7 +160,7 @@ export default function LandingPage() {
                 type="date"
                 placeholder="Select Date"
                 onChange={(e) => {
-                  setDate(e.target.value)
+                  setDate(e.target.value);
                 }}
                 className="bg-white text-black p-2 rounded-lg border border-gray-300 w-full"
               />
@@ -149,7 +173,10 @@ export default function LandingPage() {
               />
             </div>
             <div className="search w-full sm:w-[45%] md:w-fit">
-              <button onClick={handleNavigate} className="bg-black text-white cursor-pointer p-2 rounded-lg w-full">
+              <button
+                onClick={handleNavigate}
+                className="bg-black text-white cursor-pointer p-2 rounded-lg w-full"
+              >
                 Begin Adventure
               </button>
             </div>
@@ -169,14 +196,18 @@ export default function LandingPage() {
             <div className="cards flex flex-nowrap md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
               {/* Placeholder cards */}
               {[1, 2, 3].map((item) => (
-                <div className="card p-4 min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-md" key={item}>
+                <div
+                  className="card p-4 min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-md"
+                  key={item}
+                >
                   <div className="img w-full h-48 bg-gray-200 rounded-lg"></div>
                   <div className="title mt-2">
                     <h1 className="text-xl font-semibold">Adventure {item}</h1>
                   </div>
                   <div className="desp mt-1">
                     <p className="text-gray-600">
-                      Experience the thrill of this amazing adventure with friends and family.
+                      Experience the thrill of this amazing adventure with
+                      friends and family.
                     </p>
                   </div>
                 </div>
@@ -205,6 +236,5 @@ export default function LandingPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

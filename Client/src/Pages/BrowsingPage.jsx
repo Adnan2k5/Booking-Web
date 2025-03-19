@@ -29,6 +29,9 @@ import {
 import { Skeleton } from "../components/ui/skeleton";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import mock_adventure from "../Data/mock_adventure";
+import { useAuth } from "./AuthProvider.jsx";
+import { Loader } from "../components/Loader.jsx";
+import { useSelector } from "react-redux";
 
 export default function BrowsingPage() {
   const location = useLocation();
@@ -81,7 +84,7 @@ export default function BrowsingPage() {
         matchesDate = format(advDate, "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
       }
     }
-    
+
     return matchesAdventure && matchesLoc && matchesDate;
   });
 
@@ -155,7 +158,12 @@ export default function BrowsingPage() {
       return "Invalid date";
     }
   };
-
+  const {user , loading} = useAuth();
+  useEffect(() => {
+    if(user === null && !loading){
+      navigate('/login');
+    }
+  }, [user, loading]);
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-100 to-indigo-100 p-4 sm:p-6 relative overflow-hidden">
       <div className="absolute inset-0 z-0 overflow-hidden">
@@ -163,8 +171,8 @@ export default function BrowsingPage() {
         <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-indigo-200 rounded-full opacity-30 blur-[100px]"></div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row gap-4 mb-8 bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-sm">
+      <div className="relative z-10 mx-auto">
+        <div className="flex md:fixed m-auto z-20 md:w-[97%] flex-col md:flex-row gap-4 mb-8 bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-sm">
           <div className="relative flex-1">
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -270,16 +278,12 @@ export default function BrowsingPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <div className="ml-auto">
-            <Avatar className="h-10 w-10 bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors cursor-pointer">
-              <AvatarFallback>
-                <User size={18} />
-              </AvatarFallback>
-            </Avatar>
+          <div className="ml-auto w-10 h-10 bg-blue-100 flex  items-center justify-center rounded-2xl">
+          {loading ? <Loader/> : <p className="">{user?.user?.email.charAt(0).toUpperCase()}</p>}
           </div>
         </div>
         <div className="mb-6 flex justify-between items-center">
-          <div className="flex items-center gap-2">
+          <div className="flex md:mt-24 items-center gap-2">
             <button 
               onClick={() => navigate('/')} 
               className="cursor-pointer p-2 rounded-full hover:bg-white/50 transition-colors"

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, EyeClosed, Linkedin, Lock, LogInIcon, Phone } from "lucide-react";
 import { MdEmail } from "react-icons/md";
@@ -13,10 +13,13 @@ import {
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import Cookies from "js-cookie";
+import { useAuth } from "./AuthProvider";
+import { Loader } from "../components/Loader";
 
 export default function LoginPage() {
+  document.title = "Adventure Login"
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.user);
   const [viewPassword, setViewPassword] = useState(false);
   const [usingPhone, setUsingPhone] = useState(false);
   const [signup, setSignup] = useState(false);
@@ -24,8 +27,10 @@ export default function LoginPage() {
   const [openOtp, setopenOtp] = useState(false);
   const [value, setValue] = useState("");
   const [email, setEmail] = useState("");
+  const [loader, setloader] = useState(false);
   const Navigate = useNavigate();
   const onSubmit = async (data) => {
+    setloader(true);
     try {
       if (signup) {
         setEmail(data.email);
@@ -54,6 +59,9 @@ export default function LoginPage() {
         }
       }
     }
+    finally{
+      setloader(false);
+    }
   };
   const verifyOtp = async () => {
     const data = { email, otp: value };
@@ -75,10 +83,8 @@ export default function LoginPage() {
   const onGoogleLoginSucces = (response) => {
     console.log("Google Login Success:", response);
     const res = GoogleLoginSuccess(response, dispatch);
-    // axiosClient.post("/api/auth/signInWithGoogle", {token: response.credential}, {withCredentials: true})
-    //   .then(res => )
-    //   .catch(err => console.error("Error:", err));
   }
+
 
   const linkedInLogin = () => {
     const REDIRECT_URI = "http://localhost:5173/auth/signInWithLinkedin";
@@ -91,7 +97,15 @@ export default function LoginPage() {
     const authUrl = `https://www.facebook.com/v11.0/dialog/oauth?client_id=${import.meta.env.VITE_FACEBOOK_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state="{st=state123abc,ds=123456789}"&scope=email,public_profile&response_type=code`;
     window.location.href = authUrl;
   }
-  return (
+  const {user , loading} = useAuth();
+  useEffect(() => {
+    if(user.user !== null && !loading){
+      Navigate('/browse')
+    }
+  }
+  ,[user,loading])
+
+    return (
     <div className="min-h-screen flex flex-col items-center justify-center px-5">
       <div className="bg absolute w-full object-cover">
         {/* <video
@@ -235,7 +249,7 @@ export default function LoginPage() {
               </div>
             ) : (
               <div className="button w-full bg-black rounded-2xl ">
-                <button type="submit" className=" w-full cursor-pointer text-white  py-2">Sign In</button>
+                <button type="submit" className=" w-full cursor-pointer text-white  py-2">{loader ? <Loader btn={true}/> : "Sign In"}</button>
               </div>
             )}
           </form>

@@ -5,7 +5,7 @@ const initialState = {
     user: null,
     loading: false,
     error: null,
-    access_Token: null
+    accessToken: null
 }
 
 
@@ -20,9 +20,16 @@ const userSlice = createSlice({
         loginSuccess: (state, action) => {
             state.loading = false;
             state.user = action.payload.user;
+            console.log("Storing : ",action.payload)
             state.error = null;
-            state.access_Token = action.payload.accessToken;
-            Cookies.set("access_Token" , action.payload.accessToken, {secure: true});
+            state.accessToken = action.payload.accessToken;
+            Cookies.set("accessToken", action.payload.accessToken);
+            Cookies.set("refreshToken", action.payload.user.refreshToken);
+        },
+        setUser: (state,action) => {
+            state.user = action.payload;
+            state.loading = false;
+            state.error = null;
         },
         loginFailure: (state, action) => {
             state.loading = false;
@@ -32,11 +39,10 @@ const userSlice = createSlice({
             state.user = null;
             state.loading = false;
             state.error = null;
-            Cookies.remove("accessToken");
         }
     }
 })
 
 
-export const {loginStart, loginSuccess, loginFailure, logout} = userSlice.actions;
+export const {loginStart, loginSuccess, loginFailure, setUser, logout} = userSlice.actions;
 export default userSlice.reducer;
