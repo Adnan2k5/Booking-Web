@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllAdventure, createAdventure, updateAdventure, deleteAdventure } from '../controllers/adventure.controller.js';
+import { getAllAdventure, createAdventure, updateAdventure, deleteAdventure, getAdventure } from '../controllers/adventure.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
 
 const adventureRoute = express.Router();
