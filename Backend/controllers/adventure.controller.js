@@ -1,6 +1,6 @@
 import { Adventure } from "../models/adventure.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
@@ -35,7 +35,7 @@ export const createAdventure = asyncHandler(async (req, res) => {
         description,
         location,
         date,
-        medias : mediasUrl,
+        medias: mediasUrl,
         exp,
         instructor
     });
@@ -46,7 +46,49 @@ export const createAdventure = asyncHandler(async (req, res) => {
 
 });
 
-export const updateAdventure = async (req, res) => { };
+export const updateAdventure = asyncHandler(async (req, res) => {
+    const { name, description, location, date, medias, exp, instructor, id } = req.body;
+
+    if (!id) {
+        throw new ApiError(400, 'Adventure id is required');
+    }
+
+    const adventure = await Adventure.findById(id);
+
+    if (!adventure) {
+        throw new ApiError(404, 'Adventure not found');
+    }
+
+    if (req.files.medias && req.files.medias.length > 0 && req.files.medias[0]) {
+        // Save image to cloudinary
+        const mediasUrl = await Promise.all(req.files.medias.map(async (image) => {
+            const link = await uploadOnCloudinary(image.path);
+            return link.url;
+        }));
+
+
+        const oldMediaUrl = adventure.medias;
+
+        // Delete old images from cloudinary
+        await Promise.all(oldMediaUrl.map(async (url) => {
+            await deleteFromCloudinary(url);
+        }));
+
+        adventure.medias = mediasUrl;
+    }
+
+    adventure.name = name || adventure.name;
+    adventure.description = description || adventure.description;
+    adventure.location = location || adventure.location;
+    adventure.date = date || adventure.date;
+    adventure.exp = exp || adventure.exp;
+    adventure.instructor = instructor || adventure.instructor;
+
+    await adventure.save();
+
+    res.status(200).json(new ApiResponse(200, adventure, 'Adventure updated successfully'));
+
+});
 
 export const deleteAdventure = async (req, res) => { };
 
