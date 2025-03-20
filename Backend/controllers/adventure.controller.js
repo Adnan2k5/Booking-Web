@@ -207,6 +207,9 @@ export const unenrollAdventure = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, null, 'User unenrolled successfully'));
 });
 
-export const getEnrolledAdventures = async (req, res) => { };
+export const getEnrolledAdventures = asyncHandler(async (req, res) => {
+    const bookings = await Booking.find({ user: req.user._id }).populate('adventure');
+    return res.status(200).json(bookings);
+});
 
 export const getInstructorAdventures = async (req, res) => { };
