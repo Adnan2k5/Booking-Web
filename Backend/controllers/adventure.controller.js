@@ -47,7 +47,7 @@ export const createAdventure = asyncHandler(async (req, res) => {
 });
 
 export const updateAdventure = asyncHandler(async (req, res) => {
-    const { name, description, location, date, medias, exp, instructor} = req.body;
+    const { name, description, location, date, medias, exp, instructor, userId} = req.body;
     const { id } = req.params;
 
     if (!id) {
@@ -58,6 +58,10 @@ export const updateAdventure = asyncHandler(async (req, res) => {
 
     if (!adventure) {
         throw new ApiError(404, 'Adventure not found');
+    }
+
+    if(adventure.instructor !== userId) {
+        throw new ApiError(403, 'Unauthorized request');
     }
 
     if (req.files.medias && req.files.medias.length > 0 && req.files.medias[0]) {
@@ -93,6 +97,7 @@ export const updateAdventure = asyncHandler(async (req, res) => {
 
 export const deleteAdventure = asyncHandler(async (req, res) => {
     const { id } = req.params;
+    const { userId } = req.body;
 
     if(!id) {
         throw new ApiError("Adventure ID is required");
@@ -102,6 +107,10 @@ export const deleteAdventure = asyncHandler(async (req, res) => {
 
     if(!adventure) {
         throw new ApiError("Adventure with this ID does not exist");
+    }
+
+    if(adventure.instructor !== userId) {
+        throw new ApiError(403, 'Unauthorized request');
     }
 
     const medias = adventure.medias;
@@ -154,7 +163,7 @@ export const enrollAdventure = async (req, res) => {
     await adventure.save();
 
     return res.status(200).json(new ApiResponse(200, null, 'User enrolled successfully'));
- };
+};
 
 export const unenrollAdventure = async (req, res) => { };
 
