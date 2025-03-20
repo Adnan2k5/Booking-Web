@@ -1,5 +1,14 @@
 import express from 'express';
-import { getAllAdventure, createAdventure, updateAdventure, deleteAdventure, getAdventure, enrollAdventure } from '../controllers/adventure.controller.js';
+import { 
+    getAllAdventure,
+    createAdventure, 
+    updateAdventure, 
+    deleteAdventure, 
+    getAdventure, 
+    enrollAdventure, 
+    unenrollAdventure,
+    getEnrolledAdventures,
+ } from '../controllers/adventure.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
@@ -14,6 +23,9 @@ adventureRoute.post('/create', verifyJWT , upload.fields([
 
 
 adventureRoute.post('/enroll/:id', verifyJWT , enrollAdventure);
+adventureRoute.post('/unenroll/:id', verifyJWT , unenrollAdventure);
+
+adventureRoute.get('/bookings', verifyJWT , getEnrolledAdventures);
 
 adventureRoute.put('/:id', verifyJWT , upload.fields([
     {
