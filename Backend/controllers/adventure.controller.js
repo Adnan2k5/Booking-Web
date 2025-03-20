@@ -4,8 +4,8 @@ import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-export const getAdventure = asyncHandler(async (req, res) => {
-    const { location, date, duration } = req.body;
+export const getAllAdventure = asyncHandler(async (req, res) => {
+    const { location, date, duration } = req.params;
 
     const adventures = await Adventure.find({ location, date, duration }).sort({ date: 1 }).select('-enrolled -instructors');
 
@@ -47,7 +47,8 @@ export const createAdventure = asyncHandler(async (req, res) => {
 });
 
 export const updateAdventure = asyncHandler(async (req, res) => {
-    const { name, description, location, date, medias, exp, instructor, id } = req.body;
+    const { name, description, location, date, medias, exp, instructor} = req.body;
+    const { id } = req.params;
 
     if (!id) {
         throw new ApiError(400, 'Adventure id is required');
@@ -90,9 +91,70 @@ export const updateAdventure = asyncHandler(async (req, res) => {
 
 });
 
-export const deleteAdventure = async (req, res) => { };
+export const deleteAdventure = asyncHandler(async (req, res) => {
+    const { id } = req.params;
 
-export const enrollAdventure = async (req, res) => { };
+    if(!id) {
+        throw new ApiError("Adventure ID is required");
+    }
+
+    const adventure = await Adventure.findById(id);
+
+    if(!adventure) {
+        throw new ApiError("Adventure with this ID does not exist");
+    }
+
+    const medias = adventure.medias;
+
+    await Promise.all(medias.map(async (url) => {
+        await deleteFromCloudinary(url);
+    }));
+
+    await Adventure.deleteOne({ _id: id });
+
+    return res.status(200).json(new ApiResponse(200, null, 'Adventure deleted successfully'));
+});
+
+export const getAdventure = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    if (!id) {
+        throw new ApiError(400, 'Adventure id is required');
+    }
+
+    const adventure = await Adventure.findById(id);
+
+    if (!adventure) {
+        throw new ApiError(404, 'Adventure not found');
+    }
+
+    return res.status(200).json(adventure);
+});
+
+export const enrollAdventure = async (req, res) => {
+    const { adventureId } = req.params;
+    const { userId } = req.body;
+
+    if (!adventureId || !userId) {
+        throw new ApiError(400, 'Adventure ID and User ID is required');
+    }
+
+    const adventure = await Adventure.findById(adventureId);
+
+    if (!adventure) {
+        throw new ApiError(404, 'Adventure not found');
+    }
+
+    if (adventure.enrolled.includes(userId)) {
+        throw new ApiError(400, 'User already enrolled');
+    }
+
+    adventure.enrolled.push(userId);
+
+    await adventure.save();
+
+    return res.status(200).json(new ApiResponse(200, null, 'User enrolled successfully'));
+ };
 
 export const unenrollAdventure = async (req, res) => { };
 

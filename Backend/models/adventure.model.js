@@ -46,7 +46,6 @@ const adventureSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
         },
-
         enrolled: [
             {
                 type: mongoose.Schema.Types.ObjectId,
