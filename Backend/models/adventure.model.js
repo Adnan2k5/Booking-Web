@@ -49,7 +49,7 @@ const adventureSchema = new mongoose.Schema(
         enrolled: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "User",
+                ref: "Booking",
             },
         ],
     },
