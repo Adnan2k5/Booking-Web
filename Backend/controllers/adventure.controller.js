@@ -212,4 +212,7 @@ export const getEnrolledAdventures = asyncHandler(async (req, res) => {
     return res.status(200).json(bookings);
 });
 
-export const getInstructorAdventures = async (req, res) => { };
+export const getInstructorAdventures = asyncHandler(async (req, res) => {
+    const adventures = await Adventure.find({ instructor: req.user._id });
+    return res.status(200).json(adventures);
+});
