@@ -173,11 +173,39 @@ export const enrollAdventure = asyncHandler(async (req, res) => {
 
     req.user.bookings.push(newBooking._id);
     await req.user.save();
-    
+
     return res.status(200).json(new ApiResponse(200, null, 'User enrolled successfully'));
 });
 
-export const unenrollAdventure = async (req, res) => { };
+export const unenrollAdventure = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    if (!id) {
+        throw new ApiError(400, 'Adventure ID is required');
+    }
+
+    const adventure = await Adventure.findById(id);
+
+    if (!adventure) {
+        throw new ApiError(404, 'Adventure not found');
+    }
+
+    const booking = await Booking.findOne({ user: req.user._id, adventure: id });
+
+    if (!booking) {
+        throw new ApiError(400, 'Users not enrolled');
+    }
+
+    await Booking.deleteOne({ _id: booking._id });
+
+    adventure.enrolled.pull(booking._id);
+    await adventure.save();
+
+    req.user.bookings.pull(booking._id);
+    await req.user.save();
+    
+    return res.status(200).json(new ApiResponse(200, null, 'User unenrolled successfully'));
+});
 
 export const getEnrolledAdventures = async (req, res) => { };
 
