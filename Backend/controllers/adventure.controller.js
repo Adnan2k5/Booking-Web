@@ -3,6 +3,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { Booking } from "../models/booking.model.js";
+import { User } from "../models/user.model.js";
 
 export const getAllAdventure = asyncHandler(async (req, res) => {
     const { location, date, duration } = req.params;
@@ -60,6 +62,10 @@ export const updateAdventure = asyncHandler(async (req, res) => {
         throw new ApiError(404, 'Adventure not found');
     }
 
+    if(adventure.instructor !== req.user._id) {
+        throw new ApiError(403, 'Unauthorized request');
+    }
+
     if (req.files.medias && req.files.medias.length > 0 && req.files.medias[0]) {
         // Save image to cloudinary
         const mediasUrl = await Promise.all(req.files.medias.map(async (image) => {
@@ -104,6 +110,10 @@ export const deleteAdventure = asyncHandler(async (req, res) => {
         throw new ApiError("Adventure with this ID does not exist");
     }
 
+    if(adventure.instructor !== req.user._id) {
+        throw new ApiError(403, 'Unauthorized request');
+    }
+
     const medias = adventure.medias;
 
     await Promise.all(medias.map(async (url) => {
@@ -131,35 +141,78 @@ export const getAdventure = asyncHandler(async (req, res) => {
     return res.status(200).json(adventure);
 });
 
-export const enrollAdventure = async (req, res) => {
-    const { adventureId } = req.params;
-    const { userId } = req.body;
+export const enrollAdventure = asyncHandler(async (req, res) => {
+    const { id } = req.params;
 
-    if (!adventureId || !userId) {
-        throw new ApiError(400, 'Adventure ID and User ID is required');
+    if (!id) {
+        throw new ApiError(400, 'Adventure ID is required');
     }
 
-    const adventure = await Adventure.findById(adventureId);
+    const adventure = await Adventure.findById(id);
 
     if (!adventure) {
         throw new ApiError(404, 'Adventure not found');
     }
 
-    if (adventure.enrolled.includes(userId)) {
+    const booking = await Booking.findOne({ user: req.user._id, adventure: id });
+
+    if (booking) {
         throw new ApiError(400, 'User already enrolled');
     }
 
-    adventure.enrolled.push(userId);
+    const newBooking = await Booking.create({
+        user: req.user._id,
+        adventure: id,
+        amount: adventure.exp
+    });
 
+    await newBooking.save();
+
+    adventure.enrolled.push(newBooking._id);
     await adventure.save();
 
+    req.user.bookings.push(newBooking._id);
+    await req.user.save();
+
     return res.status(200).json(new ApiResponse(200, null, 'User enrolled successfully'));
- };
+});
 
-export const unenrollAdventure = async (req, res) => { };
+export const unenrollAdventure = asyncHandler(async (req, res) => {
+    const { id } = req.params;
 
-export const getEnrolledAdventures = async (req, res) => { };
+    if (!id) {
+        throw new ApiError(400, 'Adventure ID is required');
+    }
 
-export const getInstructorAdventures = async (req, res) => { };
+    const adventure = await Adventure.findById(id);
 
-export const getAdventureById = async (req, res) => { };
+    if (!adventure) {
+        throw new ApiError(404, 'Adventure not found');
+    }
+
+    const booking = await Booking.findOne({ user: req.user._id, adventure: id });
+
+    if (!booking) {
+        throw new ApiError(400, 'Users not enrolled');
+    }
+
+    await Booking.deleteOne({ _id: booking._id });
+
+    adventure.enrolled.pull(booking._id);
+    await adventure.save();
+
+    req.user.bookings.pull(booking._id);
+    await req.user.save();
+    
+    return res.status(200).json(new ApiResponse(200, null, 'User unenrolled successfully'));
+});
+
+export const getEnrolledAdventures = asyncHandler(async (req, res) => {
+    const bookings = await Booking.find({ user: req.user._id }).populate('adventure');
+    return res.status(200).json(bookings);
+});
+
+export const getInstructorAdventures = asyncHandler(async (req, res) => {
+    const adventures = await Adventure.find({ instructor: req.user._id });
+    return res.status(200).json(adventures);
+});
