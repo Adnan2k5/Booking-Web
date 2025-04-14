@@ -4,6 +4,23 @@ import ApiResponse from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import sendEmail from '../utils/sendOTP.js';
+import { OAuth2Client } from "google-auth-library";
+import { getLinkedInAccessToken, verifyLinkedInToken } from '../utils/linkedinHandler.js';
+import { getFacebookAccessToken, verifyFacebookToken } from '../utils/facebookHandler.js';
+
+let client = null;
+
+// Create a function to get the client
+const getOAuthClient = () => {
+    if (!client) {
+        if (!process.env.GOOGLE_CLIENT_ID) {
+            throw new ApiError(500, "Google Client ID is not configured");
+        }
+        client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    }
+    return client;
+};
+
 
 
 const generateAccessAndRefreshTokens = async (user) => {
@@ -17,7 +34,7 @@ const generateAccessAndRefreshTokens = async (user) => {
         return { accessToken, refreshToken };
     }
     catch (error) {
-    
+
         throw new ApiError(500, "Something went wrong while generating refresh and access token");
     }
 }
@@ -77,7 +94,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Email and OTP are Required");
     }
 
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email }).select('email phoneNumber name verified role');
 
     if (!user) {
         throw new ApiError(404, "User not found");
@@ -103,18 +120,9 @@ const verifyOtp = asyncHandler(async (req, res) => {
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
 
-    // Convert the Mongoose document to a plain JavaScript object
-    const userObject = user.toObject();
+    user.refreshToken = refreshToken;
 
-    // Remove sensitive fields
-    delete userObject.password;
-    delete userObject.refreshToken;
-    delete userObject.role;
-    delete userObject.verified;
-    delete userObject.createdAt;
-    delete userObject.updatedAt;
-    delete userObject.bookings;
-    delete userObject.reviews;
+    await user.save();
 
     const options = {
         httpOnly: true,
@@ -129,7 +137,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 {
-                    user: userObject,
+                    user: user,
                     accessToken,
                 },
                 "User Verified Successfully",
@@ -140,7 +148,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
 
 const resendOtp = asyncHandler(async (req, res) => {
     const { email } = req.body;
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email }).select('email');
     if (!user) {
         throw new ApiError(404, "User not found");
     }
@@ -175,10 +183,14 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Email and Password are Required");
     }
 
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email }).select('email phoneNumber name verified role password');
 
     if (!user) {
         throw new ApiError(404, "User not found");
+    }
+
+    if(user.password === null || user.password === undefined) {
+        throw new ApiError(400, "User not registered with email and password");
     }
 
     if (!user.verified) {
@@ -193,18 +205,9 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
 
-    // Convert the Mongoose document to a plain JavaScript object
-    const userObject = user.toObject();
+    user.refreshToken = refreshToken;
 
-    // Remove sensitive fields
-    delete userObject.password;
-    delete userObject.refreshToken;
-    delete userObject.role;
-    delete userObject.verified;
-    delete userObject.createdAt;
-    delete userObject.updatedAt;
-    delete userObject.bookings;
-    delete userObject.reviews;
+    await user.save();
 
     const options = {
         httpOnly: true,
@@ -219,7 +222,7 @@ const loginUser = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 {
-                    user: userObject,
+                    user: user,
                     accessToken,
                 },
                 "User logged in Successfully",
@@ -234,7 +237,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Email is Required");
     }
 
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email }).select('email phoneNumber');
 
     if (!user) {
         throw new ApiError(404, "User not found");
@@ -270,7 +273,7 @@ const updatePassword = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Email and Password are Required");
     }
 
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email }).select('email');
 
     if (!user) {
         throw new ApiError(404, "User not found");
@@ -289,8 +292,10 @@ const updatePassword = asyncHandler(async (req, res) => {
     user.password = password;
 
     await user.save();
-    
+
     await Otp.deleteMany({ userId: user._id });
+
+    console.log(password, "Password Changed");
 
     res.status(200).json(
         new ApiResponse(200, {
@@ -299,6 +304,175 @@ const updatePassword = asyncHandler(async (req, res) => {
     );
 });
 
+const signInWithGoogle = asyncHandler(async (req, res) => {
+    const { token } = req.body;
+
+    if (!token || typeof token !== "string") {
+        throw new ApiError(400, "Invalid or Missing Token");
+    }
 
 
-export { registerUser, verifyOtp, resendOtp, loginUser, forgotPassword, updatePassword };
+    if (!client) {
+        client = getOAuthClient();
+    }
+
+    const ticket = await client.verifyIdToken({
+        idToken: token
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name } = payload;
+
+    let user = await User.findOne({ email: email }).select('-password');
+
+    if (!user) {
+        //Signing Up
+        const newUser = await User.create({
+            email: email,
+            name: name,
+            verified: true,
+        })
+        await newUser.save();
+        user = await User.findById(newUser._id).select('email phoneNumber name verified role');
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'None'
+    };
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: user,
+                    accessToken,
+                },
+                "User logged in Successfully",
+            )
+        );
+});
+
+
+const signInWithApple = asyncHandler(async (req, res) => {
+
+});
+
+const signInWithLinkedin = asyncHandler(async (req, res) => {
+    const { code } = req.body;
+
+    if (!code) {
+        throw new ApiError(400, "Code is Required");
+    }
+
+
+    const linkedinAccessToken = await getLinkedInAccessToken(code);
+    const userDetails = await verifyLinkedInToken(linkedinAccessToken);
+
+    let user = await User.findOne({ email: userDetails.email });
+
+    if (!user) {
+        user = await User.create({
+            email: userDetails.email,
+            name: userDetails.name,
+            verified: true,
+        }).select('email phoneNumber name verified role');
+
+        await user.save();
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
+
+    user.refreshToken = refreshToken;
+
+    await user.save();
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'None'
+    };
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: user,
+                    accessToken,
+                },
+                "User logged in Successfully",
+            )
+        );
+
+});
+
+const signInWithFacebook = asyncHandler(async (req, res) => {
+    const { code } = req.body;
+    if (!code) {
+        throw new ApiError(400, "Code is Required");
+    }
+
+
+    const facebookAccessToken = await getFacebookAccessToken(code);
+    const userDetails = await verifyFacebookToken(facebookAccessToken);
+
+    let user = await User.findOne({ email: userDetails.email });
+
+    if (!user) {
+        user = await User.create({
+            email: userDetails.email,
+            name: userDetails.name,
+            verified: true,
+        });
+
+        await user.save();
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'None'
+    };
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: user,
+                    accessToken,
+                },
+                "User logged in Successfully",
+            )
+        );
+});
+
+
+
+export {
+    registerUser,
+    verifyOtp,
+    resendOtp,
+    loginUser,
+    forgotPassword,
+    updatePassword,
+    signInWithGoogle,
+    signInWithApple,
+    signInWithLinkedin,
+    signInWithFacebook,
+};

@@ -1,10 +1,9 @@
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { Eye, EyeClosed, Lock, LogInIcon, Phone } from "lucide-react";
-import google from "../assets/google.png";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Eye, EyeClosed, Facebook, Linkedin, Lock, LogInIcon, Phone } from "lucide-react";
 import { MdEmail } from "react-icons/md";
 import { useForm } from "react-hook-form";
-import { ResendOtp, UserLogin, UserRegister, VerifyUser } from "../Auth/UserAuth";
+import { GoogleLoginSuccess, ResendOtp, UserLogin, UserRegister, VerifyUser } from "../Auth/UserAuth";
 import { Modal } from "antd";
 import {
   InputOTPSlot,
@@ -14,7 +13,12 @@ import {
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import Cookies from "js-cookie";
+import { useAuth } from "./AuthProvider";
+import { Loader } from "../components/Loader";
+
 export default function LoginPage() {
+  document.title = "Adventure Login"
   const dispatch = useDispatch();
   const [viewPassword, setViewPassword] = useState(false);
   const [usingPhone, setUsingPhone] = useState(false);
@@ -23,8 +27,10 @@ export default function LoginPage() {
   const [openOtp, setopenOtp] = useState(false);
   const [value, setValue] = useState("");
   const [email, setEmail] = useState("");
+  const [loader, setloader] = useState(false);
   const Navigate = useNavigate();
   const onSubmit = async (data) => {
+    setloader(true);
     try {
       if (signup) {
         setEmail(data.email);
@@ -53,6 +59,9 @@ export default function LoginPage() {
         }
       }
     }
+    finally{
+      setloader(false);
+    }
   };
   const verifyOtp = async () => {
     const data = { email, otp: value };
@@ -71,7 +80,31 @@ export default function LoginPage() {
     setValue("");
   };
 
-  return (
+  const onGoogleLoginSucces = (response) => {
+    const res = GoogleLoginSuccess(response, dispatch);
+  }
+
+
+  const linkedInLogin = () => {
+    const REDIRECT_URI = "http://localhost:5173/auth/signInWithLinkedin";
+    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${import.meta.env.VITE_LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=openid%20profile%20email`;
+    window.location.href = authUrl;
+  }
+
+  const facebookLogin = () => {
+    const REDIRECT_URI = "http://localhost:5173/auth/signInWithFacebook";
+    const authUrl = `https://www.facebook.com/v11.0/dialog/oauth?client_id=${import.meta.env.VITE_FACEBOOK_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state="{st=state123abc,ds=123456789}"&scope=email,public_profile&response_type=code`;
+    window.location.href = authUrl;
+  }
+  const {user , loading} = useAuth();
+  useEffect(() => {
+    if(user.user !== null && !loading){
+      Navigate('/browse')
+    }
+  }
+  ,[user,loading])
+
+    return (
     <div className="min-h-screen flex flex-col items-center justify-center px-5">
       <div className="bg absolute w-full object-cover">
         {/* <video
@@ -215,20 +248,24 @@ export default function LoginPage() {
               </div>
             ) : (
               <div className="button w-full bg-black rounded-2xl ">
-                <button type="submit" className=" w-full cursor-pointer text-white  py-2">Sign In</button>
+                <button type="submit" className=" w-full cursor-pointer text-white  py-2">{loader ? <Loader btn={true}/> : "Sign In"}</button>
               </div>
             )}
           </form>
         </div>
-        <div className="alternate md:mt-3 ">
+        <div className="alternate ">
           <p className="text-gray-500 text-sm text-center">
             {signup ? "Or Sign Up with" : "Or Sign In with"}
           </p>
-          {/* <div className="google">
+          <div className="google flex gap-5 md:mt-3">
             <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-              <GoogleLogin/>
+              <GoogleLogin onSuccess={onGoogleLoginSucces}/>
             </GoogleOAuthProvider>
-          </div> */}
+            <div className="flex gap-2 items-center border px-3 rounded-[5px]" onClick={linkedInLogin}>
+              <Linkedin/>
+            </div>
+            <div className="flex gap-2 items-center border px-3 rounded-[5px]" onClick={facebookLogin}><Facebook/></div>
+          </div>
         </div>
       </div>
     </div>

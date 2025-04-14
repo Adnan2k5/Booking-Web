@@ -81,7 +81,7 @@ const shopItems = [
 const ItemCard = ({ item, selectedItems, onAddItem, onUpdateQuantity, onRemoveItem }) => {
   const selectedItem = selectedItems.find(selected => selected.id === item.id);
   const quantity = selectedItem ? selectedItem.quantity : 0;
-  
+
   return (
     <motion.div
       className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col h-full"
@@ -101,7 +101,7 @@ const ItemCard = ({ item, selectedItems, onAddItem, onUpdateQuantity, onRemoveIt
         <p className="text-sm text-gray-600 mb-4">{item.description}</p>
         <div className="mt-auto">
           <div className="font-bold text-blue-600 text-lg mb-3">${item.price}</div>
-          
+
           {quantity > 0 ? (
             <div className="flex items-center justify-between">
               <div className="flex items-center border border-gray-300 rounded-md">
@@ -128,7 +128,7 @@ const ItemCard = ({ item, selectedItems, onAddItem, onUpdateQuantity, onRemoveIt
             </div>
           ) : (
             <button
-              onClick={() => onAddItem({...item, quantity: 1})}
+              onClick={() => onAddItem({ ...item, quantity: 1 })}
               className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" /> Add to Cart
@@ -140,7 +140,7 @@ const ItemCard = ({ item, selectedItems, onAddItem, onUpdateQuantity, onRemoveIt
   )
 }
 
-export const ShopSection = ({ selectedItems, onAddItem, onRemoveItem }) => {
+export const ShopSelection = ({ selectedItems, onAddItem, onRemoveItem }) => {
   const [activeCategory, setActiveCategory] = useState("all")
   const [activeType, setActiveType] = useState("all")
 
@@ -160,7 +160,7 @@ export const ShopSection = ({ selectedItems, onAddItem, onRemoveItem }) => {
     }
     const item = selectedItems.find(item => item.id === itemId);
     if (item) {
-      const updatedItem = {...item, quantity: newQuantity};
+      const updatedItem = { ...item, quantity: newQuantity };
       onRemoveItem(itemId); // Remove the old item
       onAddItem(updatedItem); // Add the updated item
     }
@@ -177,7 +177,7 @@ export const ShopSection = ({ selectedItems, onAddItem, onRemoveItem }) => {
         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <ShoppingBag className="w-6 h-6" /> Adventure Shop
         </h2>
-        
+
         <div className="flex flex-wrap gap-6">
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-gray-700">Category</h3>
@@ -186,9 +186,8 @@ export const ShopSection = ({ selectedItems, onAddItem, onRemoveItem }) => {
                 <button
                   key={category}
                   onClick={() => setActiveCategory(category)}
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    activeCategory === category ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                  }`}
+                  className={`px-3 py-1 rounded-full text-sm ${activeCategory === category ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                    }`}
                 >
                   {category.charAt(0).toUpperCase() + category.slice(1)}
                 </button>
@@ -203,16 +202,15 @@ export const ShopSection = ({ selectedItems, onAddItem, onRemoveItem }) => {
                 <button
                   key={type}
                   onClick={() => setActiveType(type)}
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    activeType === type ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                  }`}
+                  className={`px-3 py-1 rounded-full text-sm ${activeType === type ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                    }`}
                 >
                   {type.charAt(0).toUpperCase() + type.slice(1)}
                 </button>
               ))}
             </div>
           </div>
-          
+
           <div className="ml-auto self-end text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
             {selectedItems.reduce((total, item) => total + item.quantity, 0)} item(s) selected
           </div>
@@ -267,9 +265,9 @@ export const ShopSection = ({ selectedItems, onAddItem, onRemoveItem }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredItems.map((item) => (
-          <ItemCard 
-            key={item.id} 
-            item={item} 
+          <ItemCard
+            key={item.id}
+            item={item}
             selectedItems={selectedItems}
             onAddItem={onAddItem}
             onUpdateQuantity={handleUpdateQuantity}

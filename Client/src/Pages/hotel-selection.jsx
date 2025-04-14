@@ -90,11 +90,10 @@ const HotelCard = ({ hotel, isSelected, onSelectHotel }) => {
           </div>
           <button
             onClick={() => onSelectHotel(hotel)}
-            className={`px-3 py-1 rounded-md ${
-              isSelected
+            className={`px-3 py-1 rounded-md ${isSelected
                 ? "bg-green-100 text-green-600 flex items-center gap-1"
                 : "bg-blue-600 text-white hover:bg-blue-700"
-            }`}
+              }`}
           >
             {isSelected ? (
               <>
@@ -110,7 +109,7 @@ const HotelCard = ({ hotel, isSelected, onSelectHotel }) => {
   )
 }
 
-export const HotelSection = ({ selectedHotel, onSelectHotel }) => {
+export const HotelSelection = ({ selectedHotel, onSelectHotel }) => {
   const [priceFilter, setPriceFilter] = useState("all")
 
   const filteredHotels = hotelsList.filter((hotel) => {
@@ -135,33 +134,29 @@ export const HotelSection = ({ selectedHotel, onSelectHotel }) => {
         <div className="flex gap-2">
           <button
             onClick={() => setPriceFilter("all")}
-            className={`px-3 py-1 rounded-full text-sm ${
-              priceFilter === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-            }`}
+            className={`px-3 py-1 rounded-full text-sm ${priceFilter === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+              }`}
           >
             All
           </button>
           <button
             onClick={() => setPriceFilter("budget")}
-            className={`px-3 py-1 rounded-full text-sm ${
-              priceFilter === "budget" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-            }`}
+            className={`px-3 py-1 rounded-full text-sm ${priceFilter === "budget" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+              }`}
           >
             Budget
           </button>
           <button
             onClick={() => setPriceFilter("mid")}
-            className={`px-3 py-1 rounded-full text-sm ${
-              priceFilter === "mid" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-            }`}
+            className={`px-3 py-1 rounded-full text-sm ${priceFilter === "mid" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+              }`}
           >
             Mid-range
           </button>
           <button
             onClick={() => setPriceFilter("luxury")}
-            className={`px-3 py-1 rounded-full text-sm ${
-              priceFilter === "luxury" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-            }`}
+            className={`px-3 py-1 rounded-full text-sm ${priceFilter === "luxury" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+              }`}
           >
             Luxury
           </button>
