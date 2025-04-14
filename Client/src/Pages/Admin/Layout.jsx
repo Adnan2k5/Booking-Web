@@ -17,7 +17,7 @@ import {
   SidebarGroupContent,
 } from '../../components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
-import { BarChart3, CalendarDays, Compass, LifeBuoy, LogOut, Mountain, Settings, ShoppingBag, Users } from 'lucide-react';
+import { BarChart3, BookOpen, CalendarDays, ClipboardCheck, Compass, FileCheck, Hotel, LifeBuoy, LogOut, Mountain, Settings, ShoppingBag, Store, TicketCheck, User, Users } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 
 export default function AdminLayout() {
@@ -96,11 +96,66 @@ function AdminSidebar({ pathname }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              {/* Other menu items */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/bookings"}>
+                  <Link to="/admin/bookings">
+                    <BookOpen className="h-4 w-4" />
+                    <span>Bookings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/users"}>
+                  <Link to="/admin/users">
+                    <User className="h-4 w-4" />c
+                    <span>Users</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/store"}>
+                  <Link to="/admin/store">
+                    <Store className="h-4 w-4" />
+                    <span>Stores</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/hotels"}>
+                  <Link to="/admin/hotels">
+                    <Hotel className="h-4 w-4" />
+                    <span>Hotels</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/tickets"}>
+                  <Link to="/admin/tickets">
+                    <TicketCheck className="h-4 w-4" />
+                    <span>Tickets & Support</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/terms"}>
+                  <Link to="/admin/terms">
+                    <FileCheck className="h-4 w-4" />
+                    <span>Terms & Condition</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/declaration"}>
+                  <Link to="/admin/declaration">
+                    <ClipboardCheck className="h-4 w-4" />
+                    <span>User Declaration</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
+
         {/* Continue with other sidebar groups */}
       </SidebarContent>
       <SidebarFooter className="border-t p-4">

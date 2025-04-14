@@ -2,7 +2,7 @@ import { loginStart, loginSuccess, setUser } from "../Store/UserSlice.js";
 import { axiosClient } from "../AxiosClient/axios.js";
 
 export const UserRegister = async (data) => {
-  const res = await axiosClient.post("/api/auth/signUp", data);
+  const res = await axiosClient.post("/api/auth/signUp", data, {withCredentials: true});
   if (res.status === 201) {
     return res.status;
   } else if (res.status === 409) {
@@ -11,7 +11,7 @@ export const UserRegister = async (data) => {
 };
 
 export const VerifyUser = async (data, dispatch) => {
-  const res = await axiosClient.post("/api/auth/verifyOtp", data);
+  const res = await axiosClient.post("/api/auth/verifyOtp", data, {withCredentials: true});
   if (res.status === 200) {
     if (dispatch) {
       dispatch(loginSuccess(res.data.data));
@@ -23,9 +23,8 @@ export const VerifyUser = async (data, dispatch) => {
 };
 
 export const UserLogin = async (data, dispatch) => {
-  const res = await axiosClient.post("/api/auth/login", data);
+  const res = await axiosClient.post("/api/auth/login", data, {withCredentials: true});
   if (res.data.statusCode === 200) {
-    console.log(res.data.data);
     dispatch(loginSuccess(res.data.data));
     return res.data.statusCode;
   }

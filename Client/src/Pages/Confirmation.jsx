@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom"
 import { CheckCircle, ArrowLeft, Calendar, MapPin } from "lucide-react"
 import { Button } from "../components/ui/button"
 
-export default function ConfirmationPage() {
+export default function Confirmation() {
   const navigate = useNavigate()
 
   useEffect(() => {

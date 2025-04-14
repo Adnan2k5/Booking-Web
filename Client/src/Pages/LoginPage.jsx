@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Eye, EyeClosed, Linkedin, Lock, LogInIcon, Phone } from "lucide-react";
+import { Eye, EyeClosed, Facebook, Linkedin, Lock, LogInIcon, Phone } from "lucide-react";
 import { MdEmail } from "react-icons/md";
 import { useForm } from "react-hook-form";
 import { GoogleLoginSuccess, ResendOtp, UserLogin, UserRegister, VerifyUser } from "../Auth/UserAuth";
@@ -81,7 +81,6 @@ export default function LoginPage() {
   };
 
   const onGoogleLoginSucces = (response) => {
-    console.log("Google Login Success:", response);
     const res = GoogleLoginSuccess(response, dispatch);
   }
 
@@ -265,7 +264,7 @@ export default function LoginPage() {
             <div className="flex gap-2 items-center border px-3 rounded-[5px]" onClick={linkedInLogin}>
               <Linkedin/>
             </div>
-            <div onClick={facebookLogin}>Login With Facebook</div>
+            <div className="flex gap-2 items-center border px-3 rounded-[5px]" onClick={facebookLogin}><Facebook/></div>
           </div>
         </div>
       </div>

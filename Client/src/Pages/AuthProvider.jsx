@@ -20,7 +20,6 @@ export const AuthProvider = ({ children }) => {
             const res = await axiosClient.get("/api/user/me", { withCredentials: true });
             dispatch(setUser(res.data));
         } catch (err) {
-            console.error("Auth Error:", err);
             dispatch(loginFailure(err.response?.status || 500));
         } finally {
             setLoading(false);

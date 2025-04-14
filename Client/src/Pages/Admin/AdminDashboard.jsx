@@ -127,6 +127,7 @@ const columns = [
     key: "amount",
   },
 ];
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 export default function AdminDashboard() {
   const [timeRange, setTimeRange] = useState("month");
 
@@ -334,23 +335,13 @@ export default function AdminDashboard() {
           />
         </Card>
 
-        <Card className="col-span-1 md:col-span-1">
+        <Card className="col-span-1 md:col-span-1 mt-5">
           <CardHeader>
             <CardTitle>Quick Stats</CardTitle>
             <CardDescription>Key performance indicators</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="rounded-full p-1 bg-blue-100">
-                    <Activity className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <span className="text-sm font-medium">Conversion Rate</span>
-                </div>
-                <span className="text-sm font-bold">24.8%</span>
-              </div>
-
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="rounded-full p-1 bg-green-100">
@@ -372,14 +363,6 @@ export default function AdminDashboard() {
                 </div>
                 <span className="text-sm font-bold">Alpine Heights</span>
               </div>
-
-              <Separator />
-
-              <div className="pt-2">
-                <Button variant="outline" className="w-full">
-                  View Full Report
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -389,21 +372,15 @@ export default function AdminDashboard() {
 }
 
 function RevenueChart({ data }) {
-  // This is a simplified chart component
-  // In a real application, you would use a library like Recharts or Chart.js
-  const maxRevenue = Math.max(...data.map((item) => item.revenue));
-
   return (
-    <div className="w-full h-full flex items-end space-x-2">
-      {data.map((item, index) => (
-        <div key={index} className="flex flex-col items-center flex-1">
-          <div
-            className="w-full bg-primary rounded-t-sm hover:bg-primary/80 transition-all"
-            style={{ height: `${(item.revenue / maxRevenue) * 100}%` }}
-          />
-          <div className="mt-2 text-xs text-muted-foreground">{item.month}</div>
-        </div>
-      ))}
-    </div>
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+        <XAxis dataKey="month" stroke="#000000" />
+        <YAxis stroke="#000000" />
+        <Tooltip />
+        <Line type="monotone" dataKey="revenue" stroke="#00bfa0" strokeWidth={2} dot={{ r: 4 }} />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }
+

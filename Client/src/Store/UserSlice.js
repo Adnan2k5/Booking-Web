@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import Cookies from "js-cookie";
 
 const initialState = {
     user: null,
@@ -20,11 +19,8 @@ const userSlice = createSlice({
         loginSuccess: (state, action) => {
             state.loading = false;
             state.user = action.payload.user;
-            console.log("Storing : ",action.payload)
             state.error = null;
             state.accessToken = action.payload.accessToken;
-            Cookies.set("accessToken", action.payload.accessToken);
-            Cookies.set("refreshToken", action.payload.user.refreshToken);
         },
         setUser: (state,action) => {
             state.user = action.payload;
