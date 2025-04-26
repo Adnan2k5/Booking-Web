@@ -14,6 +14,7 @@ import ConfirmationPage from "./Pages/Confirmation"
 import FacebookCallback from "./Auth/FacebookCallback"
 import LinkedInCallback from "./Auth/LinkedinCallBack"
 import ChatWidget from "./components/ChatWidget"
+import PostAdventure from "./Pages/PostAdventure"
 
 // Admin imports
 import AdminDashboard from "./Pages/Admin/AdminDashboard"
@@ -86,6 +87,10 @@ const App = () => {
                 element={
                   <UserDashboard />
                 }
+              />
+              <Route
+                path="/post-adventure"
+                element={<PostAdventure />}
               />
               <Route
                 path="/dashboard/bookings"
