@@ -150,6 +150,13 @@ export default function AdminDashboard() {
           <Button variant="outline" size="icon">
             <Calendar className="h-4 w-4" />
           </Button>
+          <Button
+            variant="default"
+            className="ml-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold shadow-lg hover:from-blue-700 hover:to-cyan-600"
+            onClick={() => window.location.href = '/admin/post-adventure'}
+          >
+            + Post Adventure
+          </Button>
         </div>
       </div>
 

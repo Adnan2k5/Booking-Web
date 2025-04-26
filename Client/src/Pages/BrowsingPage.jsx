@@ -5,35 +5,18 @@ import { motion, AnimatePresence } from "framer-motion"
 import { format } from "date-fns"
 import { useLocation, useNavigate } from "react-router-dom"
 import {
-  CalendarIcon,
-  MapPin,
-  Star,
-  X,
-  Search,
-  Filter,
   ArrowLeft,
-  Compass,
-  Wind,
-  Sparkles,
   ChevronRight,
 } from "lucide-react"
-import { cn } from "../lib/utils.js"
-import { Button } from "../components/ui/button"
-import { Input } from "../components/ui/input"
 import { Badge } from "../components/ui/badge"
-import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover"
-import { Calendar } from "antd"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu"
-import { Skeleton } from "../components/ui/skeleton"
-import mock_adventure from "../Data/mock_adventure"
+import { fetchAllAdventures } from "../Api/adventure.api"
 import { useAuth } from "./AuthProvider.jsx"
 import { Loader } from "../components/Loader.jsx"
+import { SearchFilterBar } from "../components/BrowsingPage/SearchFilterBar"
+import { CategorySelector } from "../components/BrowsingPage/CategorySelector"
+import { AdventureCard } from "../components/BrowsingPage/AdventureCard"
+import { AdventureCardSkeleton } from "../components/BrowsingPage/AdventureCardSkeleton"
+import { NoResults } from "../components/BrowsingPage/NoResults"
 
 export default function BrowsingPage() {
   const location = useLocation()
@@ -49,19 +32,16 @@ export default function BrowsingPage() {
   const [activeCategory, setActiveCategory] = useState("all")
   const [showScrollIndicator, setShowScrollIndicator] = useState(true)
   const categoriesRef = useRef(null)
+  const [adventures, setAdventures] = useState([])
 
   const categories = [
-    { id: "all", name: "All", icon: <Compass /> },
-    { id: "hiking", name: "Hiking", icon: <Wind /> },
-    { id: "water", name: "Water Sports", icon: <Sparkles /> },
-    { id: "camping", name: "Camping", icon: <Compass /> },
-    { id: "climbing", name: "Climbing", icon: <Wind /> },
-    { id: "cycling", name: "Cycling", icon: <Sparkles /> },
+    { id: "all", name: "All" },
+    { id: "hiking", name: "Hiking" },
+    { id: "water", name: "Water Sports" },
+    { id: "camping", name: "Camping" },
+    { id: "climbing", name: "Climbing" },
+    { id: "cycling", name: "Cycling" },
   ]
-
-  const onPanelChange = (value) => {
-    console.log(value.format("YYYY-MM-DD"))
-  }
 
   const wrapperStyle = {
     width: 300,
@@ -76,25 +56,20 @@ export default function BrowsingPage() {
     return () => clearTimeout(timer)
   }, [])
 
-
-  const { user, loading } = useAuth();
-  // Background animation effect
   useEffect(() => {
-    const interval = setInterval(() => {
-      const bubbles = document.querySelectorAll(".bubble")
-      bubbles.forEach((bubble) => {
-        const randomX = Math.random() * 20 - 10
-        bubble.style.transform = `translate(${randomX}px, -5px)`
-        setTimeout(() => {
-          bubble.style.transform = "translate(0, 0)"
-        }, 500)
+    setIsLoading(true)
+    fetchAllAdventures()
+      .then((data) => {
+        setAdventures(data)
       })
-    }, 3000)
-
-    return () => clearInterval(interval)
+      .catch((err) => {
+        setAdventures([])
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
-  // Handle category scroll indicator
+  const { user, loading } = useAuth()
+
   useEffect(() => {
     const handleScroll = () => {
       if (categoriesRef.current) {
@@ -106,7 +81,7 @@ export default function BrowsingPage() {
     const categoryContainer = categoriesRef.current
     if (categoryContainer) {
       categoryContainer.addEventListener("scroll", handleScroll)
-      handleScroll() // Check initially
+      handleScroll()
     }
 
     return () => {
@@ -116,16 +91,13 @@ export default function BrowsingPage() {
     }
   }, [])
 
-  const adv = mock_adventure
-
-  const filteredAdventures = adv.filter((adventureItem) => {
+  const filteredAdventures = adventures.filter((adventureItem) => {
     const matchesAdventure = !adventure || adventure === "all" || adventureItem.name.toLowerCase().includes(adventure)
     const matchesLoc = !loc || loc === "all" || adventureItem.location.toLowerCase().includes(loc)
 
     const matchesCategory =
       activeCategory === "all" || (adventureItem.category && adventureItem.category === activeCategory)
 
-    // Safe date comparison
     let matchesDate = true
     if (date && date instanceof Date && !isNaN(date)) {
       const advDate = new Date(adventureItem.date)
@@ -187,7 +159,6 @@ export default function BrowsingPage() {
 
   const handleDateChange = (value) => {
     if (value) {
-      // Ensure we're working with a proper Date object
       const selectedDate = new Date(value.format("YYYY-MM-DD"))
       setDate(selectedDate)
     } else {
@@ -197,7 +168,6 @@ export default function BrowsingPage() {
 
   const formatDate = (dateString) => {
     try {
-      // Safely parse the date string
       const date = new Date(dateString)
       if (isNaN(date.getTime())) {
         return "Invalid date"
@@ -208,60 +178,16 @@ export default function BrowsingPage() {
       return "Invalid date"
     }
   }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-6 relative overflow-hidden">
-      {/* Animated background elements */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="bubble absolute top-[10%] left-[15%] w-64 h-64 bg-blue-200 rounded-full opacity-20 blur-[80px] transition-transform duration-1000 ease-in-out"></div>
         <div className="bubble absolute top-[40%] left-[60%] w-96 h-96 bg-purple-200 rounded-full opacity-20 blur-[100px] transition-transform duration-1000 ease-in-out"></div>
         <div className="bubble absolute bottom-[10%] right-[20%] w-72 h-72 bg-cyan-200 rounded-full opacity-20 blur-[90px] transition-transform duration-1000 ease-in-out"></div>
-
-        {/* Floating particles */}
-        <motion.div
-          className="absolute top-[20%] left-[30%] w-2 h-2 bg-blue-400 rounded-full opacity-60"
-          animate={{
-            y: [0, -20, 0],
-            opacity: [0.6, 0.8, 0.6],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{
-            duration: 4,
-            repeat: Number.POSITIVE_INFINITY,
-            repeatType: "reverse",
-          }}
-        />
-        <motion.div
-          className="absolute top-[50%] left-[70%] w-3 h-3 bg-purple-400 rounded-full opacity-60"
-          animate={{
-            y: [0, -30, 0],
-            opacity: [0.6, 0.9, 0.6],
-            scale: [1, 1.3, 1],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Number.POSITIVE_INFINITY,
-            repeatType: "reverse",
-            delay: 1,
-          }}
-        />
-        <motion.div
-          className="absolute top-[70%] left-[20%] w-2 h-2 bg-cyan-400 rounded-full opacity-60"
-          animate={{
-            y: [0, -25, 0],
-            opacity: [0.6, 0.8, 0.6],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{
-            duration: 4.5,
-            repeat: Number.POSITIVE_INFINITY,
-            repeatType: "reverse",
-            delay: 2,
-          }}
-        />
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl">
-        {/* Header with back button and user info */}
         <div className="flex justify-between items-center mb-6">
           <motion.button
             onClick={() => navigate("/")}
@@ -294,7 +220,6 @@ export default function BrowsingPage() {
           </motion.div>
         </div>
 
-        {/* Main title with animation */}
         <motion.div
           className="mb-8 text-center"
           initial={{ opacity: 0, y: -20 }}
@@ -307,154 +232,34 @@ export default function BrowsingPage() {
           <p className="text-gray-600 mt-2">Find your next unforgettable experience</p>
         </motion.div>
 
-        {/* Search and filter section */}
         <motion.div
           className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Input
-                type="text"
-                placeholder={
-                  adventure ? adventure.charAt(0).toUpperCase() + adventure.slice(1) : "Search adventures..."
-                }
-                value={adventure}
-                onChange={(e) => setAdventure(e.target.value.toLowerCase())}
-                className="pl-10 border-gray-200 focus:ring-2 focus:ring-blue-500 rounded-xl"
-              />
-              {adventure && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 bg-gray-600 hover:bg-gray-700 rounded-full"
-                  onClick={() => clearFilter("adventure")}
-                >
-                  <X size={14} className="text-white" />
-                </Button>
-              )}
-            </div>
-
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Input
-                type="text"
-                placeholder={loc ? loc.charAt(0).toUpperCase() + loc.slice(1) : "All locations"}
-                value={loc}
-                onChange={(e) => setLoc(e.target.value.toLowerCase())}
-                className="pl-10 border-gray-200 focus:ring-2 focus:ring-blue-500 rounded-xl"
-              />
-              {loc && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 bg-gray-600 hover:bg-gray-700 rounded-full"
-                  onClick={() => clearFilter("location")}
-                >
-                  <X size={14} className="text-white" />
-                </Button>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "justify-start text-left font-normal border-gray-200 rounded-xl flex-1",
-                      !date && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date && !isNaN(date.getTime()) ? format(date, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <div style={wrapperStyle}>
-                    <Calendar fullscreen={false} onPanelChange={onPanelChange} onSelect={handleDateChange} />
-                  </div>
-                  {date && (
-                    <div className="p-2 border-t border-gray-100">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-center text-blue-500"
-                        onClick={() => clearFilter("date")}
-                      >
-                        Clear date
-                      </Button>
-                    </div>
-                  )}
-                </PopoverContent>
-              </Popover>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="border-gray-200 rounded-xl">
-                    <Filter size={18} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => clearFilter("all")}>Clear all filters</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+          <SearchFilterBar
+            adventure={adventure}
+            setAdventure={setAdventure}
+            loc={loc}
+            setLoc={setLoc}
+            date={date}
+            setDate={setDate}
+            clearFilter={clearFilter}
+            handleDateChange={handleDateChange}
+            wrapperStyle={wrapperStyle}
+          />
         </motion.div>
 
-        {/* Categories section with horizontal scroll */}
-        <div className="relative mb-8">
-          <motion.div
-            className="flex items-center overflow-x-auto pb-2 scrollbar-hide"
-            ref={categoriesRef}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            {categories.map((category) => (
-              <motion.button
-                key={category.id}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full mr-3 whitespace-nowrap transition-all ${
-                  activeCategory === category.id
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white"
-                }`}
-                onClick={() => setActiveCategory(category.id)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="w-5 h-5">{category.icon}</span>
-                <span className="font-medium">{category.name}</span>
-              </motion.button>
-            ))}
-          </motion.div>
+        <CategorySelector
+          categories={categories}
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
+          categoriesRef={categoriesRef}
+          showScrollIndicator={showScrollIndicator}
+          ChevronRight={ChevronRight}
+        />
 
-          {/* Scroll indicator */}
-          {showScrollIndicator && (
-            <motion.div
-              className="absolute right-0 top-0 bottom-0 flex items-center pointer-events-none"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="w-12 h-full bg-gradient-to-l from-blue-50 to-transparent flex items-center justify-end pr-1">
-                <motion.div
-                  className="bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm"
-                  animate={{ x: [0, 5, 0] }}
-                  transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.5 }}
-                >
-                  <ChevronRight size={16} className="text-blue-600" />
-                </motion.div>
-              </div>
-            </motion.div>
-          )}
-        </div>
-
-        {/* Results count */}
         <motion.div
           className="flex items-center gap-2 mb-6"
           initial={{ opacity: 0 }}
@@ -467,7 +272,6 @@ export default function BrowsingPage() {
           </Badge>
         </motion.div>
 
-        {/* Adventure cards grid */}
         <AnimatePresence>
           <motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -481,19 +285,9 @@ export default function BrowsingPage() {
                   .map((_, index) => (
                     <motion.div
                       key={`skeleton-${index}`}
-                      className="bg-white/90 backdrop-blur-sm rounded-xl overflow-hidden shadow-md"
                       variants={itemVariants}
                     >
-                      <Skeleton className="w-full h-48" />
-                      <div className="p-4">
-                        <Skeleton className="h-4 w-1/3 mb-2" />
-                        <Skeleton className="h-6 w-3/4 mb-4" />
-                        <Skeleton className="h-4 w-full mb-2" />
-                        <div className="flex justify-between mt-4">
-                          <Skeleton className="h-8 w-20" />
-                          <Skeleton className="h-8 w-24" />
-                        </div>
-                      </div>
+                      <AdventureCardSkeleton />
                     </motion.div>
                   ))
               : filteredAdventures.map((adventure) => (
@@ -507,72 +301,15 @@ export default function BrowsingPage() {
                     onClick={() => onBook(adventure.id)}
                     style={{ cursor: "pointer" }}
                   >
-                    <Card className="overflow-hidden h-full border-0 bg-white/90 backdrop-blur-sm shadow-lg">
-                      <div className="relative h-52 overflow-hidden group">
-                        <img
-                          src={adventure.img || "/placeholder.svg"}
-                          alt={adventure.name}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div className="absolute top-3 right-3">
-                          <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 border-0 shadow-md">
-                            +{adventure.exp} EXP
-                          </Badge>
-                        </div>
-                      </div>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                          <MapPin size={14} />
-                          <span>{adventure.location}</span>
-                          <span className="text-gray-300">•</span>
-                          <span>{formatDate(adventure.date)}</span>
-                        </div>
-                        <CardTitle className="text-xl font-bold text-gray-800">{adventure.name}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="pb-2">
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star key={star} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          ))}
-                          <span className="text-sm ml-1 text-gray-500">4.8</span>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="pt-2 flex flex-col gap-3">
-                        <div className="flex items-center justify-between w-full">
-                          <div className="text-sm font-medium text-gray-900">From $99</div>
-                          <div className="text-xs text-gray-500">Limited spots</div>
-                        </div>
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation() // Prevent the card click from triggering
-                            onBook(adventure.id)
-                          }}
-                          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0 shadow-md"
-                        >
-                          Book Now
-                        </Button>
-                      </CardFooter>
-                    </Card>
+                    <AdventureCard adventure={adventure} formatDate={formatDate} onBook={onBook} />
                   </motion.div>
                 ))}
           </motion.div>
         </AnimatePresence>
 
-        {/* No results message */}
         {filteredAdventures.length === 0 && !isLoading && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-12">
-            <div className="bg-white/90 backdrop-blur-sm p-8 rounded-xl shadow-md inline-block">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">No adventures found</h3>
-              <p className="text-gray-500 mb-4">Try adjusting your search filters</p>
-              <Button
-                onClick={() => clearFilter("all")}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-              >
-                Clear all filters
-              </Button>
-            </div>
+            <NoResults clearFilter={clearFilter} />
           </motion.div>
         )}
       </div>

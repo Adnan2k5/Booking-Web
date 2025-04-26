@@ -8,3 +8,8 @@ export const createAdventure = async (data) => {
     }});
     return res;
 }
+
+export const fetchAllAdventures = async () => {
+    const res = await axiosClient.get("/api/adventure/all");
+    return res.data;
+}

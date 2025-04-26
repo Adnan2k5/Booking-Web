@@ -200,6 +200,14 @@ export default function UserDashboard() {
                         >
                             {t("shop")}
                         </Button>
+
+                        <Button
+                            onClick={() => navigate("/post-adventure")}
+                            className="bg-gradient-to-r from-green-600 to-lime-500 hover:from-green-700 hover:to-lime-600"
+                        >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Post New Adventure
+                        </Button>
                     </motion.div>
                 </div>
 
