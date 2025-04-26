@@ -1,3 +1,5 @@
+import { asyncHandler } from "../utils/asyncHandler.js";
+
 export const verifyAdmin = asyncHandler(async (req, _, next) => {
     const user = req.user;
     if (!user.isAdmin) {
