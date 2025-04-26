@@ -86,7 +86,7 @@ export default function PostAdventure() {
                         <Input name="instructor" value={form.instructor} onChange={handleChange} required placeholder="Instructor ID" className="pl-10 focus:ring-2 focus:ring-cyan-400 transition rounded-xl" />
                     </div>
                     <div>
-                        <label className="block font-semibold mb-2 text-blue-800 flex items-center gap-2"><FaImages className="text-cyan-400" /> Media (up to 4 images)</label>
+                        <label className="font-semibold mb-2 text-blue-800 flex items-center gap-2"><FaImages className="text-cyan-400" /> Media (up to 4 images)</label>
                         <Input type="file" name="medias" accept="image/*" multiple onChange={handleMediaChange} required className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 transition" />
                         {medias.length > 0 && (
                             <div className="flex gap-3 mt-3">
