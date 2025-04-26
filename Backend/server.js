@@ -10,6 +10,7 @@ import authRoute from "./routes/auth.routes.js"
 import adventureRoute from "./routes/adventure.routes.js"
 import tickerRoute from "./routes/ticket.route.js"
 import userRoute from "./routes/user.routes.js"
+import termRouter from "./routes/terms.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 
 
@@ -24,6 +25,7 @@ app.use("/api/auth", authRoute);
 app.use("/api/adventure", adventureRoute);
 app.use("/api/user", userRoute);
 app.use("/api/ticket", tickerRoute);
+app.use("/api/terms", termRouter);
 
 
 const PORT = process.env.PORT || 8080;
