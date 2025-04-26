@@ -4,7 +4,6 @@ import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Booking } from "../models/booking.model.js";
-import { User } from "../models/user.model.js";
 
 export const getAllAdventure = asyncHandler(async (req, res) => {
     const { location, date, duration } = req.params;
