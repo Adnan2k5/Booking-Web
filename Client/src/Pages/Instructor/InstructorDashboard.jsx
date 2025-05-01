@@ -273,17 +273,8 @@ const InstructorDashboard = () => {
                         </Button>
                     </div>
                 </div>
-
-                <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                    <TabsList>
-                        <TabsTrigger value="overview">{t("instructor.overview")}</TabsTrigger>
-                        <TabsTrigger value="bookings">{t("instructor.bookings")}</TabsTrigger>
-                        <TabsTrigger value="sessions">{t("instructor.sessions")}</TabsTrigger>
-                        <TabsTrigger value="profile">{t("instructor.profile")}</TabsTrigger>
-                    </TabsList>
-
-                    {/* OVERVIEW TAB */}
-                    <TabsContent value="overview" className="space-y-4">
+                <div defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+                    <div value="overview" className="space-y-4">
                         <motion.div
                             className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
                             variants={staggerContainer}
@@ -343,7 +334,6 @@ const InstructorDashboard = () => {
                                     </CardContent>
                                 </Card>
                             </motion.div>
-
                             <motion.div variants={fadeIn}>
                                 <Card>
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -382,7 +372,6 @@ const InstructorDashboard = () => {
                                 </Card>
                             </motion.div>
                         </motion.div>
-
                         <motion.div
                             className="grid gap-4 md:grid-cols-2 lg:grid-cols-7"
                             variants={staggerContainer}
@@ -415,7 +404,6 @@ const InstructorDashboard = () => {
                                     </CardContent>
                                 </Card>
                             </motion.div>
-
                             <motion.div variants={fadeIn} className="col-span-3">
                                 <Card className="h-full">
                                     <CardHeader>
@@ -449,11 +437,9 @@ const InstructorDashboard = () => {
                                 </Card>
                             </motion.div>
                         </motion.div>
-
                         <motion.div variants={fadeIn} initial="hidden" animate="visible">
                             <SessionCalendar adventureTypes={adventureTypes} locations={locations} />
                         </motion.div>
-
                         <motion.div variants={fadeIn} initial="hidden" animate="visible">
                             <Card>
                                 <CardHeader>
@@ -506,301 +492,8 @@ const InstructorDashboard = () => {
                                 </CardFooter>
                             </Card>
                         </motion.div>
-                    </TabsContent>
-
-                    {/* BOOKINGS TAB */}
-                    <TabsContent value="bookings" className="space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div className="flex items-center gap-2">
-                                <div className="relative w-full sm:w-64">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input type="search" placeholder={t("instructor.searchBookings")} className="w-full pl-8" />
-                                </div>
-                                <Button variant="outline" size="icon">
-                                    <Filter className="h-4 w-4" />
-                                </Button>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Select defaultValue="all">
-                                    <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder={t("instructor.filterByStatus")} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">{t("instructor.allBookings")}</SelectItem>
-                                        <SelectItem value="upcoming">{t("instructor.upcomingOnly")}</SelectItem>
-                                        <SelectItem value="completed">{t("instructor.completedOnly")}</SelectItem>
-                                        <SelectItem value="pending">{t("instructor.pendingOnly")}</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-
-                        <Tabs defaultValue="upcoming" className="space-y-4">
-                            <TabsList>
-                                <TabsTrigger value="upcoming">{t("instructor.upcoming")}</TabsTrigger>
-                                <TabsTrigger value="completed">{t("instructor.completed")}</TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="upcoming" className="space-y-4">
-                                <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
-                                    {mockData.upcomingBookings.map((booking) => (
-                                        <motion.div key={booking.id} variants={fadeIn}>
-                                            <Card>
-                                                <CardContent className="p-6">
-                                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="bg-primary/10 p-3 rounded-full">
-                                                                <Calendar className="h-6 w-6 text-primary" />
-                                                            </div>
-                                                            <div>
-                                                                <h3 className="font-semibold text-lg">{booking.adventure}</h3>
-                                                                <div className="flex flex-col sm:flex-row sm:items-center text-sm text-muted-foreground gap-1 sm:gap-3">
-                                                                    <div className="flex items-center">
-                                                                        <MapPin className="h-3 w-3 mr-1" />
-                                                                        <span>{booking.location}</span>
-                                                                    </div>
-                                                                    <div className="hidden sm:block">•</div>
-                                                                    <div className="flex items-center">
-                                                                        <Clock className="h-3 w-3 mr-1" />
-                                                                        <span>
-                                                                            {new Date(booking.date).toLocaleDateString()} {booking.time}
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="hidden sm:block">•</div>
-                                                                    <div>{booking.duration}</div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                                            <div className="flex items-center gap-2">
-                                                                <Users className="h-4 w-4 text-muted-foreground" />
-                                                                <span>
-                                                                    {booking.participants} {t("instructor.participants")}
-                                                                </span>
-                                                            </div>
-                                                            <div className="font-semibold text-lg">${booking.amount}</div>
-                                                            <Badge variant={booking.status === "confirmed" ? "default" : "outline"}>
-                                                                {booking.status === "confirmed" ? t("instructor.confirmed") : t("instructor.pending")}
-                                                            </Badge>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex justify-end mt-4 gap-2">
-                                                        <Button variant="outline">{t("instructor.contactParticipants")}</Button>
-                                                        <Button>{t("instructor.viewDetails")}</Button>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        </motion.div>
-                                    ))}
-                                </motion.div>
-                            </TabsContent>
-
-                            <TabsContent value="completed" className="space-y-4">
-                                <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
-                                    {mockData.recentBookings.map((booking) => (
-                                        <motion.div key={booking.id} variants={fadeIn}>
-                                            <Card>
-                                                <CardContent className="p-6">
-                                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="bg-green-100 p-3 rounded-full">
-                                                                <Check className="h-6 w-6 text-green-600" />
-                                                            </div>
-                                                            <div>
-                                                                <h3 className="font-semibold text-lg">{booking.adventure}</h3>
-                                                                <div className="flex flex-col sm:flex-row sm:items-center text-sm text-muted-foreground gap-1 sm:gap-3">
-                                                                    <div className="flex items-center">
-                                                                        <MapPin className="h-3 w-3 mr-1" />
-                                                                        <span>{booking.location}</span>
-                                                                    </div>
-                                                                    <div className="hidden sm:block">•</div>
-                                                                    <div className="flex items-center">
-                                                                        <Clock className="h-3 w-3 mr-1" />
-                                                                        <span>{new Date(booking.date).toLocaleDateString()}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                                            <div className="flex items-center gap-2">
-                                                                <Users className="h-4 w-4 text-muted-foreground" />
-                                                                <span>
-                                                                    {booking.participants} {t("instructor.participants")}
-                                                                </span>
-                                                            </div>
-                                                            <div className="font-semibold text-lg">${booking.amount}</div>
-                                                            <div className="flex items-center">
-                                                                <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                                                                <span className="ml-1">{booking.rating}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        </motion.div>
-                                    ))}
-                                </motion.div>
-                            </TabsContent>
-                        </Tabs>
-                    </TabsContent>
-
-                    {/* SESSIONS TAB */}
-                    <TabsContent value="sessions" className="space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div className="flex items-center gap-2">
-                                <div className="relative w-full sm:w-64">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input type="search" placeholder={t("instructor.searchSessions")} className="w-full pl-8" />
-                                </div>
-                            </div>
-                            <Button onClick={() => navigate("/instructor/sessions/new")}>{t("instructor.createNewSession")}</Button>
-                        </div>
-
-                        <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
-                            {mockData.sessions.map((session) => (
-                                <motion.div key={session.id} variants={fadeIn}>
-                                    <Card>
-                                        <CardHeader>
-                                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                                                <div>
-                                                    <CardTitle>{session.title}</CardTitle>
-                                                    <CardDescription className="flex items-center mt-1">
-                                                        <MapPin className="h-3 w-3 mr-1" />
-                                                        {session.location}
-                                                        <span className="mx-2">•</span>
-                                                        <Clock className="h-3 w-3 mr-1" />
-                                                        {session.duration}
-                                                    </CardDescription>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                                        {session.adventure}
-                                                    </Badge>
-                                                    <div className="font-semibold text-lg">${session.price}</div>
-                                                </div>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-muted-foreground mb-4">{session.description}</p>
-
-                                            <div className="space-y-3">
-                                                <h4 className="font-medium">{t("instructor.upcomingDates")}</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                    {session.upcoming.map((date, index) => (
-                                                        <div key={index} className="border rounded-lg p-3 bg-card">
-                                                            <div className="flex justify-between items-center mb-2">
-                                                                <div className="font-medium">{new Date(date.date).toLocaleDateString()}</div>
-                                                                <div className="text-sm text-muted-foreground">{date.time}</div>
-                                                            </div>
-                                                            <div className="flex justify-between items-center">
-                                                                <div className="text-sm">
-                                                                    <span className="text-green-600">{date.booked}</span>/{session.capacity}{" "}
-                                                                    {t("instructor.booked")}
-                                                                </div>
-                                                                <Badge variant={date.available > 0 ? "outline" : "secondary"}>
-                                                                    {date.available > 0
-                                                                        ? `${date.available} ${t("instructor.available")}`
-                                                                        : t("instructor.fullyBooked")}
-                                                                </Badge>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                        <CardFooter className="flex justify-end gap-2">
-                                            <Button variant="outline">{t("instructor.editSession")}</Button>
-                                            <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                                                {t("instructor.cancelSession")}
-                                            </Button>
-                                            <Button>{t("instructor.addDates")}</Button>
-                                        </CardFooter>
-                                    </Card>
-                                </motion.div>
-                            ))}
-                        </motion.div>
-                    </TabsContent>
-
-                    {/* PROFILE TAB */}
-                    <TabsContent value="profile" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>{t("instructor.profileInformation")}</CardTitle>
-                                <CardDescription>{t("instructor.manageProfileDescription")}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex flex-col md:flex-row gap-8">
-                                    <div className="md:w-1/3 flex flex-col items-center">
-                                        <Avatar className="h-32 w-32 mb-4">
-                                            <AvatarImage src={mockData.instructor.img || "/placeholder.svg"} alt={mockData.instructor.name} />
-                                            <AvatarFallback>{mockData.instructor.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="text-center">
-                                            <h3 className="font-semibold text-xl">{mockData.instructor.name}</h3>
-                                            <p className="text-muted-foreground">{mockData.instructor.specialty}</p>
-                                            <div className="flex items-center justify-center mt-2">
-                                                <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                                                <span className="ml-1 font-medium">{mockData.instructor.rating}</span>
-                                            </div>
-                                            <p className="text-sm text-muted-foreground mt-1">{mockData.instructor.experience}</p>
-                                        </div>
-                                        <Button variant="outline" className="mt-4 w-full">
-                                            {t("instructor.changePhoto")}
-                                        </Button>
-                                    </div>
-
-                                    <div className="md:w-2/3">
-                                        <div className="space-y-4">
-                                            <div>
-                                                <h4 className="font-medium mb-2">{t("instructor.bio")}</h4>
-                                                <p className="text-muted-foreground">{mockData.instructor.bio}</p>
-                                            </div>
-
-                                            <Separator />
-
-                                            <div>
-                                                <h4 className="font-medium mb-2">{t("instructor.bio")}</h4>
-                                                <p className="text-muted-foreground">{mockData.instructor.bio}</p>
-                                            </div>
-
-                                            <Separator />
-
-                                            <div>
-                                                <h4 className="font-medium mb-2">{t("instructor.languages")}</h4>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {mockData.instructor.languages.map((language, index) => (
-                                                        <Badge key={index} variant="outline">
-                                                            {language}
-                                                        </Badge>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <Separator />
-
-                                            <div>
-                                                <h4 className="font-medium mb-2">{t("instructor.certificates")}</h4>
-                                                <div className="space-y-2">
-                                                    {mockData.instructor.certificates.map((certificate, index) => (
-                                                        <div key={index} className="flex items-center gap-2">
-                                                            <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                                                            <span>{certificate}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-6 flex justify-end gap-2">
-                                            <Button variant="outline">{t("instructor.editProfile")}</Button>
-                                            <Button>{t("instructor.saveChanges")}</Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
+                    </div>
+                </div>
             </div>
         </InstructorLayout>
     )

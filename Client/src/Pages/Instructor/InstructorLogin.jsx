@@ -1,11 +1,16 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "../../components/ui/card"
 import { Input } from "../../components/ui/input"
 import { Button } from "../../components/ui/button"
 import { Label } from "../../components/ui/label"
 import { Camera, Eye } from "lucide-react"
+import { UserRegister, VerifyUser } from "../../Auth/UserAuth"
+import { Modal } from "antd"
+import { InputOTPSlot, InputOTP, InputOTPGroup } from "../../components/ui/input-otp"
+import { toast } from "sonner"
+import { useDispatch } from "react-redux"
 
 export const InstructorRegister = () => {
     const [formData, setFormData] = useState({
@@ -17,6 +22,10 @@ export const InstructorRegister = () => {
     })
 
     const [error, seterror] = useState("")
+    const [OtpDialog, setOtpDialog] = useState(false)
+    const [otp, setOtp] = useState("")
+    const dispatch = useDispatch();
+
 
 
     const passValidation = () => {
@@ -42,14 +51,41 @@ export const InstructorRegister = () => {
             [name]: value,
         }))
     }
-    const handleSubmit = (e) => {
-        e.preventDefault()
 
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        if (error) {
+            toast.error(error)
+            return
+        }
+        const res = await UserRegister(formData)
+        if (res === 201) {
+            toast.success("Otp sent to your email")
+            setOtpDialog(true)
+        }
     }
 
     const getInitial = () => {
         return formData.name ? formData.name.charAt(0).toUpperCase() : "Hii"
     }
+
+    const cancel = () => {
+        setOtpDialog(false);
+        setOtp("");
+    };
+
+    const verifyOtp = async () => {
+        const data = { email: formData.email, otp: otp };
+        const res = await VerifyUser(data, dispatch);
+        if (res === 200) {
+            toast("Email Verified Successfully");
+            setOtpDialog(false);
+            setOtp("");
+        } else if (res === 400) {
+            toast("Invalid Otp");
+        }
+    };
 
     return (
         <div className="min-h-screen flex items-center justify-center px-3 py-8 bg-gray-50">
@@ -136,6 +172,33 @@ export const InstructorRegister = () => {
                     </Button>
                 </form>
             </Card>
+            <Modal open={OtpDialog} footer={null} onCancel={() => { cancel }}>
+                <div className="space-y-2 flex flex-col items-center gap-4">
+                    <h1>
+                        Enter One-Time Password sent
+                    </h1>
+                    <InputOTP
+                        maxLength={6}
+                        value={otp}
+                        onChange={(value) => setOtp(value)}
+                    >
+                        <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                    </InputOTP>
+                    <button
+                        onClick={verifyOtp}
+                        className="bg-black text-white rounded-2xl py-2 w-full"
+                    >
+                        Verify OTP
+                    </button>
+                </div>
+            </Modal>
         </div>
     )
 }
