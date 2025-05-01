@@ -14,8 +14,6 @@ import ConfirmationPage from "./Pages/Confirmation"
 import FacebookCallback from "./Auth/FacebookCallback"
 import LinkedInCallback from "./Auth/LinkedinCallBack"
 import ChatWidget from "./components/ChatWidget"
-
-// Admin imports
 import AdminDashboard from "./Pages/Admin/AdminDashboard"
 import AdminLayout from "./Pages/Admin/Layout"
 import AdventuresPage from "./Pages/Admin/SubPages/Adventures"
@@ -79,9 +77,6 @@ const App = () => {
               <Route path="/confirmation" element={<ConfirmationPage />} />
               <Route path="/shop" element={<Shop />} />
               <Route path="/reset" element={<ResetPass />} />
-
-              {/* User Dashboard Routes */}
-
               <Route
                 path="/dashboard"
                 element={
@@ -120,19 +115,12 @@ const App = () => {
                   </UserDashboardLayout>
                 }
               />
-
-
-              {/* Instructor Dashboard Routes */}
-
               <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
               <Route path="/instructor/bookings" element={<InstructorDashboard />} />
               <Route path="/instructor/sessions" element={<InstructorDashboard />} />
               <Route path="/instructor/sessions/new" element={<SessionForm />} />
               <Route path="/instructor/profile" element={<InstructorDashboard />} />
               <Route path="/instructor/settings" element={<InstructorDashboard />} />
-
-
-              {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
                 <Route
                   index

@@ -1,6 +1,3 @@
-"use client";
-
-import { Separator } from "../../components/ui/separator";
 import { Table } from "antd";
 import { useState } from "react";
 import {
@@ -11,7 +8,6 @@ import {
   DollarSign,
   Mountain,
   Users,
-  Activity,
   TrendingUp,
   Compass,
 } from "lucide-react";
@@ -150,13 +146,6 @@ export default function AdminDashboard() {
           <Button variant="outline" size="icon">
             <Calendar className="h-4 w-4" />
           </Button>
-          <Button
-            variant="default"
-            className="ml-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold shadow-lg hover:from-blue-700 hover:to-cyan-600"
-            onClick={() => window.location.href = '/admin/post-adventure'}
-          >
-            + Post Adventure
-          </Button>
         </div>
       </div>
 
@@ -172,11 +161,10 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
               <span
-                className={`flex items-center ${
-                  mockData.revenueIncrease > 0
-                    ? "text-green-500"
-                    : "text-red-500"
-                }`}
+                className={`flex items-center ${mockData.revenueIncrease > 0
+                  ? "text-green-500"
+                  : "text-red-500"
+                  }`}
               >
                 {mockData.revenueIncrease > 0 ? (
                   <ArrowUp className="h-3 w-3" />
@@ -201,9 +189,8 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
               <span
-                className={`flex items-center ${
-                  mockData.userIncrease > 0 ? "text-green-500" : "text-red-500"
-                }`}
+                className={`flex items-center ${mockData.userIncrease > 0 ? "text-green-500" : "text-red-500"
+                  }`}
               >
                 {mockData.userIncrease > 0 ? (
                   <ArrowUp className="h-3 w-3" />
@@ -230,11 +217,10 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
               <span
-                className={`flex items-center ${
-                  mockData.adventureIncrease > 0
-                    ? "text-green-500"
-                    : "text-red-500"
-                }`}
+                className={`flex items-center ${mockData.adventureIncrease > 0
+                  ? "text-green-500"
+                  : "text-red-500"
+                  }`}
               >
                 {mockData.adventureIncrease > 0 ? (
                   <ArrowUp className="h-3 w-3" />
@@ -261,11 +247,10 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
               <span
-                className={`flex items-center ${
-                  mockData.bookingIncrease > 0
-                    ? "text-green-500"
-                    : "text-red-500"
-                }`}
+                className={`flex items-center ${mockData.bookingIncrease > 0
+                  ? "text-green-500"
+                  : "text-red-500"
+                  }`}
               >
                 {mockData.bookingIncrease > 0 ? (
                   <ArrowUp className="h-3 w-3" />

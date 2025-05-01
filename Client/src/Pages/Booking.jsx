@@ -28,7 +28,6 @@ import { Badge } from "../components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Separator } from "../components/ui/separator"
-import mock_adventure from "../Data/mock_adventure"
 import { useAuth } from "./AuthProvider"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
@@ -194,6 +193,53 @@ const mockInstructors = [
     certificates: ["Professional Photography", "Wildlife Photography", "Digital Editing"],
   },
 ]
+const mock_adventure = [
+  {
+    id: 1,
+    name: "Alpine Trekking Adventure",
+    location: "Swiss Alps",
+    date: "2023-12-15",
+    img: "/placeholder.svg?height=300&width=500",
+    exp: 500,
+    description: "Experience the breathtaking beauty of the Swiss Alps with this guided trekking adventure.",
+  },
+  {
+    id: 2,
+    name: "Desert Safari Expedition",
+    location: "Sahara Desert",
+    date: "2024-01-10",
+    img: "/placeholder.svg?height=300&width=500",
+    exp: 400,
+    description: "Embark on an unforgettable journey through the vast dunes of the Sahara Desert.",
+  },
+  {
+    id: 3,
+    name: "Rainforest Exploration",
+    location: "Amazon Rainforest",
+    date: "2024-02-20",
+    img: "/placeholder.svg?height=300&width=500",
+    exp: 600,
+    description: "Discover the wonders of the Amazon Rainforest with expert guides and unique wildlife encounters.",
+  },
+  {
+    id: 4,
+    name: "Arctic Expedition",
+    location: "Arctic Circle",
+    date: "2024-03-05",
+    img: "/placeholder.svg?height=300&width=500",
+    exp: 700,
+    description: "Venture into the icy wilderness of the Arctic Circle for a once-in-a-lifetime adventure.",
+  },
+  {
+    id: 5,
+    name: "Volcanic Hiking Adventure",
+    location: "Mount Fuji, Japan",
+    date: "2024-04-15",
+    img: "/placeholder.svg?height=300&width=500",
+    exp: 450,
+    description: "Hike up the iconic Mount Fuji and witness stunning views from the summit.",
+  },
+]
 
 export default function BookingFlow() {
   const navigate = useNavigate()
@@ -222,27 +268,16 @@ export default function BookingFlow() {
 
   // Parse the adventure ID from URL
   useEffect(() => {
-    const query = new URLSearchParams(location.search)
-    const adventureId = query.get("id")
-
-    if (adventureId) {
-      // Find the adventure in mock data
-      const foundAdventure = mock_adventure.find((adv) => adv.id.toString() === adventureId)
-      if (foundAdventure) {
-        setAdventure(foundAdventure)
-      } else {
-        navigate("/")
-      }
-    } else {
-      navigate("/")
-    }
+    const query = new URLSearchParams(location.search);
+    setAdventure(mock_adventure);
 
     // Simulate loading
     const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 1000)
-    return () => clearTimeout(timer)
-  }, [location, navigate])
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [location]);
 
   useEffect(() => {
     if (!user.user) {
