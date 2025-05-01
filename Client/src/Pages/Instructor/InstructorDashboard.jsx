@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next"
 import InstructorLayout from "./InstructorLayout"
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import SessionCalendar from "../../components/SessionCalendar"
+import UpcomingBookingsCard from "../../components/UpcomingBookingsCard"
 
 // Mock data for the instructor dashboard
 const mockData = {
@@ -151,6 +152,8 @@ const mockData = {
                 { date: "2025-04-27", time: "09:00 AM", booked: 6, available: 2 },
                 { date: "2025-05-04", time: "09:00 AM", booked: 2, available: 6 },
             ],
+            status: "active",
+            days: ["Monday", "Wednesday"],
         },
         {
             id: "S-1002",
@@ -167,6 +170,8 @@ const mockData = {
                 { date: "2025-04-29", time: "10:00 AM", booked: 8, available: 2 },
                 { date: "2025-05-06", time: "10:00 AM", booked: 3, available: 7 },
             ],
+            status: "active",
+            days: ["Tuesday", "Thursday"],
         },
         {
             id: "S-1003",
@@ -182,6 +187,8 @@ const mockData = {
                 { date: "2025-05-02", time: "08:30 AM", booked: 5, available: 1 },
                 { date: "2025-05-09", time: "08:30 AM", booked: 2, available: 4 },
             ],
+            status: "active",
+            days: ["Friday"],
         },
     ],
 }
@@ -215,6 +222,20 @@ const InstructorDashboard = () => {
     const { t } = useTranslation()
     const [timeRange, setTimeRange] = useState("month")
     const [activeTab, setActiveTab] = useState("overview")
+    const [showCreateModal, setShowCreateModal] = useState(false)
+    const [sessions, setSessions] = useState(mockData.sessions)
+    const [newSession, setNewSession] = useState({
+        title: '',
+        adventure: '',
+        location: '',
+        price: '',
+        duration: '',
+        capacity: '',
+        description: '',
+        days: [],
+        status: 'active',
+    })
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
     useEffect(() => {
         // Check if user is logged in and is an instructor
@@ -224,6 +245,53 @@ const InstructorDashboard = () => {
         }
         // In a real app, you would check if the user has instructor role
     }, [user, navigate])
+
+    const handleDayToggle = (day) => {
+        setNewSession((prev) => ({
+            ...prev,
+            days: prev.days.includes(day)
+                ? prev.days.filter((d) => d !== day)
+                : [...prev.days, day],
+        }))
+    }
+
+    const handleSessionChange = (e) => {
+        const { name, value } = e.target
+        setNewSession((prev) => ({ ...prev, [name]: value }))
+    }
+
+    const handleStatusChange = (id, status) => {
+        setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
+    }
+
+    const handleCreateSession = (e) => {
+        e.preventDefault()
+        if (!newSession.title || !newSession.adventure || !newSession.location) {
+            toast.error('Please fill all required fields')
+            return
+        }
+        setSessions((prev) => [
+            ...prev,
+            {
+                ...newSession,
+                id: `S-${Date.now()}`,
+                upcoming: [],
+            },
+        ])
+        setShowCreateModal(false)
+        setNewSession({
+            title: '',
+            adventure: '',
+            location: '',
+            price: '',
+            duration: '',
+            capacity: '',
+            description: '',
+            days: [],
+            status: 'active',
+        })
+        toast.success('Session created!')
+    }
 
     // Animation variants
     const fadeIn = {
@@ -441,56 +509,10 @@ const InstructorDashboard = () => {
                             <SessionCalendar adventureTypes={adventureTypes} locations={locations} />
                         </motion.div>
                         <motion.div variants={fadeIn} initial="hidden" animate="visible">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>{t("instructor.upcomingBookings")}</CardTitle>
-                                    <CardDescription>{t("instructor.nextScheduledSessions")}</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        {mockData.upcomingBookings.map((booking) => (
-                                            <div
-                                                key={booking.id}
-                                                className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors"
-                                            >
-                                                <div className="flex items-center gap-4">
-                                                    <div className="bg-primary/10 p-2 rounded-full">
-                                                        <Calendar className="h-5 w-5 text-primary" />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-medium">{booking.adventure}</h4>
-                                                        <div className="flex items-center text-sm text-muted-foreground">
-                                                            <MapPin className="h-3 w-3 mr-1" />
-                                                            <span>{booking.location}</span>
-                                                            <span className="mx-2">•</span>
-                                                            <Clock className="h-3 w-3 mr-1" />
-                                                            <span>
-                                                                {new Date(booking.date).toLocaleDateString()} {booking.time}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="text-right">
-                                                        <div className="font-medium">${booking.amount}</div>
-                                                        <div className="text-sm text-muted-foreground">
-                                                            {booking.participants} {t("instructor.participants")}
-                                                        </div>
-                                                    </div>
-                                                    <Badge variant={booking.status === "confirmed" ? "default" : "outline"}>
-                                                        {booking.status === "confirmed" ? t("instructor.confirmed") : t("instructor.pending")}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </CardContent>
-                                <CardFooter>
-                                    <Button variant="outline" className="w-full" onClick={() => setActiveTab("bookings")}>
-                                        {t("instructor.viewAllBookings")}
-                                    </Button>
-                                </CardFooter>
-                            </Card>
+                            <UpcomingBookingsCard 
+                                bookings={mockData.upcomingBookings} 
+                                onViewAll={() => setActiveTab("bookings")}
+                            />
                         </motion.div>
                     </div>
                 </div>

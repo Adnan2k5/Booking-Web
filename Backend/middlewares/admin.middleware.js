@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const verifyAdmin = asyncHandler(async (req, _, next) => {
     const user = req.user;
-    if (!user.isAdmin) {
+    if (!user.role == 'admin') {
         throw new ApiError(403, "Unauthorized request");
     }
     next();
@@ -10,7 +10,7 @@ export const verifyAdmin = asyncHandler(async (req, _, next) => {
 
 export const verifyInstructor = asyncHandler(async (req, _, next) => {
     const user = req.user;
-    if (!user.isInstructor) {
+    if (!user.role == 'admin' && !user.role == 'instructor') {
         throw new ApiError(403, "Unauthorized request");
     }
     next();
