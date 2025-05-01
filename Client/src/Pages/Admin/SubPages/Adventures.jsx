@@ -296,10 +296,10 @@ export default function AdventuresPage() {
                 <div className="aspect-video relative">
                   <img
                     src={
-                      adventure.medias[0] || "/placeholder.svg?height=300&width=500"
+                      adventure.medias[0]
                     }
                     alt={adventure.name}
-                    className="object-cover w-full h-full"
+                    className="h-[300px] w-[500px]"
                   />
                 </div>
                 <CardHeader className="pb-2">
