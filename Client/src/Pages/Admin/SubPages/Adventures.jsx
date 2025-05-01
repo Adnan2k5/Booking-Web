@@ -39,7 +39,6 @@ import AdventureTableRow from "./../../../components/AdventureTableRow";
 import { useAdventures } from "../../../hooks/useAdventure";
 
 export default function AdventuresPage() {
-  const [searchTerm, setSearchTerm] = useState("");
   const { reset } = useForm({
     defaultValues: {
       name: "",
@@ -66,14 +65,9 @@ export default function AdventuresPage() {
     total,
     limit,
     setLimit,
+    search,
+    setSearch,
   } = useAdventures();
-
-  const filteredAdventures = adventures.filter((adventure) => {
-    const matchesSearch =
-      adventure.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      adventure.location.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this adventure?")) {
@@ -83,15 +77,14 @@ export default function AdventuresPage() {
     try {
       const res = await deleteAdventure(id);
       if (res.status === 200) {
-        toast.success("Adventure deleted successfully", {id: toastId });
+        toast.success("Adventure deleted successfully", { id: toastId });
       }
       refetch();
+    } catch (error) {
+      toast.error("Error deleting adventure", { id: toastId });
+      console.log(error);
     }
-    catch (error) {
-      toast.error("Error deleting adventure", {id: toastId });
-      console.log(error)
-    }
-  }
+  };
 
   // Pagination controls
   const handlePrev = () => setPage((p) => Math.max(1, p - 1));
@@ -136,8 +129,11 @@ export default function AdventuresPage() {
                 type="search"
                 placeholder="Search adventures..."
                 className="w-[200px] sm:w-[300px] pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1); // Reset to first page on new search
+                }}
               />
             </div>
             <Button variant="outline" size="sm">
@@ -160,7 +156,7 @@ export default function AdventuresPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAdventures.map((adventure, idx) => (
+                  {adventures.map((adventure, idx) => (
                     <AdventureTableRow
                       key={adventure._id || idx}
                       adventure={adventure}
@@ -178,15 +174,31 @@ export default function AdventuresPage() {
           </Card>
           {/* Pagination Controls */}
           <div className="flex justify-between items-center mt-4">
-            <Button onClick={handlePrev} disabled={page === 1} variant="outline" size="sm">Prev</Button>
-            <span>Page {page} of {totalPages} ({total} adventures)</span>
-            <Button onClick={handleNext} disabled={page === totalPages} variant="outline" size="sm">Next</Button>
+            <Button
+              onClick={handlePrev}
+              disabled={page === 1}
+              variant="outline"
+              size="sm"
+            >
+              Prev
+            </Button>
+            <span>
+              Page {page} of {totalPages} ({total} adventures)
+            </span>
+            <Button
+              onClick={handleNext}
+              disabled={page === totalPages}
+              variant="outline"
+              size="sm"
+            >
+              Next
+            </Button>
           </div>
         </TabsContent>
 
         <TabsContent value="grid" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredAdventures.map((adventure, idx) => (
+            {adventures.map((adventure, idx) => (
               <AdventureCard
                 key={adventure._id || idx}
                 adventure={adventure}
@@ -201,9 +213,25 @@ export default function AdventuresPage() {
           </div>
           {/* Pagination Controls */}
           <div className="flex justify-between items-center mt-4">
-            <Button onClick={handlePrev} disabled={page === 1} variant="outline" size="sm">Prev</Button>
-            <span>Page {page} of {totalPages} ({total} adventures)</span>
-            <Button onClick={handleNext} disabled={page === totalPages} variant="outline" size="sm">Next</Button>
+            <Button
+              onClick={handlePrev}
+              disabled={page === 1}
+              variant="outline"
+              size="sm"
+            >
+              Prev
+            </Button>
+            <span>
+              Page {page} of {totalPages} ({total} adventures)
+            </span>
+            <Button
+              onClick={handleNext}
+              disabled={page === totalPages}
+              variant="outline"
+              size="sm"
+            >
+              Next
+            </Button>
           </div>
         </TabsContent>
       </Tabs>

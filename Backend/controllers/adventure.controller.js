@@ -8,15 +8,27 @@ import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const getAllAdventure = asyncHandler(async (req, res) => {
-  // Pagination params
-  let { page = 1, limit = 10 } = req.query;
+  // Pagination & search params
+  let { page = 1, limit = 10, search = "" } = req.query;
   page = parseInt(page);
   limit = parseInt(limit);
   const skip = (page - 1) * limit;
 
+  // Build search filter
+  let filter = {};
+  if (search && search.trim() !== "") {
+    filter = {
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { location: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ],
+    };
+  }
+
   const [adventures, total] = await Promise.all([
-    Adventure.find().skip(skip).limit(limit),
-    Adventure.countDocuments(),
+    Adventure.find(filter).skip(skip).limit(limit),
+    Adventure.countDocuments(filter),
   ]);
 
   return res.status(200).json({
