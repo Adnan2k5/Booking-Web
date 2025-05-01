@@ -2,7 +2,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { createAdventure, updateAdventure } from "../../../Api/adventure.api";
+import { createAdventure, updateAdventure } from "../Api/adventure.api";
 import { toast } from "sonner";
 
 const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDialogMode, setEdit, fetchAdventure }) => {

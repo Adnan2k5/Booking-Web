@@ -31,7 +31,7 @@ import {
   DialogTitle,
 } from "../../../components/ui/dialog";
 import { useForm } from "react-hook-form";
-import { createAdventure, deleteAdventure, fetchAllAdventures, updateAdventure } from "../../../Api/adventure.api";
+import { deleteAdventure, fetchAllAdventures } from "../../../Api/adventure.api";
 import { toast } from "sonner";
 import AdventureForm from "./../../../components/AdventureForm";
 import AdventureCard from "./../../../components/AdventureCard";
