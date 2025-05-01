@@ -1,7 +1,8 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
 import { Badge } from "../ui/badge"
-import { MapPin, Star } from "lucide-react"
+import { MapPin } from "lucide-react"
 import { Button } from "../ui/button"
+import StarRating from "../StarRating"
 
 export function AdventureCard({ adventure, formatDate, onBook }) {
   return (
@@ -30,12 +31,7 @@ export function AdventureCard({ adventure, formatDate, onBook }) {
         <CardTitle className="text-xl font-bold text-gray-800">{adventure.name}</CardTitle>
       </CardHeader>
       <CardContent className="pb-2">
-        <div className="flex items-center gap-1">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Star key={star} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-          ))}
-          <span className="text-sm ml-1 text-gray-500">4.8</span>
-        </div>
+        <StarRating rating={4.8} />
       </CardContent>
       <CardFooter className="pt-2 flex flex-col gap-3">
         <div className="flex items-center justify-between w-full">

@@ -5,6 +5,7 @@ import { Input } from "./ui/input";
 import { createAdventure, updateAdventure } from "../Api/adventure.api";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import MediaPreview from "./MediaPreview";
 
 const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDialogMode, setEdit, fetchAdventure }) => {
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
@@ -108,21 +109,7 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
           disabled={isSubmitting}
         />
       </label>
-      {/* Enhanced media preview UI */}
-      <div className="flex flex-wrap gap-3 mt-2">
-        {mediaPreviews.map((media, idx) => (
-          <div key={idx} className="relative w-28 h-28 border rounded flex items-center justify-center bg-gray-50 overflow-hidden">
-            {media.type.startsWith('image') ? (
-              <img src={media.url} alt={media.name} className="object-cover w-full h-full" />
-            ) : media.type.startsWith('video') ? (
-              <video src={media.url} controls className="object-cover w-full h-full" />
-            ) : (
-              <span className="text-xs">{media.name}</span>
-            )}
-            <button type="button" onClick={() => handleRemoveMedia(idx)} className="absolute top-1 right-1 bg-white bg-opacity-80 rounded-full px-1 text-xs text-red-600 hover:bg-opacity-100" disabled={isSubmitting}>✕</button>
-          </div>
-        ))}
-      </div>
+      <MediaPreview mediaPreviews={mediaPreviews} onRemove={handleRemoveMedia} isSubmitting={isSubmitting} />
       <div className="flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={() => setShowAddAdventure(false)} disabled={isSubmitting}>
           Cancel
