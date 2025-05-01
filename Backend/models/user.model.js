@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { Instructor } from "./instructor.model";
 
 const userSchema = new mongoose.Schema(
   {
@@ -29,8 +30,12 @@ const userSchema = new mongoose.Schema(
     refreshToken: { type: String },
     role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["user", "admin", "instructor"],
       default: "user",
+    },
+    ref: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Instructor",
     },
     bookings: [
       {
