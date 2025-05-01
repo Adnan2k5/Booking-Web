@@ -2,8 +2,6 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { axiosClient } from "../AxiosClient/axios";
 import { loginFailure, loginStart, setUser } from "../Store/UserSlice";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { Loader } from "../components/Loader";
 
 // Create Authentication Context
