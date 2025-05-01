@@ -55,7 +55,7 @@ export default function AdventuresPage() {
   const [editAdventure, setEdit] = useState(null);
 
   // Use the custom hook to fetch all adventures
-  const { adventures, isLoading, error } = useAdventures();
+  const { adventures, isLoading, error, refetch } = useAdventures();
 
   const filteredAdventures = adventures.filter((adventure) => {
     const matchesSearch =
@@ -68,15 +68,16 @@ export default function AdventuresPage() {
     if (!confirm("Are you sure you want to delete this adventure?")) {
       return;
     }
-    toast.loading("Deleting adventure...");
+    const toastId = toast.loading("Deleting adventure...");
     try {
       const res = await deleteAdventure(id);
       if (res.status === 200) {
-        toast.success("Adventure deleted successfully");
+        toast.success("Adventure deleted successfully", {id: toastId });
       }
+      refetch();
     }
     catch (error) {
-      toast.error("Error deleting adventure");
+      toast.error("Error deleting adventure", {id: toastId });
       console.log(error)
     }
   }
@@ -198,7 +199,7 @@ export default function AdventuresPage() {
             setShowAddAdventure={setShowAddAdventure}
             setDialogMode={setDialogMode}
             setEdit={setEdit}
-            fetchAdventure={() => {}}
+            fetchAdventure={refetch}
           />
         </DialogContent>
       </Dialog>
