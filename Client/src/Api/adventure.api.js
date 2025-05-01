@@ -33,3 +33,8 @@ export const deleteAdventure = async (id) => {
   });
   return res;
 };
+
+export const getAdventure = async (id) => {
+  const res = await axiosClient.get(`/api/adventure/${id}`);
+  return res;
+};

@@ -31,16 +31,15 @@ import {
   DialogTitle,
 } from "../../../components/ui/dialog";
 import { useForm } from "react-hook-form";
-import { deleteAdventure, fetchAllAdventures } from "../../../Api/adventure.api";
+import { deleteAdventure } from "../../../Api/adventure.api";
 import { toast } from "sonner";
 import AdventureForm from "./../../../components/AdventureForm";
 import AdventureCard from "./../../../components/AdventureCard";
 import AdventureTableRow from "./../../../components/AdventureTableRow";
+import { useAdventures } from "../../../hooks/useAdventure";
 
 export default function AdventuresPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [adventures, setAdventures] = useState([]);
   const { reset } = useForm({
     defaultValues: {
       name: "",
@@ -54,6 +53,9 @@ export default function AdventuresPage() {
   const [showAddAdventure, setShowAddAdventure] = useState(false);
   const [dialogmode, setDialogMode] = useState(false);
   const [editAdventure, setEdit] = useState(null);
+
+  // Use the custom hook to fetch all adventures
+  const { adventures, isLoading, error } = useAdventures();
 
   const filteredAdventures = adventures.filter((adventure) => {
     const matchesSearch =
@@ -78,21 +80,6 @@ export default function AdventuresPage() {
       console.log(error)
     }
   }
-
-  const fetchAdventure = async () => {
-    try {
-      const res = await fetchAllAdventures();
-      if (res.status === 200) {
-        setAdventures(res.data);
-      }
-    } catch (error) {
-      console.error("Error fetching adventures:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchAdventure();
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -211,7 +198,7 @@ export default function AdventuresPage() {
             setShowAddAdventure={setShowAddAdventure}
             setDialogMode={setDialogMode}
             setEdit={setEdit}
-            fetchAdventure={fetchAdventure}
+            fetchAdventure={() => {}}
           />
         </DialogContent>
       </Dialog>
