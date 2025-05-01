@@ -13,7 +13,6 @@ import userRoute from "./routes/user.routes.js"
 import termRouter from "./routes/terms.routes.js";
 import documentRouter from "./routes/document.routes.js";
 import messageRoute from "./routes/message.routes.js";
-import instructorRouter from "./routes/instructor.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
 import initSocketIO from "./socket/socket.js";
@@ -49,7 +48,6 @@ app.use("/api/ticket", tickerRoute);
 app.use("/api/terms", termRouter);
 app.use("/api/document", documentRouter);
 app.use("/api/messages", messageRoute);
-app.use("/api/instructor", instructorRouter);
 
 
 const PORT = process.env.PORT || 8080;
