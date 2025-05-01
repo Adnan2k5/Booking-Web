@@ -40,6 +40,7 @@ import frTranslation from "./locales/fr.json"
 import deTranslation from "./locales/de.json"
 import esTranslation from "./locales/es.json"
 import itTranslation from "./locales/it.json"
+import { InstructorRegister } from "./Pages/Instructor/InstructorLogin"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -76,6 +77,7 @@ const App = () => {
               <Route path="/confirmation" element={<ConfirmationPage />} />
               <Route path="/shop" element={<Shop />} />
               <Route path="/reset" element={<ResetPass />} />
+              <Route path="/instructor/register" element={<InstructorRegister />} />
               <Route
                 path="/dashboard"
                 element={

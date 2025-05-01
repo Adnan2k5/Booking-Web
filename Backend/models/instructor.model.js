@@ -45,7 +45,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// This hook is called just before data is saved
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, 10);
