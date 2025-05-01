@@ -2,12 +2,10 @@ import moongoose from "mongoose";
 
 const sessionSchema = new moongoose.Schema({
     days:
-        [
-            {
-                type: String,
-                enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-            }
-        ],
+    {
+        type: String,
+        enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    },
     status: {
         type: String,
         enum: ["active", "inactive", "cancelled", "expired", "completed"],

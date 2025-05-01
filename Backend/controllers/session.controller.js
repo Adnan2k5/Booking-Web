@@ -72,6 +72,7 @@ export const updateSession = asyncHandler(async (req, res, next) => {
     if (["completed", "cancelled", "expired"].includes(session.status)) {
         throw new ApiError(400, `Cannot update a session with status: ${session.status}`);
     }
+    
     // Validate fields if provided
     if (days && (!Array.isArray(days) || days.length === 0)) {
         throw new ApiError(400, "At least one day is required");
