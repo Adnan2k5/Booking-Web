@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { Instructor } from "./instructor.model";
 
 const userSchema = new mongoose.Schema(
   {
@@ -11,6 +10,11 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       index: true,
+    },
+    profilePicture: {
+      type: String,
+      trim: true,
+      lowercase: true,
     },
     phoneNumber: {
       type: String,
@@ -48,6 +52,15 @@ const userSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "Review",
       },
+    ],
+    friends: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    friendRequests: [
+
     ],
   },
   {
