@@ -6,21 +6,38 @@ import {
 } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { Booking } from "../models/booking.model.js";
-
-// export const getAllAdventure = asyncHandler(async (req, res) => {
-//   const { location, date, duration } = req.params;
-
-//   const adventures = await Adventure.find({ location, date, duration })
-//     .sort({ date: 1 })
-//     .select("-enrolled -instructors");
-
-//   return res.status(200).json(adventures);
-// });
 
 export const getAllAdventure = asyncHandler(async (req, res) => {
-  const adventures = await Adventure.find();
-  return res.status(200).json(adventures);
+  // Pagination & search params
+  let { page = 1, limit = 10, search = "" } = req.query;
+  page = parseInt(page);
+  limit = parseInt(limit);
+  const skip = (page - 1) * limit;
+
+  // Build search filter
+  let filter = {};
+  if (search && search.trim() !== "") {
+    filter = {
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { location: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ],
+    };
+  }
+
+  const [adventures, total] = await Promise.all([
+    Adventure.find(filter).skip(skip).limit(limit),
+    Adventure.countDocuments(filter),
+  ]);
+
+  return res.status(200).json({
+    data: adventures,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+    limit,
+  });
 });
 
 export const createAdventure = asyncHandler(async (req, res) => {
@@ -161,83 +178,6 @@ export const getAdventure = asyncHandler(async (req, res) => {
   }
 
   return res.status(200).json(adventure);
-});
-
-export const enrollAdventure = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  if (!id) {
-    throw new ApiError(400, "Adventure ID is required");
-  }
-
-  const adventure = await Adventure.findById(id);
-
-  if (!adventure) {
-    throw new ApiError(404, "Adventure not found");
-  }
-
-  const booking = await Booking.findOne({ user: req.user._id, adventure: id });
-
-  if (booking) {
-    throw new ApiError(400, "User already enrolled");
-  }
-
-  const newBooking = await Booking.create({
-    user: req.user._id,
-    adventure: id,
-    amount: adventure.exp,
-  });
-
-  await newBooking.save();
-
-  adventure.enrolled.push(newBooking._id);
-  await adventure.save();
-
-  req.user.bookings.push(newBooking._id);
-  await req.user.save();
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, null, "User enrolled successfully"));
-});
-
-export const unenrollAdventure = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  if (!id) {
-    throw new ApiError(400, "Adventure ID is required");
-  }
-
-  const adventure = await Adventure.findById(id);
-
-  if (!adventure) {
-    throw new ApiError(404, "Adventure not found");
-  }
-
-  const booking = await Booking.findOne({ user: req.user._id, adventure: id });
-
-  if (!booking) {
-    throw new ApiError(400, "Users not enrolled");
-  }
-
-  await Booking.deleteOne({ _id: booking._id });
-
-  adventure.enrolled.pull(booking._id);
-  await adventure.save();
-
-  req.user.bookings.pull(booking._id);
-  await req.user.save();
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, null, "User unenrolled successfully"));
-});
-
-export const getEnrolledAdventures = asyncHandler(async (req, res) => {
-  const bookings = await Booking.find({ user: req.user._id }).populate(
-    "adventure"
-  );
-  return res.status(200).json(bookings);
 });
 
 export const getInstructorAdventures = asyncHandler(async (req, res) => {

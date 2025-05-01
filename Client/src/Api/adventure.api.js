@@ -10,8 +10,10 @@ export const createAdventure = async (data) => {
   return res;
 };
 
-export const fetchAllAdventures = async () => {
-  const res = await axiosClient.get("/api/adventure/all");
+export const fetchAllAdventures = async (page = 1, limit = 10, search = "") => {
+  const params = new URLSearchParams({ page, limit });
+  if (search && search.trim() !== "") params.append("search", search);
+  const res = await axiosClient.get(`/api/adventure/all?${params.toString()}`);
   return res;
 };
 
@@ -31,5 +33,10 @@ export const deleteAdventure = async (id) => {
   const res = await axiosClient.delete(`/api/adventure/${id}`, {
     withCredentials: true,
   });
+  return res;
+};
+
+export const getAdventure = async (id) => {
+  const res = await axiosClient.get(`/api/adventure/${id}`);
   return res;
 };

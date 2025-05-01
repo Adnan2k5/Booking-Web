@@ -3,18 +3,12 @@ import {
   Download,
   Plus,
   Search,
-  Trash2,
-  Edit,
-  MapPin,
-  UsersIcon,
-  X,
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -22,10 +16,6 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
 } from "../../../components/ui/card";
 import {
   Tabs,
@@ -37,20 +27,19 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "../../../components/ui/dialog";
-import { Label } from "../../../components/ui/label";
 import { useForm } from "react-hook-form";
-import { createAdventure, deleteAdventure, fetchAllAdventures, updateAdventure } from "../../../Api/adventure.api";
+import { deleteAdventure } from "../../../Api/adventure.api";
 import { toast } from "sonner";
+import AdventureForm from "./../../../components/AdventureForm";
+import AdventureCard from "./../../../components/AdventureCard";
+import AdventureTableRow from "./../../../components/AdventureTableRow";
+import { useAdventures } from "../../../hooks/useAdventure";
 
 export default function AdventuresPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [adventures, setAdventures] = useState([]);
-  const { register, handleSubmit, setValue, reset } = useForm({
+  const { reset } = useForm({
     defaultValues: {
       name: "",
       location: "",
@@ -63,133 +52,43 @@ export default function AdventuresPage() {
   const [showAddAdventure, setShowAddAdventure] = useState(false);
   const [dialogmode, setDialogMode] = useState(false);
   const [editAdventure, setEdit] = useState(null);
-  const [images, setImages] = useState([]);
 
-  const handleImageUpload = (event) => {
-    const files = Array.from(event.target.files);
-    if (files.length + images.length > 4) {
-      alert("You can upload up to 4 images only.");
-      return;
-    }
-
-    const newImages = files.map((file) => ({
-      url: URL.createObjectURL(file),
-      file,
-    }));
-
-    setImages((prev) => [...prev, ...newImages]);
-  };
-
-  const handleRemoveImage = (index) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // Filter adventures based on search term and status
-  const filteredAdventures = adventures.filter((adventure) => {
-    const matchesSearch =
-      adventure.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      adventure.location.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
-
-  const onSubmit = async (data) => {
-    const formData = new FormData();
-    formData.append("name", data.name);
-    formData.append("location", data.location);
-    formData.append("date", data.date);
-    formData.append("description", data.description);
-    formData.append("status", data.status);
-    formData.append("exp", data.exp);
-    images.forEach((image) => {
-      formData.append("medias", image.file);
-    });
-    setLoading(true);
-    if (dialogmode) {
-      try {
-        toast.loading("Updating adventure...");
-        formData.append("_id", editAdventure._id);
-        const res = await updateAdventure(formData);
-        if (res.status === 200) {
-          toast.success("Adventure updated successfully");
-          setShowAddAdventure(false);
-          setImages([]);
-        }
-      }
-      catch (error) {
-        toast.error("Error updating adventure");
-      }
-      finally {
-        setLoading(false);
-        window.location.reload();
-      }
-    }
-    else {
-      try {
-        toast.loading("Creating adventure...");
-        const res = await createAdventure(formData);
-        if (res.status === 201) {
-          toast.success("Adventure created successfully");
-          setShowAddAdventure(false);
-          setImages([]);
-        }
-      } catch (error) {
-        toast.error("Error creating adventure");
-      } finally {
-        setLoading(false);
-        window.location.reload();
-      }
-    }
-  };
+  // Use the custom hook to fetch all adventures with pagination
+  const {
+    adventures,
+    isLoading,
+    error,
+    refetch,
+    page,
+    setPage,
+    totalPages,
+    total,
+    limit,
+    setLimit,
+    search,
+    setSearch,
+  } = useAdventures();
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this adventure?")) {
       return;
     }
-    toast.loading("Deleting adventure...");
+    const toastId = toast.loading("Deleting adventure...");
     try {
       const res = await deleteAdventure(id);
       if (res.status === 200) {
-        toast.success("Adventure deleted successfully");
+        toast.success("Adventure deleted successfully", { id: toastId });
       }
-    }
-    catch (error) {
-      toast.error("Error deleting adventure");
-      console.log(error)
-    }
-  }
-
-
-  const fetchAdventure = async () => {
-    try {
-      const res = await fetchAllAdventures();
-      if (res.status === 200) {
-        setAdventures(res.data);
-      }
+      refetch();
     } catch (error) {
-      console.error("Error fetching adventures:", error);
+      toast.error("Error deleting adventure", { id: toastId });
+      console.log(error);
     }
   };
 
-  useEffect(() => {
-    fetchAdventure();
-  }, []);
-  useEffect(() => {
-    if (dialogmode && editAdventure) {
-      setValue("name", editAdventure.name || "");
-      setValue("location", editAdventure.location || "");
-      setValue("description", editAdventure.description || "");
-      setValue("exp", editAdventure.exp || "");
-      setValue("medias", editAdventure.medias || []);
-    } else {
-      reset({
-        name: "",
-        location: "",
-        description: "",
-        exp: "",
-        medias: [],
-      });
-    }
-  }, [dialogmode, editAdventure, setValue, reset]);
+  // Pagination controls
+  const handlePrev = () => setPage((p) => Math.max(1, p - 1));
+  const handleNext = () => setPage((p) => Math.min(totalPages, p + 1));
 
   return (
     <div className="space-y-6">
@@ -208,7 +107,6 @@ export default function AdventuresPage() {
                 exp: "",
                 medias: [],
               });
-              setImages([]);
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -231,8 +129,11 @@ export default function AdventuresPage() {
                 type="search"
                 placeholder="Search adventures..."
                 className="w-[200px] sm:w-[300px] pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1); // Reset to first page on new search
+                }}
               />
             </div>
             <Button variant="outline" size="sm">
@@ -255,91 +156,82 @@ export default function AdventuresPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAdventures.map((adventure, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell className="font-medium">
-                        {adventure.name}
-                      </TableCell>
-                      <TableCell>{adventure.location}</TableCell>
-                      <TableCell>{adventure.enrolled.length}</TableCell>
-                      <TableCell>{adventure.instructors || 0}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-start space-x-2">
-                          <Button
-                            onClick={() => {
-                              setDialogMode(true);
-                              setEdit(adventure);
-                              setShowAddAdventure(true);
-                            }}
-                            variant="ghost"
-                            size="icon"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button onClick={() => { handleDelete(adventure._id) }} variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                  {adventures.map((adventure, idx) => (
+                    <AdventureTableRow
+                      key={adventure._id || idx}
+                      adventure={adventure}
+                      onEdit={() => {
+                        setDialogMode(true);
+                        setEdit(adventure);
+                        setShowAddAdventure(true);
+                      }}
+                      onDelete={() => handleDelete(adventure._id)}
+                    />
                   ))}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center mt-4">
+            <Button
+              onClick={handlePrev}
+              disabled={page === 1}
+              variant="outline"
+              size="sm"
+            >
+              Prev
+            </Button>
+            <span>
+              Page {page} of {totalPages} ({total} adventures)
+            </span>
+            <Button
+              onClick={handleNext}
+              disabled={page === totalPages}
+              variant="outline"
+              size="sm"
+            >
+              Next
+            </Button>
+          </div>
         </TabsContent>
 
         <TabsContent value="grid" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredAdventures.map((adventure, idx) => (
-              <Card key={idx} className="overflow-hidden">
-                <div className="aspect-video relative">
-                  <img
-                    src={
-                      adventure.medias[0]
-                    }
-                    alt={adventure.name}
-                    className="h-[300px] w-[500px]"
-                  />
-                </div>
-                <CardHeader className="pb-2">
-                  <CardTitle>{adventure.name}</CardTitle>
-                  <CardDescription className="flex items-center">
-                    <MapPin className="h-3 w-3 mr-1" /> {adventure.location}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2 pb-2">
-                  <div className="flex justify-between text-sm">
-                    <div className="flex items-center">
-                      <UsersIcon className="h-3 w-3 mr-1" />
-                      <span>{adventure.enrolled.length} bookings</span>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {adventure.description}
-                  </p>
-                </CardContent>
-                <CardFooter className="flex justify-between pt-2">
-                  <div className="flex space-x-2">
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        setDialogMode(true);
-                        setEdit(adventure);
-                        setShowAddAdventure(true);
-                      }}
-                      variant="ghost"
-                      size="sm"
-                    >
-                      <Edit className="h-4 w-4 mr-1" /> Edit
-                    </Button>
-                    <Button onClick={() => { deleteAdventure(adventure._id) }} variant="ghost" size="sm">
-                      <Trash2 className="h-4 w-4 mr-1" /> Delete
-                    </Button>
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
+            {adventures.map((adventure, idx) => 
+              <AdventureCard
+                key={adventure._id || idx}
+                adventure={adventure}
+                onEdit={() => {
+                  setDialogMode(true);
+                  setEdit(adventure);
+                  setShowAddAdventure(true);
+                }}
+                onDelete={() => handleDelete(adventure._id)}
+              />
+            )}
+          </div>
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center mt-4">
+            <Button
+              onClick={handlePrev}
+              disabled={page === 1}
+              variant="outline"
+              size="sm"
+            >
+              Prev
+            </Button>
+            <span>
+              Page {page} of {totalPages} ({total} adventures)
+            </span>
+            <Button
+              onClick={handleNext}
+              disabled={page === totalPages}
+              variant="outline"
+              size="sm"
+            >
+              Next
+            </Button>
           </div>
         </TabsContent>
       </Tabs>
@@ -356,112 +248,14 @@ export default function AdventuresPage() {
                 : `Create a new adventure experience for your customers.`}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2 flex flex-col">
-                  <Label htmlFor="name">Adventure Name</Label>
-                  <input
-                    className="py-1 px-1 border rounded-md placeholder:text-sm"
-                    {...register("name")}
-                    id="name"
-                    placeholder="Enter adventure name"
-                  />
-                </div>
-                <div className="space-y-2 flex flex-col">
-                  <Label htmlFor="location">Location</Label>
-                  <input
-                    className="py-1 px-1 border rounded-md placeholder:text-sm"
-                    {...register("location")}
-                    id="location"
-                    placeholder="Enter location"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4"></div>
-              <div className="space-y-2 flex flex-col">
-                <Label htmlFor="description">Description</Label>
-                <textarea
-                  className="px-2 py-2 border rounded-md placeholder:text-sm"
-                  {...register("description")}
-                  id="description"
-                  placeholder="Describe the adventure experience"
-                />
-              </div>
-              <div className="flex gap-8">
-                <div className="space-y-2 flex flex-col">
-                  <Label htmlFor="status">Experience Points</Label>
-                  <input
-                    className="py-1 px-1 border rounded-md placeholder:text-sm"
-                    {...register("exp")}
-                    id="experience"
-                    placeholder="Enter experience"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2 flex flex-col">
-                <Label htmlFor="image">Upload Images & Videos (Max 4)</Label>
-                <input
-                  className="py-1 px-1 border rounded-md placeholder:text-sm"
-                  id="image"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  disabled={images.length >= 4}
-                />
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {dialogmode &&
-                    editAdventure?.medias?.map((img, index) => (
-                      <div
-                        key={index}
-                        className="relative group w-[22%] h-24"
-                      >
-                        <img
-                          src={img}
-                          alt={`Uploaded ${index + 1}`}
-                          className="w-full h-full object-cover rounded-md"
-                        />
-                        <button
-                          className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
-                          onClick={() => handleRemoveImage(index)}
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  {images?.map((img, index) => (
-                    <div key={index} className="relative group w-[22%] h-24">
-                      <img
-                        src={img.url}
-                        alt={`Uploaded ${index + 1}`}
-                        className="w-full h-full object-cover rounded-md"
-                      />
-                      <button
-                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
-                        onClick={() => handleRemoveImage(index)}
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setShowAddAdventure(false)}
-              >
-                Cancel
-              </Button>
-              {loading ? (
-                <Button>Posting...</Button>
-              ) : (
-                <Button>{dialogmode ? `Update` : `Create Adventure`}</Button>
-              )}
-            </DialogFooter>
-          </form>
+          <AdventureForm
+            dialogmode={dialogmode}
+            editAdventure={editAdventure}
+            setShowAddAdventure={setShowAddAdventure}
+            setDialogMode={setDialogMode}
+            setEdit={setEdit}
+            fetchAdventure={refetch}
+          />
         </DialogContent>
       </Dialog>
     </div>
