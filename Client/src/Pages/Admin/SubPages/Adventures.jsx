@@ -198,7 +198,7 @@ export default function AdventuresPage() {
 
         <TabsContent value="grid" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {adventures.map((adventure, idx) => (
+            {adventures.map((adventure, idx) => 
               <AdventureCard
                 key={adventure._id || idx}
                 adventure={adventure}
@@ -209,7 +209,7 @@ export default function AdventuresPage() {
                 }}
                 onDelete={() => handleDelete(adventure._id)}
               />
-            ))}
+            )}
           </div>
           {/* Pagination Controls */}
           <div className="flex justify-between items-center mt-4">
