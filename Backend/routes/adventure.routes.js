@@ -5,9 +5,6 @@ import {
     updateAdventure, 
     deleteAdventure, 
     getAdventure, 
-    enrollAdventure, 
-    unenrollAdventure,
-    getEnrolledAdventures,
     getInstructorAdventures,
  } from '../controllers/adventure.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
@@ -21,10 +18,6 @@ adventureRoute.post('/create', verifyJWT , upload.fields([
         name: 'medias', maxCount: 4
     }
 ]), createAdventure);
-
-
-adventureRoute.post('/enroll/:id', verifyJWT , enrollAdventure);
-adventureRoute.post('/unenroll/:id', verifyJWT , unenrollAdventure);
 
 adventureRoute.get('/instructor', verifyJWT , getInstructorAdventures);
 adventureRoute.get('/bookings', verifyJWT , getEnrolledAdventures);
