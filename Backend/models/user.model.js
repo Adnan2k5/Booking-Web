@@ -11,6 +11,11 @@ const userSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    profilePicture: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
     phoneNumber: {
       type: String,
       index: true,
@@ -29,8 +34,12 @@ const userSchema = new mongoose.Schema(
     refreshToken: { type: String },
     role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["user", "admin", "instructor"],
       default: "user",
+    },
+    ref: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Instructor",
     },
     bookings: [
       {
@@ -43,6 +52,15 @@ const userSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "Review",
       },
+    ],
+    friends: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    friendRequests: [
+
     ],
   },
   {
