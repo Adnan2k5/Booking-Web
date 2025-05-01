@@ -41,6 +41,9 @@ import deTranslation from "./locales/de.json"
 import esTranslation from "./locales/es.json"
 import itTranslation from "./locales/it.json"
 import { InstructorRegister } from "./Pages/Instructor/InstructorLogin"
+import { InstructorBookings } from "./Pages/Instructor/Instructor.bookings"
+import { InstructorSession } from "./Pages/Instructor/InstructorSession"
+import { InstructorProfile } from "./Pages/Instructor/InstructorProfile"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -117,10 +120,10 @@ const App = () => {
                 }
               />
               <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
-              <Route path="/instructor/bookings" element={<InstructorDashboard />} />
-              <Route path="/instructor/sessions" element={<InstructorDashboard />} />
+              <Route path="/instructor/bookings" element={<InstructorBookings />} />
+              <Route path="/instructor/sessions" element={<InstructorSession />} />
               <Route path="/instructor/sessions/new" element={<SessionForm />} />
-              <Route path="/instructor/profile" element={<InstructorDashboard />} />
+              <Route path="/instructor/profile" element={<InstructorProfile />} />
               <Route path="/instructor/settings" element={<InstructorDashboard />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route

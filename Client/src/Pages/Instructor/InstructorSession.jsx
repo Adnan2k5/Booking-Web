@@ -1,17 +1,14 @@
 import React from 'react'
-import { Star } from "lucide-react"
+import { motion } from "framer-motion"
+import { Clock, MapPin, Search } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Badge } from "../../components/ui/badge"
-
-import { Separator } from "../../components/ui/separator"
+import { Input } from "../../components/ui/input"
 import { useTranslation } from 'react-i18next'
 import InstructorLayout from './InstructorLayout'
 
-
-
-export const InstructorProfile = () => {
+export const InstructorSession = () => {
     const mockData = {
         instructor: {
             id: 1,
@@ -220,86 +217,84 @@ export const InstructorProfile = () => {
         },
     }
 
+
     const { t } = useTranslation();
     return (
         <InstructorLayout>
-            <div value="profile" className="space-y-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{t("instructor.profileInformation")}</CardTitle>
-                        <CardDescription>{t("instructor.manageProfileDescription")}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-col md:flex-row gap-8">
-                            <div className="md:w-1/3 flex flex-col items-center">
-                                <Avatar className="h-32 w-32 mb-4">
-                                    <AvatarImage src={mockData.instructor.img || "/placeholder.svg"} alt={mockData.instructor.name} />
-                                    <AvatarFallback>{mockData.instructor.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div className="text-center">
-                                    <h3 className="font-semibold text-xl">{mockData.instructor.name}</h3>
-                                    <p className="text-muted-foreground">{mockData.instructor.specialty}</p>
-                                    <div className="flex items-center justify-center mt-2">
-                                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                                        <span className="ml-1 font-medium">{mockData.instructor.rating}</span>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-1">{mockData.instructor.experience}</p>
-                                </div>
-                                <Button variant="outline" className="mt-4 w-full">
-                                    {t("instructor.changePhoto")}
-                                </Button>
-                            </div>
+            <div value="sessions" className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                        <div className="relative w-full sm:w-64">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input type="search" placeholder={t("instructor.searchSessions")} className="w-full pl-8" />
+                        </div>
+                    </div>
+                    <Button onClick={() => navigate("/instructor/sessions/new")}>{t("instructor.createNewSession")}</Button>
+                </div>
 
-                            <div className="md:w-2/3">
-                                <div className="space-y-4">
-                                    <div>
-                                        <h4 className="font-medium mb-2">{t("instructor.bio")}</h4>
-                                        <p className="text-muted-foreground">{mockData.instructor.bio}</p>
-                                    </div>
-
-                                    <Separator />
-
-                                    <div>
-                                        <h4 className="font-medium mb-2">{t("instructor.bio")}</h4>
-                                        <p className="text-muted-foreground">{mockData.instructor.bio}</p>
-                                    </div>
-
-                                    <Separator />
-
-                                    <div>
-                                        <h4 className="font-medium mb-2">{t("instructor.languages")}</h4>
-                                        <div className="flex flex-wrap gap-2">
-                                            {mockData.instructor.languages.map((language, index) => (
-                                                <Badge key={index} variant="outline">
-                                                    {language}
-                                                </Badge>
-                                            ))}
+                <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
+                    {mockData.sessions.map((session) => (
+                        <motion.div key={session.id} variants={fadeIn}>
+                            <Card>
+                                <CardHeader>
+                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                        <div>
+                                            <CardTitle>{session.title}</CardTitle>
+                                            <CardDescription className="flex items-center mt-1">
+                                                <MapPin className="h-3 w-3 mr-1" />
+                                                {session.location}
+                                                <span className="mx-2">•</span>
+                                                <Clock className="h-3 w-3 mr-1" />
+                                                {session.duration}
+                                            </CardDescription>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                                {session.adventure}
+                                            </Badge>
+                                            <div className="font-semibold text-lg">${session.price}</div>
                                         </div>
                                     </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-muted-foreground mb-4">{session.description}</p>
 
-                                    <Separator />
-
-                                    <div>
-                                        <h4 className="font-medium mb-2">{t("instructor.certificates")}</h4>
-                                        <div className="space-y-2">
-                                            {mockData.instructor.certificates.map((certificate, index) => (
-                                                <div key={index} className="flex items-center gap-2">
-                                                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                                                    <span>{certificate}</span>
+                                    <div className="space-y-3">
+                                        <h4 className="font-medium">{t("instructor.upcomingDates")}</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            {session.upcoming.map((date, index) => (
+                                                <div key={index} className="border rounded-lg p-3 bg-card">
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <div className="font-medium">{new Date(date.date).toLocaleDateString()}</div>
+                                                        <div className="text-sm text-muted-foreground">{date.time}</div>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="text-sm">
+                                                            <span className="text-green-600">{date.booked}</span>/{session.capacity}{" "}
+                                                            {t("instructor.booked")}
+                                                        </div>
+                                                        <Badge variant={date.available > 0 ? "outline" : "secondary"}>
+                                                            {date.available > 0
+                                                                ? `${date.available} ${t("instructor.available")}`
+                                                                : t("instructor.fullyBooked")}
+                                                        </Badge>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="mt-6 flex justify-end gap-2">
-                                    <Button variant="outline">{t("instructor.editProfile")}</Button>
-                                    <Button>{t("instructor.saveChanges")}</Button>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                                </CardContent>
+                                <CardFooter className="flex justify-end gap-2">
+                                    <Button variant="outline">{t("instructor.editSession")}</Button>
+                                    <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                        {t("instructor.cancelSession")}
+                                    </Button>
+                                    <Button>{t("instructor.addDates")}</Button>
+                                </CardFooter>
+                            </Card>
+                        </motion.div>
+                    ))}
+                </motion.div>
             </div>
         </InstructorLayout>
     )
