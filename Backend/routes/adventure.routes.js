@@ -20,7 +20,6 @@ adventureRoute.post('/create', verifyJWT , upload.fields([
 ]), createAdventure);
 
 adventureRoute.get('/instructor', verifyJWT , getInstructorAdventures);
-adventureRoute.get('/bookings', verifyJWT , getEnrolledAdventures);
 
 adventureRoute.put('/:id', verifyJWT , upload.fields([
     {
