@@ -1,9 +1,8 @@
-// Session Controller
 import { Session } from "../models/session.model.js";
 import { Adventure } from "../models/adventure.model.js";
 import { Instructor } from "../models/instructor.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import asyncHandler from "../utils/asyncHandler.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 // Create a new session
 export const createSession = asyncHandler(async (req, res, next) => {
@@ -72,7 +71,7 @@ export const updateSession = asyncHandler(async (req, res, next) => {
     if (["completed", "cancelled", "expired"].includes(session.status)) {
         throw new ApiError(400, `Cannot update a session with status: ${session.status}`);
     }
-    
+
     // Validate fields if provided
     if (days && (!Array.isArray(days) || days.length === 0)) {
         throw new ApiError(400, "At least one day is required");
