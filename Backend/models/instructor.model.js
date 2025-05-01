@@ -23,6 +23,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    documentVerified: {
+      type: String,
+      enum: ["pending", "verified", "rejected"],
+      default: "pending",
+    },
     password: {
       type: String,
     },
@@ -39,6 +44,10 @@ const userSchema = new mongoose.Schema(
         ref: "Review",
       },
     ],
+    avgReview: {
+      type: Number,
+      default: 0,
+    }
   },
   {
     Timestamps: true,
