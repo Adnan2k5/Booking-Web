@@ -40,7 +40,7 @@ const generateAccessAndRefreshTokens = async (user) => {
 }
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     if ((email?.trim() === "" || !email) || (password?.trim() === "" || !password)) {
         throw new ApiError(400, "Email and Password are Required");
@@ -55,6 +55,8 @@ const registerUser = asyncHandler(async (req, res) => {
     const user = await User.create({
         email: email.toLowerCase(),
         password: password,
+        name: name,
+        role: role,
     });
 
     const otpCode = Math.floor(100000 + Math.random() * 900000);
