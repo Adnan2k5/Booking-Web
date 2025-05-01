@@ -152,6 +152,8 @@ const mockData = {
                 { date: "2025-04-27", time: "09:00 AM", booked: 6, available: 2 },
                 { date: "2025-05-04", time: "09:00 AM", booked: 2, available: 6 },
             ],
+            status: "active",
+            days: ["Monday", "Wednesday"],
         },
         {
             id: "S-1002",
@@ -168,6 +170,8 @@ const mockData = {
                 { date: "2025-04-29", time: "10:00 AM", booked: 8, available: 2 },
                 { date: "2025-05-06", time: "10:00 AM", booked: 3, available: 7 },
             ],
+            status: "active",
+            days: ["Tuesday", "Thursday"],
         },
         {
             id: "S-1003",
@@ -183,6 +187,8 @@ const mockData = {
                 { date: "2025-05-02", time: "08:30 AM", booked: 5, available: 1 },
                 { date: "2025-05-09", time: "08:30 AM", booked: 2, available: 4 },
             ],
+            status: "active",
+            days: ["Friday"],
         },
     ],
 }
@@ -216,6 +222,20 @@ const InstructorDashboard = () => {
     const { t } = useTranslation()
     const [timeRange, setTimeRange] = useState("month")
     const [activeTab, setActiveTab] = useState("overview")
+    const [showCreateModal, setShowCreateModal] = useState(false)
+    const [sessions, setSessions] = useState(mockData.sessions)
+    const [newSession, setNewSession] = useState({
+        title: '',
+        adventure: '',
+        location: '',
+        price: '',
+        duration: '',
+        capacity: '',
+        description: '',
+        days: [],
+        status: 'active',
+    })
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
     useEffect(() => {
         // Check if user is logged in and is an instructor
@@ -225,6 +245,53 @@ const InstructorDashboard = () => {
         }
         // In a real app, you would check if the user has instructor role
     }, [user, navigate])
+
+    const handleDayToggle = (day) => {
+        setNewSession((prev) => ({
+            ...prev,
+            days: prev.days.includes(day)
+                ? prev.days.filter((d) => d !== day)
+                : [...prev.days, day],
+        }))
+    }
+
+    const handleSessionChange = (e) => {
+        const { name, value } = e.target
+        setNewSession((prev) => ({ ...prev, [name]: value }))
+    }
+
+    const handleStatusChange = (id, status) => {
+        setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
+    }
+
+    const handleCreateSession = (e) => {
+        e.preventDefault()
+        if (!newSession.title || !newSession.adventure || !newSession.location) {
+            toast.error('Please fill all required fields')
+            return
+        }
+        setSessions((prev) => [
+            ...prev,
+            {
+                ...newSession,
+                id: `S-${Date.now()}`,
+                upcoming: [],
+            },
+        ])
+        setShowCreateModal(false)
+        setNewSession({
+            title: '',
+            adventure: '',
+            location: '',
+            price: '',
+            duration: '',
+            capacity: '',
+            description: '',
+            days: [],
+            status: 'active',
+        })
+        toast.success('Session created!')
+    }
 
     // Animation variants
     const fadeIn = {
@@ -608,11 +675,61 @@ const InstructorDashboard = () => {
                                     <Input type="search" placeholder={t("instructor.searchSessions")} className="w-full pl-8" />
                                 </div>
                             </div>
-                            <Button onClick={() => navigate("/instructor/sessions/new")}>{t("instructor.createNewSession")}</Button>
+                            <Button onClick={() => setShowCreateModal(true)}>{t("instructor.createNewSession")}</Button>
                         </div>
-
+                        {/* Create Session Modal */}
+                        {showCreateModal && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                                <form onSubmit={handleCreateSession} className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg space-y-4">
+                                    <h3 className="text-lg font-bold mb-2">Create New Session</h3>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Input name="title" value={newSession.title} onChange={handleSessionChange} placeholder="Title" required />
+                                        <Input name="adventure" value={newSession.adventure} onChange={handleSessionChange} placeholder="Adventure" required />
+                                        <Input name="location" value={newSession.location} onChange={handleSessionChange} placeholder="Location" required />
+                                        <Input name="price" value={newSession.price} onChange={handleSessionChange} placeholder="Price" type="number" />
+                                        <Input name="duration" value={newSession.duration} onChange={handleSessionChange} placeholder="Duration (e.g. 6 hours)" />
+                                        <Input name="capacity" value={newSession.capacity} onChange={handleSessionChange} placeholder="Capacity" type="number" />
+                                    </div>
+                                    <Input name="description" value={newSession.description} onChange={handleSessionChange} placeholder="Description" />
+                                    <div>
+                                        <div className="font-medium mb-1">Days of the Week</div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {daysOfWeek.map((day) => (
+                                                <label key={day} className="flex items-center gap-1">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={newSession.days.includes(day)}
+                                                        onChange={() => handleDayToggle(day)}
+                                                    />
+                                                    <span>{day}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="font-medium mb-1">Status</div>
+                                        <select
+                                            name="status"
+                                            value={newSession.status}
+                                            onChange={handleSessionChange}
+                                            className="border rounded px-2 py-1"
+                                        >
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                            <option value="cancelled">Cancelled</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex justify-end gap-2">
+                                        <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>
+                                            Cancel
+                                        </Button>
+                                        <Button type="submit">Create</Button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
                         <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
-                            {mockData.sessions.map((session) => (
+                            {sessions.map((session) => (
                                 <motion.div key={session.id} variants={fadeIn}>
                                     <Card>
                                         <CardHeader>
@@ -632,16 +749,27 @@ const InstructorDashboard = () => {
                                                         {session.adventure}
                                                     </Badge>
                                                     <div className="font-semibold text-lg">${session.price}</div>
+                                                    <select
+                                                        value={session.status || 'active'}
+                                                        onChange={e => handleStatusChange(session.id, e.target.value)}
+                                                        className="border rounded px-2 py-1 ml-2"
+                                                    >
+                                                        <option value="active">Active</option>
+                                                        <option value="inactive">Inactive</option>
+                                                        <option value="cancelled">Cancelled</option>
+                                                    </select>
                                                 </div>
                                             </div>
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-muted-foreground mb-4">{session.description}</p>
-
+                                            <div className="mb-2 text-sm text-muted-foreground">
+                                                Days: {session.days ? session.days.join(', ') : ''}
+                                            </div>
                                             <div className="space-y-3">
                                                 <h4 className="font-medium">{t("instructor.upcomingDates")}</h4>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                    {session.upcoming.map((date, index) => (
+                                                    {session.upcoming && session.upcoming.map((date, index) => (
                                                         <div key={index} className="border rounded-lg p-3 bg-card">
                                                             <div className="flex justify-between items-center mb-2">
                                                                 <div className="font-medium">{new Date(date.date).toLocaleDateString()}</div>
@@ -649,8 +777,7 @@ const InstructorDashboard = () => {
                                                             </div>
                                                             <div className="flex justify-between items-center">
                                                                 <div className="text-sm">
-                                                                    <span className="text-green-600">{date.booked}</span>/{session.capacity}{" "}
-                                                                    {t("instructor.booked")}
+                                                                    <span className="text-green-600">{date.booked}</span>/{session.capacity} {t("instructor.booked")}
                                                                 </div>
                                                                 <Badge variant={date.available > 0 ? "outline" : "secondary"}>
                                                                     {date.available > 0
