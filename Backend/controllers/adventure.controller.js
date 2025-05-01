@@ -6,12 +6,26 @@ import {
 } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { Booking } from "../models/booking.model.js";
-
 
 export const getAllAdventure = asyncHandler(async (req, res) => {
-  const adventures = await Adventure.find();
-  return res.status(200).json(adventures);
+  // Pagination params
+  let { page = 1, limit = 10 } = req.query;
+  page = parseInt(page);
+  limit = parseInt(limit);
+  const skip = (page - 1) * limit;
+
+  const [adventures, total] = await Promise.all([
+    Adventure.find().skip(skip).limit(limit),
+    Adventure.countDocuments(),
+  ]);
+
+  return res.status(200).json({
+    data: adventures,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+    limit,
+  });
 });
 
 export const createAdventure = asyncHandler(async (req, res) => {

@@ -10,8 +10,8 @@ export const createAdventure = async (data) => {
   return res;
 };
 
-export const fetchAllAdventures = async () => {
-  const res = await axiosClient.get("/api/adventure/all");
+export const fetchAllAdventures = async (page = 1, limit = 10) => {
+  const res = await axiosClient.get(`/api/adventure/all?page=${page}&limit=${limit}`);
   return res;
 };
 

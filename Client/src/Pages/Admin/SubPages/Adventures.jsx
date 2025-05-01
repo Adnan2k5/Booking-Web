@@ -54,8 +54,19 @@ export default function AdventuresPage() {
   const [dialogmode, setDialogMode] = useState(false);
   const [editAdventure, setEdit] = useState(null);
 
-  // Use the custom hook to fetch all adventures
-  const { adventures, isLoading, error, refetch } = useAdventures();
+  // Use the custom hook to fetch all adventures with pagination
+  const {
+    adventures,
+    isLoading,
+    error,
+    refetch,
+    page,
+    setPage,
+    totalPages,
+    total,
+    limit,
+    setLimit,
+  } = useAdventures();
 
   const filteredAdventures = adventures.filter((adventure) => {
     const matchesSearch =
@@ -81,6 +92,10 @@ export default function AdventuresPage() {
       console.log(error)
     }
   }
+
+  // Pagination controls
+  const handlePrev = () => setPage((p) => Math.max(1, p - 1));
+  const handleNext = () => setPage((p) => Math.min(totalPages, p + 1));
 
   return (
     <div className="space-y-6">
@@ -161,6 +176,12 @@ export default function AdventuresPage() {
               </Table>
             </CardContent>
           </Card>
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center mt-4">
+            <Button onClick={handlePrev} disabled={page === 1} variant="outline" size="sm">Prev</Button>
+            <span>Page {page} of {totalPages} ({total} adventures)</span>
+            <Button onClick={handleNext} disabled={page === totalPages} variant="outline" size="sm">Next</Button>
+          </div>
         </TabsContent>
 
         <TabsContent value="grid" className="space-y-4">
@@ -177,6 +198,12 @@ export default function AdventuresPage() {
                 onDelete={() => handleDelete(adventure._id)}
               />
             ))}
+          </div>
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center mt-4">
+            <Button onClick={handlePrev} disabled={page === 1} variant="outline" size="sm">Prev</Button>
+            <span>Page {page} of {totalPages} ({total} adventures)</span>
+            <Button onClick={handleNext} disabled={page === totalPages} variant="outline" size="sm">Next</Button>
           </div>
         </TabsContent>
       </Tabs>
