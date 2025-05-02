@@ -4,8 +4,8 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import {
     Calendar,
     Clock,
@@ -19,13 +19,13 @@ import {
     ChevronRight,
     Plus,
 } from "lucide-react"
-import { Avatar, AvatarFallback } from "../components/ui/avatar"
-import { Badge } from "../components/ui/badge"
-import { Button } from "../components/ui/button"
-import { Input } from "../components/ui/input"
-import { Textarea } from "../components/ui/textarea"
-import { Separator } from "../components/ui/separator"
-import { useAuth } from "./AuthProvider"
+import { Avatar, AvatarFallback } from "../../components/ui/avatar"
+import { Badge } from "../../components/ui/badge"
+import { Button } from "../../components/ui/button"
+import { Input } from "../../components/ui/input"
+import { Textarea } from "../../components/ui/textarea"
+import { Separator } from "../../components/ui/separator"
+import { useAuth } from "../AuthProvider"
 import {
     Dialog,
     DialogContent,
@@ -33,7 +33,7 @@ import {
     DialogTitle,
     DialogFooter,
     DialogDescription,
-} from "../components/ui/dialog"
+} from "../../components/ui/dialog"
 
 // Mock data for past bookings
 const mockBookings = [
@@ -109,22 +109,7 @@ const mockTickets = [
     },
 ]
 
-// User profile data
-const userProfile = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    level: "Explorer",
-    experience: 450,
-    nextLevel: 500,
-    joinDate: "2024-12-01",
-    completedAdventures: 2,
-    upcomingAdventures: 1,
-    preferences: {
-        notifications: true,
-        newsletter: false,
-        language: "en",
-    },
-}
+
 
 export default function UserDashboard() {
     const { t } = useTranslation()
@@ -136,6 +121,21 @@ export default function UserDashboard() {
     const [activeTicket, setActiveTicket] = useState(null)
     const [isTicketDetailOpen, setIsTicketDetailOpen] = useState(false)
     const [newReply, setNewReply] = useState("")
+    console.log(user)
+    const userProfile = {
+        name: "Adnan",
+        email: user.email,
+        level: "Explorer",
+        experience: 450,
+        nextLevel: 500,
+        completedAdventures: 2,
+        upcomingAdventures: 1,
+        preferences: {
+            notifications: true,
+            newsletter: false,
+            language: "en",
+        },
+    }
 
     // Calculate progress percentage for experience bar
     const progressPercentage = (userProfile.experience / userProfile.nextLevel) * 100
@@ -199,14 +199,6 @@ export default function UserDashboard() {
                             className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                         >
                             {t("shop")}
-                        </Button>
-
-                        <Button
-                            onClick={() => navigate("/post-adventure")}
-                            className="bg-gradient-to-r from-green-600 to-lime-500 hover:from-green-700 hover:to-lime-600"
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Post New Adventure
                         </Button>
                     </motion.div>
                 </div>

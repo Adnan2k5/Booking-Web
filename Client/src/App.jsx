@@ -5,7 +5,7 @@ import Booking from "./Pages/Booking"
 import { ResetPass } from "./Pages/ResetPass"
 import { Loader } from "./components/Loader"
 import { AuthProvider } from "./Pages/AuthProvider"
-import UserDashboard from "./Pages/UserDashboard"
+import UserDashboard from "./Pages/User/UserDashboard"
 import UserDashboardLayout from "./components/UserDashboardLayout"
 import InstructorDashboard from "./Pages/Instructor/InstructorDashboard"
 import SessionForm from "./Pages/Instructor/SessionForm"
@@ -44,6 +44,7 @@ import { InstructorRegister } from "./Pages/Instructor/InstructorLogin"
 import { InstructorBookings } from "./Pages/Instructor/Instructor.bookings"
 import { InstructorSession } from "./Pages/Instructor/InstructorSession"
 import { InstructorProfile } from "./Pages/Instructor/InstructorProfile"
+import InstructorSettings from "./Pages/Instructor/InstructorSettings"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -124,7 +125,7 @@ const App = () => {
               <Route path="/instructor/sessions" element={<InstructorSession />} />
               <Route path="/instructor/sessions/new" element={<SessionForm />} />
               <Route path="/instructor/profile" element={<InstructorProfile />} />
-              <Route path="/instructor/settings" element={<InstructorDashboard />} />
+              <Route path="/instructor/settings" element={<InstructorSettings />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route
                   index
