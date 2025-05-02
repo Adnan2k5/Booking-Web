@@ -175,29 +175,6 @@ export const InstructorSession = () => {
         ],
     }
 
-    const adventureTypes = [
-        "Mountain Climbing",
-        "Wilderness Survival",
-        "Rock Climbing",
-        "Alpine Hiking",
-        "Kayaking",
-        "Scuba Diving",
-        "Paragliding",
-        "Skiing",
-    ]
-
-    const locations = [
-        "Alpine Heights",
-        "Evergreen Forest",
-        "Granite Peaks",
-        "Mountain Range",
-        "Crystal Lake",
-        "Coastal Cliffs",
-        "Desert Canyon",
-        "Snowy Summit",
-    ]
-
-    // Animation variants
     const fadeIn = {
         hidden: { opacity: 0, y: 20 },
         visible: {

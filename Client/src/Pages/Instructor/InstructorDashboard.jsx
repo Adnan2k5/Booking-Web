@@ -19,6 +19,7 @@ import InstructorLayout from "./InstructorLayout"
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import SessionCalendar from "../../components/SessionCalendar"
 import UpcomingBookingsCard from "../../components/UpcomingBookingsCard"
+import { getAllSessions } from "../../Api/session.api"
 
 // Mock data for the instructor dashboard
 const mockData = {
@@ -223,7 +224,7 @@ const InstructorDashboard = () => {
     const [timeRange, setTimeRange] = useState("month")
     const [activeTab, setActiveTab] = useState("overview")
     const [showCreateModal, setShowCreateModal] = useState(false)
-    const [sessions, setSessions] = useState(mockData.sessions)
+    const [sessions, setSessions] = useState(null)
     const [newSession, setNewSession] = useState({
         title: '',
         adventure: '',
@@ -236,15 +237,17 @@ const InstructorDashboard = () => {
         status: 'active',
     })
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
+    console.log("user", user)
     useEffect(() => {
-        // Check if user is logged in and is an instructor
         if (!user.user) {
             toast.error("Please login to access the instructor dashboard")
             navigate("/login")
         }
         // In a real app, you would check if the user has instructor role
     }, [user, navigate])
+
+
+
 
     const handleDayToggle = (day) => {
         setNewSession((prev) => ({
@@ -509,8 +512,8 @@ const InstructorDashboard = () => {
                             <SessionCalendar adventureTypes={adventureTypes} locations={locations} />
                         </motion.div>
                         <motion.div variants={fadeIn} initial="hidden" animate="visible">
-                            <UpcomingBookingsCard 
-                                bookings={mockData.upcomingBookings} 
+                            <UpcomingBookingsCard
+                                bookings={mockData.upcomingBookings}
                                 onViewAll={() => setActiveTab("bookings")}
                             />
                         </motion.div>
