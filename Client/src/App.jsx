@@ -137,7 +137,7 @@ const App = () => {
                   }
                 />
                 <Route path="/admin/adventures" element={<AdventuresPage />} />
-                <Route path="/admin/bookings" element={<Dash_Bookings />} />
+                <Route path="/admin/bookings" element={<Dash_Bookings  />} />
                 <Route path="/admin/users" element={<Dash_User />} />
                 <Route path="/admin/store" element={<Dash_Store />} />
                 <Route path="/admin/hotels" element={<Dash_Hotels />} />
