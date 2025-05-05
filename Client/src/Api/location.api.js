@@ -1,7 +1,6 @@
 import { axiosClient } from "../AxiosClient/axios";
 
 export const createLocation = async ({ name, description, position, address }) => {
-  // position: [lat, lng]
   const data = {
     name,
     description,

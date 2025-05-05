@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { createAdventure, updateAdventure } from "../Api/adventure.api";
+import { fetchLocations } from "../Api/location.api";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import MediaPreview from "./MediaPreview";
@@ -21,6 +22,7 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
   const [mediaFiles, setMediaFiles] = React.useState([]);
   const [mediaPreviews, setMediaPreviews] = React.useState([]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [locations, setLocations] = React.useState([]);
 
   // Generate previews when files are selected or when editing
   useEffect(() => {
@@ -86,6 +88,13 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
     });
   }, [editAdventure, reset]);
 
+  useEffect(() => {
+    // Fetch locations for dropdown
+    fetchLocations().then(res => {
+      if (res && res.data) setLocations(res.data);
+    }).catch(() => setLocations([]));
+  }, []);
+
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     const toastId = toast.loading(dialogmode ? "Updating adventure..." : "Creating adventure...");
@@ -123,7 +132,19 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Input placeholder="Name" disabled={isSubmitting} {...register("name", { required: true })} />
       {errors.name && <span className="text-red-500">Name is required</span>}
-      <Input placeholder="Location" disabled={isSubmitting} {...register("location", { required: true })} />
+      <label className="block">Location
+        <select
+          className="block w-full mt-1 border rounded-md p-2 disabled:opacity-50"
+          disabled={isSubmitting}
+          {...register("location", { required: true })}
+          defaultValue={editAdventure?.location || ""}
+        >
+          <option value="" disabled>Select a location</option>
+          {locations.map(loc => (
+            <option key={loc._id} value={loc._id}>{loc.name}</option>
+          ))}
+        </select>
+      </label>
       {errors.location && <span className="text-red-500">Location is required</span>}
       <Input placeholder="Description" disabled={isSubmitting} {...register("description", { required: true })} />
       {errors.description && <span className="text-red-500">Description is required</span>}
