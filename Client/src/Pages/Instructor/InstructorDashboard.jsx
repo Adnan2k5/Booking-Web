@@ -236,8 +236,7 @@ const InstructorDashboard = () => {
         days: [],
         status: 'active',
     })
-    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    console.log("user", user)
+
     useEffect(() => {
         if (!user.user) {
             toast.error("Please login to access the instructor dashboard")

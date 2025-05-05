@@ -20,7 +20,7 @@ import { Textarea } from "../components/ui/textarea"
 import { Label } from "../components/ui/label"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../Pages/AuthProvider"
-import { createPreset, getAllSessions } from "../Api/session.api"
+import { createPreset, getAllSessions, deleteSession } from "../Api/session.api"
 import { toast } from "sonner"
 
 const SessionCalendar = ({ adventureTypes, locations }) => {
@@ -42,7 +42,7 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
         notes: "",
         days: [],
         instructorId: user?.user?.user?._id,
-        adventureId: "6810bcc226245e26d90fce31",
+        adventureId: "",
     })
 
     // Preset form state
@@ -56,10 +56,8 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
     const fetchSessions = async () => {
         try {
             const res = await getAllSessions(user?.user?.user?._id)
-            console.log(res)
             if (res.status === 200) {
                 setSessions(res.data)
-                console.log("Sessions loaded:", res.data)
             } else {
                 toast.error("Failed to fetch sessions")
             }
@@ -243,8 +241,7 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
         try {
             toast.loading("Updating session...")
             // Implement your updateSession API call here
-            // const res = await updateSession(selectedSession._id, updatedData)
-
+            await updateSession(selectedSession._id, updatedData)
             toast.success("Session updated successfully")
             fetchSessions() // Refresh sessions
             setSessionDetailDialog(false)
@@ -261,9 +258,7 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
 
         try {
             toast.loading("Deleting session...")
-            // Implement your deleteSession API call here
-            // const res = await deleteSession(selectedSession._id)
-
+            const res = await deleteSession(selectedSession._id)
             toast.success("Session deleted successfully")
             fetchSessions() // Refresh sessions
             setSessionDetailDialog(false)

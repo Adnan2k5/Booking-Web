@@ -23,3 +23,7 @@ export const getAllSessions = async (id) => {
     return res;
   }
 };
+
+export const deleteSession = async (id) => {
+  
+}
