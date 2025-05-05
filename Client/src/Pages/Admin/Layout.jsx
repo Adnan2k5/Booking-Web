@@ -152,6 +152,14 @@ function AdminSidebar({ pathname }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/locations"}>
+                  <Link to="/admin/locations">
+                    <Compass className="h-4 w-4" />
+                    <span>Locations</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
