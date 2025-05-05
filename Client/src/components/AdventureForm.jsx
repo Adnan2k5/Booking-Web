@@ -17,33 +17,63 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
       medias: [],
     },
   });
+
   const [mediaFiles, setMediaFiles] = React.useState([]);
   const [mediaPreviews, setMediaPreviews] = React.useState([]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  // Generate previews when files are selected
+  // Generate previews when files are selected or when editing
   useEffect(() => {
-    if (!mediaFiles.length) {
-      setMediaPreviews([]);
-      return;
+    let previews = [];
+    // Show existing medias from editAdventure in edit mode
+    if (editAdventure && editAdventure.medias && Array.isArray(editAdventure.medias)) {
+      previews = editAdventure.medias.map((media, idx) => {
+        // Assume media is a URL string or an object with url/type/name
+        if (typeof media === 'string') {
+          // Guess type from extension
+          const ext = media.split('.').pop().toLowerCase();
+          let type = '';
+          if (["jpg","jpeg","png","gif","webp","bmp"].includes(ext)) type = 'image';
+          else if (["mp4","webm","ogg","mov","avi"].includes(ext)) type = 'video';
+          else type = 'file';
+          return {
+            url: media,
+            type: type,
+            name: media.split('/').pop() || `media-${idx}`,
+            isServer: true,
+          };
+        } else {
+          return { ...media, isServer: true };
+        }
+      });
     }
-    const previews = mediaFiles.map(file => {
-      return {
+    // Add previews for newly selected files
+    if (mediaFiles.length) {
+      const filePreviews = mediaFiles.map(file => ({
         url: URL.createObjectURL(file),
         type: file.type,
         name: file.name,
-      };
-    });
+        isServer: false,
+      }));
+      previews = [...previews, ...filePreviews];
+    }
     setMediaPreviews(previews);
-    // Cleanup
+    // Cleanup only for local files
     return () => {
-      previews.forEach(p => URL.revokeObjectURL(p.url));
+      if (mediaFiles.length) {
+        previews.filter(p => !p.isServer).forEach(p => URL.revokeObjectURL(p.url));
+      }
     };
-  }, [mediaFiles]);
+  }, [mediaFiles, editAdventure]);
 
-  // Remove a selected media file
+  // Remove a selected media file (only local files)
   const handleRemoveMedia = (idx) => {
-    setMediaFiles(files => files.filter((_, i) => i !== idx));
+    // Only allow removing local files (after server files)
+    const serverCount = (editAdventure && editAdventure.medias && Array.isArray(editAdventure.medias)) ? editAdventure.medias.length : 0;
+    if (idx >= serverCount) {
+      setMediaFiles(files => files.filter((_, i) => i !== (idx - serverCount)));
+    }
+    // Optionally, handle server media removal here if backend supports it
   };
 
   useEffect(() => {
