@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 const AdventureTableRow = ({ adventure, onEdit, onDelete }) => (
   <TableRow>
     <TableCell>{adventure.name}</TableCell>
-    <TableCell>{adventure.location}</TableCell>
+    <TableCell>{adventure.location.name}</TableCell>
     <TableCell>{adventure.bookings?.length || 0}</TableCell>
     <TableCell>{adventure.instructors?.length || 0}</TableCell>
     <TableCell className="text-left">

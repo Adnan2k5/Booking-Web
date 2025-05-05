@@ -27,7 +27,7 @@ export const getAllAdventure = asyncHandler(async (req, res) => {
   }
 
   const [adventures, total] = await Promise.all([
-    Adventure.find(filter).skip(skip).limit(limit),
+    Adventure.find(filter).skip(skip).limit(limit).populate("location"),
     Adventure.countDocuments(filter),
   ]);
 
@@ -171,7 +171,7 @@ export const getAdventure = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Adventure id is required");
   }
 
-  const adventure = await Adventure.findById(id);
+  const adventure = await Adventure.findById(id).populate("location");
 
   if (!adventure) {
     throw new ApiError(404, "Adventure not found");
