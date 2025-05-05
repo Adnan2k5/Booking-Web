@@ -6,6 +6,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-lea
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Dialog, DialogContent, DialogTitle } from "../../../components/ui/dialog";
+import { createLocation, updateLocation, deleteLocation, fetchLocations } from "../../../Api/location.api";
 
 // Fix default marker icon issue in leaflet
 const markerIcon = new L.Icon({
@@ -172,6 +173,26 @@ export default function LocationsPage() {
   const [locations, setLocations] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchLocations()
+      .then((res) => {
+        // API returns { statusCode, data, message }
+        setLocations(
+          (res.data || []).map((loc) => ({
+            id: loc._id,
+            name: loc.name,
+            description: loc.description,
+            lat: loc.location?.coordinates[1],
+            lng: loc.location?.coordinates[0],
+            address: loc.address,
+          }))
+        );
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleAddClick = () => {
     setEditIndex(null);
@@ -183,42 +204,64 @@ export default function LocationsPage() {
     setModalOpen(true);
   };
 
-  const handleDelete = (idx) => {
-    setLocations((prev) => prev.filter((_, i) => i !== idx));
+  const handleDelete = async (idx) => {
+    const loc = locations[idx];
+    if (!loc) return;
+    setLoading(true);
+    try {
+      await deleteLocation(loc.id);
+      setLocations((prev) => prev.filter((_, i) => i !== idx));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleModalClose = () => {
     setModalOpen(false);
   };
 
-  const handleModalSubmit = (data) => {
-    if (editIndex === null) {
-      setLocations((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          name: data.name,
-          description: data.description,
-          lat: data.position[0],
-          lng: data.position[1],
-          address: data.address,
-        },
-      ]);
-    } else {
-      setLocations((prev) => prev.map((loc, i) =>
-        i === editIndex
-          ? {
-              ...loc,
-              name: data.name,
-              description: data.description,
-              lat: data.position[0],
-              lng: data.position[1],
-              address: data.address,
-            }
-          : loc
-      ));
+  const handleModalSubmit = async (data) => {
+    setLoading(true);
+    try {
+      if (editIndex === null) {
+        // Create
+        const res = await createLocation(data);
+        const loc = res.data;
+        setLocations((prev) => [
+          ...prev,
+          {
+            id: loc._id,
+            name: loc.name,
+            description: loc.description,
+            lat: loc.location?.coordinates[1],
+            lng: loc.location?.coordinates[0],
+            address: loc.address,
+          },
+        ]);
+      } else {
+        // Update
+        const loc = locations[editIndex];
+        const res = await updateLocation(loc.id, data);
+        const updated = res.data;
+        setLocations((prev) =>
+          prev.map((l, i) =>
+            i === editIndex
+              ? {
+                  id: updated._id,
+                  name: updated.name,
+                  description: updated.description,
+                  lat: updated.location?.coordinates[1],
+                  lng: updated.location?.coordinates[0],
+                  address: updated.address,
+                }
+              : l
+          )
+        );
+      }
+    } finally {
+      setLoading(false);
+      setModalOpen(false);
     }
-    setModalOpen(false);
   };
 
   return (
@@ -231,25 +274,29 @@ export default function LocationsPage() {
         <CardContent className="p-4">
           <div>
             <h3 className="text-lg font-semibold mb-2">Existing Locations</h3>
-            <ul className="space-y-2">
-              {locations.length === 0 && <li className="text-muted-foreground">No locations yet.</li>}
-              {locations.map((loc, idx) => (
-                <li key={loc.id} className="border rounded p-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                  <div>
-                    <div className="font-medium">{loc.name}</div>
-                    <div className="text-sm text-muted-foreground">{loc.description}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Lat: {loc.lat.toFixed(5)}, Lng: {loc.lng.toFixed(5)}
+            {loading ? (
+              <div className="text-muted-foreground">Loading...</div>
+            ) : (
+              <ul className="space-y-2">
+                {locations.length === 0 && <li className="text-muted-foreground">No locations yet.</li>}
+                {locations.map((loc, idx) => (
+                  <li key={loc.id} className="border rounded p-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                    <div>
+                      <div className="font-medium">{loc.name}</div>
+                      <div className="text-sm text-muted-foreground">{loc.description}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Lat: {loc.lat.toFixed(5)}, Lng: {loc.lng.toFixed(5)}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">{loc.address}</div>
                     </div>
-                    <div className="text-xs text-muted-foreground truncate">{loc.address}</div>
-                  </div>
-                  <div className="flex gap-2 mt-2 md:mt-0">
-                    <Button size="sm" variant="outline" onClick={() => handleEditClick(idx)}>Edit</Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(idx)}>Delete</Button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    <div className="flex gap-2 mt-2 md:mt-0">
+                      <Button size="sm" variant="outline" onClick={() => handleEditClick(idx)}>Edit</Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDelete(idx)}>Delete</Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </CardContent>
       </Card>
