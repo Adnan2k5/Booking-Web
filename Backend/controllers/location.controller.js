@@ -45,7 +45,7 @@ export const updateLocation = asyncHandler(async (req, res) => {
     );
 });
 
-export const getLocation = asyncHandler(async (req, res) => {
+export const getLocationById = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     if (!id) {
@@ -63,7 +63,7 @@ export const getLocation = asyncHandler(async (req, res) => {
     );
 });
 
-export const getAllLocations = asyncHandler(async (req, res) => {
+export const getLocations = asyncHandler(async (req, res) => {
     const locations = await Location.find({});
 
     return res.status(200).json(

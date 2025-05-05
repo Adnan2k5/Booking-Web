@@ -14,6 +14,7 @@ import termRouter from "./routes/terms.routes.js";
 import documentRouter from "./routes/document.routes.js";
 import messageRoute from "./routes/message.routes.js";
 import sessionRouter from "./routes/session.routes.js";
+import locationRouter from "./routes/location.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
 import initSocketIO from "./socket/socket.js";
@@ -50,6 +51,7 @@ app.use("/api/terms", termRouter);
 app.use("/api/document", documentRouter);
 app.use("/api/messages", messageRoute);
 app.use("/api/session", sessionRouter);
+app.use("/api/location", locationRouter);
 
 
 const PORT = process.env.PORT || 8080;
