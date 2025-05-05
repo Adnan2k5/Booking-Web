@@ -11,6 +11,15 @@ const sessionSchema = new moongoose.Schema(
       enum: ["active", "inactive", "cancelled", "expired", "completed"],
       default: "active",
     },
+    price: {
+      type: Number,
+      required: true,
+    },
+    priceType: {
+      type: String,
+      enum: ["perHour", "perPerson", "perGroup", "perDay", "perMonth"],
+      default: "perPerson",
+    },
     expiresAt: {
       type: Date,
       required: true,

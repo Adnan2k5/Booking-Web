@@ -6,16 +6,15 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 // Create a new session
 export const createSession = asyncHandler(async (req, res, next) => {
-  console.log(req.body);
   const {
-    days, // array: ["Monday", "Wednesday"]
-    startTime, // string: "10:00"
+    days,
+    startTime,
     capacity,
     location,
     instructorId,
     adventureId,
     notes = "",
-    status = "active", // optional, default is active
+    status = "active",
   } = req.body;
 
   // === Validation ===
