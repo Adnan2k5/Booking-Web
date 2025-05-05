@@ -88,6 +88,14 @@ function AdminSidebar({ pathname }) {
           <SidebarGroupLabel>Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/locations"}>
+                  <Link to="/admin/locations">
+                    <Compass className="h-4 w-4" />
+                    <span>Locations</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === "/admin/adventures"}>
                   <Link to="/admin/adventures">
@@ -149,14 +157,6 @@ function AdminSidebar({ pathname }) {
                   <Link to="/admin/declaration">
                     <ClipboardCheck className="h-4 w-4" />
                     <span>User Declaration</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === "/admin/locations"}>
-                  <Link to="/admin/locations">
-                    <Compass className="h-4 w-4" />
-                    <span>Locations</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
