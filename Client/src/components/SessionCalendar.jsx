@@ -23,7 +23,7 @@ import { useAuth } from "../Pages/AuthProvider"
 import { createPreset, getAllSessions, deleteSession } from "../Api/session.api"
 import { toast } from "sonner"
 
-const SessionCalendar = ({ adventureTypes, locations }) => {
+const SessionCalendar = ({ adventureTypes }) => {
     const { t } = useTranslation()
     const [currentDate, setCurrentDate] = useState(new Date())
     const [selectedDate, setSelectedDate] = useState(null)
@@ -70,6 +70,16 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
     useEffect(() => {
         fetchSessions()
     }, [])
+
+    // Filter locations based on selected adventure
+    const filteredLocations = () => {
+        const selectedAdventure = adventureTypes?.find(
+            (adv) => adv._id === sessionForm.adventureId
+        )
+        if (!selectedAdventure) return []
+        const location = [selectedAdventure.location]
+        return location;
+    }
 
     // Handle preset form change
     const handlePresetInputChange = (e) => {
@@ -395,16 +405,44 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
                         </DialogHeader>
 
                         <div className="grid gap-4 py-4">
+                            {/* Adventure Type Dropdown */}
+                            <div className="grid gap-2">
+                                <Label htmlFor="adventure">Adventure Type</Label>
+                                <Select
+                                    value={sessionForm.adventureId}
+                                    onValueChange={(value) => {
+                                        handleSelectChange("adventureId", value)
+                                        // Reset location when adventure changes
+                                        setSessionForm((prev) => ({ ...prev, location: "" }))
+                                    }}
+                                >
+                                    <SelectTrigger id="adventure">
+                                        <SelectValue placeholder="Select adventure" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {adventureTypes?.map((adv) => (
+                                            <SelectItem key={adv._id} value={adv._id}>
+                                                {adv.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            {/* Location Dropdown (filtered) */}
                             <div className="grid gap-2">
                                 <Label htmlFor="location">Location</Label>
-                                <Select value={sessionForm.location} onValueChange={(value) => handleSelectChange("location", value)}>
+                                <Select
+                                    value={sessionForm.location}
+                                    onValueChange={(value) => handleSelectChange("location", value)}
+                                    disabled={!sessionForm.adventureId}
+                                >
                                     <SelectTrigger id="location">
                                         <SelectValue placeholder="Select location" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {locations?.map((location) => (
-                                            <SelectItem key={location} value={location}>
-                                                {location}
+                                        {filteredLocations()?.map((location) => (
+                                            <SelectItem key={location._id} value={location._id}>
+                                                {location.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -506,9 +544,9 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
                                                     <SelectValue placeholder="Select location" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {locations?.map((location) => (
-                                                        <SelectItem key={location} value={location}>
-                                                            {location}
+                                                    {filteredLocations()?.map((location) => (
+                                                        <SelectItem key={location._id} value={location.name}>
+                                                            {location.name}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -673,7 +711,7 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
                                     <SelectValue placeholder="Select location" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {locations?.map((location) => (
+                                    {filteredLocations()?.map((location) => (
                                         <SelectItem key={location} value={location}>
                                             {location}
                                         </SelectItem>

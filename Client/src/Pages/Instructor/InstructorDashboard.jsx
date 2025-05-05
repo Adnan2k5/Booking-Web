@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../AuthProvider"
@@ -7,19 +6,14 @@ import { motion } from "framer-motion"
 import { Calendar, DollarSign, Users, Star, TrendingUp, Clock, MapPin, Filter, Search, Check } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
-import { Badge } from "../../components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
-import { Input } from "../../components/ui/input"
-import { Separator } from "../../components/ui/separator"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import InstructorLayout from "./InstructorLayout"
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import SessionCalendar from "../../components/SessionCalendar"
 import UpcomingBookingsCard from "../../components/UpcomingBookingsCard"
-import { getAllSessions } from "../../Api/session.api"
+import { fetchAllAdventures } from "../../Api/adventure.api"
 
 // Mock data for the instructor dashboard
 const mockData = {
@@ -194,29 +188,6 @@ const mockData = {
     ],
 }
 
-// Adventure types and locations for the calendar
-const adventureTypes = [
-    "Mountain Climbing",
-    "Wilderness Survival",
-    "Rock Climbing",
-    "Alpine Hiking",
-    "Kayaking",
-    "Scuba Diving",
-    "Paragliding",
-    "Skiing",
-]
-
-const locations = [
-    "Alpine Heights",
-    "Evergreen Forest",
-    "Granite Peaks",
-    "Mountain Range",
-    "Crystal Lake",
-    "Coastal Cliffs",
-    "Desert Canyon",
-    "Snowy Summit",
-]
-
 const InstructorDashboard = () => {
     const navigate = useNavigate()
     const { user } = useAuth()
@@ -224,6 +195,7 @@ const InstructorDashboard = () => {
     const [timeRange, setTimeRange] = useState("month")
     const [activeTab, setActiveTab] = useState("overview")
     const [showCreateModal, setShowCreateModal] = useState(false)
+    const [adventureTypes, setAdventureTypes] = useState([])
     const [sessions, setSessions] = useState(null)
     const [newSession, setNewSession] = useState({
         title: '',
@@ -242,7 +214,10 @@ const InstructorDashboard = () => {
             toast.error("Please login to access the instructor dashboard")
             navigate("/login")
         }
-        // In a real app, you would check if the user has instructor role
+        fetchAllAdventures().then((res) => {
+            setAdventureTypes(res.data.data)
+        }).catch((err) => {
+            console.error(err)});
     }, [user, navigate])
 
 
@@ -508,7 +483,7 @@ const InstructorDashboard = () => {
                             </motion.div>
                         </motion.div>
                         <motion.div variants={fadeIn} initial="hidden" animate="visible">
-                            <SessionCalendar adventureTypes={adventureTypes} locations={locations} />
+                            <SessionCalendar adventureTypes={adventureTypes} />
                         </motion.div>
                         <motion.div variants={fadeIn} initial="hidden" animate="visible">
                             <UpcomingBookingsCard
