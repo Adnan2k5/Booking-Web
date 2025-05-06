@@ -3,6 +3,7 @@ import { Adventure } from "../models/adventure.model.js";
 import { Instructor } from "../models/instructor.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { User } from "../models/user.model.js";
 
 // Create a new session
 export const createSession = asyncHandler(async (req, res, next) => {
@@ -15,6 +16,8 @@ export const createSession = asyncHandler(async (req, res, next) => {
     adventureId,
     notes = "",
     status = "active",
+    unit = "perPerson",
+    price,
   } = req.body;
 
   // === Validation ===
@@ -36,15 +39,18 @@ export const createSession = asyncHandler(async (req, res, next) => {
   if (!location) {
     throw new ApiError(400, "Location is required");
   }
+  if (!price) {
+    throw new ApiError(400, "Price is required");
+  }
 
   // Check if adventure and instructor exist
   const [adventure, instructor] = await Promise.all([
     Adventure.findById(adventureId),
-    Instructor.findById(instructorId),
+    User.findById(instructorId),
   ]);
 
   if (!adventure) throw new ApiError(404, "Adventure not found");
-  if (!instructor) throw new ApiError(404, "Instructor not found");
+  if (!instructor && instructor.role === "user") throw new ApiError(404, "Instructor not found");
 
   const dayMap = {
     Sun: 0,
@@ -90,6 +96,8 @@ export const createSession = asyncHandler(async (req, res, next) => {
           days: Object.keys(dayMap).find((k) => dayMap[k] === currentDayIndex),
           startTime: sessionStart,
           expiresAt: sessionEnd,
+          price: price,
+          priceType: unit,
           capacity,
           location,
           instructorId,
@@ -207,10 +215,12 @@ export const getAllSessions = asyncHandler(async (req, res, next) => {
   if (!id) {
     throw new ApiError(400, "Instructor id is required");
   }
-  const sessions = await Session.find({ instructorId: id });
 
+  const sessions = await Session.find({ instructorId: id });
+  
   if (!sessions || sessions.length === 0) {
-    throw new ApiError(404, "No sessions found for this instructor");
+    sessions = [];
   }
+
   return res.status(200).json(sessions);
 });

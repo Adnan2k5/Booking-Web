@@ -45,6 +45,10 @@ const SessionCalendar = ({ adventureTypes }) => {
         adventureId: "",
     })
 
+    // Add price/unit state for session form
+    const [sessionPrice, setSessionPrice] = useState("");
+    const [sessionUnit, setSessionUnit] = useState("perPerson");
+
     // Preset form state
     const [presetAdventureId, setPresetAdventureId] = useState("")
     const [presetLocation, setPresetLocation] = useState("")
@@ -52,6 +56,9 @@ const SessionCalendar = ({ adventureTypes }) => {
     const [presetCapacity, setPresetCapacity] = useState("8")
     const [presetStartTime, setPresetStartTime] = useState("09:00")
     const [presetNotes, setPresetNotes] = useState("")
+    // Add price/unit state for preset form
+    const [presetPrice, setPresetPrice] = useState("");
+    const [presetUnit, setPresetUnit] = useState("perPerson");
 
     // Fetch sessions from API
     const fetchSessions = async () => {
@@ -106,6 +113,8 @@ const SessionCalendar = ({ adventureTypes }) => {
             setPresetStartTime(value)
         } else if (name === "notes") {
             setPresetNotes(value)
+        } else if (name === "price") {
+            setPresetPrice(value)
         }
     }
 
@@ -116,6 +125,8 @@ const SessionCalendar = ({ adventureTypes }) => {
         } else if (name === "adventureId") {
             setPresetAdventureId(value)
             setPresetLocation("") // Reset location when adventure changes
+        } else if (name === "unit") {
+            setPresetUnit(value)
         }
     }
 
@@ -136,13 +147,15 @@ const SessionCalendar = ({ adventureTypes }) => {
             notes: presetNotes,
             instructorId: user?.user?.user?._id,
             adventureId: presetAdventureId,
+            price: presetPrice,
+            unit: presetUnit,
         }
 
         try {
             const res = await createPreset(presetPayload)
             if (res) {
                 toast.success("Preset created successfully", { id: toastId })
-                fetchSessions() // Refresh sessions after creating preset
+                fetchSessions()
             } else {
                 toast.error("Error creating preset", { id: toastId })
             }
@@ -158,6 +171,8 @@ const SessionCalendar = ({ adventureTypes }) => {
         setPresetCapacity("8")
         setPresetStartTime("09:00")
         setPresetNotes("")
+        setPresetPrice("")
+        setPresetUnit("perPerson")
     }
 
     // Get current month and year
@@ -495,6 +510,35 @@ const SessionCalendar = ({ adventureTypes }) => {
                                 </div>
                             </div>
 
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="price">Price</Label>
+                                    <Input
+                                        id="price"
+                                        name="price"
+                                        type="number"
+                                        value={sessionPrice}
+                                        onChange={e => setSessionPrice(e.target.value)}
+                                        placeholder="Enter price"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="unit">Unit</Label>
+                                    <Select value={sessionUnit} onValueChange={setSessionUnit}>
+                                        <SelectTrigger id="unit">
+                                            <SelectValue placeholder="Select unit" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="perHour">Per Hour</SelectItem>
+                                            <SelectItem value="perPerson">Per Person</SelectItem>
+                                            <SelectItem value="perGroup">Per Group</SelectItem>
+                                            <SelectItem value="perDay">Per Day</SelectItem>
+                                            <SelectItem value="perMonth">Per Month</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
                             <div className="grid gap-2">
                                 <Label htmlFor="notes">Notes (Optional)</Label>
                                 <Textarea
@@ -806,6 +850,35 @@ const SessionCalendar = ({ adventureTypes }) => {
                                     placeholder="09:00"
                                     className="pl-9"
                                 />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-1">
+                                <Label htmlFor="preset-price">Price</Label>
+                                <Input
+                                    id="preset-price"
+                                    name="price"
+                                    type="number"
+                                    value={presetPrice}
+                                    onChange={e => setPresetPrice(e.target.value)}
+                                    placeholder="Enter price"
+                                />
+                            </div>
+                            <div className="grid gap-1">
+                                <Label htmlFor="preset-unit">Unit</Label>
+                                <Select value={presetUnit} onValueChange={setPresetUnit}>
+                                    <SelectTrigger id="preset-unit">
+                                        <SelectValue placeholder="Select unit" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="perHour">Per Hour</SelectItem>
+                                        <SelectItem value="perPerson">Per Person</SelectItem>
+                                        <SelectItem value="perGroup">Per Group</SelectItem>
+                                        <SelectItem value="perDay">Per Day</SelectItem>
+                                        <SelectItem value="perMonth">Per Month</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 

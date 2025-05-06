@@ -318,7 +318,7 @@ const InstructorDashboard = () => {
                         </Button>
                     </div>
                 </div>
-                <div defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+                <div defaultValue="overview" className="space-y-4">
                     <div value="overview" className="space-y-4">
                         <motion.div
                             className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
