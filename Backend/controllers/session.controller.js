@@ -42,8 +42,9 @@ export const createSession = asyncHandler(async (req, res, next) => {
     Adventure.findById(adventureId),
     Instructor.findById(instructorId),
   ]);
-  //   if (!adventure) throw new ApiError(404, "Adventure not found");
-  //   if (!instructor) throw new ApiError(404, "Instructor not found");
+
+  if (!adventure) throw new ApiError(404, "Adventure not found");
+  if (!instructor) throw new ApiError(404, "Instructor not found");
 
   const dayMap = {
     Sun: 0,

@@ -46,6 +46,7 @@ const SessionCalendar = ({ adventureTypes }) => {
     })
 
     // Preset form state
+    const [presetAdventureId, setPresetAdventureId] = useState("")
     const [presetLocation, setPresetLocation] = useState("")
     const [presetDays, setPresetDays] = useState([])
     const [presetCapacity, setPresetCapacity] = useState("8")
@@ -81,6 +82,15 @@ const SessionCalendar = ({ adventureTypes }) => {
         return location;
     }
 
+    // Filter locations based on selected adventure (for preset dialog)
+    const filteredPresetLocations = () => {
+        const selectedAdventure = adventureTypes?.find(
+            (adv) => adv._id === presetAdventureId
+        );
+        if (!selectedAdventure) return [];
+        return selectedAdventure.location;
+    }
+
     // Handle preset form change
     const handlePresetInputChange = (e) => {
         const { name, value, type, checked } = e.target
@@ -103,6 +113,9 @@ const SessionCalendar = ({ adventureTypes }) => {
     const handlePresetSelectChange = (name, value) => {
         if (name === "location") {
             setPresetLocation(value)
+        } else if (name === "adventureId") {
+            setPresetAdventureId(value)
+            setPresetLocation("") // Reset location when adventure changes
         }
     }
 
@@ -114,7 +127,7 @@ const SessionCalendar = ({ adventureTypes }) => {
 
     // Create preset
     const handlePreset = async () => {
-        toast.loading("Creating preset...")
+        const toastId = toast.loading("Creating preset...");
         const presetPayload = {
             location: presetLocation,
             days: presetDays,
@@ -122,23 +135,24 @@ const SessionCalendar = ({ adventureTypes }) => {
             startTime: formatTime(presetStartTime),
             notes: presetNotes,
             instructorId: user?.user?.user?._id,
-            adventureId: "6810bcc226245e26d90fce31",
+            adventureId: presetAdventureId,
         }
 
         try {
             const res = await createPreset(presetPayload)
             if (res) {
-                toast.success("Preset created successfully")
+                toast.success("Preset created successfully", { id: toastId })
                 fetchSessions() // Refresh sessions after creating preset
             } else {
-                toast.error("Error creating preset")
+                toast.error("Error creating preset", { id: toastId })
             }
         } catch (error) {
             console.error("Error creating preset:", error)
-            toast.error("Failed to create preset")
+            toast.error("Failed to create preset", { id: toastId })
         }
 
         setPresetDialog(false)
+        setPresetAdventureId("")
         setPresetLocation("")
         setPresetDays([])
         setPresetCapacity("8")
@@ -700,20 +714,42 @@ const SessionCalendar = ({ adventureTypes }) => {
                                 Create a preset for your sessions. Sessions will be created automatically with the same settings.
                             </DialogDescription>
                         </DialogHeader>
+                        {/* Adventure Type Dropdown */}
+                        <div className="grid gap-1">
+                            <Label htmlFor="preset-adventure">Adventure Type</Label>
+                            <Select
+                                id="preset-adventure"
+                                value={presetAdventureId}
+                                onValueChange={(value) => handlePresetSelectChange("adventureId", value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select adventure" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {adventureTypes?.map((adv) => (
+                                        <SelectItem key={adv._id} value={adv._id}>
+                                            {adv.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {/* Location Dropdown (filtered by adventure) */}
                         <div className="grid gap-1">
                             <Label htmlFor="preset-location">Location</Label>
                             <Select
                                 id="preset-location"
                                 value={presetLocation}
                                 onValueChange={(value) => handlePresetSelectChange("location", value)}
+                                disabled={!presetAdventureId}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select location" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {filteredLocations()?.map((location) => (
-                                        <SelectItem key={location} value={location}>
-                                            {location}
+                                    {filteredPresetLocations()?.map((location) => (
+                                        <SelectItem key={location._id} value={location._id}>
+                                            {location.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

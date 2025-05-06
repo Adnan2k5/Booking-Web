@@ -1,11 +1,12 @@
 import { axiosClient } from '../AxiosClient/axios';
 
 export const createPreset = async (data) => {
-  console.log(data);
   try {
     const res = await axiosClient.post('/api/session/', data, {
       withCredentials: true,
     });
+
+    console.log('Response from createPreset:', res.data);
 
     if (res.status === 201) {
       return true;
