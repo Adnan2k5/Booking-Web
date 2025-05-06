@@ -75,9 +75,9 @@ const SessionCalendar = ({ adventureTypes }) => {
     const filteredLocations = () => {
         const selectedAdventure = adventureTypes?.find(
             (adv) => adv._id === sessionForm.adventureId
-        )
-        if (!selectedAdventure) return []
-        const location = [selectedAdventure.location]
+        );
+        if (!selectedAdventure) return [];
+        const location = selectedAdventure.location;
         return location;
     }
 
