@@ -63,10 +63,19 @@ export const createAdventure = asyncHandler(async (req, res) => {
     })
   );
 
+  let locationsArray = location;
+  if (typeof location === "string" && location.includes(",")) {
+    locationsArray = location.split(",");
+  } else if (!Array.isArray(location)) {
+    locationsArray = [location];
+  }
+
+
+
   const newAdventure = await Adventure.create({
     name,
     description,
-    location,
+    location: locationsArray,
     medias: mediasUrl,
     exp,
   });

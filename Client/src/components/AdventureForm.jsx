@@ -12,7 +12,7 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     defaultValues: editAdventure || {
       name: "",
-      location: "",
+      location: [],
       description: "",
       exp: "",
       medias: [],
@@ -23,6 +23,8 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
   const [mediaPreviews, setMediaPreviews] = React.useState([]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [locations, setLocations] = React.useState([]);
+  const [showLocationDropdown, setShowLocationDropdown] = React.useState(false);
+  const [selectedLocations, setSelectedLocations] = React.useState(editAdventure?.location || []);
 
   // Generate previews when files are selected or when editing
   useEffect(() => {
@@ -81,7 +83,7 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
   useEffect(() => {
     reset(editAdventure || {
       name: "",
-      location: "",
+      location: [],
       description: "",
       exp: "",
       medias: [],
@@ -95,13 +97,31 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
     }).catch(() => setLocations([]));
   }, []);
 
+  // Sync selectedLocations with form value
+  useEffect(() => {
+    setValue("location", selectedLocations);
+  }, [selectedLocations, setValue]);
+
+  // When editing, update selectedLocations
+  useEffect(() => {
+    setSelectedLocations(editAdventure?.location || []);
+  }, [editAdventure]);
+
+  const toggleLocation = (locId) => {
+    setSelectedLocations((prev) =>
+      prev.includes(locId)
+        ? prev.filter((id) => id !== locId)
+        : [...prev, locId]
+    );
+  };
+
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     const toastId = toast.loading(dialogmode ? "Updating adventure..." : "Creating adventure...");
     try {
       const formData = new FormData();
       formData.append("name", data.name);
-      formData.append("location", data.location);
+      data.location.forEach(locId => formData.append("location", locId));
       formData.append("description", data.description);
       formData.append("exp", data.exp);
       if (editAdventure && editAdventure._id) {
@@ -122,7 +142,7 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
       setEdit(null);
       fetchAdventure();
     } catch (error) {
-      toast.error("Error saving adventure");
+      toast.error("Error saving adventure", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
@@ -132,18 +152,40 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Input placeholder="Name" disabled={isSubmitting} {...register("name", { required: true })} />
       {errors.name && <span className="text-red-500">Name is required</span>}
-      <label className="block">Location
-        <select
-          className="block w-full mt-1 border rounded-md p-2 disabled:opacity-50"
-          disabled={isSubmitting}
-          {...register("location", { required: true })}
-          defaultValue={editAdventure?.location || ""}
+      <label className="block relative">Location
+        <div
+          className="block w-full mt-1 border rounded-md p-2 bg-white cursor-pointer select-none"
+          onClick={() => setShowLocationDropdown((v) => !v)}
         >
-          <option value="" disabled>Select a location</option>
-          {locations.map(loc => (
-            <option key={loc._id} value={loc._id}>{loc.name}</option>
-          ))}
-        </select>
+          {selectedLocations.length === 0
+            ? "Select location(s)"
+            : locations
+                .filter((loc) => selectedLocations.includes(loc._id))
+                .map((loc) => loc.name)
+                .join(", ")}
+        </div>
+        {showLocationDropdown && (
+          <div className="absolute z-10 bg-white border rounded-md mt-1 w-full max-h-48 overflow-auto shadow-lg">
+            {locations.map((loc) => (
+              <div
+                key={loc._id}
+                className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleLocation(loc._id);
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedLocations.includes(loc._id)}
+                  readOnly
+                  className="mr-2"
+                />
+                <span>{loc.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </label>
       {errors.location && <span className="text-red-500">Location is required</span>}
       <Input placeholder="Description" disabled={isSubmitting} {...register("description", { required: true })} />

@@ -5,7 +5,11 @@ import { Button } from "./ui/button";
 const AdventureTableRow = ({ adventure, onEdit, onDelete }) => (
   <TableRow>
     <TableCell>{adventure.name}</TableCell>
-    <TableCell>{adventure.location.name}</TableCell>
+    <TableCell>
+      {Array.isArray(adventure.location) && adventure.location.length > 0 
+        ? adventure.location.map(loc => loc.name).join(", ")
+        : 'No location'}
+    </TableCell>
     <TableCell>{adventure.bookings?.length || 0}</TableCell>
     <TableCell>{adventure.instructors?.length || 0}</TableCell>
     <TableCell className="text-left">
