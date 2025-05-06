@@ -96,7 +96,6 @@ export const createPreset = asyncHandler(async (req, res, next) => {
   }
 
   const created = await Session.insertMany(sessions);
-  console.log("Created sessions:", created);
   res.status(201).json({
     message: `${created.length} sessions created successfully`,
     sessions: created,
