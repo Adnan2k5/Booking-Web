@@ -6,7 +6,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 
 // Create a new session
-export const createSession = asyncHandler(async (req, res, next) => {
+export const createPreset = asyncHandler(async (req, res, next) => {
   const {
     days,
     startTime,
@@ -77,50 +77,80 @@ export const createSession = asyncHandler(async (req, res, next) => {
       sessionStart.setHours(+hour, +minute, 0, 0);
 
       const sessionEnd = new Date(sessionStart);
-      sessionEnd.setHours(sessionEnd.getHours() + 2); // default 2 hour session
+      sessionEnd.setHours(sessionEnd.getHours() + 2);
 
-      // Check for overlapping sessions
-      const isDuplicate = await Session.findOne({
+      sessions.push({
+        days: Object.keys(dayMap).find((k) => dayMap[k] === currentDayIndex),
+        startTime: sessionStart,
+        expiresAt: sessionEnd,
+        price: price,
+        priceType: unit,
+        capacity,
+        location,
         instructorId,
         adventureId,
-        $or: [
-          {
-            startTime: { $lt: sessionEnd },
-            expiresAt: { $gt: sessionStart },
-          },
-        ],
+        notes,
+        status,
       });
-
-      if (!isDuplicate) {
-        sessions.push({
-          days: Object.keys(dayMap).find((k) => dayMap[k] === currentDayIndex),
-          startTime: sessionStart,
-          expiresAt: sessionEnd,
-          price: price,
-          priceType: unit,
-          capacity,
-          location,
-          instructorId,
-          adventureId,
-          notes,
-          status,
-        });
-      }
     }
   }
 
-  if (sessions.length === 0) {
-    throw new ApiError(
-      409,
-      "No sessions created. Either all dates conflict or input is invalid."
-    );
-  }
-
   const created = await Session.insertMany(sessions);
-
+  console.log("Created sessions:", created);
   res.status(201).json({
     message: `${created.length} sessions created successfully`,
     sessions: created,
+  });
+});
+
+export const createSession = asyncHandler(async (req, res, next) => {
+  const {
+    days,
+    status,
+    expiresAt,
+    startTime,
+    capacity,
+    adventureId,
+    price,
+    instructorId,
+    location,
+  } = req.body;
+
+  if(!days || !expiresAt || !startTime || !capacity || !adventureId || !instructorId || !location || !price) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  const [adventure, instructor] = await Promise.all([
+    Adventure.findById(adventureId),
+    User.findById(instructorId),
+  ]);
+
+  if (!adventure || !instructor) {
+    throw new ApiError(404, "Adventure or instructor not found");
+  }
+
+
+  if (instructor.role === "user") {
+    throw new ApiError(403, "Only instructors can create sessions");
+  }
+
+  const session = new Session({
+    days: Array.isArray(days) ? days[0]: days[0],
+    status,
+    expiresAt,
+    startTime,
+    capacity,
+    adventureId,
+    instructorId,
+    location,
+    price
+  });
+
+  await session.save();
+
+  res.status(201).json({
+    message: "Session created successfully",
+    session,
   });
 });
 
@@ -217,7 +247,7 @@ export const getAllSessions = asyncHandler(async (req, res, next) => {
   }
 
   const sessions = await Session.find({ instructorId: id });
-  
+
   if (!sessions || sessions.length === 0) {
     sessions = [];
   }

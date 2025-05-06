@@ -20,7 +20,7 @@ import { Textarea } from "../components/ui/textarea"
 import { Label } from "../components/ui/label"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../Pages/AuthProvider"
-import { createPreset, getAllSessions, deleteSession } from "../Api/session.api"
+import { createPreset, getAllSessions, deleteSession, createSession } from "../Api/session.api"
 import { toast } from "sonner"
 
 const SessionCalendar = ({ adventureTypes }) => {
@@ -139,6 +139,7 @@ const SessionCalendar = ({ adventureTypes }) => {
     // Create preset
     const handlePreset = async () => {
         const toastId = toast.loading("Creating preset...");
+        
         const presetPayload = {
             location: presetLocation,
             days: presetDays,
@@ -173,6 +174,51 @@ const SessionCalendar = ({ adventureTypes }) => {
         setPresetNotes("")
         setPresetPrice("")
         setPresetUnit("perPerson")
+    }
+
+    // Add method to create a session for a specific day
+    const addSession = async () => {
+        if (!sessionForm.adventureId || !sessionForm.location || !sessionPrice || !sessionUnit || !sessionForm.capacity || !sessionForm.time) {
+            toast.error("Please fill all required fields")
+            return
+        }
+        if (!selectedDate) {
+            toast.error("No date selected")
+            return
+        }
+
+        const [hour, minute] = sessionForm.time.split(":")
+        const startTime = new Date(selectedDate)
+        startTime.setHours(+hour, +minute, 0, 0)
+        const expiresAt = new Date(startTime)
+        expiresAt.setHours(expiresAt.getHours() + 2) // Default 2 hour session
+        const payload = {
+            adventureId: sessionForm.adventureId,
+            location: sessionForm.location,
+            instructorId: user?.user?.user?._id,
+            days: [dayNames[startTime.getDay()]],
+            startTime: startTime.toISOString(),
+            expiresAt: expiresAt.toISOString(),
+            capacity: sessionForm.capacity,
+            price: sessionPrice,
+            unit: sessionUnit,
+            notes: sessionForm.notes,
+            status: "active",
+        }
+
+        try {
+            const res = await createSession(payload)
+            if (res) {
+                toast.success("Session created successfully")
+                setIsDialogOpen(false)
+                fetchSessions()
+                console.log(sessions);
+            } else {
+                toast.error("Error creating session")
+            }
+        } catch (error) {
+            toast.error("Failed to create session")
+        }
     }
 
     // Get current month and year
@@ -556,14 +602,7 @@ const SessionCalendar = ({ adventureTypes }) => {
                             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button
-                                onClick={() => {
-                                    // Implement session creation logic
-                                    toast.success("Session created")
-                                    setIsDialogOpen(false)
-                                    fetchSessions()
-                                }}
-                            >
+                            <Button onClick={addSession}>
                                 Create Session
                             </Button>
                         </DialogFooter>
