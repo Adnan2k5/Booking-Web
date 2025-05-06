@@ -20,10 +20,10 @@ import { Textarea } from "../components/ui/textarea"
 import { Label } from "../components/ui/label"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../Pages/AuthProvider"
-import { createPreset, getAllSessions } from "../Api/session.api"
+import { createPreset, getAllSessions, deleteSession, createSession } from "../Api/session.api"
 import { toast } from "sonner"
 
-const SessionCalendar = ({ adventureTypes, locations }) => {
+const SessionCalendar = ({ adventureTypes }) => {
     const { t } = useTranslation()
     const [currentDate, setCurrentDate] = useState(new Date())
     const [selectedDate, setSelectedDate] = useState(null)
@@ -42,24 +42,30 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
         notes: "",
         days: [],
         instructorId: user?.user?.user?._id,
-        adventureId: "6810bcc226245e26d90fce31",
+        adventureId: "",
     })
 
+    // Add price/unit state for session form
+    const [sessionPrice, setSessionPrice] = useState("");
+    const [sessionUnit, setSessionUnit] = useState("perPerson");
+
     // Preset form state
+    const [presetAdventureId, setPresetAdventureId] = useState("")
     const [presetLocation, setPresetLocation] = useState("")
     const [presetDays, setPresetDays] = useState([])
     const [presetCapacity, setPresetCapacity] = useState("8")
     const [presetStartTime, setPresetStartTime] = useState("09:00")
     const [presetNotes, setPresetNotes] = useState("")
+    // Add price/unit state for preset form
+    const [presetPrice, setPresetPrice] = useState("");
+    const [presetUnit, setPresetUnit] = useState("perPerson");
 
     // Fetch sessions from API
     const fetchSessions = async () => {
         try {
             const res = await getAllSessions(user?.user?.user?._id)
-            console.log(res)
             if (res.status === 200) {
                 setSessions(res.data)
-                console.log("Sessions loaded:", res.data)
             } else {
                 toast.error("Failed to fetch sessions")
             }
@@ -72,6 +78,25 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
     useEffect(() => {
         fetchSessions()
     }, [])
+
+    // Filter locations based on selected adventure
+    const filteredLocations = () => {
+        const selectedAdventure = adventureTypes?.find(
+            (adv) => adv._id === sessionForm.adventureId
+        );
+        if (!selectedAdventure) return [];
+        const location = selectedAdventure.location;
+        return location;
+    }
+
+    // Filter locations based on selected adventure (for preset dialog)
+    const filteredPresetLocations = () => {
+        const selectedAdventure = adventureTypes?.find(
+            (adv) => adv._id === presetAdventureId
+        );
+        if (!selectedAdventure) return [];
+        return selectedAdventure.location;
+    }
 
     // Handle preset form change
     const handlePresetInputChange = (e) => {
@@ -88,6 +113,8 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
             setPresetStartTime(value)
         } else if (name === "notes") {
             setPresetNotes(value)
+        } else if (name === "price") {
+            setPresetPrice(value)
         }
     }
 
@@ -95,6 +122,11 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
     const handlePresetSelectChange = (name, value) => {
         if (name === "location") {
             setPresetLocation(value)
+        } else if (name === "adventureId") {
+            setPresetAdventureId(value)
+            setPresetLocation("") // Reset location when adventure changes
+        } else if (name === "unit") {
+            setPresetUnit(value)
         }
     }
 
@@ -106,7 +138,8 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
 
     // Create preset
     const handlePreset = async () => {
-        toast.loading("Creating preset...")
+        const toastId = toast.loading("Creating preset...");
+        
         const presetPayload = {
             location: presetLocation,
             days: presetDays,
@@ -114,28 +147,78 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
             startTime: formatTime(presetStartTime),
             notes: presetNotes,
             instructorId: user?.user?.user?._id,
-            adventureId: "6810bcc226245e26d90fce31",
+            adventureId: presetAdventureId,
+            price: presetPrice,
+            unit: presetUnit,
         }
 
         try {
             const res = await createPreset(presetPayload)
             if (res) {
-                toast.success("Preset created successfully")
-                fetchSessions() // Refresh sessions after creating preset
+                toast.success("Preset created successfully", { id: toastId })
+                fetchSessions()
             } else {
-                toast.error("Error creating preset")
+                toast.error("Error creating preset", { id: toastId })
             }
         } catch (error) {
             console.error("Error creating preset:", error)
-            toast.error("Failed to create preset")
+            toast.error("Failed to create preset", { id: toastId })
         }
 
         setPresetDialog(false)
+        setPresetAdventureId("")
         setPresetLocation("")
         setPresetDays([])
         setPresetCapacity("8")
         setPresetStartTime("09:00")
         setPresetNotes("")
+        setPresetPrice("")
+        setPresetUnit("perPerson")
+    }
+
+    // Add method to create a session for a specific day
+    const addSession = async () => {
+        if (!sessionForm.adventureId || !sessionForm.location || !sessionPrice || !sessionUnit || !sessionForm.capacity || !sessionForm.time) {
+            toast.error("Please fill all required fields")
+            return
+        }
+        if (!selectedDate) {
+            toast.error("No date selected")
+            return
+        }
+
+        const [hour, minute] = sessionForm.time.split(":")
+        const startTime = new Date(selectedDate)
+        startTime.setHours(+hour, +minute, 0, 0)
+        const expiresAt = new Date(startTime)
+        expiresAt.setHours(expiresAt.getHours() + 2) // Default 2 hour session
+        const payload = {
+            adventureId: sessionForm.adventureId,
+            location: sessionForm.location,
+            instructorId: user?.user?.user?._id,
+            days: [dayNames[startTime.getDay()]],
+            startTime: startTime.toISOString(),
+            expiresAt: expiresAt.toISOString(),
+            capacity: sessionForm.capacity,
+            price: sessionPrice,
+            unit: sessionUnit,
+            notes: sessionForm.notes,
+            status: "active",
+        }
+
+        try {
+            const res = await createSession(payload)
+            if (res) {
+                toast.success("Session created successfully")
+                setIsDialogOpen(false)
+                fetchSessions()
+                console.log(sessions);
+            } else {
+                toast.error("Error creating session")
+            }
+        } catch (error) {
+            toast.error("Failed to create session")
+        }
     }
 
     // Get current month and year
@@ -243,8 +326,7 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
         try {
             toast.loading("Updating session...")
             // Implement your updateSession API call here
-            // const res = await updateSession(selectedSession._id, updatedData)
-
+            await updateSession(selectedSession._id, updatedData)
             toast.success("Session updated successfully")
             fetchSessions() // Refresh sessions
             setSessionDetailDialog(false)
@@ -261,9 +343,7 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
 
         try {
             toast.loading("Deleting session...")
-            // Implement your deleteSession API call here
-            // const res = await deleteSession(selectedSession._id)
-
+            const res = await deleteSession(selectedSession._id)
             toast.success("Session deleted successfully")
             fetchSessions() // Refresh sessions
             setSessionDetailDialog(false)
@@ -400,16 +480,44 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
                         </DialogHeader>
 
                         <div className="grid gap-4 py-4">
+                            {/* Adventure Type Dropdown */}
+                            <div className="grid gap-2">
+                                <Label htmlFor="adventure">Adventure Type</Label>
+                                <Select
+                                    value={sessionForm.adventureId}
+                                    onValueChange={(value) => {
+                                        handleSelectChange("adventureId", value)
+                                        // Reset location when adventure changes
+                                        setSessionForm((prev) => ({ ...prev, location: "" }))
+                                    }}
+                                >
+                                    <SelectTrigger id="adventure">
+                                        <SelectValue placeholder="Select adventure" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {adventureTypes?.map((adv) => (
+                                            <SelectItem key={adv._id} value={adv._id}>
+                                                {adv.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            {/* Location Dropdown (filtered) */}
                             <div className="grid gap-2">
                                 <Label htmlFor="location">Location</Label>
-                                <Select value={sessionForm.location} onValueChange={(value) => handleSelectChange("location", value)}>
+                                <Select
+                                    value={sessionForm.location}
+                                    onValueChange={(value) => handleSelectChange("location", value)}
+                                    disabled={!sessionForm.adventureId}
+                                >
                                     <SelectTrigger id="location">
                                         <SelectValue placeholder="Select location" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {locations?.map((location) => (
-                                            <SelectItem key={location} value={location}>
-                                                {location}
+                                        {filteredLocations()?.map((location) => (
+                                            <SelectItem key={location._id} value={location._id}>
+                                                {location.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -448,6 +556,35 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
                                 </div>
                             </div>
 
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="price">Price</Label>
+                                    <Input
+                                        id="price"
+                                        name="price"
+                                        type="number"
+                                        value={sessionPrice}
+                                        onChange={e => setSessionPrice(e.target.value)}
+                                        placeholder="Enter price"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="unit">Unit</Label>
+                                    <Select value={sessionUnit} onValueChange={setSessionUnit}>
+                                        <SelectTrigger id="unit">
+                                            <SelectValue placeholder="Select unit" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="perHour">Per Hour</SelectItem>
+                                            <SelectItem value="perPerson">Per Person</SelectItem>
+                                            <SelectItem value="perGroup">Per Group</SelectItem>
+                                            <SelectItem value="perDay">Per Day</SelectItem>
+                                            <SelectItem value="perMonth">Per Month</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
                             <div className="grid gap-2">
                                 <Label htmlFor="notes">Notes (Optional)</Label>
                                 <Textarea
@@ -465,14 +602,7 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
                             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button
-                                onClick={() => {
-                                    // Implement session creation logic
-                                    toast.success("Session created")
-                                    setIsDialogOpen(false)
-                                    fetchSessions()
-                                }}
-                            >
+                            <Button onClick={addSession}>
                                 Create Session
                             </Button>
                         </DialogFooter>
@@ -511,9 +641,9 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
                                                     <SelectValue placeholder="Select location" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {locations?.map((location) => (
-                                                        <SelectItem key={location} value={location}>
-                                                            {location}
+                                                    {filteredLocations()?.map((location) => (
+                                                        <SelectItem key={location._id} value={location.name}>
+                                                            {location.name}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -667,20 +797,42 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
                                 Create a preset for your sessions. Sessions will be created automatically with the same settings.
                             </DialogDescription>
                         </DialogHeader>
+                        {/* Adventure Type Dropdown */}
+                        <div className="grid gap-1">
+                            <Label htmlFor="preset-adventure">Adventure Type</Label>
+                            <Select
+                                id="preset-adventure"
+                                value={presetAdventureId}
+                                onValueChange={(value) => handlePresetSelectChange("adventureId", value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select adventure" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {adventureTypes?.map((adv) => (
+                                        <SelectItem key={adv._id} value={adv._id}>
+                                            {adv.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {/* Location Dropdown (filtered by adventure) */}
                         <div className="grid gap-1">
                             <Label htmlFor="preset-location">Location</Label>
                             <Select
                                 id="preset-location"
                                 value={presetLocation}
                                 onValueChange={(value) => handlePresetSelectChange("location", value)}
+                                disabled={!presetAdventureId}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select location" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {locations?.map((location) => (
-                                        <SelectItem key={location} value={location}>
-                                            {location}
+                                    {filteredPresetLocations()?.map((location) => (
+                                        <SelectItem key={location._id} value={location._id}>
+                                            {location.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -737,6 +889,35 @@ const SessionCalendar = ({ adventureTypes, locations }) => {
                                     placeholder="09:00"
                                     className="pl-9"
                                 />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-1">
+                                <Label htmlFor="preset-price">Price</Label>
+                                <Input
+                                    id="preset-price"
+                                    name="price"
+                                    type="number"
+                                    value={presetPrice}
+                                    onChange={e => setPresetPrice(e.target.value)}
+                                    placeholder="Enter price"
+                                />
+                            </div>
+                            <div className="grid gap-1">
+                                <Label htmlFor="preset-unit">Unit</Label>
+                                <Select value={presetUnit} onValueChange={setPresetUnit}>
+                                    <SelectTrigger id="preset-unit">
+                                        <SelectValue placeholder="Select unit" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="perHour">Per Hour</SelectItem>
+                                        <SelectItem value="perPerson">Per Person</SelectItem>
+                                        <SelectItem value="perGroup">Per Group</SelectItem>
+                                        <SelectItem value="perDay">Per Day</SelectItem>
+                                        <SelectItem value="perMonth">Per Month</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 

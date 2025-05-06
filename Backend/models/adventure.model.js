@@ -12,12 +12,12 @@ const adventureSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    location: {
-      type: String,
-      required: true,
-      trim: true,
-      index: true,
-    },
+    location: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Location",
+      }
+    ],
     medias: {
       type: [
         {

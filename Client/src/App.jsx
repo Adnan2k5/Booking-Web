@@ -24,6 +24,7 @@ import Dash_Hotels from "./Pages/Admin/SubPages/Hotels"
 import Dash_Tickets from "./Pages/Admin/SubPages/Tickets"
 import Dash_Terms from "./Pages/Admin/SubPages/Terms"
 import Dash_Declation from "./Pages/Admin/SubPages/Declaration"
+import LocationsPage from "./Pages/Admin/SubPages/Location"
 
 // Lazy loaded components
 const LoginPage = lazy(() => import("./Pages/LoginPage"))
@@ -136,13 +137,14 @@ const App = () => {
                   }
                 />
                 <Route path="/admin/adventures" element={<AdventuresPage />} />
-                <Route path="/admin/bookings" element={<Dash_Bookings />} />
+                <Route path="/admin/bookings" element={<Dash_Bookings  />} />
                 <Route path="/admin/users" element={<Dash_User />} />
                 <Route path="/admin/store" element={<Dash_Store />} />
                 <Route path="/admin/hotels" element={<Dash_Hotels />} />
                 <Route path="/admin/tickets" element={<Dash_Tickets />} />
                 <Route path="/admin/terms" element={<Dash_Terms />} />
                 <Route path="/admin/declaration" element={<Dash_Declation />} />
+                <Route path="/admin/locations" element={<LocationsPage />} />
               </Route>
             </Routes>
           </Suspense>

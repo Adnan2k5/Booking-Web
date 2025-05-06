@@ -4,12 +4,14 @@ import {
   updateSession,
   deleteSession,
   getAllSessions,
+  createPreset,
 } from "../controllers/session.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
 // Create a session
+router.post("/preset", verifyJWT, createPreset);
 router.post("/", verifyJWT, createSession);
 router.get("/:id", verifyJWT, getAllSessions);
 
