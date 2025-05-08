@@ -9,7 +9,7 @@ const locationSchema = new moongoose.Schema({
         type: String,
         required: true,
     },
-    location: {
+    location: {  
         type: { type: String, enum: ['Point'], required: true },
         coordinates: { type: [Number], required: true }
     },

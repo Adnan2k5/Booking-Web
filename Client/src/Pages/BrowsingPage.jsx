@@ -50,22 +50,23 @@ export default function BrowsingPage() {
     borderRadius: "0.375rem",
   }
 
-  console.log(adventure)
-
   const handleSearch = () => {
     setIsLoading(true)
-    fetchAllAdventures({
-      location: loc,
-      date: date ? date.toISOString().split('T')[0] : '',
-      adventure,
+    // Use the new filter API
+    import("../Api/adventure.api").then(({ fetchFilteredAdventures }) => {
+      fetchFilteredAdventures({
+        adventure,
+        location: loc,
+        session_date: date ? date.toISOString().split('T')[0] : '',
+      })
+        .then((data) => {
+          setAdventures(data.data.data)
+        })
+        .catch(() => {
+          setAdventures([])
+        })
+        .finally(() => setIsLoading(false))
     })
-      .then((data) => {
-        setAdventures(data.data.data)
-      })
-      .catch(() => {
-        setAdventures([])
-      })
-      .finally(() => setIsLoading(false))
   }
 
   const { user, loading } = useAuth()

@@ -6,6 +6,7 @@ import {
     deleteAdventure, 
     getAdventure, 
     getInstructorAdventures,
+    getFilteredAdventures,
  } from '../controllers/adventure.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
@@ -21,6 +22,7 @@ adventureRoute.post('/create', verifyJWT , upload.fields([
 
 adventureRoute.get('/instructor', verifyJWT , getInstructorAdventures);
 
+adventureRoute.get('/filter', getFilteredAdventures);
 adventureRoute.put('/:id', verifyJWT , upload.fields([
     {
         name: 'medias', maxCount: 4
@@ -29,6 +31,5 @@ adventureRoute.put('/:id', verifyJWT , upload.fields([
 
 adventureRoute.delete('/:id', verifyJWT , deleteAdventure);
 adventureRoute.get('/:id', getAdventure);
-
 
 export default adventureRoute;

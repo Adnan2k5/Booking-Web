@@ -29,6 +29,19 @@ export const fetchAllAdventures = async ({
   return res;
 };
 
+export const fetchFilteredAdventures = async ({
+  adventure = '',
+  location = '',
+  session_date = '',
+} = {}) => {
+  const params = new URLSearchParams();
+  if (adventure && adventure.trim() !== '') params.append('adventure', adventure);
+  if (location && location.trim() !== '') params.append('location', location);
+  if (session_date && session_date.trim() !== '') params.append('session_date', session_date);
+  const res = await axiosClient.get(`/api/adventure/filter?${params.toString()}`);
+  return res;
+};
+
 export const updateAdventure = async (data) => {
   console.log(data);
   const id = data.get('_id');

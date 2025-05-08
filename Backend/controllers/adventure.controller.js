@@ -1,4 +1,6 @@
 import { Adventure } from "../models/adventure.model.js";
+import { Session } from "../models/session.model.js";
+import { Location } from "../models/location.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import {
   deleteFromCloudinary,
@@ -192,4 +194,39 @@ export const getAdventure = asyncHandler(async (req, res) => {
 export const getInstructorAdventures = asyncHandler(async (req, res) => {
   const adventures = await Adventure.find({ instructor: req.user._id });
   return res.status(200).json(adventures);
+});
+
+export const getFilteredAdventures = asyncHandler(async (req, res) => {
+  const { adventure, location, session_date } = req.query;
+
+  console.log(adventure, location, session_date);
+
+  const date = new Date(session_date);
+  const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+  // Step 1: Find sessions within the date range
+  let sessions = await Session.find({
+    startTime: { $gte: startOfDay, $lte: endOfDay }
+  })
+    .populate({
+      path: "adventureId",
+      match: adventure ? { name: { $regex: adventure, $options: "i" } } : {}, // filter here
+    })
+    .populate({
+      path: "location",
+      match: location ? { name: { $regex: location, $options: "i" } } : {}, // filter here
+    });
+
+  // Step 2: Filter out sessions where populate returned null
+  sessions = sessions.filter(session => session.adventureId && session.location);
+
+  // Step 3: Extract adventures
+  const adventures = sessions.map(session => session.adventureId);
+  const uniqueAdventures = Array.from(new Set(adventures.map(a => a._id.toString())))
+    .map(id => adventures.find(a => a._id.toString() === id));
+
+
+  // Response
+  res.status(200).json({ data: uniqueAdventures, total: uniqueAdventures.length });
 });
