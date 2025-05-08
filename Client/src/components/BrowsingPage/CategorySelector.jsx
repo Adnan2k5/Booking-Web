@@ -12,7 +12,7 @@ export function CategorySelector({ categories, activeCategory, setActiveCategory
       >
         {categories.map((category) => (
           <motion.button
-            key={category.id}
+            key={category._id}
             className={`flex items-center gap-2 px-4 py-2 rounded-full mr-3 whitespace-nowrap transition-all ${
               activeCategory === category.id
                 ? "bg-blue-600 text-white shadow-md"

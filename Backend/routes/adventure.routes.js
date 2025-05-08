@@ -13,7 +13,7 @@ import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 const adventureRoute = express.Router();
 
-adventureRoute.get('/all', verifyJWT, getAllAdventure); // supports pagination & search
+adventureRoute.get('/all', getAllAdventure); 
 adventureRoute.post('/create', verifyJWT , upload.fields([
     {
         name: 'medias', maxCount: 4

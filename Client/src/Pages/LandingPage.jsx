@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion"
 import { MdLanguage, MdMenu, MdClose } from "react-icons/md"
 import { IoIosLogIn } from "react-icons/io"
 import { useNavigate } from "react-router-dom"
-import mock_adventure from "../Data/mock_adventure"
 import { useAuth } from "./AuthProvider"
 import { Loader } from "../components/Loader"
 import { Users, Search, UserPlus, UserX, ChevronDown, Settings, LogOut, User, TicketIcon } from 'lucide-react'
@@ -30,14 +29,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu"
+import { useAdventures } from "../hooks/useAdventure"
 
 export default function LandingPage() {
   const Navigate = useNavigate()
-  const adventures = mock_adventure
   const { user, loading } = useAuth()
   const { t, i18n } = useTranslation()
 
-  const [adventure, setadventure] = useState("")
   const [location, setLocation] = useState("")
   const [date, setDate] = useState("")
   const [openLaguage, setOpenLanguage] = useState(false)
@@ -48,6 +46,9 @@ export default function LandingPage() {
   const [searchEmail, setSearchEmail] = useState("")
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
+  const [adventure, setadventure] = useState("all")
+
+  const { adventures, loading: adventureLoading } = useAdventures();
 
   // Animation variants
   const fadeIn = {

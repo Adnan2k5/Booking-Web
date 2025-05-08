@@ -10,37 +10,10 @@ import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const getAllAdventure = asyncHandler(async (req, res) => {
-  // Pagination & search params
-  let { page = 1, limit = 10, search = "" } = req.query;
-  console.log(req.query);
-
-  page = parseInt(page);
-  limit = parseInt(limit);
-  const skip = (page - 1) * limit;
-
-  // Build search filter
-  let filter = {};
-  if (search && search.trim() !== "") {
-    filter = {
-      $or: [
-        { name: { $regex: search, $options: "i" } },
-        { location: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-      ],
-    };
-  }
-
-  const [adventures, total] = await Promise.all([
-    Adventure.find(filter).skip(skip).limit(limit).populate("location"),
-    Adventure.countDocuments(filter),
-  ]);
+  const adventures = await Adventure.find();
 
   return res.status(200).json({
-    data: adventures,
-    total,
-    page,
-    totalPages: Math.ceil(total / limit),
-    limit,
+    adventures
   });
 });
 
@@ -199,8 +172,6 @@ export const getInstructorAdventures = asyncHandler(async (req, res) => {
 export const getFilteredAdventures = asyncHandler(async (req, res) => {
   const { adventure, location, session_date } = req.query;
 
-  console.log(adventure, location, session_date);
-
   const date = new Date(session_date);
   const startOfDay = new Date(date.setHours(0, 0, 0, 0));
   const endOfDay = new Date(date.setHours(23, 59, 59, 999));
@@ -226,7 +197,7 @@ export const getFilteredAdventures = asyncHandler(async (req, res) => {
   const uniqueAdventures = Array.from(new Set(adventures.map(a => a._id.toString())))
     .map(id => adventures.find(a => a._id.toString() === id));
 
-
+  
   // Response
   res.status(200).json({ data: uniqueAdventures, total: uniqueAdventures.length });
 });

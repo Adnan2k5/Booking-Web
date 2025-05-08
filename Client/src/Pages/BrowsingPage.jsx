@@ -10,7 +10,6 @@ import {
   MapPin,
 } from "lucide-react"
 import { Badge } from "../components/ui/badge"
-import { fetchAllAdventures } from "../Api/adventure.api"
 import { useAuth } from "./AuthProvider.jsx"
 import { Loader } from "../components/Loader.jsx"
 import { SearchFilterBar } from "../components/BrowsingPage/SearchFilterBar"
@@ -18,12 +17,13 @@ import { CategorySelector } from "../components/BrowsingPage/CategorySelector"
 import { AdventureCard } from "../components/BrowsingPage/AdventureCard"
 import { AdventureCardSkeleton } from "../components/BrowsingPage/AdventureCardSkeleton"
 import { NoResults } from "../components/BrowsingPage/NoResults"
+import { useAdventures } from "../hooks/useAdventure"
+import { useBrowse } from "../hooks/useBrowse"
 
 export default function BrowsingPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const query = new URLSearchParams(location?.search)
-  const [isLoading, setIsLoading] = useState(true)
   const [adventure, setAdventure] = useState(query.get("adventure")?.toLowerCase() || "")
   const [loc, setLoc] = useState(query.get("location")?.toLowerCase() || "")
   const [date, setDate] = useState(() => {
@@ -33,16 +33,6 @@ export default function BrowsingPage() {
   const [activeCategory, setActiveCategory] = useState("all")
   const [showScrollIndicator, setShowScrollIndicator] = useState(true)
   const categoriesRef = useRef(null)
-  const [adventures, setAdventures] = useState([])
-
-  const categories = [
-    { id: "all", name: "All" },
-    { id: "hiking", name: "Hiking" },
-    { id: "water", name: "Water Sports" },
-    { id: "camping", name: "Camping" },
-    { id: "climbing", name: "Climbing" },
-    { id: "cycling", name: "Cycling" },
-  ]
 
   const wrapperStyle = {
     width: 300,
@@ -50,26 +40,22 @@ export default function BrowsingPage() {
     borderRadius: "0.375rem",
   }
 
-  const handleSearch = () => {
-    setIsLoading(true)
-    // Use the new filter API
-    import("../Api/adventure.api").then(({ fetchFilteredAdventures }) => {
-      fetchFilteredAdventures({
-        adventure,
-        location: loc,
-        session_date: date ? date.toISOString().split('T')[0] : '',
-      })
-        .then((data) => {
-          setAdventures(data.data.data)
-        })
-        .catch(() => {
-          setAdventures([])
-        })
-        .finally(() => setIsLoading(false))
-    })
-  }
+  const { user, loading } = useAuth();
+  const { adventures: categories } = useAdventures();
+  const { adventures, isLoading, filters, setFilters } = useBrowse();
 
-  const { user, loading } = useAuth()
+  const updateParams = (params, options = {}) => {
+    const queryParams = new URLSearchParams(location.search);
+    // Remove keys with empty values
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        queryParams.set(key, value);
+      } else {
+        queryParams.delete(key);
+      }
+    });
+    navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true, ...options });
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -91,6 +77,31 @@ export default function BrowsingPage() {
       }
     }
   }, [])
+  
+  useEffect(() => {
+    // Parse URL params and set filters
+    const queryParams = new URLSearchParams(location.search);
+    const adventureParam = queryParams.get("adventure") || "";
+    const locationParam = queryParams.get("location") || "";
+    const dateParam = queryParams.get("date") || "";
+    
+    // Update filters for API requests
+    setFilters({
+      adventure: adventureParam,
+      location: locationParam,
+      session_date: dateParam,
+    });
+    
+    // Update local state for UI display
+    setAdventure(adventureParam.toLowerCase());
+    setLoc(locationParam.toLowerCase());
+    setDate(dateParam ? new Date(dateParam) : undefined);
+    
+    // Update URL if needed
+    if (location.search !== queryParams.toString()) {
+      navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
+    }
+  }, [location.search, setFilters, navigate, location.pathname]);
 
   const onBook = (id) => {
     navigate(`/booking?id=${id}`)
@@ -99,23 +110,27 @@ export default function BrowsingPage() {
   const clearFilter = (type) => {
     switch (type) {
       case "adventure":
-        setAdventure("")
-        break
+        setAdventure("");
+        updateParams({ adventure: "" });
+        break;
       case "location":
-        setLoc("")
-        break
+        setLoc("");
+        updateParams({ location: "" });
+        break;
       case "date":
-        setDate(undefined)
-        break
+        setDate(undefined);
+        updateParams({ date: "" });
+        break;
       case "all":
-        setAdventure("")
-        setLoc("")
-        setDate(undefined)
-        setActiveCategory("all")
-        setAdventures([]) // Clear results when all filters are cleared
-        break
+        setAdventure("");
+        setLoc("");
+        setDate(undefined);
+        setActiveCategory("all");
+        setFilters({ adventure: "", location: "", session_date: "" });
+        updateParams({ adventure: "", location: "", date: "" });
+        break;
       default:
-        break
+        break;
     }
   }
 
@@ -231,7 +246,14 @@ export default function BrowsingPage() {
             clearFilter={clearFilter}
             handleDateChange={handleDateChange}
             wrapperStyle={wrapperStyle}
-            onSearch={handleSearch}
+            onSearch={() => {
+              updateParams({
+                adventure,
+                location: loc,
+                date: date ? date.toISOString().split("T")[0] : ""
+              });
+            }}
+            setSearchParams={updateParams}
           />
         </motion.div>
 
@@ -252,7 +274,7 @@ export default function BrowsingPage() {
         >
           <h2 className="text-xl font-semibold text-gray-800">Results</h2>
           <Badge variant="outline" className="text-gray-500 bg-white/80 backdrop-blur-sm">
-            {adventures.length} adventures
+            {adventures?.length} adventures
           </Badge>
         </motion.div>
 
@@ -286,7 +308,7 @@ export default function BrowsingPage() {
                     Please use the search bar above to select a location and discover available adventures.
                   </p>
                 </div>
-              </motion.div> : adventures.map((adventure) => (
+              </motion.div> : adventures?.map((adventure) => (
                 <motion.div
                   key={adventure._id}
                   variants={itemVariants}
@@ -303,7 +325,7 @@ export default function BrowsingPage() {
           </motion.div>
         </AnimatePresence>
 
-        {adventures.length === 0 && !isLoading && (
+        {adventures?.length === 0 && !isLoading && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-12">
             <NoResults clearFilter={clearFilter} />
           </motion.div>

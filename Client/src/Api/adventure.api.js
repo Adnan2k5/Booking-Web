@@ -10,22 +10,8 @@ export const createAdventure = async (data) => {
   return res;
 };
 
-export const fetchAllAdventures = async ({
-  page = 1,
-  limit = 10,
-  search = '',
-  location = '',
-  date = '',
-  adventure = '',
-} = {}) => {
-  const params = new URLSearchParams({ page, limit });
-  if (search && search.trim() !== '') params.append('search', search);
-  if (location && location.trim() !== '') params.append('location', location);
-  if (date && date.trim() !== '') params.append('date', date);
-  if (adventure && adventure.trim() !== '')
-    params.append('adventure', adventure);
-  console.log(params.toString());
-  const res = await axiosClient.get(`/api/adventure/all?${params.toString()}`);
+export const fetchAllAdventures = async () => {
+  const res = await axiosClient.get(`/api/adventure/all`);
   return res;
 };
 
