@@ -26,7 +26,7 @@ export const createSession = async (data) => {
   } catch (err) {
     console.error(err);
   }
-};  
+};
 
 export const getAllSessions = async (id) => {
   const res = await axiosClient.get(`/api/session/${id}`, {
@@ -37,6 +37,17 @@ export const getAllSessions = async (id) => {
   }
 };
 
-export const deleteSession = async (id) => {
-  
-}
+export const deleteSession = async (id) => {};
+
+export const getSession = async (data) => {
+  const res = await axiosClient.post(
+    '/api/session/fetch',
+    { adventureId: data },
+    {
+      withCredentials: true,
+    }
+  );
+  if (res.status === 200) {
+    return res;
+  }
+};

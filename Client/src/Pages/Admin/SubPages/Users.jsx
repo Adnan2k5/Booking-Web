@@ -24,6 +24,8 @@ export default function Dash_User() {
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(false)
 
+  console.log("Users:", users)
+
   const getUsers = useCallback(async () => {
     setLoading(true)
     try {
@@ -118,7 +120,7 @@ export default function Dash_User() {
                     <TableCell>
                       <Badge variant="outline">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
                     </TableCell>
-                    <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{user.createdAt}</TableCell>
                     <TableCell>{user.bookings?.length || 0}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">

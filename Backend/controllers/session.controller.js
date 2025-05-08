@@ -50,7 +50,8 @@ export const createPreset = asyncHandler(async (req, res, next) => {
   ]);
 
   if (!adventure) throw new ApiError(404, "Adventure not found");
-  if (!instructor && instructor.role === "user") throw new ApiError(404, "Instructor not found");
+  if (!instructor && instructor.role === "user")
+    throw new ApiError(404, "Instructor not found");
 
   const dayMap = {
     Sun: 0,
@@ -115,7 +116,16 @@ export const createSession = asyncHandler(async (req, res, next) => {
     location,
   } = req.body;
 
-  if(!days || !expiresAt || !startTime || !capacity || !adventureId || !instructorId || !location || !price) {
+  if (
+    !days ||
+    !expiresAt ||
+    !startTime ||
+    !capacity ||
+    !adventureId ||
+    !instructorId ||
+    !location ||
+    !price
+  ) {
     throw new ApiError(400, "All fields are required");
   }
 
@@ -128,13 +138,12 @@ export const createSession = asyncHandler(async (req, res, next) => {
     throw new ApiError(404, "Adventure or instructor not found");
   }
 
-
   if (instructor.role === "user") {
     throw new ApiError(403, "Only instructors can create sessions");
   }
 
   const session = new Session({
-    days: Array.isArray(days) ? days[0]: days[0],
+    days: Array.isArray(days) ? days[0] : days[0],
     status,
     expiresAt,
     startTime,
@@ -142,7 +151,7 @@ export const createSession = asyncHandler(async (req, res, next) => {
     adventureId,
     instructorId,
     location,
-    price
+    price,
   });
 
   await session.save();
@@ -252,4 +261,25 @@ export const getAllSessions = asyncHandler(async (req, res, next) => {
   }
 
   return res.status(200).json(sessions);
+});
+
+export const getSession = asyncHandler(async (req, res, next) => {
+  const { adventureId } = req.body;
+
+  if (!adventureId) {
+    throw new ApiError(400, "Adventure Id is required");
+  }
+
+  const session = await Session.find({
+    adventureId,
+  }).populate("instructorId");
+
+  if (!session) {
+    throw new ApiError(
+      404,
+      "Session not found for the given adventure and date"
+    );
+  }
+
+  return res.status(200).json(session);
 });
