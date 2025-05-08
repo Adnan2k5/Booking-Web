@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { format } from "date-fns"
+import { format, set } from "date-fns"
 import { useNavigate, useLocation } from "react-router-dom"
 import {
   MapPin,
@@ -35,6 +35,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog"
 import LanguageSelector from "../components/LanguageSelector"
 import { Navbar } from "../components/Navbar"
+import { getSession } from "../Api/session.api"
+import { getAdventure } from "../Api/adventure.api"
 
 // Mock data for items
 const mockItems = [
@@ -193,53 +195,7 @@ const mockInstructors = [
     certificates: ["Professional Photography", "Wildlife Photography", "Digital Editing"],
   },
 ]
-const mock_adventure = [
-  {
-    id: 1,
-    name: "Alpine Trekking Adventure",
-    location: "Swiss Alps",
-    date: "2023-12-15",
-    img: "/placeholder.svg?height=300&width=500",
-    exp: 500,
-    description: "Experience the breathtaking beauty of the Swiss Alps with this guided trekking adventure.",
-  },
-  {
-    id: 2,
-    name: "Desert Safari Expedition",
-    location: "Sahara Desert",
-    date: "2024-01-10",
-    img: "/placeholder.svg?height=300&width=500",
-    exp: 400,
-    description: "Embark on an unforgettable journey through the vast dunes of the Sahara Desert.",
-  },
-  {
-    id: 3,
-    name: "Rainforest Exploration",
-    location: "Amazon Rainforest",
-    date: "2024-02-20",
-    img: "/placeholder.svg?height=300&width=500",
-    exp: 600,
-    description: "Discover the wonders of the Amazon Rainforest with expert guides and unique wildlife encounters.",
-  },
-  {
-    id: 4,
-    name: "Arctic Expedition",
-    location: "Arctic Circle",
-    date: "2024-03-05",
-    img: "/placeholder.svg?height=300&width=500",
-    exp: 700,
-    description: "Venture into the icy wilderness of the Arctic Circle for a once-in-a-lifetime adventure.",
-  },
-  {
-    id: 5,
-    name: "Volcanic Hiking Adventure",
-    location: "Mount Fuji, Japan",
-    date: "2024-04-15",
-    img: "/placeholder.svg?height=300&width=500",
-    exp: 450,
-    description: "Hike up the iconic Mount Fuji and witness stunning views from the summit.",
-  },
-]
+
 
 export default function BookingFlow() {
   const navigate = useNavigate()
@@ -255,6 +211,8 @@ export default function BookingFlow() {
   const [isInstructorDialogOpen, setIsInstructorDialogOpen] = useState(false)
   const [currentInstructor, setCurrentInstructor] = useState()
   const [groupMembers, setGroupMembers] = useState([])
+  const [instructors, setInstructors] = useState([])
+  const [sessions, setSessions] = useState([])
   const [activeGalleryImage, setActiveGalleryImage] = useState(0)
   const [activeTab, setActiveTab] = useState("instructor")
 
@@ -266,18 +224,44 @@ export default function BookingFlow() {
     }
   }, [])
 
-  // Parse the adventure ID from URL
+  const fetchAdventure = async () => {
+    const query = new URLSearchParams(location.search)
+    const adventureId = query.get("id")
+    const res = await getAdventure(adventureId)
+    if (res.status === 200) {
+      setAdventure(res.data)
+      setIsLoading(false)
+    }
+  }
+
+  const fetchSession = async () => {
+    const query = new URLSearchParams(location.search)
+    const adventureId = query.get("id")
+    const res = await getSession(adventureId);
+    if (res.status === 200) {
+      setSessions(res.data)
+    }
+  }
+
+
   useEffect(() => {
-    const query = new URLSearchParams(location.search);
-    setAdventure(mock_adventure);
+    if (sessions.length > 0) {
+      const instructor = sessions.map((session => session.instructorId));
+      setInstructors(instructor);
+    }
+  }, [sessions])
 
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
 
-    return () => clearTimeout(timer);
-  }, [location]);
+  useEffect(() => {
+    fetchAdventure()
+  }, [])
+
+  useEffect(() => {
+    if (adventure) {
+      fetchSession();
+    }
+  }, [adventure])
+
 
   useEffect(() => {
     if (!user.user) {
@@ -285,6 +269,7 @@ export default function BookingFlow() {
       navigate("/login")
     }
   }, [user, navigate, t])
+
 
   const handleAddToCart = (itemId, isRental = false) => {
     setCartItems((prev) => {
@@ -548,7 +533,7 @@ export default function BookingFlow() {
                   <div className="flex flex-col md:flex-row gap-6">
                     <div className="md:w-1/2 overflow-hidden rounded-xl">
                       <motion.img
-                        src={adventure.img || "/placeholder.svg?height=300&width=500"}
+                        src={adventure.medias[0]}
                         alt={adventure.name}
                         className="w-full h-64 object-cover"
                         whileHover={{ scale: 1.05 }}
@@ -559,7 +544,7 @@ export default function BookingFlow() {
                       <div>
                         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                           <MapPin size={16} />
-                          <span>{adventure.location}</span>
+                          <span>{adventure.location[0].name}</span>
                           <span className="text-gray-300">•</span>
                           <span>{formatDate(adventure.date)}</span>
                         </div>

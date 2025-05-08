@@ -46,6 +46,7 @@ import { InstructorBookings } from "./Pages/Instructor/Instructor.bookings"
 import { InstructorSession } from "./Pages/Instructor/InstructorSession"
 import { InstructorProfile } from "./Pages/Instructor/InstructorProfile"
 import InstructorSettings from "./Pages/Instructor/InstructorSettings"
+import { CartProvider } from "./Pages/Cart/CartContext"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -67,88 +68,90 @@ const App = () => {
   return (
     <I18nextProvider i18n={i18n}>
       <AuthProvider>
-        <BrowserRouter>
-          <Suspense fallback={<Loader />}>
-            <Toaster />
-            <ChatWidget />
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/auth/signInWithLinkedin" element={<LinkedInCallback />} />
-              <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/browse" element={<BrowsingPage />} />
-              <Route path="/booking" element={<Booking />} />
-              <Route path="/confirmation" element={<ConfirmationPage />} />
-              <Route path="/shop" element={<Shop />} />
-              <Route path="/reset" element={<ResetPass />} />
-              <Route path="/instructor/register" element={<InstructorRegister />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <UserDashboard />
-                }
-              />
-              <Route
-                path="/dashboard/bookings"
-                element={
-                  <UserDashboardLayout>
-                    <UserDashboard />
-                  </UserDashboardLayout>
-                }
-              />
-              <Route
-                path="/dashboard/tickets"
-                element={
-                  <UserDashboardLayout>
-                    <UserDashboard />
-                  </UserDashboardLayout>
-                }
-              />
-              <Route
-                path="/dashboard/profile"
-                element={
-                  <UserDashboardLayout>
-                    <UserDashboard />
-                  </UserDashboardLayout>
-                }
-              />
-              <Route
-                path="/dashboard/settings"
-                element={
-                  <UserDashboardLayout>
-                    <UserDashboard />
-                  </UserDashboardLayout>
-                }
-              />
-              <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
-              <Route path="/instructor/bookings" element={<InstructorBookings />} />
-              <Route path="/instructor/sessions" element={<InstructorSession />} />
-              <Route path="/instructor/sessions/new" element={<SessionForm />} />
-              <Route path="/instructor/profile" element={<InstructorProfile />} />
-              <Route path="/instructor/settings" element={<InstructorSettings />} />
-              <Route path="/admin" element={<AdminLayout />}>
+        <CartProvider>
+          <BrowserRouter>
+            <Suspense fallback={<Loader />}>
+              <Toaster />
+              <ChatWidget />
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/auth/signInWithLinkedin" element={<LinkedInCallback />} />
+                <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/browse" element={<BrowsingPage />} />
+                <Route path="/booking" element={<Booking />} />
+                <Route path="/confirmation" element={<ConfirmationPage />} />
+                <Route path="/shop" element={<Shop />} />
+                <Route path="/reset" element={<ResetPass />} />
+                <Route path="/instructor/register" element={<InstructorRegister />} />
                 <Route
-                  index
+                  path="/dashboard"
                   element={
-                    <ProtectedRoute>
-                      <AdminDashboard />
-                    </ProtectedRoute>
+                    <UserDashboard />
                   }
                 />
-                <Route path="/admin/adventures" element={<AdventuresPage />} />
-                <Route path="/admin/bookings" element={<Dash_Bookings  />} />
-                <Route path="/admin/users" element={<Dash_User />} />
-                <Route path="/admin/store" element={<Dash_Store />} />
-                <Route path="/admin/hotels" element={<Dash_Hotels />} />
-                <Route path="/admin/tickets" element={<Dash_Tickets />} />
-                <Route path="/admin/terms" element={<Dash_Terms />} />
-                <Route path="/admin/declaration" element={<Dash_Declation />} />
-                <Route path="/admin/locations" element={<LocationsPage />} />
-              </Route>
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
+                <Route
+                  path="/dashboard/bookings"
+                  element={
+                    <UserDashboardLayout>
+                      <UserDashboard />
+                    </UserDashboardLayout>
+                  }
+                />
+                <Route
+                  path="/dashboard/tickets"
+                  element={
+                    <UserDashboardLayout>
+                      <UserDashboard />
+                    </UserDashboardLayout>
+                  }
+                />
+                <Route
+                  path="/dashboard/profile"
+                  element={
+                    <UserDashboardLayout>
+                      <UserDashboard />
+                    </UserDashboardLayout>
+                  }
+                />
+                <Route
+                  path="/dashboard/settings"
+                  element={
+                    <UserDashboardLayout>
+                      <UserDashboard />
+                    </UserDashboardLayout>
+                  }
+                />
+                <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
+                <Route path="/instructor/bookings" element={<InstructorBookings />} />
+                <Route path="/instructor/sessions" element={<InstructorSession />} />
+                <Route path="/instructor/sessions/new" element={<SessionForm />} />
+                <Route path="/instructor/profile" element={<InstructorProfile />} />
+                <Route path="/instructor/settings" element={<InstructorSettings />} />
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route
+                    index
+                    element={
+                      <ProtectedRoute>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/admin/adventures" element={<AdventuresPage />} />
+                  <Route path="/admin/bookings" element={<Dash_Bookings />} />
+                  <Route path="/admin/users" element={<Dash_User />} />
+                  <Route path="/admin/store" element={<Dash_Store />} />
+                  <Route path="/admin/hotels" element={<Dash_Hotels />} />
+                  <Route path="/admin/tickets" element={<Dash_Tickets />} />
+                  <Route path="/admin/terms" element={<Dash_Terms />} />
+                  <Route path="/admin/declaration" element={<Dash_Declation />} />
+                  <Route path="/admin/locations" element={<LocationsPage />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </CartProvider>
       </AuthProvider>
     </I18nextProvider>
   )

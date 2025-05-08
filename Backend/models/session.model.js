@@ -39,7 +39,7 @@ const sessionSchema = new moongoose.Schema(
     },
     instructorId: {
       type: moongoose.Schema.Types.ObjectId,
-      ref: "Instructor",
+      ref: "User",
       required: true,
     },
     notes: {

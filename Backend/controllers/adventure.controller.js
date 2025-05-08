@@ -10,6 +10,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 export const getAllAdventure = asyncHandler(async (req, res) => {
   // Pagination & search params
   let { page = 1, limit = 10, search = "" } = req.query;
+  console.log(req.query);
+
   page = parseInt(page);
   limit = parseInt(limit);
   const skip = (page - 1) * limit;
@@ -69,8 +71,6 @@ export const createAdventure = asyncHandler(async (req, res) => {
   } else if (!Array.isArray(location)) {
     locationsArray = [location];
   }
-
-
 
   const newAdventure = await Adventure.create({
     name,

@@ -7,6 +7,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import {
   ArrowLeft,
   ChevronRight,
+  MapPin,
 } from "lucide-react"
 import { Badge } from "../components/ui/badge"
 import { fetchAllAdventures } from "../Api/adventure.api"
@@ -49,24 +50,23 @@ export default function BrowsingPage() {
     borderRadius: "0.375rem",
   }
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 1500)
-    return () => clearTimeout(timer)
-  }, [])
+  console.log(adventure)
 
-  useEffect(() => {
+  const handleSearch = () => {
     setIsLoading(true)
-    fetchAllAdventures()
+    fetchAllAdventures({
+      location: loc,
+      date: date ? date.toISOString().split('T')[0] : '',
+      adventure,
+    })
       .then((data) => {
-        setAdventures(data)
+        setAdventures(data.data.data)
       })
-      .catch((err) => {
+      .catch(() => {
         setAdventures([])
       })
       .finally(() => setIsLoading(false))
-  }, [])
+  }
 
   const { user, loading } = useAuth()
 
@@ -91,24 +91,6 @@ export default function BrowsingPage() {
     }
   }, [])
 
-  const filteredAdventures = adventures.filter((adventureItem) => {
-    const matchesAdventure = !adventure || adventure === "all" || adventureItem.name.toLowerCase().includes(adventure)
-    const matchesLoc = !loc || loc === "all" || adventureItem.location.toLowerCase().includes(loc)
-
-    const matchesCategory =
-      activeCategory === "all" || (adventureItem.category && adventureItem.category === activeCategory)
-
-    let matchesDate = true
-    if (date && date instanceof Date && !isNaN(date)) {
-      const advDate = new Date(adventureItem.date)
-      if (advDate instanceof Date && !isNaN(advDate)) {
-        matchesDate = format(advDate, "yyyy-MM-dd") === format(date, "yyyy-MM-dd")
-      }
-    }
-
-    return matchesAdventure && matchesLoc && matchesDate && matchesCategory
-  })
-
   const onBook = (id) => {
     navigate(`/booking?id=${id}`)
   }
@@ -129,6 +111,7 @@ export default function BrowsingPage() {
         setLoc("")
         setDate(undefined)
         setActiveCategory("all")
+        setAdventures([]) // Clear results when all filters are cleared
         break
       default:
         break
@@ -219,7 +202,6 @@ export default function BrowsingPage() {
             )}
           </motion.div>
         </div>
-
         <motion.div
           className="mb-8 text-center"
           initial={{ opacity: 0, y: -20 }}
@@ -248,6 +230,7 @@ export default function BrowsingPage() {
             clearFilter={clearFilter}
             handleDateChange={handleDateChange}
             wrapperStyle={wrapperStyle}
+            onSearch={handleSearch}
           />
         </motion.div>
 
@@ -268,46 +251,58 @@ export default function BrowsingPage() {
         >
           <h2 className="text-xl font-semibold text-gray-800">Results</h2>
           <Badge variant="outline" className="text-gray-500 bg-white/80 backdrop-blur-sm">
-            {filteredAdventures.length} adventures
+            {adventures.length} adventures
           </Badge>
         </motion.div>
 
         <AnimatePresence>
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className={`${loc ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col items-center justify-center"} `}
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
             {isLoading
               ? Array(6)
-                  .fill(0)
-                  .map((_, index) => (
-                    <motion.div
-                      key={`skeleton-${index}`}
-                      variants={itemVariants}
-                    >
-                      <AdventureCardSkeleton />
-                    </motion.div>
-                  ))
-              : filteredAdventures.map((adventure) => (
+                .fill(0)
+                .map((_, index) => (
                   <motion.div
-                    key={adventure.id}
+                    key={`skeleton-${index}`}
                     variants={itemVariants}
-                    layout
-                    className="h-full"
-                    whileHover={{ y: -8 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    onClick={() => onBook(adventure.id)}
-                    style={{ cursor: "pointer" }}
                   >
-                    <AdventureCard adventure={adventure} formatDate={formatDate} onBook={onBook} />
+                    <AdventureCardSkeleton />
                   </motion.div>
-                ))}
+                ))
+              : (!loc ? <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center  py-12 bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-8"
+              >
+                <div className="flex flex-col items-center gap-4">
+                  <MapPin size={48} className="text-blue-500" />
+                  <h3 className="text-xl font-semibold text-gray-800">Select a location to see adventures</h3>
+                  <p className="text-gray-600 max-w-md">
+                    Please use the search bar above to select a location and discover available adventures.
+                  </p>
+                </div>
+              </motion.div> : adventures.map((adventure) => (
+                <motion.div
+                  key={adventure._id}
+                  variants={itemVariants}
+                  layout
+                  className="h-full"
+                  whileHover={{ y: -8 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  onClick={() => onBook(adventure._id)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <AdventureCard adventure={adventure} formatDate={formatDate} onBook={onBook} />
+                </motion.div>
+              )))}
           </motion.div>
         </AnimatePresence>
 
-        {filteredAdventures.length === 0 && !isLoading && (
+        {adventures.length === 0 && !isLoading && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-12">
             <NoResults clearFilter={clearFilter} />
           </motion.div>
