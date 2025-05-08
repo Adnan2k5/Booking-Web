@@ -47,7 +47,8 @@ const sessionSchema = new moongoose.Schema(
       default: "",
     },
     location: {
-      type: String,
+      type: moongoose.Schema.Types.ObjectId,
+      ref: "Location",
       required: true,
     },
     booking: {

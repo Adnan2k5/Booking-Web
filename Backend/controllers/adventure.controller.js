@@ -1,4 +1,6 @@
 import { Adventure } from "../models/adventure.model.js";
+import { Session } from "../models/session.model.js";
+import { Location } from "../models/location.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import {
   deleteFromCloudinary,
@@ -8,37 +10,10 @@ import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const getAllAdventure = asyncHandler(async (req, res) => {
-  // Pagination & search params
-  let { page = 1, limit = 10, search = "" } = req.query;
-  console.log(req.query);
-
-  page = parseInt(page);
-  limit = parseInt(limit);
-  const skip = (page - 1) * limit;
-
-  // Build search filter
-  let filter = {};
-  if (search && search.trim() !== "") {
-    filter = {
-      $or: [
-        { name: { $regex: search, $options: "i" } },
-        { location: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-      ],
-    };
-  }
-
-  const [adventures, total] = await Promise.all([
-    Adventure.find(filter).skip(skip).limit(limit).populate("location"),
-    Adventure.countDocuments(filter),
-  ]);
+  const adventures = await Adventure.find();
 
   return res.status(200).json({
-    data: adventures,
-    total,
-    page,
-    totalPages: Math.ceil(total / limit),
-    limit,
+    adventures
   });
 });
 
@@ -192,4 +167,37 @@ export const getAdventure = asyncHandler(async (req, res) => {
 export const getInstructorAdventures = asyncHandler(async (req, res) => {
   const adventures = await Adventure.find({ instructor: req.user._id });
   return res.status(200).json(adventures);
+});
+
+export const getFilteredAdventures = asyncHandler(async (req, res) => {
+  const { adventure, location, session_date } = req.query;
+
+  const date = new Date(session_date);
+  const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+  // Step 1: Find sessions within the date range
+  let sessions = await Session.find({
+    startTime: { $gte: startOfDay, $lte: endOfDay }
+  })
+    .populate({
+      path: "adventureId",
+      match: adventure ? { name: { $regex: adventure, $options: "i" } } : {}, // filter here
+    })
+    .populate({
+      path: "location",
+      match: location ? { name: { $regex: location, $options: "i" } } : {}, // filter here
+    });
+
+  // Step 2: Filter out sessions where populate returned null
+  sessions = sessions.filter(session => session.adventureId && session.location);
+
+  // Step 3: Extract adventures
+  const adventures = sessions.map(session => session.adventureId);
+  const uniqueAdventures = Array.from(new Set(adventures.map(a => a._id.toString())))
+    .map(id => adventures.find(a => a._id.toString() === id));
+
+  
+  // Response
+  res.status(200).json({ data: uniqueAdventures, total: uniqueAdventures.length });
 });
