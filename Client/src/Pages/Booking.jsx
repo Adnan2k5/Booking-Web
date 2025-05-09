@@ -40,10 +40,9 @@ export default function BookingFlow() {
   const [isInstructorDialogOpen, setIsInstructorDialogOpen] = useState(false)
   const [currentInstructor, setCurrentInstructor] = useState(null)
   const [groupMembers, setGroupMembers] = useState([])
-  const [instructors, setInstructors] = useState([])
 
-  const { sessions } = useSessions({adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date")})
-
+  const { sessions, instructors } = useSessions({adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date")})
+  console.log(instructors )
   // Load group members from sessionStorage if available
   useEffect(() => {
     const storedGroupMembers = sessionStorage.getItem("groupMembers")
@@ -62,13 +61,6 @@ export default function BookingFlow() {
     }
   }
 
-
-  useEffect(() => {
-    if (sessions.length > 0) {
-      const instructor = sessions.map((session) => session.instructorId)
-      setInstructors(instructor)
-    }
-  }, [sessions])
 
   useEffect(() => {
     fetchAdventure()

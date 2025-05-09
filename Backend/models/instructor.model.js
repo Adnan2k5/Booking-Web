@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
 
 const instructorSchema = new mongoose.Schema(
   {
@@ -16,6 +15,11 @@ const instructorSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Booking",
+      },
+    ],
+    description: [
+      {
+        type: String,
       },
     ],
     reviews: [

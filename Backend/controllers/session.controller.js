@@ -280,7 +280,7 @@ export const getInstructorSessions = asyncHandler(async (req, res, next) => {
   }).populate("instructorId").populate({
       path: "location",
       match: location ? { name: { $regex: location, $options: "i" } } : {}, // filter here
-    });;
+    }).select("name").populate("instructor").select("description avgReview")
 
   if (!sessions || sessions.length === 0) {
     return res.status(404).json({ message: "No sessions found" });
