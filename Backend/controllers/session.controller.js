@@ -283,3 +283,24 @@ export const getSession = asyncHandler(async (req, res, next) => {
 
   return res.status(200).json(session);
 });
+
+export const getInstructorSessions = asyncHandler(async (req, res, next) => {
+  const {location, sessionDate, adventure} = req.query;
+
+  if (!location || !sessionDate || !adventure) {
+    return res.status(400).json({ message: "Location, sessionDate, and adventure are required" });
+  }
+  
+  const sessions = await Session.find({
+    location,
+    adventureId: adventure,
+    startTime: {
+      $gte: new Date(sessionDate),
+      $lt: new Date(new Date(sessionDate).setDate(new Date(sessionDate).getDate() + 1)),
+    },
+  }).populate("instructorId");
+
+  if (!sessions || sessions.length === 0) {
+    return res.status(404).json({ message: "No sessions found" });
+  }
+});

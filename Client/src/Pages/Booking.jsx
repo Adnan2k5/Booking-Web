@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { format, set } from "date-fns"
+import { format } from "date-fns"
 import { useNavigate, useLocation } from "react-router-dom"
 import {
   MapPin,
@@ -37,6 +37,7 @@ import LanguageSelector from "../components/LanguageSelector"
 import { Navbar } from "../components/Navbar"
 import { getSession } from "../Api/session.api"
 import { getAdventure } from "../Api/adventure.api"
+import { useSessions } from "../hooks/useSession"
 
 // Mock data for items
 const mockItems = [
@@ -215,6 +216,10 @@ export default function BookingFlow() {
   const [sessions, setSessions] = useState([])
   const [activeGalleryImage, setActiveGalleryImage] = useState(0)
   const [activeTab, setActiveTab] = useState("instructor")
+
+  const { sessions: h1 } = useSessions()
+
+  console.log("Session:", h1)
 
   // Load group members from sessionStorage if available
   useEffect(() => {

@@ -1,6 +1,5 @@
 import { Adventure } from "../models/adventure.model.js";
 import { Session } from "../models/session.model.js";
-import { Location } from "../models/location.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import {
   deleteFromCloudinary,
