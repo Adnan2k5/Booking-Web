@@ -263,44 +263,28 @@ export const getAllSessions = asyncHandler(async (req, res, next) => {
   return res.status(200).json(sessions);
 });
 
-export const getSession = asyncHandler(async (req, res, next) => {
-  const { adventureId } = req.body;
-
-  if (!adventureId) {
-    throw new ApiError(400, "Adventure Id is required");
-  }
-
-  const session = await Session.find({
-    adventureId,
-  }).populate("instructorId");
-
-  if (!session) {
-    throw new ApiError(
-      404,
-      "Session not found for the given adventure and date"
-    );
-  }
-
-  return res.status(200).json(session);
-});
 
 export const getInstructorSessions = asyncHandler(async (req, res, next) => {
-  const {location, sessionDate, adventure} = req.query;
+  const {location, session_date, adventure} = req.query;
 
-  if (!location || !sessionDate || !adventure) {
+  if (!location || !session_date || !adventure) {
     return res.status(400).json({ message: "Location, sessionDate, and adventure are required" });
   }
   
   const sessions = await Session.find({
-    location,
     adventureId: adventure,
     startTime: {
-      $gte: new Date(sessionDate),
-      $lt: new Date(new Date(sessionDate).setDate(new Date(sessionDate).getDate() + 1)),
+      $gte: new Date(session_date),
+      $lt: new Date(new Date(session_date).setDate(new Date(session_date).getDate() + 1)),
     },
-  }).populate("instructorId");
+  }).populate("instructorId").populate({
+      path: "location",
+      match: location ? { name: { $regex: location, $options: "i" } } : {}, // filter here
+    });;
 
   if (!sessions || sessions.length === 0) {
     return res.status(404).json({ message: "No sessions found" });
   }
+
+  return res.status(200).json(sessions);
 });

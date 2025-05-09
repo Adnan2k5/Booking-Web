@@ -104,7 +104,7 @@ export default function BrowsingPage() {
   }, [location.search, setFilters, navigate, location.pathname]);
 
   const onBook = (id) => {
-    navigate(`/booking?id=${id}`)
+    navigate(`/booking?id=${id}&location=${filters.location}&session_date=${filters.session_date}`, { replace: true })
   }
 
   const clearFilter = (type) => {

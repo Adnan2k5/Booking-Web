@@ -35,7 +35,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog"
 import LanguageSelector from "../components/LanguageSelector"
 import { Navbar } from "../components/Navbar"
-import { getSession } from "../Api/session.api"
 import { getAdventure } from "../Api/adventure.api"
 import { useSessions } from "../hooks/useSession"
 
@@ -201,6 +200,7 @@ const mockInstructors = [
 export default function BookingFlow() {
   const navigate = useNavigate()
   const location = useLocation()
+  const query = new URLSearchParams(location.search);
   const { user } = useAuth()
   const { t } = useTranslation()
   const [currentStep, setCurrentStep] = useState(1)
@@ -213,13 +213,9 @@ export default function BookingFlow() {
   const [currentInstructor, setCurrentInstructor] = useState()
   const [groupMembers, setGroupMembers] = useState([])
   const [instructors, setInstructors] = useState([])
-  const [sessions, setSessions] = useState([])
   const [activeGalleryImage, setActiveGalleryImage] = useState(0)
   const [activeTab, setActiveTab] = useState("instructor")
-
-  const { sessions: h1 } = useSessions()
-
-  console.log("Session:", h1)
+  const { sessions } = useSessions({adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date")})
 
   // Load group members from sessionStorage if available
   useEffect(() => {
@@ -239,15 +235,6 @@ export default function BookingFlow() {
     }
   }
 
-  const fetchSession = async () => {
-    const query = new URLSearchParams(location.search)
-    const adventureId = query.get("id")
-    const res = await getSession(adventureId);
-    if (res.status === 200) {
-      setSessions(res.data)
-    }
-  }
-
 
   useEffect(() => {
     if (sessions.length > 0) {
@@ -260,12 +247,6 @@ export default function BookingFlow() {
   useEffect(() => {
     fetchAdventure()
   }, [])
-
-  useEffect(() => {
-    if (adventure) {
-      fetchSession();
-    }
-  }, [adventure])
 
 
   useEffect(() => {
