@@ -212,7 +212,6 @@ const SessionCalendar = ({ adventureTypes }) => {
                 toast.success("Session created successfully")
                 setIsDialogOpen(false)
                 fetchSessions()
-                console.log(sessions);
             } else {
                 toast.error("Error creating session")
             }
@@ -433,7 +432,7 @@ const SessionCalendar = ({ adventureTypes }) => {
 
         return days
     }
-
+    
     return (
         <Card className="col-span-7">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

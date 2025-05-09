@@ -193,21 +193,8 @@ const InstructorDashboard = () => {
     const { user } = useAuth()
     const { t } = useTranslation()
     const [timeRange, setTimeRange] = useState("month")
-    const [activeTab, setActiveTab] = useState("overview")
-    const [showCreateModal, setShowCreateModal] = useState(false)
     const [adventureTypes, setAdventureTypes] = useState([])
-    const [sessions, setSessions] = useState(null)
-    const [newSession, setNewSession] = useState({
-        title: '',
-        adventure: '',
-        location: '',
-        price: '',
-        duration: '',
-        capacity: '',
-        description: '',
-        days: [],
-        status: 'active',
-    })
+
 
     useEffect(() => {
         if (!user.user) {
@@ -215,60 +202,12 @@ const InstructorDashboard = () => {
             navigate("/login")
         }
         fetchAllAdventures().then((res) => {
-            setAdventureTypes(res.data.data)
+            setAdventureTypes(res.data.adventures)
         }).catch((err) => {
             console.error(err)});
     }, [user, navigate])
 
 
-
-
-    const handleDayToggle = (day) => {
-        setNewSession((prev) => ({
-            ...prev,
-            days: prev.days.includes(day)
-                ? prev.days.filter((d) => d !== day)
-                : [...prev.days, day],
-        }))
-    }
-
-    const handleSessionChange = (e) => {
-        const { name, value } = e.target
-        setNewSession((prev) => ({ ...prev, [name]: value }))
-    }
-
-    const handleStatusChange = (id, status) => {
-        setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
-    }
-
-    const handleCreateSession = (e) => {
-        e.preventDefault()
-        if (!newSession.title || !newSession.adventure || !newSession.location) {
-            toast.error('Please fill all required fields')
-            return
-        }
-        setSessions((prev) => [
-            ...prev,
-            {
-                ...newSession,
-                id: `S-${Date.now()}`,
-                upcoming: [],
-            },
-        ])
-        setShowCreateModal(false)
-        setNewSession({
-            title: '',
-            adventure: '',
-            location: '',
-            price: '',
-            duration: '',
-            capacity: '',
-            description: '',
-            days: [],
-            status: 'active',
-        })
-        toast.success('Session created!')
-    }
 
     // Animation variants
     const fadeIn = {
