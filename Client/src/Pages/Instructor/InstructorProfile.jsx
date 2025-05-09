@@ -17,17 +17,6 @@ export const InstructorProfile = () => {
     const [editMode, setEditMode] = useState(false)
     const [certificateUploadMode, setCertificateUploadMode] = useState(false)
 
-    const adventureTypes = [
-        "Mountain Climbing",
-        "Wilderness Survival",
-        "Rock Climbing",
-        "Alpine Hiking",
-        "Kayaking",
-        "Scuba Diving",
-        "Paragliding",
-        "Skiing",
-    ]
-
     const [profileData, setProfileData] = useState({
         id: 1,
         name: "Alex Johnson",
@@ -66,22 +55,6 @@ export const InstructorProfile = () => {
             ...prev,
             [field]: value
         }))
-    }
-
-    const handleAdventureToggle = (adventure) => {
-        setProfileData(prev => {
-            if (prev.selectedAdventures.includes(adventure)) {
-                return {
-                    ...prev,
-                    selectedAdventures: prev.selectedAdventures.filter(a => a !== adventure)
-                }
-            } else {
-                return {
-                    ...prev,
-                    selectedAdventures: [...prev.selectedAdventures, adventure]
-                }
-            }
-        })
     }
 
     const handleLanguageToggle = (language) => {

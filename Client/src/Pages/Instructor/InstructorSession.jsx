@@ -7,6 +7,7 @@ import { Badge } from "../../components/ui/badge"
 import { Input } from "../../components/ui/input"
 import { useTranslation } from 'react-i18next'
 import InstructorLayout from './InstructorLayout'
+import { fadeIn, staggerContainer } from '../../assets/Animations'
 
 export const InstructorSession = () => {
     const mockData = {
@@ -174,26 +175,6 @@ export const InstructorSession = () => {
             },
         ],
     }
-
-    const fadeIn = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: { duration: 0.4 },
-        },
-    }
-
-    const staggerContainer = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-            },
-        },
-    }
-
 
     const { t } = useTranslation();
     return (

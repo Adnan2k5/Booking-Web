@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Input } from "../../components/ui/input"
 import { useTranslation } from 'react-i18next'
 import InstructorLayout from './InstructorLayout'
+import { staggerContainer, fadeIn } from '../../assets/Animations'
 
 export const InstructorBookings = () => {
 
@@ -177,48 +178,6 @@ export const InstructorBookings = () => {
             },
         ],
     }
-
-    const adventureTypes = [
-        "Mountain Climbing",
-        "Wilderness Survival",
-        "Rock Climbing",
-        "Alpine Hiking",
-        "Kayaking",
-        "Scuba Diving",
-        "Paragliding",
-        "Skiing",
-    ]
-
-    const locations = [
-        "Alpine Heights",
-        "Evergreen Forest",
-        "Granite Peaks",
-        "Mountain Range",
-        "Crystal Lake",
-        "Coastal Cliffs",
-        "Desert Canyon",
-        "Snowy Summit",
-    ]
-    const staggerContainer = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-            },
-        },
-    }
-
-    const fadeIn = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: { duration: 0.4 },
-        },
-    }
-
-
     const { t } = useTranslation()
     return (
         <InstructorLayout>

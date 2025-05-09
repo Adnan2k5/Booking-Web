@@ -19,6 +19,8 @@ import { AdventureCardSkeleton } from "../components/BrowsingPage/AdventureCardS
 import { NoResults } from "../components/BrowsingPage/NoResults"
 import { useAdventures } from "../hooks/useAdventure"
 import { useBrowse } from "../hooks/useBrowse"
+import { containerVariants, itemVariants } from "../assets/Animations"
+import { Bubble } from "../components/Bubble"
 
 export default function BrowsingPage() {
   const location = useLocation()
@@ -46,7 +48,6 @@ export default function BrowsingPage() {
 
   const updateParams = (params, options = {}) => {
     const queryParams = new URLSearchParams(location.search);
-    // Remove keys with empty values
     Object.entries(params).forEach(([key, value]) => {
       if (value) {
         queryParams.set(key, value);
@@ -77,27 +78,24 @@ export default function BrowsingPage() {
       }
     }
   }, [])
-  
+
   useEffect(() => {
     // Parse URL params and set filters
     const queryParams = new URLSearchParams(location.search);
     const adventureParam = queryParams.get("adventure") || "";
     const locationParam = queryParams.get("location") || "";
     const dateParam = queryParams.get("date") || "";
-    
-    // Update filters for API requests
+
     setFilters({
       adventure: adventureParam,
       location: locationParam,
       session_date: dateParam,
     });
-    
-    // Update local state for UI display
+
     setAdventure(adventureParam.toLowerCase());
     setLoc(locationParam.toLowerCase());
     setDate(dateParam ? new Date(dateParam) : undefined);
-    
-    // Update URL if needed
+
     if (location.search !== queryParams.toString()) {
       navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
     }
@@ -134,28 +132,6 @@ export default function BrowsingPage() {
     }
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-      },
-    },
-  }
-
   const handleDateChange = (value) => {
     if (value) {
       const selectedDate = new Date(value.format("YYYY-MM-DD"))
@@ -164,7 +140,6 @@ export default function BrowsingPage() {
       setDate(undefined)
     }
   }
-
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString)
@@ -180,11 +155,7 @@ export default function BrowsingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-6 relative overflow-hidden">
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="bubble absolute top-[10%] left-[15%] w-64 h-64 bg-blue-200 rounded-full opacity-20 blur-[80px] transition-transform duration-1000 ease-in-out"></div>
-        <div className="bubble absolute top-[40%] left-[60%] w-96 h-96 bg-purple-200 rounded-full opacity-20 blur-[100px] transition-transform duration-1000 ease-in-out"></div>
-        <div className="bubble absolute bottom-[10%] right-[20%] w-72 h-72 bg-cyan-200 rounded-full opacity-20 blur-[90px] transition-transform duration-1000 ease-in-out"></div>
-      </div>
+      <Bubble />
 
       <div className="relative z-10 mx-auto max-w-7xl">
         <div className="flex justify-between items-center mb-6">
