@@ -120,7 +120,6 @@ export default function UserDashboard() {
     const [ticketMessage, setTicketMessage] = useState("")
     const [activeTicket, setActiveTicket] = useState(null)
     const [isTicketDetailOpen, setIsTicketDetailOpen] = useState(false)
-    const [newReply, setNewReply] = useState("")
     console.log(user)
     const userProfile = {
         name: "Adnan",
@@ -153,16 +152,6 @@ export default function UserDashboard() {
     const handleOpenTicketDetail = (ticket) => {
         setActiveTicket(ticket)
         setIsTicketDetailOpen(true)
-    }
-
-    const handleSendReply = () => {
-        if (!newReply.trim()) return
-
-        // In a real app, this would send the reply to an API
-        console.log("Sending reply:", newReply)
-        setNewReply("")
-        // Show success message
-        alert(t("replySent"))
     }
 
     return (

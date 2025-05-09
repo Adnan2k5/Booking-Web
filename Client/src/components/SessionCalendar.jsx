@@ -139,7 +139,7 @@ const SessionCalendar = ({ adventureTypes }) => {
     // Create preset
     const handlePreset = async () => {
         const toastId = toast.loading("Creating preset...");
-        
+
         const presetPayload = {
             location: presetLocation,
             days: presetDays,
@@ -514,9 +514,9 @@ const SessionCalendar = ({ adventureTypes }) => {
                                         <SelectValue placeholder="Select location" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {filteredLocations()?.map((location) => (
-                                            <SelectItem key={location._id} value={location._id}>
-                                                {location.name}
+                                        {adventureTypes.location?.map((location, index) => (
+                                            <SelectItem key={location[index]} value={location[index]}>
+                                                {location[index]}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

@@ -4,7 +4,8 @@ import { useEffect } from "react"
 import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { CheckCircle, ArrowLeft, Calendar, MapPin } from "lucide-react"
-import { Button } from "../components/ui/button"
+import { Button } from "../../components/ui/button"
+import { BackgroundElems } from "./BackgroundElems"
 
 export default function Confirmation() {
   const navigate = useNavigate()
@@ -16,11 +17,7 @@ export default function Confirmation() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-100 to-indigo-100 p-4 sm:p-6 relative overflow-hidden">
       {/* Background elements */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-200 rounded-full opacity-30 blur-[100px]"></div>
-        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-indigo-200 rounded-full opacity-30 blur-[100px]"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white opacity-5 rounded-full"></div>
-      </div>
+      <BackgroundElems />
 
       {/* Main content */}
       <div className="relative z-10 max-w-2xl mx-auto">

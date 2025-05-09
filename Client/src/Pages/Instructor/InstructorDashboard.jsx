@@ -14,6 +14,8 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, 
 import SessionCalendar from "../../components/SessionCalendar"
 import UpcomingBookingsCard from "../../components/UpcomingBookingsCard"
 import { fetchAllAdventures } from "../../Api/adventure.api"
+import { staggerContainer, fadeIn } from "../../assets/Animations"
+import { COLORS } from "../../assets/Animations"
 
 // Mock data for the instructor dashboard
 const mockData = {
@@ -204,33 +206,10 @@ const InstructorDashboard = () => {
         fetchAllAdventures().then((res) => {
             setAdventureTypes(res.data.adventures)
         }).catch((err) => {
-            console.error(err)});
+            console.error(err)
+        });
     }, [user, navigate])
 
-
-
-    // Animation variants
-    const fadeIn = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: { duration: 0.4 },
-        },
-    }
-
-    const staggerContainer = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-            },
-        },
-    }
-
-    // COLORS for charts
-    const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"]
 
     return (
         <InstructorLayout>
@@ -427,7 +406,7 @@ const InstructorDashboard = () => {
                         <motion.div variants={fadeIn} initial="hidden" animate="visible">
                             <UpcomingBookingsCard
                                 bookings={mockData.upcomingBookings}
-                                onViewAll={() => setActiveTab("bookings")}
+                                onViewAll={() => navigate("/instructor/bookings")}
                             />
                         </motion.div>
                     </div>
