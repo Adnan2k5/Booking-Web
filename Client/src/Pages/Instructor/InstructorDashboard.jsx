@@ -197,6 +197,7 @@ const InstructorDashboard = () => {
     const [timeRange, setTimeRange] = useState("month")
     const [adventureTypes, setAdventureTypes] = useState([])
 
+
     useEffect(() => {
         if (!user.user) {
             toast.error("Please login to access the instructor dashboard")
@@ -208,6 +209,7 @@ const InstructorDashboard = () => {
             console.error(err)
         });
     }, [user, navigate])
+
 
     return (
         <InstructorLayout>

@@ -263,23 +263,28 @@ export const getAllSessions = asyncHandler(async (req, res, next) => {
   return res.status(200).json(sessions);
 });
 
-export const getSession = asyncHandler(async (req, res, next) => {
-  const { adventureId } = req.body;
 
-  if (!adventureId) {
-    throw new ApiError(400, "Adventure Id is required");
+export const getInstructorSessions = asyncHandler(async (req, res, next) => {
+  const {location, session_date, adventure} = req.query;
+
+  if (!location || !session_date || !adventure) {
+    return res.status(400).json({ message: "Location, sessionDate, and adventure are required" });
+  }
+  
+  const sessions = await Session.find({
+    adventureId: adventure,
+    startTime: {
+      $gte: new Date(session_date),
+      $lt: new Date(new Date(session_date).setDate(new Date(session_date).getDate() + 1)),
+    },
+  }).populate("instructorId").populate({
+      path: "location",
+      match: location ? { name: { $regex: location, $options: "i" } } : {}, // filter here
+    });;
+
+  if (!sessions || sessions.length === 0) {
+    return res.status(404).json({ message: "No sessions found" });
   }
 
-  const session = await Session.find({
-    adventureId,
-  }).populate("instructorId");
-
-  if (!session) {
-    throw new ApiError(
-      404,
-      "Session not found for the given adventure and date"
-    );
-  }
-
-  return res.status(200).json(session);
+  return res.status(200).json(sessions);
 });

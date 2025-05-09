@@ -1,6 +1,5 @@
 import { Adventure } from "../models/adventure.model.js";
 import { Session } from "../models/session.model.js";
-import { Location } from "../models/location.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import {
   deleteFromCloudinary,
@@ -10,7 +9,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const getAllAdventure = asyncHandler(async (req, res) => {
-  const adventures = await Adventure.find();
+  const adventures = await Adventure.find().populate("location");
 
   return res.status(200).json({
     adventures

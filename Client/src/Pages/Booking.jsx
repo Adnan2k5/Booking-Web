@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { format } from "date-fns"
 import { useNavigate, useLocation } from "react-router-dom"
 import { MapPin, Star, ArrowLeft, ChevronRight, Building, Check, Users, ShoppingCart } from 'lucide-react'
 import { cn } from "../lib/utils"
@@ -12,8 +13,8 @@ import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import LanguageSelector from "../components/LanguageSelector"
 import { Navbar } from "../components/Navbar"
-import { getSession } from "../Api/session.api"
 import { getAdventure } from "../Api/adventure.api"
+import { useSessions } from "../hooks/useSession"
 
 // Import step components
 import { InstructorSelection } from "./BookingSteps/InstructorSelection"
@@ -27,6 +28,7 @@ import { mockInstructors, mockItems, mockHotels } from "../Data/mock_booking"
 export default function BookingFlow() {
   const navigate = useNavigate()
   const location = useLocation()
+  const query = new URLSearchParams(location.search);
   const { user } = useAuth()
   const { t } = useTranslation()
   const [currentStep, setCurrentStep] = useState(1)
@@ -39,7 +41,8 @@ export default function BookingFlow() {
   const [currentInstructor, setCurrentInstructor] = useState(null)
   const [groupMembers, setGroupMembers] = useState([])
   const [instructors, setInstructors] = useState([])
-  const [sessions, setSessions] = useState([])
+
+  const { sessions } = useSessions({adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date")})
 
   // Load group members from sessionStorage if available
   useEffect(() => {
@@ -59,14 +62,6 @@ export default function BookingFlow() {
     }
   }
 
-  const fetchSession = async () => {
-    const query = new URLSearchParams(location.search)
-    const adventureId = query.get("id")
-    const res = await getSession(adventureId)
-    if (res.status === 200) {
-      setSessions(res.data)
-    }
-  }
 
   useEffect(() => {
     if (sessions.length > 0) {
@@ -79,11 +74,6 @@ export default function BookingFlow() {
     fetchAdventure()
   }, [])
 
-  useEffect(() => {
-    if (adventure) {
-      fetchSession()
-    }
-  }, [adventure])
 
   useEffect(() => {
     if (!user.user) {
