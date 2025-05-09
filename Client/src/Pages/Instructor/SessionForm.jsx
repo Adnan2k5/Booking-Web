@@ -14,7 +14,6 @@ import { Label } from "../../components/ui/label"
 import { toast } from "sonner"
 import InstructorLayout from "./InstructorLayout"
 
-// Mock adventure types
 const adventureTypes = [
     "Mountain Climbing",
     "Wilderness Survival",

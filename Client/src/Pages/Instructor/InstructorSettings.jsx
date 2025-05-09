@@ -1,17 +1,13 @@
-"use client"
-
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "../../components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
-import { Switch } from "../../components/ui/switch"
 import { Separator } from "../../components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
-import { AlertCircle, Bell, Globe, Lock, Moon, Shield, User } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert"
+import { Globe, Lock } from "lucide-react"
 import InstructorLayout from "./InstructorLayout"
 
 const InstructorSettings = () => {
@@ -103,16 +99,6 @@ const InstructorSettings = () => {
             setLoading(false)
             toast.success(t("instructor.passwordUpdatedSuccessfully"))
         }, 1000)
-    }
-
-    const toggleTwoFactorAuth = () => {
-        // In a real app, this would open a 2FA setup flow
-        setSettings((prev) => ({
-            ...prev,
-            twoFactorAuth: !prev.twoFactorAuth,
-        }))
-
-        toast.success(settings.twoFactorAuth ? t("instructor.twoFactorAuthDisabled") : t("instructor.twoFactorAuthEnabled"))
     }
 
     return (
