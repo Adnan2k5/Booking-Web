@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { format } from "date-fns"
@@ -32,7 +30,7 @@ export default function BrowsingPage() {
     const queryDate = query.get("date")
     return queryDate ? new Date(queryDate) : undefined
   })
-  const [activeCategory, setActiveCategory] = useState("all")
+  const [activeCategory, setActiveCategory] = useState("")
   const [showScrollIndicator, setShowScrollIndicator] = useState(true)
   const categoriesRef = useRef(null)
 
@@ -123,7 +121,7 @@ export default function BrowsingPage() {
         setAdventure("");
         setLoc("");
         setDate(undefined);
-        setActiveCategory("all");
+        setActiveCategory("");
         setFilters({ adventure: "", location: "", session_date: "" });
         updateParams({ adventure: "", location: "", date: "" });
         break;
