@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin", "instructor"],
       default: "user",
     },
-    ref: {
+    instructor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Instructor",
     },

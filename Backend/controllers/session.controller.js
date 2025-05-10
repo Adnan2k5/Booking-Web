@@ -254,7 +254,7 @@ export const getAllSessions = asyncHandler(async (req, res, next) => {
     throw new ApiError(400, "Instructor id is required");
   }
 
-  const sessions = await Session.find({ instructorId: id });
+  let sessions = await Session.find({ instructorId: id });
 
   if (!sessions || sessions.length === 0) {
     sessions = [];
@@ -265,22 +265,27 @@ export const getAllSessions = asyncHandler(async (req, res, next) => {
 
 
 export const getInstructorSessions = asyncHandler(async (req, res, next) => {
-  const {location, session_date, adventure} = req.query;
+  const { location, session_date, adventure } = req.query;
 
   if (!location || !session_date || !adventure) {
     return res.status(400).json({ message: "Location, sessionDate, and adventure are required" });
   }
-  
+
   const sessions = await Session.find({
     adventureId: adventure,
     startTime: {
       $gte: new Date(session_date),
       $lt: new Date(new Date(session_date).setDate(new Date(session_date).getDate() + 1)),
     },
-  }).populate("instructorId").populate({
-      path: "location",
-      match: location ? { name: { $regex: location, $options: "i" } } : {}, // filter here
-    });;
+  })
+    .populate({
+      path: "instructorId",
+      select: "name email profilePicture instructor",
+      populate: {
+        path: "instructor",
+        select: "description avgReview",
+      }
+    }).select("")
 
   if (!sessions || sessions.length === 0) {
     return res.status(404).json({ message: "No sessions found" });

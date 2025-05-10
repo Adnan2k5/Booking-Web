@@ -5,18 +5,20 @@ import { Card } from "../../components/ui/card"
 import { Input } from "../../components/ui/input"
 import { Button } from "../../components/ui/button"
 import { Label } from "../../components/ui/label"
-import { UserRegister, VerifyUser } from "../../Auth/UserAuth"
+import { VerifyUser } from "../../Auth/UserAuth"
 import { Modal } from "antd"
 import { InputOTPSlot, InputOTP, InputOTPGroup } from "../../components/ui/input-otp"
 import { toast } from "sonner"
 import { useDispatch } from "react-redux"
 import { Textarea } from "../../components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
-import { fetchLocations } from "../../Api/location.api"
-import { fetchAllAdventures } from "../../Api/adventure.api"
+import { useAdventures } from "../../hooks/useAdventure"
 import { ProfileImageUpload } from "./components/ProfileImageUpload"
 import { MediaUpload } from "./components/MediaUpload"
 import { DocumentUpload } from "./components/DocumentUpload"
+import { axiosClient } from "../../AxiosClient/axios"
+import { useNavigate } from "react-router-dom"
+import InstructorPendingReview from "./InstructorPendingReview"
 
 export const InstructorRegister = () => {
     const [formData, setFormData] = useState({
@@ -38,25 +40,10 @@ export const InstructorRegister = () => {
     const [otpDialog, setOtpDialog] = useState(false)
     const [otp, setOtp] = useState("")
     const [locations, setLocations] = useState([])
-    const [adventures, setAdventures] = useState([])
     const [loading, setLoading] = useState(false)
     const dispatch = useDispatch()
-
-    useEffect(() => {
-        const getLocationsAndAdventures = async () => {
-            try {
-                const locationsData = await fetchLocations()
-                setLocations(locationsData)
-
-                const adventuresData = await fetchAllAdventures()
-                setAdventures(adventuresData.data)
-            } catch (error) {
-                console.error("Error fetching data:", error)
-            }
-        }
-
-        getLocationsAndAdventures()
-    }, [])
+    const { adventures } = useAdventures()
+    const navigate = useNavigate()
 
     const passValidation = () => {
         if (
@@ -90,6 +77,14 @@ export const InstructorRegister = () => {
             ...prev,
             [name]: value,
         }))
+
+        if (name === "adventure") {
+            const currentLocation = (adventures.find((adventure) => adventure._id === value))
+
+            setLocations(
+                currentLocation?.location
+            )
+        }
     }
 
     const handleProfileImageChange = (file) => {
@@ -121,59 +116,72 @@ export const InstructorRegister = () => {
     }
 
     const handleSubmit = async (e) => {
-        e.preventDefault()
+        e.preventDefault();
         if (error) {
-            toast.error(error)
-            return
+            toast.error(error);
+            return;
         }
 
         // Validate required fields
         if (!formData.bio) {
-            toast.error("Bio is required")
-            return
+            toast.error("Bio is required");
+            return;
         }
         if (!formData.adventure) {
-            toast.error("Adventure is required")
-            return
+            toast.error("Adventure is required");
+            return;
         }
         if (!formData.location) {
-            toast.error("Location is required")
-            return
+            toast.error("Location is required");
+            return;
         }
         if (!formData.certificate) {
-            toast.error("Certificate is required")
-            return
+            toast.error("Certificate is required");
+            return;
         }
         if (!formData.governmentId) {
-            toast.error("Government ID is required")
-            return
+            toast.error("Government ID is required");
+            return;
         }
 
-        setLoading(true)
+        setLoading(true);
+        const toastId = toast.loading("Processing your request...");
+
         try {
-            // In a real implementation, you would create a FormData object to handle file uploads
-            // const formDataToSend = new FormData()
-            // Object.entries(formData).forEach(([key, value]) => {
-            //   if (key === 'mediaFiles') {
-            //     value.forEach(file => formDataToSend.append('mediaFiles', file))
-            //   } else if (value instanceof File) {
-            //     formDataToSend.append(key, value)
-            //   } else {
-            //     formDataToSend.append(key, value)
-            //   }
-            // })
-
-            const res = await UserRegister(formData)
-            if (res === 201) {
-                toast.success("OTP sent to your email")
-                setOtpDialog(true)
+            const data = new FormData();
+            data.append("name", formData.name);
+            data.append("email", formData.email);
+            data.append("password", formData.password);
+            data.append("confirmPassword", formData.confirmPassword);
+            data.append("description", formData.bio);
+            data.append("adventure", formData.adventure);
+            data.append("location", formData.location);
+            data.append("role", formData.role);
+            if (formData.profileImage) data.append("profileImage", formData.profileImage);
+            if (formData.certificate) data.append("certificate", formData.certificate);
+            if (formData.governmentId) data.append("governmentId", formData.governmentId);
+            if (formData.mediaFiles && formData.mediaFiles.length > 0) {
+                formData.mediaFiles.forEach((file) => {
+                    data.append("portfolioMedias", file);
+                });
             }
-        } catch (error) {
-            toast.error("Registration failed")
+
+            const response = await axiosClient.post(
+                "/api/auth/instructor/register",
+                data,
+                {
+                    headers: { "Content-Type": "multipart/form-data" },
+                }
+            );
+            toast.success("Registration successful! Please verify OTP sent to your email.", { id: toastId });
+            setOtpDialog(true);
+        } catch (err) {
+            const message = err?.response?.data?.message || err.message || "Registration failed";
+            toast.error(message, { id: toastId });
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     const getInitial = () => {
         return formData.name ? formData.name.charAt(0).toUpperCase() : "Hii"
@@ -191,6 +199,7 @@ export const InstructorRegister = () => {
             toast("Email Verified Successfully")
             setOtpDialog(false)
             setOtp("")
+            navigate("/instructor/pending-review")
         } else if (res === 400) {
             toast("Invalid OTP")
         }

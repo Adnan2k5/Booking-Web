@@ -13,7 +13,7 @@ const storage = multer.diskStorage({
   },
 });
 
-// Allowed file types (Images & Videos)
+// Allowed file types (Images, Videos & PDFs)
 const allowedMimeTypes = [
   "image/jpeg",
   "image/png",
@@ -24,13 +24,14 @@ const allowedMimeTypes = [
   "video/quicktime",
   "video/x-msvideo",
   "video/x-matroska",
+  "application/pdf", // Allow PDF for certificates and IDs
 ];
 
 const fileFilter = (req, file, cb) => {
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Only images and videos are allowed!"), false);
+    cb(new Error("Only images, videos, and PDFs are allowed!"), false);
   }
 };
 
