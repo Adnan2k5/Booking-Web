@@ -14,7 +14,6 @@ export function useBrowse() {
     const fetchAdventures = async () => {
         setIsLoading(true);
         try {
-            console.log("Fetching adventures with filters:", filters);
             // Only return empty if all filters are empty
             if (!filters.adventure && !filters.location && !filters.session_date) {
                 setAdventures([]);
