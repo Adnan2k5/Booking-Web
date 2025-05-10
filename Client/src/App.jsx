@@ -47,6 +47,7 @@ import { InstructorSession } from "./Pages/Instructor/InstructorSession"
 import { InstructorProfile } from "./Pages/Instructor/InstructorProfile"
 import InstructorSettings from "./Pages/Instructor/InstructorSettings"
 import { CartProvider } from "./Pages/Cart/CartContext"
+import InstructorPendingReview from "./Pages/Instructor/InstructorPendingReview"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -85,6 +86,7 @@ const App = () => {
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/reset" element={<ResetPass />} />
                 <Route path="/instructor/register" element={<InstructorRegister />} />
+                <Route path="/instructor/pending-review" element={<InstructorPendingReview />} />
                 <Route
                   path="/dashboard"
                   element={

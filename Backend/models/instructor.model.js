@@ -7,10 +7,6 @@ const instructorSchema = new mongoose.Schema(
       enum: ["pending", "verified", "rejected"],
       default: "pending",
     },
-    password: {
-      type: String,
-    },
-    refreshToken: { type: String },
     sessions: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -22,6 +18,14 @@ const instructorSchema = new mongoose.Schema(
         type: String,
       },
     ],
+    adventure: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Adventure",
+    },
+    location: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Location",
+    },
     reviews: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -31,6 +35,18 @@ const instructorSchema = new mongoose.Schema(
     avgReview: {
       type: Number,
       default: 0,
+    },
+    portfolioMedias: [
+      {
+        type: String
+      }
+    ],
+    certificate:
+    {
+      type: String
+    },
+    governmentId: {
+      type: String
     }
   },
   {

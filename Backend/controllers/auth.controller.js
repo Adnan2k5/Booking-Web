@@ -7,6 +7,8 @@ import sendEmail from '../utils/sendOTP.js';
 import { OAuth2Client } from "google-auth-library";
 import { getLinkedInAccessToken, verifyLinkedInToken } from '../utils/linkedinHandler.js';
 import { getFacebookAccessToken, verifyFacebookToken } from '../utils/facebookHandler.js';
+import { Instructor } from '../models/instructor.model.js';
+import { uploadOnCloudinary } from '../utils/cloudinary.js';
 
 let client = null;
 
@@ -39,7 +41,8 @@ const generateAccessAndRefreshTokens = async (user) => {
     }
 }
 
-const registerUser = asyncHandler(async (req, res) => {
+const registerUser = asyncHandler(async (req, res, next) => {
+    console.log(req.body, "Register User");
     const { name, email, password, role } = req.body;
 
     if ((email?.trim() === "" || !email) || (password?.trim() === "" || !password)) {
@@ -80,6 +83,10 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering the user")
     }
+    if(role === "instructor") {
+        req.user = user;
+        next();
+    }
 
     res.status(201).
         json(
@@ -87,6 +94,66 @@ const registerUser = asyncHandler(async (req, res) => {
                 user: user,
             }, "User registered Succesfully"),
         );
+});
+
+const registerInstructor = asyncHandler(async (req, res) => {
+    const { description, adventure, location } = req.body;
+
+    if ((description?.trim() === "" || !description) || (adventure?.trim() === "" || !adventure) || (location?.trim() === "" || !location)) {
+        throw new ApiError(400, "Description, Adventure and Location are Required");
+    }
+
+    // Handle uploaded files
+    const files = req.files || {};
+    let profileImage, portfolioMedias = [], certificate, governmentId;
+
+    if (files.profileImage && files.profileImage[0]) {
+        const uploaded = await uploadOnCloudinary(files.profileImage[0].path);
+        profileImage = uploaded?.url;
+    }
+    if (files.portfolioMedias && files.portfolioMedias.length > 0) {
+        for (const file of files.portfolioMedias) {
+            const uploaded = await uploadOnCloudinary(file.path);
+            if (uploaded?.url) portfolioMedias.push(uploaded.url);
+        }
+    }
+    if (files.certificate && files.certificate[0]) {
+        const uploaded = await uploadOnCloudinary(files.certificate[0].path);
+        certificate = uploaded?.url;
+    }
+    if (files.governmentId && files.governmentId[0]) {
+        const uploaded = await uploadOnCloudinary(files.governmentId[0].path);
+        governmentId = uploaded?.url;
+    }
+
+    // Save profile image to user
+    if (profileImage) {
+        req.user.profilePicture = profileImage;
+        await req.user.save();
+    }
+
+    const instructor = await Instructor.create({
+        description: description,
+        adventure: adventure,
+        location: location,
+        portfolioMedias: portfolioMedias,
+        certificate: certificate,
+        governmentId: governmentId
+    });
+
+    if (!instructor) {
+        throw new ApiError(500, "Something went wrong while registering the instructor")
+    }
+
+    req.user.instructor = instructor._id;
+    await req.user.save();
+
+    res.status(201).json(
+        new ApiResponse(200, {
+            instructor: instructor,
+            user: req.user
+        }, "Instructor registered successfully")
+    );
 });
 
 const verifyOtp = asyncHandler(async (req, res) => {
@@ -297,8 +364,6 @@ const updatePassword = asyncHandler(async (req, res) => {
 
     await Otp.deleteMany({ userId: user._id });
 
-    console.log(password, "Password Changed");
-
     res.status(200).json(
         new ApiResponse(200, {
             email: email,
@@ -468,6 +533,7 @@ const signInWithFacebook = asyncHandler(async (req, res) => {
 
 export {
     registerUser,
+    registerInstructor,
     verifyOtp,
     resendOtp,
     loginUser,
