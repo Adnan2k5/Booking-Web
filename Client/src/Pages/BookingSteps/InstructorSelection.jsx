@@ -67,7 +67,7 @@ export const InstructorSelection = ({
                 animate="visible"
             >
                 {mockInstructors.map((instructor) => (
-                    <motion.div key={instructor.id} variants={itemVariants}>
+                    <motion.div key={instructor._id} variants={itemVariants}>
                         <Card
                             className={cn(
                                 "overflow-hidden h-full transition-all duration-300 border-2",
@@ -79,20 +79,22 @@ export const InstructorSelection = ({
                             <div className="flex flex-col md:flex-row">
                                 <div className="md:w-1/3 p-4 flex justify-center items-start">
                                     <Avatar className="h-24 w-24 border-2 border-white shadow-md">
-                                        <AvatarImage src={instructor.img || "/placeholder.svg"} alt={instructor.name} />
-                                        <AvatarFallback>{instructor.name.charAt(0)}</AvatarFallback>
+                                        <AvatarImage src={instructor.instructorId.profilePicture || "/placeholder.svg"} alt={instructor.name} />
+                                        <AvatarFallback>{instructor.instructorId.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                 </div>
                                 <div className="md:w-2/3 p-4">
-                                    <h3 className="text-lg font-bold text-gray-800 mb-1">{instructor.name}</h3>
+                                    <h3 className="text-lg font-bold text-gray-800 mb-1">{instructor.instructorId.name}</h3>
                                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                                        <span>{instructor.specialty}</span>
+
                                         <span className="text-gray-300">•</span>
-                                        <span>{instructor.experience}</span>
+                                        <span>{instructor.instructorId.instructor.description[0]}</span>
                                     </div>
                                     <div className="flex items-center gap-1 mb-3">
                                         {[1, 2, 3, 4, 5].map((star) => (
-                                            <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                            star <= instructor.instructorId.instructor.avgReview ? (
+                                                <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                            ) : null
                                         ))}
                                         <span className="text-xs ml-1 text-gray-500">{instructor.rating}</span>
                                     </div>

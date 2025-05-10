@@ -23,7 +23,7 @@ import { HotelSelection } from "./BookingSteps/HotelSelection"
 import { BookingSummary } from "./BookingSteps/BookingSummary"
 
 // Import data
-import { mockInstructors, mockItems, mockHotels } from "../Data/mock_booking"
+import { mockItems, mockHotels } from "../Data/mock_booking"
 
 export default function BookingFlow() {
   const navigate = useNavigate()
@@ -42,7 +42,8 @@ export default function BookingFlow() {
   const [groupMembers, setGroupMembers] = useState([])
 
   const { sessions, instructors } = useSessions({adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date")})
-  console.log(instructors )
+
+  console.log("Sessions: ", sessions)
   // Load group members from sessionStorage if available
   useEffect(() => {
     const storedGroupMembers = sessionStorage.getItem("groupMembers")
@@ -105,7 +106,7 @@ export default function BookingFlow() {
   }
 
   const handleInstructorSelect = (instructorId) => {
-    const instructor = mockInstructors.find((i) => i.id === instructorId)
+    const instructor = sessions.find((i) => i._id === instructorId)
     setSelectedInstructor((prev) => (prev?.id === instructorId ? null : instructor))
     setIsInstructorDialogOpen(false)
   }
@@ -336,7 +337,7 @@ export default function BookingFlow() {
                 className="w-full"
               >
                 <InstructorSelection
-                  mockInstructors={mockInstructors}
+                  mockInstructors={sessions}
                   selectedInstructor={selectedInstructor}
                   handleInstructorSelect={handleInstructorSelect}
                   openInstructorDialog={openInstructorDialog}

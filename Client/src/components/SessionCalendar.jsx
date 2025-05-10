@@ -85,6 +85,7 @@ const SessionCalendar = ({ adventureTypes }) => {
             (adv) => adv._id === sessionForm.adventureId
         );
         if (!selectedAdventure) return [];
+
         const location = selectedAdventure.location;
         return location;
     }
@@ -432,7 +433,7 @@ const SessionCalendar = ({ adventureTypes }) => {
 
         return days
     }
-    
+
     return (
         <Card className="col-span-7">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -514,9 +515,9 @@ const SessionCalendar = ({ adventureTypes }) => {
                                         <SelectValue placeholder="Select location" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {adventureTypes.location?.map((location, index) => (
-                                            <SelectItem key={location[index]} value={location[index]}>
-                                                {location[index]}
+                                        {filteredLocations()?.map((location) => (
+                                            <SelectItem key={location._id} value={location._id}>
+                                                {location.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

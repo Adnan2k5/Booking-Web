@@ -10,6 +10,7 @@ export function useSessions(filters = {adventure, location, session_date}) {
 
     const fetchSessions = async () => {
         setIsLoading(true);
+        setInstructors([]);
         try {
             if (!filters.adventure || !filters.location || !filters.session_date) {
                 setSessions([]);
