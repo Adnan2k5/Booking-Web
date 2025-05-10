@@ -246,10 +246,6 @@ export default function BookingFlow() {
             <span className="text-sm font-medium">Back</span>
           </motion.button>
           <h1 className="text-2xl font-bold text-gray-800">Book Your Adventure</h1>
-
-          <div className="ml-auto">
-            <LanguageSelector variant="minimal" />
-          </div>
         </div>
 
         {/* Progress indicator */}
