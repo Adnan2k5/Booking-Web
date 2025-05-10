@@ -169,6 +169,7 @@ export default function BookingFlow() {
     return itemsPrice + hotelPrice + instructorPrice
   }
 
+
   // Animation variants
   const slideVariants = {
     hidden: (direction) => ({

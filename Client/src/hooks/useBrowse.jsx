@@ -1,4 +1,3 @@
-import { fi, fy } from "date-fns/locale";
 import { fetchFilteredAdventures } from "../Api/adventure.api";
 import { useState, useEffect } from "react";
 
@@ -11,7 +10,7 @@ export function useBrowse() {
         location: "",
         session_date: "",
     });
-    
+
     const fetchAdventures = async () => {
         setIsLoading(true);
         try {
@@ -30,10 +29,10 @@ export function useBrowse() {
             setIsLoading(false);
         }
     };
-    
+
     useEffect(() => {
         fetchAdventures();
     }, [filters]);
-    
+
     return { adventures, isLoading, error, filters, setFilters };
 }
