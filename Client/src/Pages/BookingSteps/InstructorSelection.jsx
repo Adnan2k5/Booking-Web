@@ -247,32 +247,14 @@ export const InstructorSelection = ({
 
                                     <div>
                                         <h3 className="font-semibold text-gray-800 mb-2">{t("certificates")}</h3>
-                                        <div className="space-y-2">
-                                            {typeof currentInstructor?.instructorId.instructor.certificate === 'string' ? (
-                                                <a
-                                                    href={currentInstructor?.instructorId.instructor.certificate}
-                                                    download
-                                                    className="flex items-center gap-2 p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                                                >
-                                                    <Award size={16} className="text-blue-600" />
-                                                    <span className="text-sm">{t("downloadCertificate")}</span>
-                                                </a>
-                                            ) : Array.isArray(currentInstructor?.instructorId.instructor.certificate) ? (
-                                                currentInstructor?.instructorId.instructor.certificate.map((cert, index) => (
-                                                    <a
-                                                        key={index}
-                                                        href={cert}
-                                                        download
-                                                        className="flex items-center gap-2 p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                                                    >
-                                                        <Award size={16} className="text-blue-600" />
-                                                        <span className="text-sm">{t("certificate")} {index + 1}</span>
-                                                    </a>
-                                                ))
-                                            ) : (
-                                                <p className="text-sm text-gray-500">{t("noCertificates")}</p>
-                                            )}
-                                        </div>
+                                        <ul className="space-y-2">
+                                            {currentInstructor?.certificates?.map((certificate, index) => (
+                                                <li key={index} className="text-sm flex items-start gap-2">
+                                                    <Award size={14} className="text-blue-500 mt-1 flex-shrink-0" />
+                                                    <span>{certificate}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
 
                                     <div>
@@ -283,7 +265,6 @@ export const InstructorSelection = ({
                                         </Button>
                                     </div>
                                 </div>
-
                                 <div className="mt-6 flex flex-col gap-5 md:gap-0 md:flex-row justify-between items-center">
                                     <div className="font-bold text-blue-600 text-xl">
                                         ${currentInstructor?.price + groupMembers.length * 30}

@@ -6,34 +6,10 @@ import { Star, Plus, Minus } from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card"
 import { useTranslation } from "react-i18next"
+import { containerVariants, itemVariants } from "../../assets/Animations"
 
 export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRemoveFromCart }) => {
     const { t } = useTranslation()
-    const [activeTab, setActiveTab] = useState("shop")
-
-    // Animation variants
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-            },
-        },
-    }
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: {
-                type: "spring",
-                stiffness: 100,
-            },
-        },
-    }
-
     return (
         <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-xl mb-8 border border-white/50">
             <div className="flex items-center gap-2 mb-6">
