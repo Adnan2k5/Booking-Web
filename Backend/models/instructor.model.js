@@ -47,7 +47,12 @@ const instructorSchema = new mongoose.Schema(
     },
     governmentId: {
       type: String
-    }
+    },
+    languages: [
+      {
+        type: String,
+      },
+    ],
   },
   {
     Timestamps: true,

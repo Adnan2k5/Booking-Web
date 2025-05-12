@@ -71,7 +71,7 @@ export const InstructorSelection = ({
                         <Card
                             className={cn(
                                 "overflow-hidden h-full transition-all duration-300 border-2",
-                                selectedInstructor && selectedInstructor.id === instructor.id
+                                selectedInstructor && selectedInstructor._id === instructor._id
                                     ? "border-blue-500 shadow-md shadow-blue-200"
                                     : "border-transparent hover:border-blue-200",
                             )}
@@ -79,26 +79,26 @@ export const InstructorSelection = ({
                             <div className="flex flex-col md:flex-row">
                                 <div className="md:w-1/3 p-4 flex justify-center items-start">
                                     <Avatar className="h-24 w-24 border-2 border-white shadow-md">
-                                        <AvatarImage src={instructor.instructorId.profilePicture || "/placeholder.svg"} alt={instructor.name} />
-                                        <AvatarFallback>{instructor.instructorId.name.charAt(0)}</AvatarFallback>
+                                        <AvatarImage src={instructor.instructorId?.profilePicture || "/placeholder.svg"} alt={instructor.instructorId?.name} />
+                                        <AvatarFallback>{instructor.instructorId?.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                 </div>
                                 <div className="md:w-2/3 p-4">
-                                    <h3 className="text-lg font-bold text-gray-800 mb-1">{instructor.instructorId.name}</h3>
+                                    <h3 className="text-lg font-bold text-gray-800 mb-1">{instructor.instructorId?.name}</h3>
                                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
 
                                         <span className="text-gray-300">•</span>
-                                        <span>{instructor.instructorId.instructor.description[0]}</span>
+                                        <span>{instructor.instructorId?.instructor.description[0]}</span>
                                     </div>
                                     <div className="flex items-center gap-1 mb-3">
                                         {[1, 2, 3, 4, 5].map((star) => (
-                                            star <= instructor.instructorId.instructor.avgReview ? (
+                                            star <= instructor.instructorId?.instructor.avgReview ? (
                                                 <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                                             ) : null
                                         ))}
-                                        <span className="text-xs ml-1 text-gray-500">{instructor.rating}</span>
+                                        <span className="text-xs ml-1 text-gray-500">{instructor.instructorId?.instructor.avgReview}</span>
                                     </div>
-                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{instructor.bio}</p>
+                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{instructor.instructorId?.instructor.description}</p>
                                     <div className="flex justify-between items-center">
                                         <span className="font-bold text-blue-600">
                                             ${instructor.price + groupMembers.length * 30}
@@ -118,13 +118,13 @@ export const InstructorSelection = ({
                                                 size="sm"
                                                 className={cn(
                                                     "flex items-center gap-1",
-                                                    selectedInstructor && selectedInstructor.id === instructor.id
+                                                    selectedInstructor && selectedInstructor_.id === instructor._id
                                                         ? "bg-green-600 hover:bg-green-700"
                                                         : "bg-blue-600 hover:bg-blue-700",
                                                 )}
-                                                onClick={() => handleInstructorSelect(instructor.id)}
+                                                onClick={() => handleInstructorSelect(instructor._id)}
                                             >
-                                                {selectedInstructor && selectedInstructor.id === instructor.id ? (
+                                                {selectedInstructor && selectedInstructor._id === instructor._id ? (
                                                     <>
                                                         <Check size={14} />
                                                         {t("selected")}
@@ -149,7 +149,7 @@ export const InstructorSelection = ({
             <Dialog open={isInstructorDialogOpen} onOpenChange={setIsInstructorDialogOpen}>
                 <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-white rounded-xl">
                     <DialogHeader className="p-6 pb-0">
-                        <DialogTitle className="text-2xl font-bold">{currentInstructor?.name}</DialogTitle>
+                        <DialogTitle className="text-2xl font-bold">{currentInstructor?.instructorId?.name}</DialogTitle>
                     </DialogHeader>
 
                     <div className="p-6">
@@ -164,8 +164,8 @@ export const InstructorSelection = ({
                                     <TabsContent value="profile" className="mt-4">
                                         <div className="rounded-xl overflow-hidden">
                                             <img
-                                                src={currentInstructor?.img || "/placeholder.svg"}
-                                                alt={currentInstructor?.name}
+                                                src={currentInstructor?.instructorId.profilePicture || "/placeholder.svg"}
+                                                alt={currentInstructor?.instructorId.name}
                                                 className="w-full aspect-[3/4] object-cover rounded-xl"
                                             />
                                         </div>
@@ -174,13 +174,13 @@ export const InstructorSelection = ({
                                         <div className="space-y-4">
                                             <div className="rounded-xl overflow-hidden">
                                                 <img
-                                                    src={currentInstructor?.gallery?.[activeGalleryImage] || "/placeholder.svg"}
-                                                    alt={`${currentInstructor?.name} gallery`}
+                                                    src={currentInstructor?.instructorId.instructor.portfolioMedias && currentInstructor?.instructorId.instructor.portfolioMedias.length > 0 && currentInstructor?.instructorId.instructor?.portfolioMedias[0] || "/placeholder.svg"}
+                                                    alt={`${currentInstructor?.instructorId.name} gallery`}
                                                     className="w-full aspect-[3/4] object-cover rounded-xl"
                                                 />
                                             </div>
                                             <div className="grid grid-cols-4 gap-2">
-                                                {currentInstructor?.gallery?.map((img, index) => (
+                                                {currentInstructor?.instructorId.instructor.portfolioMedias?.map((img, index) => (
                                                     <div
                                                         key={index}
                                                         className={`rounded-lg overflow-hidden cursor-pointer border-2 ${activeGalleryImage === index ? "border-blue-500" : "border-transparent"}`}
@@ -196,7 +196,7 @@ export const InstructorSelection = ({
 
                                 <div className="mt-4">
                                     <h3 className="font-semibold text-gray-800 mb-2">{t("about")}</h3>
-                                    <p className="text-gray-600">{currentInstructor?.bio}</p>
+                                    <p className="text-gray-600">{currentInstructor?.instructorId.instructor.description[0]}</p>
                                 </div>
 
                                 <div className="mt-4">
@@ -226,7 +226,7 @@ export const InstructorSelection = ({
                                     </div>
                                     <div className="flex items-center gap-1 md:mr-8 bg-blue-50 px-3 py-1 rounded-full">
                                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                        <span className="font-bold">{currentInstructor?.rating}</span>
+                                        <span className="font-bold">{currentInstructor?.instructorId.instructor.avgReview}</span>
                                     </div>
                                 </div>
 
@@ -247,14 +247,32 @@ export const InstructorSelection = ({
 
                                     <div>
                                         <h3 className="font-semibold text-gray-800 mb-2">{t("certificates")}</h3>
-                                        <ul className="space-y-2">
-                                            {currentInstructor?.certificates?.map((certificate, index) => (
-                                                <li key={index} className="text-sm flex items-start gap-2">
-                                                    <Award size={14} className="text-blue-500 mt-1 flex-shrink-0" />
-                                                    <span>{certificate}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                        <div className="space-y-2">
+                                            {typeof currentInstructor?.instructorId.instructor.certificate === 'string' ? (
+                                                <a
+                                                    href={currentInstructor?.instructorId.instructor.certificate}
+                                                    download
+                                                    className="flex items-center gap-2 p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                                                >
+                                                    <Award size={16} className="text-blue-600" />
+                                                    <span className="text-sm">{t("downloadCertificate")}</span>
+                                                </a>
+                                            ) : Array.isArray(currentInstructor?.instructorId.instructor.certificate) ? (
+                                                currentInstructor?.instructorId.instructor.certificate.map((cert, index) => (
+                                                    <a
+                                                        key={index}
+                                                        href={cert}
+                                                        download
+                                                        className="flex items-center gap-2 p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                                                    >
+                                                        <Award size={16} className="text-blue-600" />
+                                                        <span className="text-sm">{t("certificate")} {index + 1}</span>
+                                                    </a>
+                                                ))
+                                            ) : (
+                                                <p className="text-sm text-gray-500">{t("noCertificates")}</p>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div>
@@ -275,15 +293,15 @@ export const InstructorSelection = ({
                                         <Button
                                             className={cn(
                                                 "flex items-center gap-1 bg-gradient-to-r",
-                                                selectedInstructor && selectedInstructor.id === currentInstructor?.id
+                                                selectedInstructor && selectedInstructor._id === currentInstructor?._id
                                                     ? "from-green-600 to-green-500 hover:from-green-700 hover:to-green-600"
                                                     : "from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600",
                                             )}
                                             onClick={() => {
-                                                handleInstructorSelect(currentInstructor?.id)
+                                                handleInstructorSelect(currentInstructor?._id)
                                             }}
                                         >
-                                            {selectedInstructor && selectedInstructor.id === currentInstructor?.id ? (
+                                            {selectedInstructor && selectedInstructor._id === currentInstructor?._id ? (
                                                 <>
                                                     <Check size={14} />
                                                     {t("selected")}

@@ -283,7 +283,7 @@ export const getInstructorSessions = asyncHandler(async (req, res, next) => {
       select: "name email profilePicture instructor",
       populate: {
         path: "instructor",
-        select: "description avgReview",
+        select: "description avgReview portfolioMedias certificate languages",
       }
     }).select("")
 
