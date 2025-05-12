@@ -1,12 +1,17 @@
-"use client"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { MdLanguage, MdMenu, MdClose } from "react-icons/md"
-import { IoIosLogIn } from "react-icons/io"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider"
-import { Loader } from "../components/Loader"
-import { Users, Search, UserPlus, UserX, ChevronDown, Settings, LogOut, User, TicketIcon } from 'lucide-react'
+
+import {
+  Users,
+  Search,
+  UserPlus,
+  UserX,
+  MapPin,
+  Calendar,
+  Compass,
+} from "lucide-react"
 import { Button } from "../components/ui/button"
 import {
   Dialog,
@@ -30,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu"
 import { useAdventures } from "../hooks/useAdventure"
+import { Nav_Landing } from "@/components/Nav_Landing"
 
 export default function LandingPage() {
   const Navigate = useNavigate()
@@ -38,17 +44,31 @@ export default function LandingPage() {
 
   const [location, setLocation] = useState("")
   const [date, setDate] = useState("")
-  const [openLaguage, setOpenLanguage] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
 
   const [showGroupDialog, setShowGroupDialog] = useState(false)
   const [groupMembers, setGroupMembers] = useState([])
   const [searchEmail, setSearchEmail] = useState("")
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
-  const [adventure, setadventure] = useState("all")
+  const [adventure, setadventure] = useState("")
 
-  const { adventures, loading: adventureLoading } = useAdventures();
+  const { adventures, loading: adventureLoading } = useAdventures()
+
+  // Combine groupMembers from local state and sessionStorage (avoid duplicates)
+  let sessionGroupMembers = []
+  try {
+    const stored = sessionStorage.getItem("groupMembers")
+    sessionGroupMembers = stored ? JSON.parse(stored) : []
+  } catch {
+    sessionGroupMembers = []
+  }
+  const allGroupMembers = [
+    ...groupMembers,
+    ...sessionGroupMembers.filter(
+      (sess) => !groupMembers.some((local) => local.id === sess.id)
+    ),
+  ]
 
   // Animation variants
   const fadeIn = {
@@ -58,9 +78,9 @@ export default function LandingPage() {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: "easeOut"
-      }
-    }
+        ease: "easeOut",
+      },
+    },
   }
 
   const staggerContainer = {
@@ -68,23 +88,13 @@ export default function LandingPage() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   }
 
-  const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'fr', name: 'Français' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'es', name: 'Español' },
-    { code: 'it', name: 'Italiano' },
-  ]
 
-  const changeLanguage = (lng) => {
-    i18n.changeLanguage(lng)
-    setOpenLanguage(false)
-  }
+
 
   // Mock data for registered users
   const mockUsers = [
@@ -142,7 +152,19 @@ export default function LandingPage() {
   }
 
   const removeGroupMember = (userId) => {
+    // Remove from local state
     setGroupMembers((prev) => prev.filter((member) => member.id !== userId))
+
+    // Remove from sessionStorage if present
+    try {
+      const stored = sessionStorage.getItem("groupMembers")
+      if (stored) {
+        const sessionMembers = JSON.parse(stored)
+        const updatedSessionMembers = sessionMembers.filter((member) => member.id !== userId)
+        sessionStorage.setItem("groupMembers", JSON.stringify(updatedSessionMembers))
+      }
+    } catch { }
+
     toast(t("friendRemoved"), { type: "success", position: "top-right" })
   }
 
@@ -173,198 +195,19 @@ export default function LandingPage() {
         />
       </div>
 
-      {/* Responsive Navigation */}
-      <nav className="w-full fixed h-fit z-50">
-        <motion.div
-          className="bg-black/80 backdrop-blur-md w-[90%] m-auto mt-5 text-white px-3 py-3 rounded-xl border border-white/10"
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
-          <div className="container mx-auto flex justify-between items-center">
-            <motion.h1
-              className="text-xl md:text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              Adventure
-            </motion.h1>
 
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white p-2">
-                {mobileMenuOpen ? <MdClose className="text-2xl" /> : <MdMenu className="text-2xl" />}
-              </button>
-            </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex links gap-10 items-center">
-              <div className="language-selector relative">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2 text-white">
-                      <MdLanguage className="text-xl" />
-                      <span>{languages.find(lang => lang.code === i18n.language)?.name || 'English'}</span>
-                      <ChevronDown size={16} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-[200px]">
-                    <DropdownMenuLabel>{t("selectLanguage")}</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {languages.map((language) => (
-                      <DropdownMenuItem
-                        key={language.code}
-                        onClick={() => changeLanguage(language.code)}
-                        className={i18n.language === language.code ? "bg-blue-50 text-blue-600" : ""}
-                      >
-                        {language.name}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <ul className="flex space-x-5 items-center text-lg">
-                <motion.li
-                  className="cursor-pointer hover:text-cyan-400 transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {t("explore")}
-                </motion.li>
-                <motion.li
-                  className="cursor-pointer hover:text-cyan-400 transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <a href="/shop">{t("shop")}</a>
-                </motion.li>
-                <motion.li
-                  className="cursor-pointer hover:text-cyan-400 transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {t("mission")}
-                </motion.li>
-                <li>
-                  {loading ? (
-                    <Loader />
-                  ) : user.user ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="relative h-10 w-10 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 p-0">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback>{user?.user?.email.charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56" align="end" forceMount>
-                        <DropdownMenuLabel className="font-normal">
-                          <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">{user?.user?.email}</p>
-                            <p className="text-xs leading-none text-muted-foreground">
-                              {t("level")}: Explorer
-                            </p>
-                          </div>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                          <DropdownMenuItem onClick={() => Navigate("/dashboard")}>
-                            <User className="mr-2 h-4 w-4" />
-                            <span>{t("profile")}</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => Navigate("/dashboard/tickets")}>
-                            <TicketIcon className="mr-2 h-4 w-4" />
-                            <span>{t("tickets")}</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => Navigate("/dashboard/settings")}>
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>{t("settings")}</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <LogOut className="mr-2 h-4 w-4" />
-                          <span>{t("logout")}</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : (
-                    <motion.a
-                      href="/login"
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <IoIosLogIn className="text-3xl" />
-                    </motion.a>
-                  )}
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Mobile Menu */}
-          <AnimatePresence>
-            {mobileMenuOpen && (
-              <motion.div
-                className="md:hidden mt-4 pb-2"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <ul className="flex flex-col space-y-3">
-                  <li className="cursor-pointer hover:text-gray-300">{t("explore")}</li>
-                  <li className="cursor-pointer hover:text-gray-300">
-                    <a href="/shop">{t("shop")}</a>
-                  </li>
-                  <li className="cursor-pointer hover:text-gray-300">{t("mission")}</li>
-                  <li className="flex items-center">
-                    <MdLanguage className="text-white text-xl mr-2" />
-                    <select
-                      className="bg-black text-white"
-                      value={i18n.language}
-                      onChange={(e) => changeLanguage(e.target.value)}
-                    >
-                      {languages.map((language) => (
-                        <option key={language.code} value={language.code}>
-                          {language.name}
-                        </option>
-                      ))}
-                    </select>
-                  </li>
-                  <li>
-                    {loading ? (
-                      <Loader />
-                    ) : user.user ? (
-                      <div
-                        className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 text-white flex items-center justify-center rounded-full"
-                        onClick={() => Navigate("/dashboard")}
-                      >
-                        {user?.user?.email.charAt(0).toUpperCase()}
-                      </div>
-                    ) : (
-                      <a href="/login">
-                        <IoIosLogIn className="text-3xl" />
-                      </a>
-                    )}
-                  </li>
-                </ul>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </nav>
-
+      <Nav_Landing />
       {/* Main Content - First Section */}
       <section className="flex-1 flex items-center justify-center pt-36 lg:mt-[10rem]">
         <motion.div
-          className="bg-white/90 backdrop-blur-md mx-auto px-4 sm:px-6 md:px-8 py-6 flex-col w-[90%] rounded-3xl shadow-lg border border-white/50"
+          className="bg-white/80 backdrop-blur-3xl mx-auto px-4 sm:px-6 md:px-8 py-8 flex-col w-[90%] rounded-lg shadow-lg border border-white/50"
           variants={fadeIn}
           initial="hidden"
           animate="visible"
         >
           <motion.h1
-            className="text-3xl md:text-4xl font-bold text-center mb-6 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent"
+            className="text-3xl md:text-4xl font-bold text-center mb-6 bg-gradient-to-r from-black to-teal-200 bg-clip-text text-transparent"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
@@ -373,86 +216,101 @@ export default function LandingPage() {
           </motion.h1>
 
           <motion.div
-            className="search-bar flex flex-col sm:flex-row gap-4 flex-wrap items-center justify-around w-full"
+            className="search-bar grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mx-auto"
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
           >
-            <motion.div className="location w-full sm:w-[45%] md:w-fit" variants={fadeIn}>
-              <Input
-                onChange={(e) => {
-                  setLocation(e.target.value)
-                }}
-                className="bg-white text-black p-2 rounded-xl border border-gray-300 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-all"
-                type="text"
-                placeholder={t("searchLocation")}
-              />
+            <motion.div className="location-container" variants={fadeIn}>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MapPin className="h-5 w-5 text-gray-400" />
+                </div>
+                <Input
+                  onChange={(e) => {
+                    setLocation(e.target.value)
+                  }}
+                  className="pl-10 py-6 text-base border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 rounded-md"
+                  type="text"
+                  placeholder={t("searchLocation")}
+                />
+              </div>
             </motion.div>
-            <motion.div className="adventure w-full sm:w-[45%] md:w-fit" variants={fadeIn}>
-              <select
-                onChange={(e) => {
-                  setadventure(e.target.value)
-                }}
-                className="bg-white text-black p-2 rounded-xl border border-gray-300 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-all"
-              >
-                <option value="all">{t("selectAdventure")}</option>
-                {adventures.map((adventure, index) => (
-                  <option key={index} value={adventure.name}>
-                    {adventure.name}
-                  </option>
-                ))}
-              </select>
+
+            <motion.div className="adventure-container" variants={fadeIn}>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Compass className="h-5 w-5 text-gray-400" />
+                </div>
+                <select
+                  onChange={(e) => {
+                    setadventure(e.target.value)
+                  }}
+                  className="pl-10 py-6 text-base w-full border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 rounded-md"
+                >
+                  <option value="all">{t("selectAdventure")}</option>
+                  {adventures.map((adventure, index) => (
+                    <option key={index} value={adventure.name}>
+                      {adventure.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </motion.div>
-            <motion.div className="date w-full sm:w-[45%] md:w-fit" variants={fadeIn}>
-              <Input
-                type="date"
-                placeholder={t("selectDate")}
-                onChange={(e) => {
-                  setDate(e.target.value)
-                }}
-                className="bg-white text-black p-2 rounded-xl border border-gray-300 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-all"
-              />
+
+            <motion.div className="date-container" variants={fadeIn}>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Calendar className="h-5 w-5 text-gray-400" />
+                </div>
+                <Input
+                  type="date"
+                  placeholder={t("selectDate")}
+                  onChange={(e) => {
+                    setDate(e.target.value)
+                  }}
+                  className="pl-10 py-6 text-base border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 rounded-md"
+                />
+              </div>
             </motion.div>
-            <motion.div className="group w-full sm:w-[45%] md:w-fit" variants={fadeIn}>
-              <Button
-                onClick={() => setShowGroupDialog(true)}
-                className="bg-white text-black p-2 rounded-xl border border-gray-300 w-full flex justify-between items-center hover:bg-gray-100 transition-all"
-              >
-                <span className="text-gray-500">
-                  {groupMembers.length > 0 ? `${t("group")} (${groupMembers.length + 1})` : t("addGroup")}
-                </span>
-                <Users className="h-4 w-4 text-gray-500" />
-              </Button>
-            </motion.div>
-            <motion.div className="search w-full sm:w-[45%] md:w-fit" variants={fadeIn}>
-              <Button
-                onClick={handleNavigate}
-                className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white cursor-pointer p-2 rounded-xl w-full hover:shadow-lg hover:from-blue-700 hover:to-cyan-600 transition-all"
-              >
-                {t("beginAdventure")}
-              </Button>
-            </motion.div>
+          </motion.div>
+
+          <motion.div className="flex flex-col sm:flex-row gap-4 justify-center mt-8" variants={fadeIn}>
+            <Button
+              onClick={() => setShowGroupDialog(true)}
+              className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-6 rounded-md shadow-sm transition-all text-base"
+            >
+              <Users className="h-5 w-5" />
+              <span>{groupMembers.length > 0 ? `${t("group")} (${groupMembers.length + 1})` : t("addGroup")}</span>
+            </Button>
+
+            <Button
+              onClick={handleNavigate}
+              className="flex items-center gap-2 bg-gradient-to-r from-black to-teal-600 text-white hover:from-emerald-700 hover:to-teal-600 px-8 py-6 rounded-md shadow-md transition-all text-base font-medium"
+            >
+              {t("beginAdventure")}
+            </Button>
           </motion.div>
         </motion.div>
       </section>
 
       {/* Explore Section - Positioned after 100vh */}
-      <div className="explore w-full bg-white px-4 sm:px-6 md:px-8 py-8 mt-[calc(100vh-16rem)]">
-        <div className="content">
+      <div className="explore w-full bg-white px-4 sm:px-6 md:px-8 py-16 mt-[calc(100vh-16rem)]">
+        <div className="content max-w-7xl mx-auto">
           <motion.div
-            className="title text-2xl md:text-3xl"
+            className="title text-2xl md:text-3xl mb-10"
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="font-bold tracking-widest w-fit border-b-2 border-blue-500 pb-2">
+            <h1 className="font-bold tracking-wider w-fit border-b-2 border-emerald-500 pb-2">
               {t("exploreFeaturedAdventures")}
             </h1>
           </motion.div>
           <div className="adventures flex overflow-x-auto md:overflow-visible py-4">
             <motion.div
-              className="cards flex flex-nowrap md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4"
+              className="cards flex flex-nowrap md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
@@ -461,7 +319,7 @@ export default function LandingPage() {
               {/* Placeholder cards */}
               {[1, 2, 3].map((item) => (
                 <motion.div
-                  className="card p-4 min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-md hover:shadow-xl transition-all"
+                  className="card p-0 min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all"
                   key={item}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -469,7 +327,7 @@ export default function LandingPage() {
                   whileHover={{ y: -5 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="img w-full h-48 bg-gradient-to-br from-blue-400 to-cyan-300 rounded-lg overflow-hidden">
+                  <div className="img w-full h-48 bg-gradient-to-br from-emerald-400 to-teal-300 rounded-t-lg overflow-hidden">
                     <motion.div
                       className="w-full h-full bg-gray-200"
                       initial={{ scale: 1.2 }}
@@ -477,13 +335,15 @@ export default function LandingPage() {
                       transition={{ duration: 0.5 }}
                     ></motion.div>
                   </div>
-                  <div className="title mt-2">
-                    <h1 className="text-xl font-semibold">{t("adventure")} {item}</h1>
-                  </div>
-                  <div className="desp mt-1">
-                    <p className="text-gray-600">
-                      {t("adventureDescription")}
-                    </p>
+                  <div className="content p-5">
+                    <div className="title">
+                      <h1 className="text-xl font-semibold text-gray-800">
+                        {t("adventure")} {item}
+                      </h1>
+                    </div>
+                    <div className="desp mt-2">
+                      <p className="text-gray-600">{t("adventureDescription")}</p>
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -494,12 +354,10 @@ export default function LandingPage() {
 
       {/* Group Dialog */}
       <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
-        <DialogContent className="sm:max-w-[500px] bg-white/95 backdrop-blur-md border border-blue-100">
+        <DialogContent className="sm:max-w-[500px] bg-white/95 backdrop-blur-md border border-gray-200 rounded-lg">
           <DialogHeader>
-            <DialogTitle className="text-xl text-blue-600">{t("addFriendsToGroup")}</DialogTitle>
-            <DialogDescription>
-              {t("inviteFriendsDescription")}
-            </DialogDescription>
+            <DialogTitle className="text-xl text-emerald-600">{t("addFriendsToGroup")}</DialogTitle>
+            <DialogDescription>{t("inviteFriendsDescription")}</DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSearchFriends} className="flex gap-2 mb-4 mt-4">
@@ -508,12 +366,12 @@ export default function LandingPage() {
               placeholder={t("searchByEmail")}
               value={searchEmail}
               onChange={(e) => setSearchEmail(e.target.value)}
-              className="flex-1 focus:ring-2 focus:ring-blue-500"
+              className="flex-1 focus:ring-2 focus:ring-emerald-500"
             />
             <Button
               type="submit"
               disabled={isSearching || !searchEmail}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600"
             >
               {isSearching ? t("searching") : t("search")}
               <Search size={16} />
@@ -522,13 +380,13 @@ export default function LandingPage() {
 
           {/* Search Results */}
           {searchResults.length > 0 && (
-            <div className="bg-blue-50 rounded-xl p-4 mb-4">
+            <div className="bg-emerald-50 rounded-lg p-4 mb-4">
               <h3 className="text-sm font-semibold text-gray-800 mb-3">{t("searchResults")}</h3>
               <div className="space-y-3">
                 {searchResults.map((user) => (
                   <div key={user.id} className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border border-blue-100">
+                      <Avatar className="h-10 w-10 border border-emerald-100">
                         <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
                         <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                       </Avatar>
@@ -540,7 +398,7 @@ export default function LandingPage() {
                     <Button
                       size="sm"
                       onClick={() => addGroupMember(user)}
-                      className="flex items-center gap-1 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                      className="flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600"
                     >
                       <UserPlus size={14} />
                       {t("add")}
@@ -554,13 +412,15 @@ export default function LandingPage() {
           {/* Group Members */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-800">{t("yourGroup")} ({groupMembers.length + 1})</h3>
+              <h3 className="text-sm font-semibold text-gray-800">
+                {t("yourGroup")} ({groupMembers.length + 1})
+              </h3>
             </div>
 
             {/* Current User */}
             <div className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm mb-2">
               <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 border border-blue-100 bg-gradient-to-r from-blue-600 to-cyan-500">
+                <Avatar className="h-10 w-10 border border-emerald-100 bg-gradient-to-r from-emerald-600 to-teal-500">
                   <AvatarFallback>{user?.user ? user.user.email.charAt(0).toUpperCase() : "Y"}</AvatarFallback>
                 </Avatar>
                 <div>
@@ -570,9 +430,8 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Added Group Members */}
             <AnimatePresence>
-              {groupMembers.map((member) => (
+              {allGroupMembers.map((member) => (
                 <motion.div
                   key={member.id}
                   className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm mb-2"
@@ -582,8 +441,8 @@ export default function LandingPage() {
                   transition={{ duration: 0.2 }}
                 >
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border border-blue-100">
-                      <AvatarImage src={member.avatar || "/placeholder.svg"} alt={member.name} />
+                    <Avatar className="h-10 w-10 border border-emerald-100">
+                      <AvatarImage src={member.avatar} alt={member.name} />
                       <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
@@ -605,10 +464,8 @@ export default function LandingPage() {
             </AnimatePresence>
 
             {groupMembers.length === 0 && (
-              <div className="bg-blue-50 p-4 rounded-lg text-center">
-                <p className="text-gray-500 text-sm">
-                  {t("noFriendsYet")}
-                </p>
+              <div className="bg-emerald-50 p-4 rounded-lg text-center">
+                <p className="text-gray-500 text-sm">{t("noFriendsYet")}</p>
               </div>
             )}
           </div>
@@ -616,7 +473,7 @@ export default function LandingPage() {
           <DialogFooter className="mt-4">
             <Button
               onClick={() => setShowGroupDialog(false)}
-              className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+              className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600"
             >
               {t("done")}
             </Button>
