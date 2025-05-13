@@ -71,7 +71,6 @@ export default function ItemsPage() {
   const [images, setImages] = useState([]);
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCategory, setNewCategory] = useState("");
-  const [localCategories, setLocalCategories] = useState([]);
   const [categorySuccess, setCategorySuccess] = useState("");
 
   const { items, loading } = useMyItems();
@@ -116,7 +115,6 @@ export default function ItemsPage() {
     try {
       const res = await createCategory(newCategory);
       if (res.data && res.data.data) {
-        setLocalCategories((prev) => [...prev, res.data.data.name]);
         setAddingCategory(false);
         setNewCategory("");
         setCategorySuccess("Category created successfully!");
