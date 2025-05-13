@@ -15,6 +15,7 @@ import documentRouter from "./routes/document.routes.js";
 import messageRoute from "./routes/message.routes.js";
 import sessionRouter from "./routes/session.routes.js";
 import locationRouter from "./routes/location.routes.js";
+import itemRouter from "./routes/item.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
 import initSocketIO from "./socket/socket.js";
@@ -52,6 +53,7 @@ app.use("/api/document", documentRouter);
 app.use("/api/messages", messageRoute);
 app.use("/api/session", sessionRouter);
 app.use("/api/location", locationRouter);
+app.use("/api/item", itemRouter);
 
 
 const PORT = process.env.PORT || 8080;

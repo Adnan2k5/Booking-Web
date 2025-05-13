@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
-import Category from "./category.model.js";
-import translateText from "../middlewares/translate.middleware.js";
+import { Category } from "./category.model.js";
 
 const itemSchema = new mongoose.Schema(
     {
@@ -9,15 +8,11 @@ const itemSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
-        name_it: { type: String }, // Italian translation
-
         description: {
             type: String,
             required: true,
             trim: true,
         },
-        description_it: { type: String }, // Italian translation
-
         price: {
             type: Number,
             required: true,
@@ -51,11 +46,6 @@ const itemSchema = new mongoose.Schema(
             required: true,
             default: 0,
         },
-        owner: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-        },
         status: {
             type: String,
             enum: ["available", "rented", "reserved"],
@@ -86,15 +76,5 @@ const itemSchema = new mongoose.Schema(
 );
 
 itemSchema.index({ location: "2dsphere" });
-
-itemSchema.pre('save', async function (next) {
-    if (!this.name_it) {
-        this.name_it = await translateText(this.name, 'it');
-    }
-    if (!this.description_it) {
-        this.description_it = await translateText(this.description, 'it');
-    }
-    next();
-});
 
 export const Item = mongoose.model("Item", itemSchema);

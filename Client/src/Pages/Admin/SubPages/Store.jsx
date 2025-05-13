@@ -50,90 +50,7 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { useForm, Controller } from "react-hook-form";
-
-// Mock data for items/products
-const mockItems = [
-  {
-    id: 1,
-    name: "Hiking Backpack",
-    description: "Durable 40L backpack perfect for multi-day hikes",
-    category: "Equipment",
-    price: 129.99,
-    stock: 45,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 2,
-    name: "Climbing Harness",
-    description: "Professional-grade climbing harness with adjustable leg loops",
-    category: "Safety Gear",
-    price: 89.99,
-    stock: 32,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 3,
-    name: "Waterproof Tent",
-    description: "3-person tent with rainfly and waterproof floor",
-    category: "Equipment",
-    price: 199.99,
-    stock: 18,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 4,
-    name: "Trekking Poles",
-    description: "Adjustable aluminum trekking poles with cork grips",
-    category: "Equipment",
-    price: 49.99,
-    stock: 60,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 5,
-    name: "Adventure First Aid Kit",
-    description: "Comprehensive first aid kit for outdoor adventures",
-    category: "Safety Gear",
-    price: 34.99,
-    stock: 75,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 6,
-    name: "Insulated Water Bottle",
-    description: "1L vacuum insulated stainless steel water bottle",
-    category: "Accessories",
-    price: 29.99,
-    stock: 0,
-    status: "out-of-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 7,
-    name: "Headlamp",
-    description: "300-lumen LED headlamp with adjustable brightness",
-    category: "Equipment",
-    price: 45.99,
-    stock: 28,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 8,
-    name: "Climbing Rope",
-    description: "60m dynamic climbing rope with middle mark",
-    category: "Safety Gear",
-    price: 159.99,
-    stock: 12,
-    status: "low-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-];
+import { useMyItems } from "../../../hooks/useMyItems";
 
 export default function ItemsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -150,6 +67,25 @@ export default function ItemsPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [showAddItem, setShowAddItem] = useState(false);
   const [images, setImages] = useState([]);
+
+  const { items, loading } = useMyItems();
+
+  // Get unique categories from items
+  const categories = [
+    ...new Set(items?.map((item) => item.category).filter(Boolean))
+  ];
+
+  // Filter items based on search and category
+  const filteredItems = (items || []).filter((item) => {
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      categoryFilter === "all" ||
+      (item.category && item.category.toLowerCase() === categoryFilter.toLowerCase());
+    return matchesSearch && matchesCategory;
+  });
 
   const handleImageUpload = (event) => {
     const files = Array.from(event.target.files);
@@ -170,17 +106,6 @@ export default function ItemsPage() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Filter items based on search term and category
-  const filteredItems = mockItems.filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      categoryFilter === "all" || item.category.toLowerCase() === categoryFilter.toLowerCase();
-    return matchesSearch && matchesCategory;
-  });
-
   const onSubmit = (data) => {
     console.log("Form data:", data);
     console.log("Images:", images);
@@ -189,9 +114,6 @@ export default function ItemsPage() {
     reset();
     setImages([]);
   };
-
-  // Get unique categories for filter dropdown
-  const categories = [...new Set(mockItems.map(item => item.category))];
 
   return (
     <motion.div
@@ -262,122 +184,140 @@ export default function ItemsPage() {
         <TabsContent value="list" className="space-y-4">
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredItems.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        {item.name}
-                      </TableCell>
-                      <TableCell>{item.category}</TableCell>
-                      <TableCell>${item.price.toFixed(2)}</TableCell>
-                      <TableCell>{item.stock}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            item.status === "in-stock"
-                              ? "default"
-                              : item.status === "low-stock"
-                                ? "outline"
-                                : "secondary"
-                          }
-                        >
-                          {item.status === "in-stock"
-                            ? "In Stock"
-                            : item.status === "low-stock"
-                              ? "Low Stock"
-                              : "Out of Stock"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="ghost" size="icon">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+              {loading ? (
+                <div className="p-8 text-center text-muted-foreground">Loading items...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredItems.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                          No items found.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredItems.map((item) => (
+                        <TableRow key={item._id}>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell>{item.category}</TableCell>
+                          <TableCell>${item.price?.toFixed(2)}</TableCell>
+                          <TableCell>{item.availableQuantity}</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                item.status === "available"
+                                  ? "default"
+                                  : item.status === "reserved"
+                                  ? "outline"
+                                  : "secondary"
+                              }
+                            >
+                              {item.status === "available"
+                                ? "Available"
+                                : item.status === "reserved"
+                                ? "Reserved"
+                                : "Rented"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button variant="ghost" size="icon">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="grid" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredItems.map((item) => (
-              <Card key={item.id} className="overflow-hidden">
-                <div className="aspect-square relative">
-                  <img
-                    src={item.image || "/placeholder.svg"}
-                    alt={item.name}
-                    className="object-cover w-full h-full"
-                  />
-                  <Badge
-                    className="absolute top-2 right-2"
-                    variant={
-                      item.status === "in-stock"
-                        ? "default"
-                        : item.status === "low-stock"
-                          ? "outline"
-                          : "secondary"
-                    }
-                  >
-                    {item.status === "in-stock"
-                      ? "In Stock"
-                      : item.status === "low-stock"
-                        ? "Low Stock"
-                        : "Out of Stock"}
-                  </Badge>
-                </div>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">{item.name}</CardTitle>
-                  <CardDescription className="flex items-center">
-                    <Tag className="h-3 w-3 mr-1" /> {item.category}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2 pb-2">
-                  <div className="flex justify-between text-sm">
-                    <div className="flex items-center">
-                      <Package className="h-3 w-3 mr-1" />
-                      <span>{item.stock} in stock</span>
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground">Loading items...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredItems.length === 0 ? (
+                <div className="col-span-full text-center text-muted-foreground py-8">No items found.</div>
+              ) : (
+                filteredItems.map((item) => (
+                  <Card key={item._id} className="overflow-hidden">
+                    <div className="aspect-square relative">
+                      <img
+                        src={item.images?.[0] || "/placeholder.svg"}
+                        alt={item.name}
+                        className="object-cover w-full h-full"
+                      />
+                      <Badge
+                        className="absolute top-2 right-2"
+                        variant={
+                          item.status === "available"
+                            ? "default"
+                            : item.status === "reserved"
+                            ? "outline"
+                            : "secondary"
+                        }
+                      >
+                        {item.status === "available"
+                          ? "Available"
+                          : item.status === "reserved"
+                          ? "Reserved"
+                          : "Rented"}
+                      </Badge>
                     </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {item.description}
-                  </p>
-                </CardContent>
-                <CardFooter className="flex justify-between pt-2">
-                  <div className="font-bold">${item.price.toFixed(2)}</div>
-                  <div className="flex space-x-2">
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4 mr-1" /> View
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Edit className="h-4 w-4 mr-1" /> Edit
-                    </Button>
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">{item.name}</CardTitle>
+                      <CardDescription className="flex items-center">
+                        <Tag className="h-3 w-3 mr-1" /> {item.category}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2 pb-2">
+                      <div className="flex justify-between text-sm">
+                        <div className="flex items-center">
+                          <Package className="h-3 w-3 mr-1" />
+                          <span>{item.availableQuantity} in stock</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {item.description}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex justify-between pt-2">
+                      <div className="font-bold">${item.price?.toFixed(2)}</div>
+                      <div className="flex space-x-2">
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4 mr-1" /> View
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4 mr-1" /> Edit
+                        </Button>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                ))
+              )}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
