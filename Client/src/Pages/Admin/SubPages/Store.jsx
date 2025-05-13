@@ -51,6 +51,7 @@ import {
 } from "../../../components/ui/select";
 import { useForm, Controller } from "react-hook-form";
 import { useMyItems } from "../../../hooks/useMyItems";
+import { createCategory } from "../../../Api/category.api";
 
 export default function ItemsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,12 +68,19 @@ export default function ItemsPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [showAddItem, setShowAddItem] = useState(false);
   const [images, setImages] = useState([]);
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
+  const [localCategories, setLocalCategories] = useState([]);
+  const [categorySuccess, setCategorySuccess] = useState("");
 
   const { items, loading } = useMyItems();
 
-  // Get unique categories from items
+  // Get unique categories from items and local additions
   const categories = [
-    ...new Set(items?.map((item) => item.category).filter(Boolean))
+    ...new Set([
+      ...items?.map((item) => item.category).filter(Boolean),
+      ...localCategories
+    ])
   ];
 
   // Filter items based on search and category
@@ -104,6 +112,22 @@ export default function ItemsPage() {
 
   const handleRemoveImage = (index) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategory || categories.includes(newCategory)) return;
+    try {
+      const res = await createCategory(newCategory);
+      if (res.data && res.data.data) {
+        setLocalCategories((prev) => [...prev, res.data.data.name]);
+        setAddingCategory(false);
+        setNewCategory("");
+        setCategorySuccess("Category created successfully!");
+        setTimeout(() => setCategorySuccess(""), 2000);
+      }
+    } catch (err) {
+      alert("Failed to add category: " + (err.response?.data?.message || err.message));
+    }
   };
 
   const onSubmit = (data) => {
@@ -347,22 +371,63 @@ export default function ItemsPage() {
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="new">Add New Category</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <>
+                        <Select
+                          onValueChange={(val) => {
+                            if (val === "new") {
+                              setAddingCategory(true);
+                              field.onChange("");
+                            } else {
+                              setAddingCategory(false);
+                              field.onChange(val);
+                            }
+                          }}
+                          value={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((category) => (
+                              <SelectItem key={category} value={category}>
+                                {category}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="new">Add New Category</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {addingCategory && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <Input
+                              placeholder="Enter new category"
+                              value={newCategory}
+                              onChange={e => setNewCategory(e.target.value)}
+                              className="flex-1"
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleAddCategory}
+                            >
+                              Add
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setAddingCategory(false);
+                                setNewCategory("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            {categorySuccess && (
+                              <span className="text-green-600 text-sm ml-2">{categorySuccess}</span>
+                            )}
+                          </div>
+                        )}
+                      </>
                     )}
                   />
                 </div>
