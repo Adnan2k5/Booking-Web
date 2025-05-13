@@ -25,17 +25,8 @@ import { Input } from "../components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu"
 import { useAdventures } from "../hooks/useAdventure"
-import { Nav_Landing } from "@/components/Nav_Landing"
+import { Nav_Landing } from "../components/Nav_Landing"
 
 export default function LandingPage() {
   const Navigate = useNavigate()
