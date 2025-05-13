@@ -6,20 +6,11 @@ import { Category } from "../models/category.model.js";
 export const getCategories = asyncHandler(async (req, res) => {
     const categories = await Category.find({});
 
-    const lang = req.query.lang || "en";
-
     if (!categories) {
         throw new ApiError(404, "Categories not found");
     }
 
-    const transformed = categories.map(cat => ({
-        id: cat._id,
-        name: lang === 'it' ? cat.name_it || cat.name : cat.name,
-        name_en: cat.name,
-        subCategories: lang === 'it' ? cat.subCategories_it || cat.subCategories : cat.subCategories
-      }));
-
-    res.status(200).json(new ApiResponse(200, "Categories fetched successfully", transformed));
+    res.status(200).json(new ApiResponse(200, "Categories fetched successfully", categories));
 });
 
 export const createCategory = asyncHandler(async (req, res) => {

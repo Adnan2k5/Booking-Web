@@ -52,6 +52,7 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { useMyItems } from "../../../hooks/useMyItems";
 import { createCategory } from "../../../Api/category.api";
+import { useCategory } from "../../../hooks/useCategory";
 
 export default function ItemsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -74,14 +75,10 @@ export default function ItemsPage() {
   const [categorySuccess, setCategorySuccess] = useState("");
 
   const { items, loading } = useMyItems();
+  const { categories: fetchedCategories } = useCategory();
 
-  // Get unique categories from items and local additions
-  const categories = [
-    ...new Set([
-      ...items?.map((item) => item.category).filter(Boolean),
-      ...localCategories
-    ])
-  ];
+  const categories = fetchedCategories.map((category) => category.name);
+
 
   // Filter items based on search and category
   const filteredItems = (items || []).filter((item) => {
