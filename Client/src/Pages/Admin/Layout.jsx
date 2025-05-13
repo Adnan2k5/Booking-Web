@@ -88,7 +88,7 @@ function AdminSidebar({ pathname }) {
           <SidebarGroupLabel>Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-            <SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === "/admin/locations"}>
                   <Link to="/admin/locations">
                     <Compass className="h-4 w-4" />
@@ -117,6 +117,14 @@ function AdminSidebar({ pathname }) {
                   <Link to="/admin/users">
                     <User className="h-4 w-4" />
                     <span>Users</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/instructors"}>
+                  <Link to="/admin/instructors">
+                    <User className="h-4 w-4" />
+                    <span>Instructor</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

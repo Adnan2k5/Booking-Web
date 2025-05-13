@@ -1,37 +1,20 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Search, Filter, Download, ChevronDown, Eye, Edit, Trash2, Plus, ShoppingBag, Tag, Package, X } from 'lucide-react';
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
+"use client"
+
+import { useState } from "react"
+import { motion } from "framer-motion"
+import { Search, Filter, Download, ChevronDown, Eye, Edit, Trash2, Plus, Tag, Package, X } from "lucide-react"
+import { Button } from "../../../components/ui/button"
+import { Input } from "../../../components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../../components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../../components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
-import { Badge } from "../../../components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../../components/ui/tabs";
+} from "../../../components/ui/dropdown-menu"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../components/ui/card"
+import { Badge } from "../../../components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
 import {
   Dialog,
   DialogContent,
@@ -39,17 +22,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
-import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../../components/ui/select";
-import { useForm, Controller } from "react-hook-form";
+} from "../../../components/ui/dialog"
+import { Label } from "../../../components/ui/label"
+import { Textarea } from "../../../components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
+import { useForm, Controller } from "react-hook-form"
+import { Checkbox } from "../../../components/ui/checkbox"
+import { fetchAllAdventures } from "../../../Api/adventure.api"
+import { useEffect } from "react"
 
 // Mock data for items/products
 const mockItems = [
@@ -133,10 +113,10 @@ const mockItems = [
     status: "low-stock",
     image: "/placeholder.svg?height=200&width=200",
   },
-];
+]
 
 export default function ItemsPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("")
   const { register, handleSubmit, control, reset } = useForm({
     defaultValues: {
       name: "",
@@ -144,62 +124,76 @@ export default function ItemsPage() {
       price: "",
       stock: "",
       description: "",
-      status: ""
+      status: "",
+    },
+  })
+  const [categoryFilter, setCategoryFilter] = useState("all")
+  const [showAddItem, setShowAddItem] = useState(false)
+  const [images, setImages] = useState([])
+  const [adventures, setAdventures] = useState([])
+  const [selectedAdventure, setSelectedAdventure] = useState("")
+  const [itemType, setItemType] = useState({ rent: false, buy: true })
+
+  useEffect(() => {
+    const getAdventures = async () => {
+      try {
+        const response = await fetchAllAdventures()
+        if (response.data && response.data.adventures) {
+          setAdventures(response.data.adventures)
+        }
+      } catch (error) {
+        console.error("Error fetching adventures:", error)
+      }
     }
-  });
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [showAddItem, setShowAddItem] = useState(false);
-  const [images, setImages] = useState([]);
+
+    getAdventures()
+  }, [])
 
   const handleImageUpload = (event) => {
-    const files = Array.from(event.target.files);
+    const files = Array.from(event.target.files)
     if (files.length + images.length > 4) {
-      alert("You can upload up to 4 images only.");
-      return;
+      alert("You can upload up to 4 images only.")
+      return
     }
 
     const newImages = files.map((file) => ({
       url: URL.createObjectURL(file),
       file,
-    }));
+    }))
 
-    setImages((prev) => [...prev, ...newImages]);
-  };
+    setImages((prev) => [...prev, ...newImages])
+  }
 
   const handleRemoveImage = (index) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  };
+    setImages((prev) => prev.filter((_, i) => i !== index))
+  }
 
   // Filter items based on search term and category
   const filteredItems = mockItems.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      categoryFilter === "all" || item.category.toLowerCase() === categoryFilter.toLowerCase();
-    return matchesSearch && matchesCategory;
-  });
+      item.category.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = categoryFilter === "all" || item.category.toLowerCase() === categoryFilter.toLowerCase()
+    return matchesSearch && matchesCategory
+  })
 
   const onSubmit = (data) => {
-    console.log("Form data:", data);
-    console.log("Images:", images);
+    console.log("Form data:", data)
+    console.log("Images:", images)
+    console.log("Selected Adventure:", selectedAdventure)
+    console.log("Item Type:", itemType)
     // Here you would typically send the data to your API
-    setShowAddItem(false);
-    reset();
-    setImages([]);
-  };
+    setShowAddItem(false)
+    reset()
+    setImages([])
+  }
 
   // Get unique categories for filter dropdown
-  const categories = [...new Set(mockItems.map(item => item.category))];
+  const categories = [...new Set(mockItems.map((item) => item.category))]
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
-    >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
         <h2 className="text-2xl font-bold tracking-tight">Items</h2>
         <div className="flex items-center space-x-2">
@@ -238,14 +232,9 @@ export default function ItemsPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuItem onClick={() => setCategoryFilter("all")}>
-                  All Categories
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCategoryFilter("all")}>All Categories</DropdownMenuItem>
                 {categories.map((category) => (
-                  <DropdownMenuItem
-                    key={category}
-                    onClick={() => setCategoryFilter(category)}
-                  >
+                  <DropdownMenuItem key={category} onClick={() => setCategoryFilter(category)}>
                     {category}
                   </DropdownMenuItem>
                 ))}
@@ -276,9 +265,7 @@ export default function ItemsPage() {
                 <TableBody>
                   {filteredItems.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        {item.name}
-                      </TableCell>
+                      <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>{item.category}</TableCell>
                       <TableCell>${item.price.toFixed(2)}</TableCell>
                       <TableCell>{item.stock}</TableCell>
@@ -325,19 +312,11 @@ export default function ItemsPage() {
             {filteredItems.map((item) => (
               <Card key={item.id} className="overflow-hidden">
                 <div className="aspect-square relative">
-                  <img
-                    src={item.image || "/placeholder.svg"}
-                    alt={item.name}
-                    className="object-cover w-full h-full"
-                  />
+                  <img src={item.image || "/placeholder.svg"} alt={item.name} className="object-cover w-full h-full" />
                   <Badge
                     className="absolute top-2 right-2"
                     variant={
-                      item.status === "in-stock"
-                        ? "default"
-                        : item.status === "low-stock"
-                          ? "outline"
-                          : "secondary"
+                      item.status === "in-stock" ? "default" : item.status === "low-stock" ? "outline" : "secondary"
                     }
                   >
                     {item.status === "in-stock"
@@ -360,9 +339,7 @@ export default function ItemsPage() {
                       <span>{item.stock} in stock</span>
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {item.description}
-                  </p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
                 </CardContent>
                 <CardFooter className="flex justify-between pt-2">
                   <div className="font-bold">${item.price.toFixed(2)}</div>
@@ -385,20 +362,14 @@ export default function ItemsPage() {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Add New Item</DialogTitle>
-            <DialogDescription>
-              Add a new product to your inventory.
-            </DialogDescription>
+            <DialogDescription>Add a new product to your inventory.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Item Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter item name"
-                    {...register("name", { required: true })}
-                  />
+                  <Input id="name" placeholder="Enter item name" {...register("name", { required: true })} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
@@ -407,10 +378,7 @@ export default function ItemsPage() {
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
@@ -440,12 +408,7 @@ export default function ItemsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="stock">Stock Quantity</Label>
-                  <Input
-                    id="stock"
-                    type="number"
-                    placeholder="0"
-                    {...register("stock", { required: true, min: 0 })}
-                  />
+                  <Input id="stock" type="number" placeholder="0" {...register("stock", { required: true, min: 0 })} />
                 </div>
               </div>
               <div className="space-y-2">
@@ -457,27 +420,57 @@ export default function ItemsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="adventure">Associated Adventure</Label>
                 <Controller
-                  name="status"
+                  name="adventure"
                   control={control}
-                  rules={{ required: true }}
                   render={({ field }) => (
                     <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value)
+                        setSelectedAdventure(value)
+                      }}
+                      value={field.value || "none"}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
+                        <SelectValue placeholder="Select an adventure" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="in-stock">In Stock</SelectItem>
-                        <SelectItem value="low-stock">Low Stock</SelectItem>
-                        <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
+                        {adventures.map((adventure) => (
+                          <SelectItem key={adventure._id} value={adventure._id}>
+                            {adventure.title || adventure.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   )}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Item Availability</Label>
+                <div className="flex space-x-4 items-center">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="buy"
+                      checked={itemType.buy}
+                      onCheckedChange={(checked) => setItemType((prev) => ({ ...prev, buy: checked }))}
+                    />
+                    <Label htmlFor="buy" className="cursor-pointer">
+                      Available for Purchase
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="rent"
+                      checked={itemType.rent}
+                      onCheckedChange={(checked) => setItemType((prev) => ({ ...prev, rent: checked }))}
+                    />
+                    <Label htmlFor="rent" className="cursor-pointer">
+                      Available for Rent
+                    </Label>
+                  </div>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="image">Upload Images (Max 4)</Label>
@@ -514,9 +507,9 @@ export default function ItemsPage() {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setShowAddItem(false);
-                  reset();
-                  setImages([]);
+                  setShowAddItem(false)
+                  reset()
+                  setImages([])
                 }}
               >
                 Cancel
@@ -527,5 +520,5 @@ export default function ItemsPage() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  );
+  )
 }

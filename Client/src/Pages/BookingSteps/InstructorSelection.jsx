@@ -80,7 +80,7 @@ export const InstructorSelection = ({
                                 <div className="md:w-1/3 p-4 flex justify-center items-start">
                                     <Avatar className="h-24 w-24 border-2 border-white shadow-md">
                                         <AvatarImage src={instructor.instructorId?.profilePicture || "/placeholder.svg"} alt={instructor.instructorId?.name} />
-                                        <AvatarFallback>{instructor.instructorId?.name.charAt(0)}</AvatarFallback>
+                                        {/* <AvatarFallback>{instructor.instructorId?.name.charAt(0)}</AvatarFallback> */}
                                     </Avatar>
                                 </div>
                                 <div className="md:w-2/3 p-4">
@@ -88,17 +88,17 @@ export const InstructorSelection = ({
                                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
 
                                         <span className="text-gray-300">•</span>
-                                        <span>{instructor.instructorId?.instructor.description[0]}</span>
+                                        {/* <span>{instructor.instructorId?.instructor.description[0]}</span> */}
                                     </div>
-                                    <div className="flex items-center gap-1 mb-3">
+                                    {/* <div className="flex items-center gap-1 mb-3">
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             star <= instructor.instructorId?.instructor.avgReview ? (
                                                 <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                                             ) : null
                                         ))}
                                         <span className="text-xs ml-1 text-gray-500">{instructor.instructorId?.instructor.avgReview}</span>
-                                    </div>
-                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{instructor.instructorId?.instructor.description}</p>
+                                    </div> */}
+                                    {/* <p className="text-sm text-gray-600 mb-3 line-clamp-2">{instructor.instructorId?.instructor.description}</p> */}
                                     <div className="flex justify-between items-center">
                                         <span className="font-bold text-blue-600">
                                             ${instructor.price + groupMembers.length * 30}
