@@ -48,6 +48,7 @@ import { InstructorProfile } from "./Pages/Instructor/InstructorProfile"
 import InstructorSettings from "./Pages/Instructor/InstructorSettings"
 import { CartProvider } from "./Pages/Cart/CartContext"
 import InstructorPendingReview from "./Pages/Instructor/InstructorPendingReview"
+import InstructorsPage from "./Pages/Admin/SubPages/InstructorsVerification"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -143,6 +144,7 @@ const App = () => {
                   <Route path="/admin/adventures" element={<AdventuresPage />} />
                   <Route path="/admin/bookings" element={<Dash_Bookings />} />
                   <Route path="/admin/users" element={<Dash_User />} />
+                  <Route path="/admin/instructors" element={<InstructorsPage />} />
                   <Route path="/admin/store" element={<Dash_Store />} />
                   <Route path="/admin/hotels" element={<Dash_Hotels />} />
                   <Route path="/admin/tickets" element={<Dash_Tickets />} />

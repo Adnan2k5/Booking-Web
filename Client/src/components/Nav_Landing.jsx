@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Loader } from "../components/Loader"
 import {
     Settings,
@@ -6,14 +6,14 @@ import {
     User,
     TicketIcon,
 } from "lucide-react"
+import { AnimatePresence, motion } from 'framer-motion'
 import { MdLanguage, MdMenu, MdClose } from "react-icons/md"
 import { IoIosLogIn } from "react-icons/io"
-import { useState } from "react"
-import { useTranslation } from "react-i18next"
-import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from "../Pages/AuthProvider"
-import { AnimatePresence } from 'framer-motion'
-
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuGroup } from './ui/dropdown-menu'
+import { Button } from './ui/button'
+import { Avatar, AvatarFallback } from './ui/avatar'
 export const Nav_Landing = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const { t, i18n } = useTranslation()

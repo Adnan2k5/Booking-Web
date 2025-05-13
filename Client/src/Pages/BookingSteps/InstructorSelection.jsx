@@ -80,7 +80,7 @@ export const InstructorSelection = ({
                                 <div className="md:w-1/3 p-4 flex justify-center items-start">
                                     <Avatar className="h-24 w-24 border-2 border-white shadow-md">
                                         <AvatarImage src={instructor.instructorId?.profilePicture || "/placeholder.svg"} alt={instructor.instructorId?.name} />
-                                        <AvatarFallback>{instructor.instructorId?.name.charAt(0)}</AvatarFallback>
+                                        {/* <AvatarFallback>{instructor.instructorId?.name.charAt(0)}</AvatarFallback> */}
                                     </Avatar>
                                 </div>
                                 <div className="md:w-2/3 p-4">
@@ -88,17 +88,17 @@ export const InstructorSelection = ({
                                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
 
                                         <span className="text-gray-300">•</span>
-                                        <span>{instructor.instructorId?.instructor.description[0]}</span>
+                                        {/* <span>{instructor.instructorId?.instructor.description[0]}</span> */}
                                     </div>
-                                    <div className="flex items-center gap-1 mb-3">
+                                    {/* <div className="flex items-center gap-1 mb-3">
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             star <= instructor.instructorId?.instructor.avgReview ? (
                                                 <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                                             ) : null
                                         ))}
                                         <span className="text-xs ml-1 text-gray-500">{instructor.instructorId?.instructor.avgReview}</span>
-                                    </div>
-                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{instructor.instructorId?.instructor.description}</p>
+                                    </div> */}
+                                    {/* <p className="text-sm text-gray-600 mb-3 line-clamp-2">{instructor.instructorId?.instructor.description}</p> */}
                                     <div className="flex justify-between items-center">
                                         <span className="font-bold text-blue-600">
                                             ${instructor.price + groupMembers.length * 30}
@@ -246,32 +246,14 @@ export const InstructorSelection = ({
 
                                     <div>
                                         <h3 className="font-semibold text-gray-800 mb-2">{t("certificates")}</h3>
-                                        <div className="space-y-2">
-                                            {typeof currentInstructor?.instructorId.instructor.certificate === 'string' ? (
-                                                <a
-                                                    href={currentInstructor?.instructorId.instructor.certificate}
-                                                    download
-                                                    className="flex items-center gap-2 p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                                                >
-                                                    <Award size={16} className="text-blue-600" />
-                                                    <span className="text-sm">{t("downloadCertificate")}</span>
-                                                </a>
-                                            ) : Array.isArray(currentInstructor?.instructorId.instructor.certificate) ? (
-                                                currentInstructor?.instructorId.instructor.certificate.map((cert, index) => (
-                                                    <a
-                                                        key={index}
-                                                        href={cert}
-                                                        download
-                                                        className="flex items-center gap-2 p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                                                    >
-                                                        <Award size={16} className="text-blue-600" />
-                                                        <span className="text-sm">{t("certificate")} {index + 1}</span>
-                                                    </a>
-                                                ))
-                                            ) : (
-                                                <p className="text-sm text-gray-500">{t("noCertificates")}</p>
-                                            )}
-                                        </div>
+                                        <ul className="space-y-2">
+                                            {currentInstructor?.certificates?.map((certificate, index) => (
+                                                <li key={index} className="text-sm flex items-start gap-2">
+                                                    <Award size={14} className="text-blue-500 mt-1 flex-shrink-0" />
+                                                    <span>{certificate}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
 
                                     <div>
@@ -282,7 +264,6 @@ export const InstructorSelection = ({
                                         </Button>
                                     </div>
                                 </div>
-
                                 <div className="mt-6 flex flex-col gap-5 md:gap-0 md:flex-row justify-between items-center">
                                     <div className="font-bold text-blue-600 text-xl">
                                         ${currentInstructor?.price + groupMembers.length * 30}

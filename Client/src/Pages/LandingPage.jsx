@@ -27,6 +27,8 @@ import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import { useAdventures } from "../hooks/useAdventure"
 import { Nav_Landing } from "../components/Nav_Landing"
+import { fadeIn, staggerContainer } from "../assets/Animations"
+
 
 export default function LandingPage() {
   const Navigate = useNavigate()
@@ -61,28 +63,6 @@ export default function LandingPage() {
     ),
   ]
 
-  // Animation variants
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-      },
-    },
-  }
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  }
 
 
 

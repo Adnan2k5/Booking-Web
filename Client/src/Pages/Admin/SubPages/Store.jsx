@@ -1,37 +1,20 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Search, Filter, Download, ChevronDown, Eye, Edit, Trash2, Plus, ShoppingBag, Tag, Package, X } from 'lucide-react';
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
+"use client"
+
+import { useState } from "react"
+import { motion } from "framer-motion"
+import { Search, Filter, Download, ChevronDown, Eye, Edit, Trash2, Plus, Tag, Package, X } from "lucide-react"
+import { Button } from "../../../components/ui/button"
+import { Input } from "../../../components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../../components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../../components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
-import { Badge } from "../../../components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../../components/ui/tabs";
+} from "../../../components/ui/dropdown-menu"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../components/ui/card"
+import { Badge } from "../../../components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
 import {
   Dialog,
   DialogContent,
@@ -39,23 +22,101 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
-import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../../components/ui/select";
-import { useForm, Controller } from "react-hook-form";
-import { useMyItems } from "../../../hooks/useMyItems";
-import { createCategory } from "../../../Api/category.api";
-import { useCategory } from "../../../hooks/useCategory";
+} from "../../../components/ui/dialog"
+import { Label } from "../../../components/ui/label"
+import { Textarea } from "../../../components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
+import { useForm, Controller } from "react-hook-form"
+import { Checkbox } from "../../../components/ui/checkbox"
+import { fetchAllAdventures } from "../../../Api/adventure.api"
+import { useEffect } from "react"
+
+// Mock data for items/products
+const mockItems = [
+  {
+    id: 1,
+    name: "Hiking Backpack",
+    description: "Durable 40L backpack perfect for multi-day hikes",
+    category: "Equipment",
+    price: 129.99,
+    stock: 45,
+    status: "in-stock",
+    image: "/placeholder.svg?height=200&width=200",
+  },
+  {
+    id: 2,
+    name: "Climbing Harness",
+    description: "Professional-grade climbing harness with adjustable leg loops",
+    category: "Safety Gear",
+    price: 89.99,
+    stock: 32,
+    status: "in-stock",
+    image: "/placeholder.svg?height=200&width=200",
+  },
+  {
+    id: 3,
+    name: "Waterproof Tent",
+    description: "3-person tent with rainfly and waterproof floor",
+    category: "Equipment",
+    price: 199.99,
+    stock: 18,
+    status: "in-stock",
+    image: "/placeholder.svg?height=200&width=200",
+  },
+  {
+    id: 4,
+    name: "Trekking Poles",
+    description: "Adjustable aluminum trekking poles with cork grips",
+    category: "Equipment",
+    price: 49.99,
+    stock: 60,
+    status: "in-stock",
+    image: "/placeholder.svg?height=200&width=200",
+  },
+  {
+    id: 5,
+    name: "Adventure First Aid Kit",
+    description: "Comprehensive first aid kit for outdoor adventures",
+    category: "Safety Gear",
+    price: 34.99,
+    stock: 75,
+    status: "in-stock",
+    image: "/placeholder.svg?height=200&width=200",
+  },
+  {
+    id: 6,
+    name: "Insulated Water Bottle",
+    description: "1L vacuum insulated stainless steel water bottle",
+    category: "Accessories",
+    price: 29.99,
+    stock: 0,
+    status: "out-of-stock",
+    image: "/placeholder.svg?height=200&width=200",
+  },
+  {
+    id: 7,
+    name: "Headlamp",
+    description: "300-lumen LED headlamp with adjustable brightness",
+    category: "Equipment",
+    price: 45.99,
+    stock: 28,
+    status: "in-stock",
+    image: "/placeholder.svg?height=200&width=200",
+  },
+  {
+    id: 8,
+    name: "Climbing Rope",
+    description: "60m dynamic climbing rope with middle mark",
+    category: "Safety Gear",
+    price: 159.99,
+    stock: 12,
+    status: "low-stock",
+    image: "/placeholder.svg?height=200&width=200",
+  },
+]
 
 export default function ItemsPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("")
   const { register, handleSubmit, control, reset } = useForm({
     defaultValues: {
       name: "",
@@ -63,84 +124,76 @@ export default function ItemsPage() {
       price: "",
       stock: "",
       description: "",
-      status: ""
+      status: "",
+    },
+  })
+  const [categoryFilter, setCategoryFilter] = useState("all")
+  const [showAddItem, setShowAddItem] = useState(false)
+  const [images, setImages] = useState([])
+  const [adventures, setAdventures] = useState([])
+  const [selectedAdventure, setSelectedAdventure] = useState("")
+  const [itemType, setItemType] = useState({ rent: false, buy: true })
+
+  useEffect(() => {
+    const getAdventures = async () => {
+      try {
+        const response = await fetchAllAdventures()
+        if (response.data && response.data.adventures) {
+          setAdventures(response.data.adventures)
+        }
+      } catch (error) {
+        console.error("Error fetching adventures:", error)
+      }
     }
-  });
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [showAddItem, setShowAddItem] = useState(false);
-  const [images, setImages] = useState([]);
-  const [addingCategory, setAddingCategory] = useState(false);
-  const [newCategory, setNewCategory] = useState("");
-  const [categorySuccess, setCategorySuccess] = useState("");
 
-  const { items, loading } = useMyItems();
-  const { categories: fetchedCategories } = useCategory();
-
-  const categories = fetchedCategories.map((category) => category.name);
-
-
-  // Filter items based on search and category
-  const filteredItems = (items || []).filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      categoryFilter === "all" ||
-      (item.category && item.category.toLowerCase() === categoryFilter.toLowerCase());
-    return matchesSearch && matchesCategory;
-  });
+    getAdventures()
+  }, [])
 
   const handleImageUpload = (event) => {
-    const files = Array.from(event.target.files);
+    const files = Array.from(event.target.files)
     if (files.length + images.length > 4) {
-      alert("You can upload up to 4 images only.");
-      return;
+      alert("You can upload up to 4 images only.")
+      return
     }
 
     const newImages = files.map((file) => ({
       url: URL.createObjectURL(file),
       file,
-    }));
+    }))
 
-    setImages((prev) => [...prev, ...newImages]);
-  };
+    setImages((prev) => [...prev, ...newImages])
+  }
 
   const handleRemoveImage = (index) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  };
+    setImages((prev) => prev.filter((_, i) => i !== index))
+  }
 
-  const handleAddCategory = async () => {
-    if (!newCategory || categories.includes(newCategory)) return;
-    try {
-      const res = await createCategory(newCategory);
-      if (res.data && res.data.data) {
-        setAddingCategory(false);
-        setNewCategory("");
-        setCategorySuccess("Category created successfully!");
-        setTimeout(() => setCategorySuccess(""), 2000);
-      }
-    } catch (err) {
-      alert("Failed to add category: " + (err.response?.data?.message || err.message));
-    }
-  };
+  // Filter items based on search term and category
+  const filteredItems = mockItems.filter((item) => {
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = categoryFilter === "all" || item.category.toLowerCase() === categoryFilter.toLowerCase()
+    return matchesSearch && matchesCategory
+  })
 
   const onSubmit = (data) => {
-    console.log("Form data:", data);
-    console.log("Images:", images);
+    console.log("Form data:", data)
+    console.log("Images:", images)
+    console.log("Selected Adventure:", selectedAdventure)
+    console.log("Item Type:", itemType)
     // Here you would typically send the data to your API
-    setShowAddItem(false);
-    reset();
-    setImages([]);
-  };
+    setShowAddItem(false)
+    reset()
+    setImages([])
+  }
+
+  // Get unique categories for filter dropdown
+  const categories = [...new Set(mockItems.map((item) => item.category))]
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
-    >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
         <h2 className="text-2xl font-bold tracking-tight">Items</h2>
         <div className="flex items-center space-x-2">
@@ -179,14 +232,9 @@ export default function ItemsPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuItem onClick={() => setCategoryFilter("all")}>
-                  All Categories
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCategoryFilter("all")}>All Categories</DropdownMenuItem>
                 {categories.map((category) => (
-                  <DropdownMenuItem
-                    key={category}
-                    onClick={() => setCategoryFilter(category)}
-                  >
+                  <DropdownMenuItem key={category} onClick={() => setCategoryFilter(category)}>
                     {category}
                   </DropdownMenuItem>
                 ))}
@@ -203,140 +251,118 @@ export default function ItemsPage() {
         <TabsContent value="list" className="space-y-4">
           <Card>
             <CardContent className="p-0">
-              {loading ? (
-                <div className="p-8 text-center text-muted-foreground">Loading items...</div>
-              ) : (
-                <Table>
-                  <TableHeader>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Stock</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredItems.length === 0 ? (
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Stock</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
+                        No items found.
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredItems.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground">
-                          No items found.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredItems.map((item) => (
-                        <TableRow key={item._id}>
-                          <TableCell className="font-medium">{item.name}</TableCell>
-                          <TableCell>{item.category}</TableCell>
-                          <TableCell>${item.price?.toFixed(2)}</TableCell>
-                          <TableCell>{item.availableQuantity}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                item.status === "available"
-                                  ? "default"
-                                  : item.status === "reserved"
+                  ) : (
+                    filteredItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell>{item.category}</TableCell>
+                        <TableCell>${item.price.toFixed(2)}</TableCell>
+                        <TableCell>{item.stock}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              item.status === "in-stock"
+                                ? "default"
+                                : item.status === "low-stock"
                                   ? "outline"
                                   : "secondary"
-                              }
-                            >
-                              {item.status === "available"
-                                ? "Available"
-                                : item.status === "reserved"
-                                ? "Reserved"
-                                : "Rented"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end space-x-2">
-                              <Button variant="ghost" size="icon">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              )}
+                            }
+                          >
+                            {item.status === "in-stock"
+                              ? "In Stock"
+                              : item.status === "low-stock"
+                                ? "Low Stock"
+                                : "Out of Stock"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button variant="ghost" size="icon">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="grid" className="space-y-4">
-          {loading ? (
-            <div className="p-8 text-center text-muted-foreground">Loading items...</div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredItems.length === 0 ? (
-                <div className="col-span-full text-center text-muted-foreground py-8">No items found.</div>
-              ) : (
-                filteredItems.map((item) => (
-                  <Card key={item._id} className="overflow-hidden">
-                    <div className="aspect-square relative">
-                      <img
-                        src={item.images?.[0] || "/placeholder.svg"}
-                        alt={item.name}
-                        className="object-cover w-full h-full"
-                      />
-                      <Badge
-                        className="absolute top-2 right-2"
-                        variant={
-                          item.status === "available"
-                            ? "default"
-                            : item.status === "reserved"
-                            ? "outline"
-                            : "secondary"
-                        }
-                      >
-                        {item.status === "available"
-                          ? "Available"
-                          : item.status === "reserved"
-                          ? "Reserved"
-                          : "Rented"}
-                      </Badge>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredItems.map((item) => (
+              <Card key={item.id} className="overflow-hidden">
+                <div className="aspect-square relative">
+                  <img src={item.image || "/placeholder.svg"} alt={item.name} className="object-cover w-full h-full" />
+                  <Badge
+                    className="absolute top-2 right-2"
+                    variant={
+                      item.status === "in-stock" ? "default" : item.status === "low-stock" ? "outline" : "secondary"
+                    }
+                  >
+                    {item.status === "in-stock"
+                      ? "In Stock"
+                      : item.status === "low-stock"
+                        ? "Low Stock"
+                        : "Out of Stock"}
+                  </Badge>
+                </div>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">{item.name}</CardTitle>
+                  <CardDescription className="flex items-center">
+                    <Tag className="h-3 w-3 mr-1" /> {item.category}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2 pb-2">
+                  <div className="flex justify-between text-sm">
+                    <div className="flex items-center">
+                      <Package className="h-3 w-3 mr-1" />
+                      <span>{item.stock} in stock</span>
                     </div>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">{item.name}</CardTitle>
-                      <CardDescription className="flex items-center">
-                        <Tag className="h-3 w-3 mr-1" /> {item.category}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2 pb-2">
-                      <div className="flex justify-between text-sm">
-                        <div className="flex items-center">
-                          <Package className="h-3 w-3 mr-1" />
-                          <span>{item.availableQuantity} in stock</span>
-                        </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {item.description}
-                      </p>
-                    </CardContent>
-                    <CardFooter className="flex justify-between pt-2">
-                      <div className="font-bold">${item.price?.toFixed(2)}</div>
-                      <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4 mr-1" /> View
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4 mr-1" /> Edit
-                        </Button>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                ))
-              )}
-            </div>
-          )}
+                  </div>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
+                </CardContent>
+                <CardFooter className="flex justify-between pt-2">
+                  <div className="font-bold">${item.price.toFixed(2)}</div>
+                  <div className="flex space-x-2">
+                    <Button variant="ghost" size="sm">
+                      <Eye className="h-4 w-4 mr-1" /> View
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <Edit className="h-4 w-4 mr-1" /> Edit
+                    </Button>
+                  </div>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -344,20 +370,14 @@ export default function ItemsPage() {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Add New Item</DialogTitle>
-            <DialogDescription>
-              Add a new product to your inventory.
-            </DialogDescription>
+            <DialogDescription>Add a new product to your inventory.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Item Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter item name"
-                    {...register("name", { required: true })}
-                  />
+                  <Input id="name" placeholder="Enter item name" {...register("name", { required: true })} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
@@ -366,63 +386,19 @@ export default function ItemsPage() {
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
-                      <>
-                        <Select
-                          onValueChange={(val) => {
-                            if (val === "new") {
-                              setAddingCategory(true);
-                              field.onChange("");
-                            } else {
-                              setAddingCategory(false);
-                              field.onChange(val);
-                            }
-                          }}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category} value={category}>
-                                {category}
-                              </SelectItem>
-                            ))}
-                            <SelectItem value="new">Add New Category</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {addingCategory && (
-                          <div className="flex items-center gap-2 mt-2">
-                            <Input
-                              placeholder="Enter new category"
-                              value={newCategory}
-                              onChange={e => setNewCategory(e.target.value)}
-                              className="flex-1"
-                            />
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={handleAddCategory}
-                            >
-                              Add
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                setAddingCategory(false);
-                                setNewCategory("");
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                            {categorySuccess && (
-                              <span className="text-green-600 text-sm ml-2">{categorySuccess}</span>
-                            )}
-                          </div>
-                        )}
-                      </>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="new">Add New Category</SelectItem>
+                        </SelectContent>
+                      </Select>
                     )}
                   />
                 </div>
@@ -440,12 +416,7 @@ export default function ItemsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="stock">Stock Quantity</Label>
-                  <Input
-                    id="stock"
-                    type="number"
-                    placeholder="0"
-                    {...register("stock", { required: true, min: 0 })}
-                  />
+                  <Input id="stock" type="number" placeholder="0" {...register("stock", { required: true, min: 0 })} />
                 </div>
               </div>
               <div className="space-y-2">
@@ -457,27 +428,57 @@ export default function ItemsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="adventure">Associated Adventure</Label>
                 <Controller
-                  name="status"
+                  name="adventure"
                   control={control}
-                  rules={{ required: true }}
                   render={({ field }) => (
                     <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value)
+                        setSelectedAdventure(value)
+                      }}
+                      value={field.value || "none"}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
+                        <SelectValue placeholder="Select an adventure" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="in-stock">In Stock</SelectItem>
-                        <SelectItem value="low-stock">Low Stock</SelectItem>
-                        <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
+                        {adventures.map((adventure) => (
+                          <SelectItem key={adventure._id} value={adventure._id}>
+                            {adventure.title || adventure.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   )}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Item Availability</Label>
+                <div className="flex space-x-4 items-center">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="buy"
+                      checked={itemType.buy}
+                      onCheckedChange={(checked) => setItemType((prev) => ({ ...prev, buy: checked }))}
+                    />
+                    <Label htmlFor="buy" className="cursor-pointer">
+                      Available for Purchase
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="rent"
+                      checked={itemType.rent}
+                      onCheckedChange={(checked) => setItemType((prev) => ({ ...prev, rent: checked }))}
+                    />
+                    <Label htmlFor="rent" className="cursor-pointer">
+                      Available for Rent
+                    </Label>
+                  </div>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="image">Upload Images (Max 4)</Label>
@@ -514,9 +515,9 @@ export default function ItemsPage() {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setShowAddItem(false);
-                  reset();
-                  setImages([]);
+                  setShowAddItem(false)
+                  reset()
+                  setImages([])
                 }}
               >
                 Cancel
@@ -527,5 +528,5 @@ export default function ItemsPage() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  );
+  )
 }
