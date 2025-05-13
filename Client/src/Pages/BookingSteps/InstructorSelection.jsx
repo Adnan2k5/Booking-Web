@@ -118,12 +118,11 @@ export const InstructorSelection = ({
                                                 size="sm"
                                                 className={cn(
                                                     "flex items-center gap-1",
-                                                    selectedInstructor && selectedInstructor_.id === instructor._id
+                                                    selectedInstructor && selectedInstructor._id === instructor._id
                                                         ? "bg-green-600 hover:bg-green-700"
                                                         : "bg-blue-600 hover:bg-blue-700",
                                                 )}
-                                                onClick={() => handleInstructorSelect(instructor._id)}
-                                            >
+                                                onClick={() => (selectedInstructor?._id === instructor._id) ? handleInstructorSelect(null) : handleInstructorSelect(instructor._id)}>
                                                 {selectedInstructor && selectedInstructor._id === instructor._id ? (
                                                     <>
                                                         <Check size={14} />

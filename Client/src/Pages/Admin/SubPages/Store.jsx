@@ -263,44 +263,52 @@ export default function ItemsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredItems.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell>{item.category}</TableCell>
-                      <TableCell>${item.price.toFixed(2)}</TableCell>
-                      <TableCell>{item.stock}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            item.status === "in-stock"
-                              ? "default"
-                              : item.status === "low-stock"
-                                ? "outline"
-                                : "secondary"
-                          }
-                        >
-                          {item.status === "in-stock"
-                            ? "In Stock"
-                            : item.status === "low-stock"
-                              ? "Low Stock"
-                              : "Out of Stock"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="ghost" size="icon">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                  {filteredItems.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
+                        No items found.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell>{item.category}</TableCell>
+                        <TableCell>${item.price.toFixed(2)}</TableCell>
+                        <TableCell>{item.stock}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              item.status === "in-stock"
+                                ? "default"
+                                : item.status === "low-stock"
+                                  ? "outline"
+                                  : "secondary"
+                            }
+                          >
+                            {item.status === "in-stock"
+                              ? "In Stock"
+                              : item.status === "low-stock"
+                                ? "Low Stock"
+                                : "Out of Stock"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button variant="ghost" size="icon">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

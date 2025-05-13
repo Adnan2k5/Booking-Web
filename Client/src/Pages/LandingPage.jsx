@@ -29,6 +29,7 @@ import { useAdventures } from "../hooks/useAdventure"
 import { Nav_Landing } from "../components/Nav_Landing"
 import { fadeIn, staggerContainer } from "../assets/Animations"
 
+
 export default function LandingPage() {
   const Navigate = useNavigate()
   const { user, loading } = useAuth()

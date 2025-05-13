@@ -17,7 +17,9 @@ import { Avatar, AvatarFallback } from './ui/avatar'
 export const Nav_Landing = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const { t, i18n } = useTranslation()
-    const { user, loading } = useAuth()
+    const [loading, setLoading] = useState(false)
+    const { user } = useAuth()
+
     return (
         <nav className="w-full fixed h-fit z-50" >
             <motion.div
