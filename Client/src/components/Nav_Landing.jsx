@@ -8,10 +8,18 @@ import {
 } from "lucide-react"
 import { MdLanguage, MdMenu, MdClose } from "react-icons/md"
 import { IoIosLogIn } from "react-icons/io"
+import { useState } from "react"
+import { useTranslation } from "react-i18next"
+import { motion } from 'framer-motion'
+import { useAuth } from "../Pages/AuthProvider"
+import { AnimatePresence } from 'framer-motion'
 
 export const Nav_Landing = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const { t, i18n } = useTranslation()
+    const [loading, setLoading] = useState(false)
+    const { user } = useAuth()
+
     return (
         <nav className="w-full fixed h-fit z-50" >
             <motion.div
