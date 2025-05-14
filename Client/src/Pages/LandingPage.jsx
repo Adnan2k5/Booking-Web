@@ -1,17 +1,11 @@
+"use client"
+
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider"
 
-import {
-  Users,
-  Search,
-  UserPlus,
-  UserX,
-  MapPin,
-  Calendar,
-  Compass,
-} from "lucide-react"
+import { Users, Search, UserPlus, UserX, MapPin, Calendar, Compass } from "lucide-react"
 import { Button } from "../components/ui/button"
 import {
   Dialog,
@@ -29,7 +23,6 @@ import { useAdventures } from "../hooks/useAdventure"
 import { Nav_Landing } from "../components/Nav_Landing"
 import { fadeIn, staggerContainer } from "../assets/Animations"
 
-
 export default function LandingPage() {
   const Navigate = useNavigate()
   const { user, loading } = useAuth()
@@ -38,13 +31,13 @@ export default function LandingPage() {
   const [location, setLocation] = useState("")
   const [date, setDate] = useState("")
 
-
   const [showGroupDialog, setShowGroupDialog] = useState(false)
   const [groupMembers, setGroupMembers] = useState([])
   const [searchEmail, setSearchEmail] = useState("")
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
   const [adventure, setadventure] = useState("")
+  const [activeSearchField, setActiveSearchField] = useState(null)
 
   const { adventures, loading: adventureLoading } = useAdventures()
 
@@ -58,14 +51,8 @@ export default function LandingPage() {
   }
   const allGroupMembers = [
     ...groupMembers,
-    ...sessionGroupMembers.filter(
-      (sess) => !groupMembers.some((local) => local.id === sess.id)
-    ),
+    ...sessionGroupMembers.filter((sess) => !groupMembers.some((local) => local.id === sess.id)),
   ]
-
-
-
-
 
   // Mock data for registered users
   const mockUsers = [
@@ -152,7 +139,7 @@ export default function LandingPage() {
       {/* Background Video - Fixed at 100vh */}
       <div className="bg absolute top-0 left-0 w-full h-screen overflow-hidden -z-50">
         <motion.div
-          className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/20 z-10"
+          className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 z-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.5 }}
@@ -166,8 +153,6 @@ export default function LandingPage() {
         />
       </div>
 
-
-
       <Nav_Landing />
       {/* Main Content - First Section */}
       <section className="flex-1 flex items-center justify-center pt-36 lg:mt-[10rem]">
@@ -178,7 +163,7 @@ export default function LandingPage() {
           animate="visible"
         >
           <motion.h1
-            className="text-3xl md:text-4xl font-bold text-center mb-6 bg-gradient-to-r from-black to-teal-200 bg-clip-text text-transparent"
+            className="text-3xl md:text-4xl font-bold text-center mb-6 bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
@@ -187,37 +172,32 @@ export default function LandingPage() {
           </motion.h1>
 
           <motion.div
-            className="search-bar grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mx-auto"
+            className="search-bar w-full max-w-5xl mx-auto"
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
           >
-            <motion.div className="location-container" variants={fadeIn}>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="flex flex-wrap md:flex-nowrap items-center gap-2">
+              {/* Unified search container */}
+              <div className="relative flex-1 flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                <div className="flex items-center pl-3">
                   <MapPin className="h-5 w-5 text-gray-400" />
                 </div>
                 <Input
-                  onChange={(e) => {
-                    setLocation(e.target.value)
-                  }}
-                  className="pl-10 py-6 text-base border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 rounded-md"
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1"
                   type="text"
                   placeholder={t("searchLocation")}
                 />
-              </div>
-            </motion.div>
 
-            <motion.div className="adventure-container" variants={fadeIn}>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="h-8 w-px bg-gray-300 mx-1"></div>
+
+                <div className="flex items-center pl-2">
                   <Compass className="h-5 w-5 text-gray-400" />
                 </div>
                 <select
-                  onChange={(e) => {
-                    setadventure(e.target.value)
-                  }}
-                  className="pl-10 py-6 text-base w-full border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 rounded-md"
+                  onChange={(e) => setadventure(e.target.value)}
+                  className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1 bg-transparent"
                 >
                   <option value="all">{t("selectAdventure")}</option>
                   {adventures.map((adventure, index) => (
@@ -226,41 +206,37 @@ export default function LandingPage() {
                     </option>
                   ))}
                 </select>
-              </div>
-            </motion.div>
 
-            <motion.div className="date-container" variants={fadeIn}>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="h-8 w-px bg-gray-300 mx-1"></div>
+
+                <div className="flex items-center pl-2">
                   <Calendar className="h-5 w-5 text-gray-400" />
                 </div>
                 <Input
+                  onChange={(e) => setDate(e.target.value)}
                   type="date"
                   placeholder={t("selectDate")}
-                  onChange={(e) => {
-                    setDate(e.target.value)
-                  }}
-                  className="pl-10 py-6 text-base border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 rounded-md"
+                  className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1"
                 />
+
+                <Button
+                  onClick={() => setShowGroupDialog(true)}
+                  className="h-full px-4 border-l border-gray-200 bg-white hover:bg-gray-50 text-black"
+                >
+                  <Users className="h-5 w-5 mr-2" />
+                  <span className="hidden sm:inline">
+                    {groupMembers.length > 0 ? `${t("group")} (${groupMembers.length + 1})` : t("addGroup")}
+                  </span>
+                </Button>
+
+                <Button
+                  onClick={handleNavigate}
+                  className="h-full px-6 bg-black hover:bg-gray-800 text-white rounded-none"
+                >
+                  <Search className="h-5 w-5" />
+                </Button>
               </div>
-            </motion.div>
-          </motion.div>
-
-          <motion.div className="flex flex-col sm:flex-row gap-4 justify-center mt-8" variants={fadeIn}>
-            <Button
-              onClick={() => setShowGroupDialog(true)}
-              className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-6 rounded-md shadow-sm transition-all text-base"
-            >
-              <Users className="h-5 w-5" />
-              <span>{groupMembers.length > 0 ? `${t("group")} (${groupMembers.length + 1})` : t("addGroup")}</span>
-            </Button>
-
-            <Button
-              onClick={handleNavigate}
-              className="flex items-center gap-2 bg-gradient-to-r from-black to-teal-600 text-white hover:from-emerald-700 hover:to-teal-600 px-8 py-6 rounded-md shadow-md transition-all text-base font-medium"
-            >
-              {t("beginAdventure")}
-            </Button>
+            </div>
           </motion.div>
         </motion.div>
       </section>
@@ -275,7 +251,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="font-bold tracking-wider w-fit border-b-2 border-emerald-500 pb-2">
+            <h1 className="font-bold tracking-wider w-fit border-b-2 border-gray-500 pb-2">
               {t("exploreFeaturedAdventures")}
             </h1>
           </motion.div>
@@ -298,7 +274,7 @@ export default function LandingPage() {
                   whileHover={{ y: -5 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="img w-full h-48 bg-gradient-to-br from-emerald-400 to-teal-300 rounded-t-lg overflow-hidden">
+                  <div className="img w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-t-lg overflow-hidden">
                     <motion.div
                       className="w-full h-full bg-gray-200"
                       initial={{ scale: 1.2 }}
@@ -327,7 +303,7 @@ export default function LandingPage() {
       <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
         <DialogContent className="sm:max-w-[500px] bg-white/95 backdrop-blur-md border border-gray-200 rounded-lg">
           <DialogHeader>
-            <DialogTitle className="text-xl text-emerald-600">{t("addFriendsToGroup")}</DialogTitle>
+            <DialogTitle className="text-xl text-gray-800">{t("addFriendsToGroup")}</DialogTitle>
             <DialogDescription>{t("inviteFriendsDescription")}</DialogDescription>
           </DialogHeader>
 
@@ -337,12 +313,12 @@ export default function LandingPage() {
               placeholder={t("searchByEmail")}
               value={searchEmail}
               onChange={(e) => setSearchEmail(e.target.value)}
-              className="flex-1 focus:ring-2 focus:ring-emerald-500"
+              className="flex-1 focus:ring-2 focus:ring-gray-500"
             />
             <Button
               type="submit"
               disabled={isSearching || !searchEmail}
-              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600"
+              className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white"
             >
               {isSearching ? t("searching") : t("search")}
               <Search size={16} />
@@ -351,13 +327,13 @@ export default function LandingPage() {
 
           {/* Search Results */}
           {searchResults.length > 0 && (
-            <div className="bg-emerald-50 rounded-lg p-4 mb-4">
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <h3 className="text-sm font-semibold text-gray-800 mb-3">{t("searchResults")}</h3>
               <div className="space-y-3">
                 {searchResults.map((user) => (
                   <div key={user.id} className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border border-emerald-100">
+                      <Avatar className="h-10 w-10 border border-gray-100">
                         <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
                         <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                       </Avatar>
@@ -369,7 +345,7 @@ export default function LandingPage() {
                     <Button
                       size="sm"
                       onClick={() => addGroupMember(user)}
-                      className="flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600"
+                      className="flex items-center gap-1 bg-black hover:bg-gray-800 text-white"
                     >
                       <UserPlus size={14} />
                       {t("add")}
@@ -391,8 +367,10 @@ export default function LandingPage() {
             {/* Current User */}
             <div className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm mb-2">
               <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 border border-emerald-100 bg-gradient-to-r from-emerald-600 to-teal-500">
-                  <AvatarFallback>{user?.user ? user.user.email.charAt(0).toUpperCase() : "Y"}</AvatarFallback>
+                <Avatar className="h-10 w-10 border border-gray-100 bg-black">
+                  <AvatarFallback className="text-white">
+                    {user?.user ? user.user.email.charAt(0).toUpperCase() : "Y"}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="font-medium text-gray-800">{user?.user ? user.user.email : "You"}</p>
@@ -412,8 +390,8 @@ export default function LandingPage() {
                   transition={{ duration: 0.2 }}
                 >
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border border-emerald-100">
-                      <AvatarImage src={member.avatar} alt={member.name} />
+                    <Avatar className="h-10 w-10 border border-gray-100">
+                      <AvatarImage src={member.avatar || "/placeholder.svg"} alt={member.name} />
                       <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
@@ -435,17 +413,14 @@ export default function LandingPage() {
             </AnimatePresence>
 
             {groupMembers.length === 0 && (
-              <div className="bg-emerald-50 p-4 rounded-lg text-center">
+              <div className="bg-gray-50 p-4 rounded-lg text-center">
                 <p className="text-gray-500 text-sm">{t("noFriendsYet")}</p>
               </div>
             )}
           </div>
 
           <DialogFooter className="mt-4">
-            <Button
-              onClick={() => setShowGroupDialog(false)}
-              className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600"
-            >
+            <Button onClick={() => setShowGroupDialog(false)} className="bg-black hover:bg-gray-800 text-white">
               {t("done")}
             </Button>
           </DialogFooter>

@@ -1,27 +1,47 @@
-import React, { useState } from 'react'
+"use client"
+
+import { useState } from "react"
 import { Loader } from "../components/Loader"
-import {
-    Settings,
-    LogOut,
-    User,
-    TicketIcon,
-} from "lucide-react"
-import { AnimatePresence, motion } from 'framer-motion'
+import { Settings, LogOut, User, TicketIcon } from 'lucide-react'
+import { AnimatePresence, motion } from "framer-motion"
 import { MdLanguage, MdMenu, MdClose } from "react-icons/md"
 import { IoIosLogIn } from "react-icons/io"
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from "react-i18next"
 import { useAuth } from "../Pages/AuthProvider"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuGroup } from './ui/dropdown-menu'
-import { Button } from './ui/button'
-import { Avatar, AvatarFallback } from './ui/avatar'
+import { useNavigate } from "react-router-dom"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+    DropdownMenuGroup,
+} from "./ui/dropdown-menu"
+import { Button } from "./ui/button"
+import { Avatar, AvatarFallback } from "./ui/avatar"
+
 export const Nav_Landing = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const { t, i18n } = useTranslation()
     const [loading, setLoading] = useState(false)
     const { user } = useAuth()
+    const navigate = useNavigate()
+
+    const languages = [
+        { code: "en", name: "English" },
+        { code: "fr", name: "Français" },
+        { code: "de", name: "Deutsch" },
+        { code: "es", name: "Español" },
+        { code: "it", name: "Italiano" },
+    ]
+
+    const changeLanguage = (code) => {
+        i18n.changeLanguage(code)
+    }
 
     return (
-        <nav className="w-full fixed h-fit z-50" >
+        <nav className="w-full fixed h-fit z-50">
             <motion.div
                 className="bg-black/80 backdrop-blur-md w-[90%] m-auto mt-5 text-white px-3 py-3 rounded-xl border border-white/10"
                 initial={{ y: -50, opacity: 0 }}
@@ -33,6 +53,8 @@ export const Nav_Landing = () => {
                         className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent"
                         whileHover={{ scale: 1.05 }}
                         transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                        onClick={() => navigate("/")}
+                        style={{ cursor: "pointer" }}
                     >
                         Adventure
                     </motion.h1>
@@ -92,15 +114,15 @@ export const Nav_Landing = () => {
                                             </DropdownMenuLabel>
                                             <DropdownMenuSeparator />
                                             <DropdownMenuGroup>
-                                                <DropdownMenuItem onClick={() => Navigate("/dashboard")}>
+                                                <DropdownMenuItem onClick={() => navigate("/dashboard")}>
                                                     <User className="mr-2 h-4 w-4" />
                                                     <span>{t("profile")}</span>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => Navigate("/dashboard/tickets")}>
+                                                <DropdownMenuItem onClick={() => navigate("/dashboard/tickets")}>
                                                     <TicketIcon className="mr-2 h-4 w-4" />
                                                     <span>{t("tickets")}</span>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => Navigate("/dashboard/settings")}>
+                                                <DropdownMenuItem onClick={() => navigate("/dashboard/settings")}>
                                                     <Settings className="mr-2 h-4 w-4" />
                                                     <span>{t("settings")}</span>
                                                 </DropdownMenuItem>
@@ -113,9 +135,14 @@ export const Nav_Landing = () => {
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 ) : (
-                                    <motion.a href="/login" whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.95 }}>
+                                    <motion.div
+                                        whileHover={{ scale: 1.1, rotate: 5 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => navigate("/login-options")}
+                                        style={{ cursor: "pointer" }}
+                                    >
                                         <IoIosLogIn className="text-3xl" />
-                                    </motion.a>
+                                    </motion.div>
                                 )}
                             </li>
                         </ul>
@@ -158,14 +185,14 @@ export const Nav_Landing = () => {
                                     ) : user.user ? (
                                         <div
                                             className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex items-center justify-center rounded-full"
-                                            onClick={() => Navigate("/dashboard")}
+                                            onClick={() => navigate("/dashboard")}
                                         >
                                             {user?.user?.email.charAt(0).toUpperCase()}
                                         </div>
                                     ) : (
-                                        <a href="/login">
+                                        <div onClick={() => navigate("/login-options")}>
                                             <IoIosLogIn className="text-3xl" />
-                                        </a>
+                                        </div>
                                     )}
                                 </li>
                             </ul>
