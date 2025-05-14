@@ -1,69 +1,85 @@
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
-import { Badge } from "../ui/badge"
-import { MapPin } from 'lucide-react'
-import { Button } from "../ui/button"
-import StarRating from "../StarRating"
+"use client"
+import { useState } from "react"
+import { motion } from "framer-motion"
+import { Play, X } from "lucide-react"
+import { Dialog, DialogContent } from "../../components/ui/dialog"
 
-export function AdventureCard({ adventure, formatDate, onBook }) {
-  // Add a check to ensure adventure data exists
-  if (!adventure) return null;
-
-  // Safely access media URL
-  const mediaUrl = adventure.medias && adventure.medias.length > 0
-    ? adventure.medias[0]
-    : "/placeholder.svg?height=200&width=300";
-
-  // Safely access location
-  const locationName = adventure.location && adventure.location.length > 0
-    ? adventure.location[0].name
-    : "Unknown Location";
+export const AdventureCard = ({ adventure, formatDate, onBook }) => {
+  const [showPreview, setShowPreview] = useState(false)
 
   return (
-    <Card className="overflow-hidden h-full border-0 bg-white/90 backdrop-blur-sm shadow-lg">
-      <div className="relative h-52 overflow-hidden group">
-        <img
-          src={mediaUrl || "/placeholder.svg"}
-          alt={adventure.name || "Adventure"}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          loading="lazy"
-          onError={(e) => {
-            e.target.src = "/placeholder.svg?height=200&width=300";
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div className="absolute top-3 right-3">
-          <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 border-0 shadow-md">
-            +{adventure.exp || 0} EXP
-          </Badge>
+    <>
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-xl">
+        <div className="relative h-48 overflow-hidden">
+          {adventure.thumbnail ? (
+            <img
+              src={adventure.thumbnail || "/placeholder.svg"}
+              alt={adventure.name}
+              className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+              <span className="text-white font-medium">{adventure.name}</span>
+            </div>
+          )}
+
+          {adventure.previewVideo && (
+            <motion.button
+              className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-md hover:bg-white"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowPreview(true)
+              }}
+            >
+              <Play size={20} className="text-blue-600" />
+            </motion.button>
+          )}
+        </div>
+
+        <div className="p-4 flex-1 flex flex-col">
+          <h3 className="text-lg font-semibold text-gray-800 mb-1">{adventure.name}</h3>
+
+          <div className="flex items-center text-gray-500 text-sm mb-2">
+            <span>{adventure.location}</span>
+          </div>
+
+          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{adventure.description}</p>
+
+          <div className="mt-auto">
+            {adventure.session_date && (
+              <div className="text-xs text-gray-500 mb-2">Available: {formatDate(adventure.session_date)}</div>
+            )}
+
+            <motion.button
+              className="w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-md font-medium"
+              whileHover={{ y: -2 }}
+              whileTap={{ y: 0 }}
+              onClick={() => onBook(adventure._id)}
+            >
+              Book Now
+            </motion.button>
+          </div>
         </div>
       </div>
-      <CardHeader className="pb-2">
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-          <MapPin size={14} />
-          <span>{locationName}</span>
-          <span className="text-gray-300">•</span>
-          <span>{formatDate(adventure.createdAt)}</span>
-        </div>
-        <CardTitle className="text-xl font-bold text-gray-800">{adventure.name || "Adventure"}</CardTitle>
-      </CardHeader>
-      <CardContent className="pb-2">
-        <StarRating rating={4.8} />
-      </CardContent>
-      <CardFooter className="pt-2 flex flex-col gap-3">
-        <div className="flex items-center justify-between w-full">
-          <div className="text-sm font-medium text-gray-900">From $99</div>
-          <div className="text-xs text-gray-500">Limited spots</div>
-        </div>
-        <Button
-          onClick={(e) => {
-            e.stopPropagation();
-            onBook(adventure._id);
-          }}
-          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0 shadow-md"
-        >
-          Book Now
-        </Button>
-      </CardFooter>
-    </Card>
-  );
+
+      {/* Preview Video Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-black rounded-lg">
+          <div className="relative">
+            <button
+              className="absolute top-2 right-2 z-10 bg-black/50 text-white p-1 rounded-full"
+              onClick={() => setShowPreview(false)}
+            >
+              <X size={20} />
+            </button>
+            <video src={adventure.previewVideo} controls autoPlay className="w-full h-auto max-h-[80vh]" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
 }
+
+export default AdventureCard

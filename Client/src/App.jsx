@@ -31,6 +31,7 @@ const LoginPage = lazy(() => import("./Pages/LoginPage"))
 const LandingPage = lazy(() => import("./Pages/LandingPage"))
 const BrowsingPage = lazy(() => import("./Pages/BrowsingPage"))
 const Shop = lazy(() => import("./Pages/Shop"))
+const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
 
 // i18n
 import { I18nextProvider } from "react-i18next"
@@ -49,6 +50,7 @@ import InstructorSettings from "./Pages/Instructor/InstructorSettings"
 import { CartProvider } from "./Pages/Cart/CartContext"
 import InstructorPendingReview from "./Pages/Instructor/InstructorPendingReview"
 import InstructorsPage from "./Pages/Admin/SubPages/InstructorsVerification"
+import { HotelRegister } from "./Pages/Hotel/HotelRegister"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -78,6 +80,7 @@ const App = () => {
               <Routes>
                 {/* Public routes */}
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/login-options" element={<LoginOptionsPage />} />
                 <Route path="/auth/signInWithLinkedin" element={<LinkedInCallback />} />
                 <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
                 <Route path="/" element={<LandingPage />} />
@@ -88,12 +91,8 @@ const App = () => {
                 <Route path="/reset" element={<ResetPass />} />
                 <Route path="/instructor/register" element={<InstructorRegister />} />
                 <Route path="/instructor/pending-review" element={<InstructorPendingReview />} />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <UserDashboard />
-                  }
-                />
+                <Route path="/dashboard" element={<UserDashboard />} />
+                <Route path="/hotel/register" element={<HotelRegister />} />
                 <Route
                   path="/dashboard/bookings"
                   element={
