@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { LayoutDashboard, Users, Calendar, Settings, LogOut, Menu, Bell, User } from "lucide-react"
@@ -17,6 +17,7 @@ import {
 } from "../../components/ui/dropdown-menu"
 import LanguageSelector from "../../components/LanguageSelector"
 import { useAuth } from "../AuthProvider"
+import { getAllInstructors, getInstructorById } from "../../Api/instructor.api"
 
 const InstructorLayout = ({ children }) => {
     const navigate = useNavigate()
@@ -81,6 +82,7 @@ const InstructorLayout = ({ children }) => {
             unread: false,
         },
     ]
+
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
