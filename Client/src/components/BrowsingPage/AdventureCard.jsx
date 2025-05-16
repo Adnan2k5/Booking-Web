@@ -6,14 +6,14 @@ import { Dialog, DialogContent } from "../../components/ui/dialog"
 
 export const AdventureCard = ({ adventure, formatDate, onBook }) => {
   const [showPreview, setShowPreview] = useState(false)
-
+  console.log(adventure)
   return (
     <>
       <div className="bg-white rounded-xl shadow-lg overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-xl">
         <div className="relative h-48 overflow-hidden">
-          {adventure.thumbnail ? (
+          {adventure.medias[0] ? (
             <img
-              src={adventure.thumbnail || "/placeholder.svg"}
+              src={adventure.medias[0]}
               alt={adventure.name}
               className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
             />
@@ -42,7 +42,7 @@ export const AdventureCard = ({ adventure, formatDate, onBook }) => {
           <h3 className="text-lg font-semibold text-gray-800 mb-1">{adventure.name}</h3>
 
           <div className="flex items-center text-gray-500 text-sm mb-2">
-            <span>{adventure.location}</span>
+            <span>Location to be fetched as Name not co-ordinates</span>
           </div>
 
           <p className="text-gray-600 text-sm mb-3 line-clamp-2">{adventure.description}</p>

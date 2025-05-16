@@ -80,15 +80,13 @@ export const InstructorSelection = ({
                                 <div className="md:w-1/3 p-4 flex justify-center items-start">
                                     <Avatar className="h-24 w-24 border-2 border-white shadow-md">
                                         <AvatarImage src={instructor.instructorId?.profilePicture || "/placeholder.svg"} alt={instructor.instructorId?.name} />
-                                        {/* <AvatarFallback>{instructor.instructorId?.name.charAt(0)}</AvatarFallback> */}
+                                        <AvatarFallback>{instructor.instructorId?.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                 </div>
                                 <div className="md:w-2/3 p-4">
                                     <h3 className="text-lg font-bold text-gray-800 mb-1">{instructor.instructorId?.name}</h3>
                                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-
-                                        <span className="text-gray-300">•</span>
-                                        {/* <span>{instructor.instructorId?.instructor.description[0]}</span> */}
+                                        <span>{instructor.instructorId?.instructor.description[0]}</span>
                                     </div>
                                     {/* <div className="flex items-center gap-1 mb-3">
                                         {[1, 2, 3, 4, 5].map((star) => (

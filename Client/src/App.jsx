@@ -5,11 +5,11 @@ import Booking from "./Pages/Booking"
 import { ResetPass } from "./Pages/ResetPass"
 import { Loader } from "./components/Loader"
 import { AuthProvider } from "./Pages/AuthProvider"
+import { AdminRoute, InstructorRoute } from "./Auth/ProtectedRoute"
 import UserDashboard from "./Pages/User/UserDashboard"
 import UserDashboardLayout from "./components/UserDashboardLayout"
 import InstructorDashboard from "./Pages/Instructor/InstructorDashboard"
 import SessionForm from "./Pages/Instructor/SessionForm"
-import { ProtectedRoute } from "./Auth/ProtectedRoute"
 import ConfirmationPage from "./Pages/ConfirmationPage/Confirmation"
 import FacebookCallback from "./Auth/FacebookCallback"
 import LinkedInCallback from "./Auth/LinkedinCallBack"
@@ -51,6 +51,7 @@ import { CartProvider } from "./Pages/Cart/CartContext"
 import InstructorPendingReview from "./Pages/Instructor/InstructorPendingReview"
 import InstructorsPage from "./Pages/Admin/SubPages/InstructorsVerification"
 import { HotelRegister } from "./Pages/Hotel/HotelRegister"
+import InstructorLayout from "./Pages/Instructor/InstructorLayout"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -125,19 +126,25 @@ const App = () => {
                     </UserDashboardLayout>
                   }
                 />
-                <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
-                <Route path="/instructor/bookings" element={<InstructorBookings />} />
-                <Route path="/instructor/sessions" element={<InstructorSession />} />
-                <Route path="/instructor/sessions/new" element={<SessionForm />} />
-                <Route path="/instructor/profile" element={<InstructorProfile />} />
-                <Route path="/instructor/settings" element={<InstructorSettings />} />
-                <Route path="/admin" element={<AdminLayout />}>
+
+
+
+                <Route path="/instructor/" element={<InstructorRoute><InstructorLayout /></InstructorRoute>} />
+                <Route path="/instructor/dashboard" element={<InstructorRoute><InstructorDashboard /></InstructorRoute>} />
+                <Route path="/instructor/bookings" element={<InstructorRoute><InstructorBookings /></InstructorRoute>} />
+                <Route path="/instructor/sessions" element={<InstructorRoute><InstructorSession /></InstructorRoute>} />
+                <Route path="/instructor/sessions/new" element={<InstructorRoute><SessionForm /></InstructorRoute>} />
+                <Route path="/instructor/profile" element={<InstructorRoute><InstructorProfile /></InstructorRoute>} />
+                <Route path="/instructor/settings" element={<InstructorRoute><InstructorSettings /></InstructorRoute>} />
+
+
+                <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
                   <Route
                     index
                     element={
-                      <ProtectedRoute>
+                      <AdminRoute>
                         <AdminDashboard />
-                      </ProtectedRoute>
+                      </AdminRoute>
                     }
                   />
                   <Route path="/admin/adventures" element={<AdventuresPage />} />
