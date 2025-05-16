@@ -24,8 +24,7 @@ export default function InstructorsPage() {
     const [statusFilter, setStatusFilter] = useState("all")
     const [selectedInstructor, setSelectedInstructor] = useState(null)
     const [showDocuments, setShowDocuments] = useState(false)
-    const { instructors } = useInstructors()
-
+    const { instructors, isLoading, error, page, setPage, total, limit, deleteInstructorById, totalPages } = useInstructors()
 
     const handleViewDocuments = (instructor) => {
         setSelectedInstructor(instructor)
@@ -74,8 +73,7 @@ export default function InstructorsPage() {
                                 <TableRow key={instructor._id}>
                                     <TableCell className="font-medium">{instructor.name}</TableCell>
                                     <TableCell>{instructor.email}</TableCell>
-                                    <TableCell>{instructor?.instructor?.adventure?.name
-                                    }</TableCell>
+                                    <TableCell>{instructor?.instructor?.adventure?.name}</TableCell>
                                     <TableCell>
                                         <Badge
                                             variant={
@@ -94,7 +92,7 @@ export default function InstructorsPage() {
                                             <Button variant="ghost" size="icon" onClick={() => handleViewDocuments(instructor)}>
                                                 <FileText className="h-4 w-4" />
                                             </Button>
-                                            <Button variant="ghost" size="icon">
+                                            <Button variant="ghost" size="icon" onClick={() => deleteInstructorById(instructor._id)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -105,6 +103,30 @@ export default function InstructorsPage() {
                     </Table>
                 </CardContent>
             </Card>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center mt-4 space-x-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === 1}
+                        onClick={() => setPage(page - 1)}
+                    >
+                        Previous
+                    </Button>
+                    <span className="px-2">Page {page} of {totalPages}</span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === totalPages}
+                        onClick={() => setPage(page + 1)}
+                    >
+                        Next
+                    </Button>
+                </div>
+            )}
+
             {/* Full-width Document Viewer Dialog */}
             <Dialog open={showDocuments} onOpenChange={setShowDocuments} className="w-full">
                 <DialogContent className="max-w-full w-full h-[90vh] p-0 border-none rounded-none sm:rounded-none">

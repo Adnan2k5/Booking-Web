@@ -4,7 +4,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 
 export const getAllInstructors = asyncHandler(async (req, res) => {
-    const { page, limit } = req.query;
+    const { page, limit = 10 } = req.query;
 
     const instructors = await User.find({ role: "instructor" })
         .skip((page - 1) * limit)

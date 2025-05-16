@@ -14,7 +14,7 @@ export function useInstructors() {
         setIsLoading(true);
         try {
             const res = await getAllInstructors();
-            console.log(res);
+            console.log(res.data.message);
             setInstructors(res.data.message.instructors);
             setTotal(res.data.message.total);
             setTotalPages(res.data.message.totalPages);
@@ -30,7 +30,7 @@ export function useInstructors() {
         fetchItems();
     }, []);
 
-    const deleteAdventure = async (id) => {
+    const deleteInstructorById = async (id) => {
         setIsLoading(true);
         try {
             await deleteInstructor(id);
@@ -43,5 +43,5 @@ export function useInstructors() {
         }
     }
 
-    return { instructors, isLoading, error, page, setPage, total, limit, deleteAdventure, totalPages };
+    return { instructors, isLoading, error, page, setPage, total, limit, deleteInstructorById, totalPages };
 }
