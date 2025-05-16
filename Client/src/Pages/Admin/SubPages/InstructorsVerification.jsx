@@ -18,18 +18,38 @@ import {
 } from "../../../components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
 import { useInstructors } from "../../../hooks/useInstructor"
+import { toast } from "sonner"
 
 export default function InstructorsPage() {
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
     const [selectedInstructor, setSelectedInstructor] = useState(null)
     const [showDocuments, setShowDocuments] = useState(false)
-    const { instructors } = useInstructors()
-
+    const { instructors, isLoading, error, page, setPage, total, limit, deleteInstructorById, totalPages, changeDocumentStatus, setInstructors } = useInstructors()
 
     const handleViewDocuments = (instructor) => {
         setSelectedInstructor(instructor)
         setShowDocuments(true)
+    }
+
+    const handleDocumentStatus = async (status) => {
+        const loading = toast.loading("Changing document status...");
+        try {
+            if (selectedInstructor) {
+                await changeDocumentStatus(selectedInstructor.instructor._id, status)
+                toast.success("Document status changed successfully", {
+                    id: loading,
+                });
+            }
+        }
+        catch (error) {
+            toast.error("Failed to change document status", {
+                id: loading,
+            })
+        } finally {
+            setShowDocuments(false)
+            setSelectedInstructor(null)
+        }
     }
 
     return (
@@ -74,8 +94,7 @@ export default function InstructorsPage() {
                                 <TableRow key={instructor._id}>
                                     <TableCell className="font-medium">{instructor.name}</TableCell>
                                     <TableCell>{instructor.email}</TableCell>
-                                    <TableCell>{instructor?.instructor?.adventure?.name
-                                    }</TableCell>
+                                    <TableCell>{instructor?.instructor?.adventure?.name}</TableCell>
                                     <TableCell>
                                         <Badge
                                             variant={
@@ -94,7 +113,7 @@ export default function InstructorsPage() {
                                             <Button variant="ghost" size="icon" onClick={() => handleViewDocuments(instructor)}>
                                                 <FileText className="h-4 w-4" />
                                             </Button>
-                                            <Button variant="ghost" size="icon">
+                                            <Button variant="ghost" size="icon" onClick={() => deleteInstructorById(instructor._id)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -105,6 +124,30 @@ export default function InstructorsPage() {
                     </Table>
                 </CardContent>
             </Card>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center mt-4 space-x-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === 1}
+                        onClick={() => setPage(page - 1)}
+                    >
+                        Previous
+                    </Button>
+                    <span className="px-2">Page {page} of {totalPages}</span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === totalPages}
+                        onClick={() => setPage(page + 1)}
+                    >
+                        Next
+                    </Button>
+                </div>
+            )}
+
             {/* Full-width Document Viewer Dialog */}
             <Dialog open={showDocuments} onOpenChange={setShowDocuments} className="w-full">
                 <DialogContent className="max-w-full w-full h-[90vh] p-0 border-none rounded-none sm:rounded-none">
@@ -232,8 +275,8 @@ export default function InstructorsPage() {
                                 </TabsContent>
                             </Tabs>
                             <div className="mt-8 flex justify-end space-x-4 sticky bottom-0 bg-background p-4 border-t">
-                                <Button variant="outline">Reject Documents</Button>
-                                <Button>Approve Documents</Button>
+                                <Button variant="outline" onClick={() => handleDocumentStatus("rejected")}>Reject Documents</Button>
+                                <Button onClick={() => handleDocumentStatus("verified")}>Approve Documents</Button>
                             </div>
                         </div>
                     )}
