@@ -19,3 +19,23 @@ export const getAllSessions = async ({
   }
 }
 
+export const getAllInstructors = async () => {
+  try {
+    const res = await axiosClient.get('/api/instructor');
+    return res;
+  } catch (error) {
+    console.error("Error fetching all instructors:", error);
+    throw error;
+  }
+}
+
+
+export const deleteInstructor = async (id) => {
+  try {
+    const res = await axiosClient.delete(`/api/instructor/${id}`);
+    return res;
+  } catch (error) {
+    console.error("Error deleting instructor:", error);
+    throw error;
+  }
+}

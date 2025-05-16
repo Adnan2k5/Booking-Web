@@ -17,112 +17,15 @@ import {
     DialogClose,
 } from "../../../components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
-
-// Mock data for instructors
-const mockInstructors = [
-    {
-        id: 1,
-        name: "John Doe",
-        email: "john.doe@example.com",
-        phone: "+1 (555) 123-4567",
-        specialties: ["Scuba Diving", "Snorkeling"],
-        experience: "5 years",
-        status: "verified",
-        documents: [
-            { id: 1, name: "Diving Certification", type: "pdf", url: "/placeholder.svg?height=800&width=600" },
-            { id: 2, name: "CPR Certificate", type: "pdf", url: "/placeholder.svg?height=800&width=600" },
-            { id: 3, name: "ID Proof", type: "image", url: "/placeholder.svg?height=800&width=600" },
-        ],
-    },
-    {
-        id: 2,
-        name: "Jane Smith",
-        email: "jane.smith@example.com",
-        phone: "+1 (555) 987-6543",
-        specialties: ["Rock Climbing", "Hiking"],
-        experience: "8 years",
-        status: "pending",
-        documents: [
-            { id: 1, name: "Climbing Certification", type: "pdf", url: "/placeholder.svg?height=800&width=600" },
-            { id: 2, name: "First Aid Certificate", type: "pdf", url: "/placeholder.svg?height=800&width=600" },
-            { id: 3, name: "ID Proof", type: "image", url: "/placeholder.svg?height=800&width=600" },
-        ],
-    },
-    {
-        id: 3,
-        name: "Michael Johnson",
-        email: "michael.johnson@example.com",
-        phone: "+1 (555) 456-7890",
-        specialties: ["Kayaking", "Canoeing"],
-        experience: "3 years",
-        status: "verified",
-        documents: [
-            { id: 1, name: "Kayaking Certification", type: "pdf", url: "/placeholder.svg?height=800&width=600" },
-            { id: 2, name: "Water Safety Certificate", type: "pdf", url: "/placeholder.svg?height=800&width=600" },
-            { id: 3, name: "ID Proof", type: "image", url: "/placeholder.svg?height=800&width=600" },
-        ],
-    },
-    {
-        id: 4,
-        name: "Emily Davis",
-        email: "emily.davis@example.com",
-        phone: "+1 (555) 789-0123",
-        specialties: ["Paragliding", "Hang Gliding"],
-        experience: "6 years",
-        status: "rejected",
-        documents: [
-            { id: 1, name: "Paragliding License", type: "pdf", url: "/placeholder.svg?height=800&width=600" },
-            { id: 2, name: "Aviation Safety Certificate", type: "pdf", url: "/placeholder.svg?height=800&width=600" },
-            { id: 3, name: "ID Proof", type: "image", url: "/placeholder.svg?height=800&width=600" },
-        ],
-    },
-    {
-        id: 5,
-        name: "Robert Wilson",
-        email: "robert.wilson@example.com",
-        phone: "+1 (555) 234-5678",
-        specialties: ["Surfing", "Paddleboarding"],
-        experience: "10 years",
-        status: "verified",
-        documents: [
-            { id: 1, name: "Surfing Instructor Certification", type: "pdf", url: "/placeholder.svg?height=800&width=600" },
-            { id: 2, name: "Water Rescue Certificate", type: "pdf", url: "/placeholder.svg?height=800&width=600" },
-            { id: 3, name: "ID Proof", type: "image", url: "/placeholder.svg?height=800&width=600" },
-        ],
-    },
-    {
-        id: 6,
-        name: "Sarah Brown",
-        email: "sarah.brown@example.com",
-        phone: "+1 (555) 876-5432",
-        specialties: ["Mountain Biking", "Trail Running"],
-        experience: "4 years",
-        status: "pending",
-        documents: [
-            { id: 1, name: "Mountain Biking Certification", type: "pdf", url: "/placeholder.svg?height=800&width=600" },
-            { id: 2, name: "Wilderness First Aid", type: "pdf", url: "/placeholder.svg?height=800&width=600" },
-            { id: 3, name: "ID Proof", type: "image", url: "/placeholder.svg?height=800&width=600" },
-        ],
-    },
-]
+import { useInstructors } from "../../../hooks/useInstructor"
 
 export default function InstructorsPage() {
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
     const [selectedInstructor, setSelectedInstructor] = useState(null)
     const [showDocuments, setShowDocuments] = useState(false)
+    const { instructors } = useInstructors()
 
-    // Filter instructors based on search term and status
-    const filteredInstructors = mockInstructors.filter((instructor) => {
-        const matchesSearch =
-            instructor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            instructor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            instructor.specialties.some((specialty) => specialty.toLowerCase().includes(searchTerm.toLowerCase()))
-
-        const matchesStatus = statusFilter === "all" || instructor.status === statusFilter
-
-        return matchesSearch && matchesStatus
-    })
 
     const handleViewDocuments = (instructor) => {
         setSelectedInstructor(instructor)
@@ -162,29 +65,28 @@ export default function InstructorsPage() {
                                 <TableHead>Name</TableHead>
                                 <TableHead>Email</TableHead>
                                 <TableHead>Adventures</TableHead>
-                                <TableHead>Experience</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredInstructors.map((instructor) => (
-                                <TableRow key={instructor.id}>
+                            {instructors.map((instructor) => (
+                                <TableRow key={instructor._id}>
                                     <TableCell className="font-medium">{instructor.name}</TableCell>
                                     <TableCell>{instructor.email}</TableCell>
-                                    <TableCell>{instructor.specialties.join(", ")}</TableCell>
-                                    <TableCell>{instructor.experience}</TableCell>
+                                    <TableCell>{instructor?.instructor?.adventure?.name
+                                    }</TableCell>
                                     <TableCell>
                                         <Badge
                                             variant={
-                                                instructor.status === "verified"
+                                                instructor?.instructor?.documentVerified === "verified"
                                                     ? "default"
-                                                    : instructor.status === "pending"
+                                                    : instructor?.instructor?.documentVerified === "pending"
                                                         ? "outline"
                                                         : "secondary"
                                             }
                                         >
-                                            {instructor.status.charAt(0).toUpperCase() + instructor.status.slice(1)}
+                                            {instructor?.instructor?.documentVerified.charAt(0).toUpperCase() + instructor?.instructor?.documentVerified.slice(1)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
@@ -226,33 +128,61 @@ export default function InstructorsPage() {
                                 </TabsList>
                                 <TabsContent value="documents" className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {selectedInstructor.documents.map((doc) => (
-                                            <motion.div
-                                                key={doc.id}
-                                                className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ duration: 0.3 }}
-                                            >
-                                                <div className="aspect-[4/3] bg-muted relative group">
-                                                    <img
-                                                        src={doc.url || "/placeholder.svg"}
-                                                        alt={doc.name}
-                                                        className="w-full h-full object-cover"
-                                                    />
+
+                                        <motion.div
+                                            className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                        >
+                                            <div className="aspect-[4/3] bg-muted relative group">
+                                                <img
+                                                    src={selectedInstructor.instructor.certificate || "/placeholder.svg"}
+                                                    alt={"Certificate"}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <div className="p-4">
+                                                <h3 className="font-medium">{"Certifcate"}</h3>
+                                                <p className="text-sm text-muted-foreground capitalize">Certificate Document</p>
+                                                <div className="mt-4 flex space-x-2">
+                                                    <Button variant="outline" size="sm" className="flex-1" onClick={() => {
+                                                        window.open(selectedInstructor.instructor.certificate || "/placeholder.svg", "_blank");
+                                                    }}>
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        View
+                                                    </Button>
                                                 </div>
-                                                <div className="p-4">
-                                                    <h3 className="font-medium">{doc.name}</h3>
-                                                    <p className="text-sm text-muted-foreground capitalize">{doc.type} Document</p>
-                                                    <div className="mt-4 flex space-x-2">
-                                                        <Button variant="outline" size="sm" className="flex-1">
-                                                            <Eye className="mr-2 h-4 w-4" />
-                                                            View
-                                                        </Button>
-                                                    </div>
+                                            </div>
+                                        </motion.div>
+
+                                        <motion.div
+                                            className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                        >
+                                            <div className="aspect-[4/3] bg-muted relative group">
+                                                <img
+                                                    src={selectedInstructor.instructor.governmentId || "/placeholder.svg"}
+                                                    alt={"Government ID"}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <div className="p-4">
+                                                <h3 className="font-medium">{"Government Id"}</h3>
+                                                <p className="text-sm text-muted-foreground capitalize">Government Id Document</p>
+                                                <div className="mt-4 flex space-x-2">
+                                                    <Button variant="outline" size="sm" className="flex-1" onClick={() => {
+                                                        window.open(selectedInstructor.instructor.governmentId || "/placeholder.svg", "_blank");
+                                                    }}>
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        View
+                                                    </Button>
                                                 </div>
-                                            </motion.div>
-                                        ))}
+                                            </div>
+                                        </motion.div>
+
                                     </div>
                                 </TabsContent>
                                 <TabsContent value="details">
@@ -269,10 +199,6 @@ export default function InstructorsPage() {
                                                         <p className="text-sm font-medium">Email Address</p>
                                                         <p>{selectedInstructor.email}</p>
                                                     </div>
-                                                    <div>
-                                                        <p className="text-sm font-medium">Phone Number</p>
-                                                        <p>{selectedInstructor.phone}</p>
-                                                    </div>
                                                 </div>
                                             </div>
                                             <div>
@@ -281,30 +207,22 @@ export default function InstructorsPage() {
                                                     <div>
                                                         <p className="text-sm font-medium">Specialties</p>
                                                         <div className="flex flex-wrap gap-2 mt-1">
-                                                            {selectedInstructor.specialties.map((specialty, index) => (
-                                                                <Badge key={index} variant="secondary">
-                                                                    {specialty}
-                                                                </Badge>
-                                                            ))}
+                                                            {selectedInstructor?.instructor?.adventure?.name}
                                                         </div>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-medium">Experience</p>
-                                                        <p>{selectedInstructor.experience}</p>
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-medium">Verification Status</p>
                                                         <Badge
                                                             variant={
-                                                                selectedInstructor.status === "verified"
+                                                                selectedInstructor.instructor.documentVerified === "verified"
                                                                     ? "default"
-                                                                    : selectedInstructor.status === "pending"
+                                                                    : selectedInstructor.instructor.documentVerified === "pending"
                                                                         ? "outline"
                                                                         : "secondary"
                                                             }
                                                             className="mt-1"
                                                         >
-                                                            {selectedInstructor.status.charAt(0).toUpperCase() + selectedInstructor.status.slice(1)}
+                                                            {selectedInstructor.instructor.documentVerified.charAt(0).toUpperCase() + selectedInstructor.instructor.documentVerified.slice(1)}
                                                         </Badge>
                                                     </div>
                                                 </div>

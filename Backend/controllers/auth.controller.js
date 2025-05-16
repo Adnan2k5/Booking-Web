@@ -42,7 +42,6 @@ const generateAccessAndRefreshTokens = async (user) => {
 }
 
 const registerUser = asyncHandler(async (req, res, next) => {
-    console.log(req.body, "Register User");
     const { name, email, password, role } = req.body;
 
     if ((email?.trim() === "" || !email) || (password?.trim() === "" || !password)) {
@@ -83,9 +82,10 @@ const registerUser = asyncHandler(async (req, res, next) => {
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering the user")
     }
+
     if(role === "instructor") {
         req.user = user;
-        next();
+        return next();
     }
 
     res.status(201).
@@ -129,7 +129,6 @@ const registerInstructor = asyncHandler(async (req, res) => {
     // Save profile image to user
     if (profileImage) {
         req.user.profilePicture = profileImage;
-        await req.user.save();
     }
 
     const instructor = await Instructor.create({
