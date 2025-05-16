@@ -5,6 +5,7 @@ import { verifyJWT } from '../middlewares/auth.middleware.js';
 import {
     getAllInstructors,
     deleteInstructor,
+    changeDocumentStatusById,
 } from '../controllers/instructor.controller.js';
 
 const router = express.Router();
@@ -14,6 +15,8 @@ router.use(verifyJWT);
 
 // Route to get all instructors
 router.get('/', getAllInstructors);
-router.delete('/:id', deleteInstructor);
+router.delete('/:id', deleteInstructor).put('/:id', changeDocumentStatusById);
+
+
 
 export default router;

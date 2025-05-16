@@ -1,4 +1,4 @@
-import { getAllInstructors, deleteInstructor } from "../Api/instructor.api";
+import { getAllInstructors, deleteInstructor, changeDocumentStatusById } from "../Api/instructor.api";
 import { useState, useEffect } from "react";
 
 export function useInstructors() {
@@ -28,7 +28,7 @@ export function useInstructors() {
     };
     useEffect(() => {
         fetchItems();
-    }, []);
+    }, [page]);
 
     const deleteInstructorById = async (id) => {
         setIsLoading(true);
@@ -38,10 +38,33 @@ export function useInstructors() {
             setError(null);
         } catch (err) {
             setError(err);
+            throw err;
         } finally {
             setIsLoading(false);
         }
     }
 
-    return { instructors, isLoading, error, page, setPage, total, limit, deleteInstructorById, totalPages };
+    const changeDocumentStatus = async (id, status) => {
+        setIsLoading(true);
+        try {
+            await changeDocumentStatusById(id, status);
+            setInstructors((prevInstructors) =>
+                prevInstructors.map((instructor) =>
+                    instructor.instructor_id === id ? { ...instructor, instructor : {
+                        ...instructor.instructor,
+                        documentVerified: status
+                    } } : instructor
+                )
+            );
+            fetchItems();
+            setError(null);
+        } catch (err) {
+            setError(err);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    return { instructors, isLoading, error, page, setPage, total, limit, deleteInstructorById, totalPages, changeDocumentStatus };
 }

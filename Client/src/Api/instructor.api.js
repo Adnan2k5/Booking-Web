@@ -39,3 +39,13 @@ export const deleteInstructor = async (id) => {
     throw error;
   }
 }
+
+export const changeDocumentStatusById = async (id, status) => {
+  try {
+    const res = await axiosClient.put(`/api/instructor/${id}`, { status });
+    return res;
+  } catch (error) {
+    console.error("Error changing document status:", error);
+    throw error;
+  }
+}

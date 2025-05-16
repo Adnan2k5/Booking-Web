@@ -18,17 +18,38 @@ import {
 } from "../../../components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
 import { useInstructors } from "../../../hooks/useInstructor"
+import { toast } from "sonner"
 
 export default function InstructorsPage() {
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
     const [selectedInstructor, setSelectedInstructor] = useState(null)
     const [showDocuments, setShowDocuments] = useState(false)
-    const { instructors, isLoading, error, page, setPage, total, limit, deleteInstructorById, totalPages } = useInstructors()
+    const { instructors, isLoading, error, page, setPage, total, limit, deleteInstructorById, totalPages, changeDocumentStatus, setInstructors } = useInstructors()
 
     const handleViewDocuments = (instructor) => {
         setSelectedInstructor(instructor)
         setShowDocuments(true)
+    }
+
+    const handleDocumentStatus = async (status) => {
+        const loading = toast.loading("Changing document status...");
+        try {
+            if (selectedInstructor) {
+                await changeDocumentStatus(selectedInstructor.instructor._id, status)
+                toast.success("Document status changed successfully", {
+                    id: loading,
+                });
+            }
+        }
+        catch (error) {
+            toast.error("Failed to change document status", {
+                id: loading,
+            })
+        } finally {
+            setShowDocuments(false)
+            setSelectedInstructor(null)
+        }
     }
 
     return (
@@ -254,8 +275,8 @@ export default function InstructorsPage() {
                                 </TabsContent>
                             </Tabs>
                             <div className="mt-8 flex justify-end space-x-4 sticky bottom-0 bg-background p-4 border-t">
-                                <Button variant="outline">Reject Documents</Button>
-                                <Button>Approve Documents</Button>
+                                <Button variant="outline" onClick={() => handleDocumentStatus("rejected")}>Reject Documents</Button>
+                                <Button onClick={() => handleDocumentStatus("verified")}>Approve Documents</Button>
                             </div>
                         </div>
                     )}
