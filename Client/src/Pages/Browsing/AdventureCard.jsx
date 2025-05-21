@@ -6,7 +6,6 @@ import { Dialog, DialogContent } from "../../components/ui/dialog"
 
 export const AdventureCard = ({ adventure, formatDate, onBook }) => {
   const [showPreview, setShowPreview] = useState(false)
-  console.log(adventure)
   return (
     <>
       <div className="bg-white rounded-xl shadow-lg overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-xl">
@@ -22,7 +21,6 @@ export const AdventureCard = ({ adventure, formatDate, onBook }) => {
               <span className="text-white font-medium">{adventure.name}</span>
             </div>
           )}
-
           {adventure.previewVideo && (
             <motion.button
               className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-md hover:bg-white"

@@ -44,23 +44,9 @@ export const HotelRegister = () => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
-    const amenitiesList = [
-        "Pool",
-        "Spa",
-        "Restaurant",
-        "Bar",
-        "Gym",
-        "Conference Room",
-        "Free WiFi",
-        "Room Service",
-        "Parking",
-        "Beach Access",
-        "Airport Shuttle",
-        "Concierge",
-        "Pet Friendly",
-        "Laundry Service",
-        "Business Center",
-    ]
+
+    const [customAmenity, setCustomAmenity] = useState("");
+    const [allAmenities, setAllAmenities] = useState([]);
 
     const passValidation = () => {
         if (
@@ -424,20 +410,49 @@ export const HotelRegister = () => {
 
                                 <div className="space-y-2">
                                     <Label>Amenities</Label>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                        {amenitiesList.map((amenity) => (
-                                            <div key={amenity} className="flex items-center space-x-2">
-                                                <Checkbox
-                                                    id={`amenity-${amenity}`}
-                                                    checked={formData.amenities.includes(amenity)}
-                                                    onCheckedChange={() => handleAmenityChange(amenity)}
-                                                />
-                                                <label
-                                                    htmlFor={`amenity-${amenity}`}
-                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                    <div className="flex gap-2 mt-2">
+                                        <input
+                                            type="text"
+                                            value={customAmenity}
+                                            onChange={(e) => setCustomAmenity(e.target.value)}
+                                            placeholder="Add amenity"
+                                            className="border rounded px-2 py-1 flex-1 focus:ring-2 focus:ring-black"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const trimmed = customAmenity.trim();
+                                                if (trimmed && !allAmenities.includes(trimmed)) {
+                                                    setAllAmenities((prev) => [...prev, trimmed]);
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        amenities: [...prev.amenities, trimmed],
+                                                    }));
+                                                    setCustomAmenity("");
+                                                }
+                                            }}
+                                            className="bg-black text-white px-3 py-1 rounded hover:bg-gray-800"
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {allAmenities.map((amenity) => (
+                                            <div key={amenity} className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded">
+                                                <span>{amenity}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setAllAmenities((prev) => prev.filter((a) => a !== amenity));
+                                                        setFormData((prev) => ({
+                                                            ...prev,
+                                                            amenities: prev.amenities.filter((a) => a !== amenity),
+                                                        }));
+                                                    }}
+                                                    className="text-red-500 hover:text-red-700"
                                                 >
-                                                    {amenity}
-                                                </label>
+                                                    <X size={14} />
+                                                </button>
                                             </div>
                                         ))}
                                     </div>
