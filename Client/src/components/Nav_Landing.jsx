@@ -20,6 +20,7 @@ import {
 } from "./ui/dropdown-menu"
 import { Button } from "./ui/button"
 import { Avatar, AvatarFallback } from "./ui/avatar"
+import LanguageSelector from "./LanguageSelector"
 
 export const Nav_Landing = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -101,6 +102,9 @@ export const Nav_Landing = () => {
                                 whileTap={{ scale: 0.95 }}
                             >
                                 {t("mission")}
+                            </motion.li>
+                            <motion.li className="cursor-pointer hover:text-emerald-400 transition-colors">
+                                <LanguageSelector />
                             </motion.li>
                             <li>
                                 {loading ? (

@@ -148,8 +148,8 @@ const LanguageSelector = ({ variant = "default" }) => {
                                     <motion.button
                                         key={language.code}
                                         className={`flex items-center w-full px-4 py-2.5 text-left text-sm ${currentLanguage.code === language.code
-                                                ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                            ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                                             }`}
                                         onClick={() => changeLanguage(language)}
                                         custom={index}
