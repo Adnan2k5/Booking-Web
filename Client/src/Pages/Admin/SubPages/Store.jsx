@@ -57,7 +57,8 @@ export default function ItemsPage() {
 
   const { adventures } = useAdventures();
   const { categories, handleCreateCetegory } = useCategory();
-  const { handleCreateItem, items } = useMyItems();
+  const { handleCreateItem, items, handleEditItem } = useMyItems();
+  const [editItem, setEditItem] = useState(null); // Add this with other useState hooks
 
   // Handle adding a new category from dropdown
   // UI-based add category
@@ -124,18 +125,28 @@ export default function ItemsPage() {
     formData.append("purchase", itemType.buy);
     formData.append("rent", itemType.rent);
 
-    images.forEach((img) => { 
-      formData.append("images", img.file);
+    images.forEach((img) => {
+      if (img.file) {
+        formData.append("images", img.file);
+      } else if (img.url) {
+        formData.append("existingImages", img.url); // For already uploaded images
+      }
     });
 
     try {
-      await handleCreateItem(formData);
-      toast.success("Item posted successfully!");
+      if (editItem) {
+        await handleEditItem(editItem._id, formData);
+        toast.success("Item updated successfully!");
+      } else {
+        await handleCreateItem(formData);
+        toast.success("Item posted successfully!");
+      }
       reset();
       setImages([]);
       setShowAddItem(false);
+      setEditItem(null);
     } catch (error) {
-      toast.error("Failed to post item.");
+      toast.error(editItem ? "Failed to update item." : "Failed to post item.");
     }
   };
 
@@ -205,14 +216,14 @@ export default function ItemsPage() {
                     <TableHead>Category</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Stock</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Adventures</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {!items || items.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center text-muted-foreground">
                         No items found.
                       </TableCell>
                     </TableRow>
@@ -224,28 +235,33 @@ export default function ItemsPage() {
                         <TableCell>${item.price.toFixed(2)}</TableCell>
                         <TableCell>{item.stock}</TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              item.status === "in-stock"
-                                ? "default"
-                                : item.status === "low-stock"
-                                  ? "outline"
-                                  : "secondary"
-                            }
-                          >
-                            {item.status === "in-stock"
-                              ? "In Stock"
-                              : item.status === "low-stock"
-                                ? "Low Stock"
-                                : "Out of Stock"}
-                          </Badge>
+                          {item.adventures && item.adventures.map((adventure) => (
+                            <Badge key={adventure._id} variant="outline" className="mr-1">
+                              {adventure.name}
+                            </Badge>
+                          ))}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end space-x-2">
                             <Button variant="ghost" size="icon">
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => {
+                              setEditItem(item);
+                              setShowAddItem(true);
+                              reset({
+                                name: item.name,
+                                category: item.category,
+                                price: item.price,
+                                stock: item.stock,
+                                description: item.description,
+                                status: item.status,
+                                adventure: item.adventures?.[0]?._id || "none",
+                              });
+                              setSelectedAdventure(item.adventures?.[0]?._id || "");
+                              setItemType({ buy: item.purchase, rent: item.rent });
+                              setImages(item.images ? item.images.map(url => ({ url, file: null })) : []);
+                            }}>
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="icon">
@@ -268,18 +284,6 @@ export default function ItemsPage() {
               <Card key={item.id} className="overflow-hidden">
                 <div className="aspect-square relative">
                   <img src={item.image || "/placeholder.svg"} alt={item.name} className="object-cover w-full h-full" />
-                  <Badge
-                    className="absolute top-2 right-2"
-                    variant={
-                      item.status === "in-stock" ? "default" : item.status === "low-stock" ? "outline" : "secondary"
-                    }
-                  >
-                    {item.status === "in-stock"
-                      ? "In Stock"
-                      : item.status === "low-stock"
-                        ? "Low Stock"
-                        : "Out of Stock"}
-                  </Badge>
                 </div>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">{item.name}</CardTitle>
@@ -294,6 +298,12 @@ export default function ItemsPage() {
                       <span>{item.stock} in stock</span>
                     </div>
                   </div>
+                  {item.adventure && (items.adventures.map((adventure) => (
+                    <Badge variant="outline" className="mt-1">
+                      {adventure.name}
+                    </Badge>
+                  ))
+                  )}
                   <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
                 </CardContent>
                 <CardFooter className="flex justify-between pt-2">
@@ -302,8 +312,23 @@ export default function ItemsPage() {
                     <Button variant="ghost" size="sm">
                       <Eye className="h-4 w-4 mr-1" /> View
                     </Button>
-                    <Button variant="ghost" size="sm">
-                      <Edit className="h-4 w-4 mr-1" /> Edit
+                    <Button variant="ghost" size="icon" onClick={() => {
+                      setEditItem(item);
+                      setShowAddItem(true);
+                      reset({
+                        name: item.name,
+                        category: item.category,
+                        price: item.price,
+                        stock: item.stock,
+                        description: item.description,
+                        status: item.status,
+                        adventure: item.adventures?.[0]?._id || "none",
+                      });
+                      setSelectedAdventure(item.adventures?.[0]?._id || "");
+                      setItemType({ buy: item.purchase, rent: item.rent });
+                      setImages(item.images ? item.images.map(url => ({ url, file: null })) : []);
+                    }}>
+                      <Edit className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardFooter>
@@ -313,12 +338,20 @@ export default function ItemsPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={showAddItem} onOpenChange={setShowAddItem}>
+      <Dialog open={showAddItem} onOpenChange={(open) => {
+        setShowAddItem(open);
+        if (!open) {
+          setEditItem(null);
+          reset();
+          setImages([]);
+        }
+      }}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Add New Item</DialogTitle>
-            <DialogDescription>Add a new product to your inventory.</DialogDescription>
-          </DialogHeader>
+            <DialogTitle>{editItem ? "Edit Item" : "Add New Item"}</DialogTitle>
+            <DialogDescription>
+              {editItem ? "Edit the details of your item." : "Add a new product to your inventory."}
+            </DialogDescription>          </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
@@ -493,11 +526,12 @@ export default function ItemsPage() {
                   setShowAddItem(false)
                   reset()
                   setImages([])
+                  setEditItem(null)
                 }}
               >
                 Cancel
               </Button>
-              <Button type="submit">Add Item</Button>
+              <Button type="submit">{editItem ? "Update Item" : "Add Item"}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

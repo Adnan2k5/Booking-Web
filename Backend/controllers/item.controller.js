@@ -90,72 +90,56 @@ export const createItem = asyncHandler(async (req, res) => {
 
 export const updateItem = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, description, price, category, availableQuantity, location } =
-    req.body;
+  const {
+    name,
+    description,
+    price,
+    stock,
+    category,
+    adventures,
+    purchase,
+    rent,
+  } = req.body;
 
   if (!id) {
     throw new ApiError(400, "Item ID is required");
   }
 
-  const itemExists = await Item.findById(id);
-  if (!itemExists) {
+  const item = await Item.findById(id);
+  if (!item) {
     throw new ApiError(404, "Item not found");
   }
 
-  if (itemExists.owner.toString() !== req.user._id.toString()) {
-    throw new ApiError(403, "You are not authorized to update this item");
-  }
 
-  const updatedFields = {};
+  // Update fields if provided
+  if (name !== undefined) item.name = name;
+  if (description !== undefined) item.description = description;
+  if (price !== undefined) item.price = price;
+  if (stock !== undefined) item.stock = stock;
+  if (category !== undefined) item.category = category;
+  if (adventures !== undefined) item.adventures = adventures;
+  if (purchase !== undefined) item.purchase = purchase;
+  if (rent !== undefined) item.rent = rent;
 
-  if (name !== undefined) updatedFields.name = name;
-  if (description !== undefined) updatedFields.description = description;
-  if (price !== undefined) updatedFields.price = price;
-  if (category !== undefined) updatedFields.category = category;
-  if (req.files.images !== undefined) {
+  // Handle images update
+  if (req.files && req.files.images && req.files.images.length > 0) {
+    // Delete old images from Cloudinary
     await Promise.all(
-      itemExists.images.map(async (image) => {
-        const link = await deleteFromCloudinary(image);
+      item.images.map(async (image) => {
+        await deleteFromCloudinary(image);
       })
     );
-
+    // Upload new images
     const mediasUrl = await Promise.all(
       req.files.images.map(async (image) => {
         const link = await uploadOnCloudinary(image.path);
         return link.url;
       })
     );
-    updatedFields.images = mediasUrl;
-  }
-  if (availableQuantity !== undefined)
-    updatedFields.availableQuantity = availableQuantity;
-  if (location !== undefined) {
-    let geoLocation = location;
-    // Accept GeoJSON object as-is
-    if (
-      typeof location === "object" &&
-      location.type === "Point" &&
-      Array.isArray(location.coordinates) &&
-      location.coordinates.length === 2
-    ) {
-      geoLocation = location;
-    }
-    // Parse string "lat,lng"
-    else if (typeof location === "string" && location.includes(",")) {
-      const [lat, lng] = location.split(",").map(Number);
-      geoLocation = {
-        type: "Point",
-        coordinates: [lng, lat],
-      };
-    }
-    updatedFields.location = geoLocation;
+    item.images = mediasUrl;
   }
 
-  const item = await Item.findByIdAndUpdate(id, updatedFields, { new: true });
-
-  if (!item) {
-    throw new ApiError(404, "Item not found");
-  }
+  await item.save();
 
   res.status(200).json(new ApiResponse(200, "Item updated successfully", item));
 });
