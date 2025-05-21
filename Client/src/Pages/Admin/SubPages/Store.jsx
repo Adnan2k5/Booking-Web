@@ -57,7 +57,7 @@ export default function ItemsPage() {
 
   const { adventures } = useAdventures();
   const { categories, handleCreateCetegory } = useCategory();
-  const { handleCreateItem, items, handleEditItem } = useMyItems();
+  const { handleCreateItem, items, handleEditItem, handleDeleteItem } = useMyItems();
   const [editItem, setEditItem] = useState(null); // Add this with other useState hooks
 
   // Handle adding a new category from dropdown
@@ -264,7 +264,7 @@ export default function ItemsPage() {
                             }}>
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteItem(item._id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
