@@ -28,7 +28,7 @@ const itemSchema = new mongoose.Schema(
                 message: props => `${props.value} is not a valid category`
             }
         },
-        adventure: [
+        adventures: [
             {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Adventure",
@@ -41,15 +41,18 @@ const itemSchema = new mongoose.Schema(
                 required: true,
             },
         ],
-        availableQuantity: {
+        stock: {
             type: Number,
             required: true,
             default: 0,
         },
-        status: {
-            type: String,
-            enum: ["available", "rented", "reserved"],
-            default: "available",
+        rent: {
+            type: Boolean,
+            required: true,
+        },  
+        purchase: {
+            type: Boolean,
+            required: true,
         },
         bookings: [
             {
@@ -66,10 +69,6 @@ const itemSchema = new mongoose.Schema(
         totalReviews: {
             type: Number,
             default: 0,
-        },
-        location: {
-            type: { type: String, enum: ['Point'], required: true },
-            coordinates: { type: [Number], required: true }
         },
     },
     { timestamps: true }

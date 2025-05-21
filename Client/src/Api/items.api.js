@@ -1,6 +1,8 @@
-import axiosClient from '../Middleware/AxiosClient';
+import {axiosClient} from '../AxiosClient/axios';
+
+
 export const fetchAllItems = async ({ search } = {}) => {
-  const res = await axiosClient.get(`/api/item/discover`, {
+  const res = await axiosClient.get(`/api/items/discover`, {
     withCredentials: true,
     params: {
       search: search || 'all',
@@ -10,21 +12,21 @@ export const fetchAllItems = async ({ search } = {}) => {
 };
 
 export const createItems = async (data) => {
-  const res = await axiosClient.post('/api/item/upload', data, {
+  const res = await axiosClient.post('/api/items/upload', data, {
     withCredentials: true,
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 };
 
 export const deleteItem = async (id) => {
-  const res = await axiosClient.delete(`/api/item/${id}`, {
+  const res = await axiosClient.delete(`/api/items/${id}`, {
     withCredentials: true,
   });
   return res;
 };
 
 export const updateItem = async (id, data) => {
-  const res = await axiosClient.put(`/api/item/${id}`, data, {
+  const res = await axiosClient.put(`/api/items/${id}`, data, {
     withCredentials: true,
     headers: { 'Content-Type': 'multipart/form-data' },
   });

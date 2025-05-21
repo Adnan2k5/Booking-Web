@@ -28,92 +28,10 @@ import { Textarea } from "../../../components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
 import { useForm, Controller } from "react-hook-form"
 import { Checkbox } from "../../../components/ui/checkbox"
-import { fetchAllAdventures } from "../../../Api/adventure.api"
-import { useEffect } from "react"
-
-// Mock data for items/products
-const mockItems = [
-  {
-    id: 1,
-    name: "Hiking Backpack",
-    description: "Durable 40L backpack perfect for multi-day hikes",
-    category: "Equipment",
-    price: 129.99,
-    stock: 45,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 2,
-    name: "Climbing Harness",
-    description: "Professional-grade climbing harness with adjustable leg loops",
-    category: "Safety Gear",
-    price: 89.99,
-    stock: 32,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 3,
-    name: "Waterproof Tent",
-    description: "3-person tent with rainfly and waterproof floor",
-    category: "Equipment",
-    price: 199.99,
-    stock: 18,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 4,
-    name: "Trekking Poles",
-    description: "Adjustable aluminum trekking poles with cork grips",
-    category: "Equipment",
-    price: 49.99,
-    stock: 60,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 5,
-    name: "Adventure First Aid Kit",
-    description: "Comprehensive first aid kit for outdoor adventures",
-    category: "Safety Gear",
-    price: 34.99,
-    stock: 75,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 6,
-    name: "Insulated Water Bottle",
-    description: "1L vacuum insulated stainless steel water bottle",
-    category: "Accessories",
-    price: 29.99,
-    stock: 0,
-    status: "out-of-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 7,
-    name: "Headlamp",
-    description: "300-lumen LED headlamp with adjustable brightness",
-    category: "Equipment",
-    price: 45.99,
-    stock: 28,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 8,
-    name: "Climbing Rope",
-    description: "60m dynamic climbing rope with middle mark",
-    category: "Safety Gear",
-    price: 159.99,
-    stock: 12,
-    status: "low-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-]
+import { useAdventures } from "../../../hooks/useAdventure"
+import { useCategory } from "../../../hooks/useCategory"
+import { toast } from "sonner"
+import { useMyItems } from "../../../hooks/useMyItems"
 
 export default function ItemsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -130,24 +48,46 @@ export default function ItemsPage() {
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [showAddItem, setShowAddItem] = useState(false)
   const [images, setImages] = useState([])
-  const [adventures, setAdventures] = useState([])
   const [selectedAdventure, setSelectedAdventure] = useState("")
   const [itemType, setItemType] = useState({ rent: false, buy: true })
+  // State for add category dialog
+  const [showAddCategory, setShowAddCategory] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState("")
+  const [pendingCategoryOnAdd, setPendingCategoryOnAdd] = useState(null)
 
-  useEffect(() => {
-    const getAdventures = async () => {
-      try {
-        const response = await fetchAllAdventures()
-        if (response.data && response.data.adventures) {
-          setAdventures(response.data.adventures)
-        }
-      } catch (error) {
-        console.error("Error fetching adventures:", error)
+  const { adventures } = useAdventures();
+  const { categories, handleCreateCetegory } = useCategory();
+  const { handleCreateItem, items, handleEditItem, handleDeleteItem } = useMyItems();
+  const [editItem, setEditItem] = useState(null); // Add this with other useState hooks
+
+  // Handle adding a new category from dropdown
+  // UI-based add category
+  const handleCategoryChange = (value, onChange) => {
+    if (value === "new") {
+      setShowAddCategory(true);
+      setPendingCategoryOnAdd(() => onChange);
+    } else {
+      onChange(value);
+    }
+  };
+
+  const handleAddCategorySubmit = async (e) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    try {
+      const created = await handleCreateCetegory(newCategoryName.trim());
+      if (created && created._id && pendingCategoryOnAdd) {
+        pendingCategoryOnAdd(created._id);
       }
     }
+    catch (error) {
+      toast.error("Error creating category");
+    }
+    setShowAddCategory(false);
+    setNewCategoryName("");
+    setPendingCategoryOnAdd(null);
+  };
 
-    getAdventures()
-  }, [])
 
   const handleImageUpload = (event) => {
     const files = Array.from(event.target.files)
@@ -168,29 +108,48 @@ export default function ItemsPage() {
     setImages((prev) => prev.filter((_, i) => i !== index))
   }
 
-  // Filter items based on search term and category
-  const filteredItems = mockItems.filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = categoryFilter === "all" || item.category.toLowerCase() === categoryFilter.toLowerCase()
-    return matchesSearch && matchesCategory
-  })
+  const onSubmit = async (data) => {
+    if (images.length === 0) {
+      toast.error("Please upload at least one image.");
+      return;
+    }
 
-  const onSubmit = (data) => {
-    console.log("Form data:", data)
-    console.log("Images:", images)
-    console.log("Selected Adventure:", selectedAdventure)
-    console.log("Item Type:", itemType)
-    // Here you would typically send the data to your API
-    setShowAddItem(false)
-    reset()
-    setImages([])
-  }
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("description", data.description);
+    formData.append("price", data.price);
+    formData.append("stock", data.stock);
+    formData.append("category", data.category);
+    formData.append("status", data.status);
+    if (selectedAdventure) formData.append("adventures", selectedAdventure);
+    formData.append("purchase", itemType.buy);
+    formData.append("rent", itemType.rent);
 
-  // Get unique categories for filter dropdown
-  const categories = [...new Set(mockItems.map((item) => item.category))]
+    images.forEach((img) => {
+      if (img.file) {
+        formData.append("images", img.file);
+      } else if (img.url) {
+        formData.append("existingImages", img.url); // For already uploaded images
+      }
+    });
+
+    try {
+      if (editItem) {
+        await handleEditItem(editItem._id, formData);
+        toast.success("Item updated successfully!");
+      } else {
+        await handleCreateItem(formData);
+        toast.success("Item posted successfully!");
+      }
+      reset();
+      setImages([]);
+      setShowAddItem(false);
+      setEditItem(null);
+    } catch (error) {
+      toast.error(editItem ? "Failed to update item." : "Failed to post item.");
+    }
+  };
+
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-6">
@@ -234,13 +193,12 @@ export default function ItemsPage() {
               <DropdownMenuContent align="end" className="w-[200px]">
                 <DropdownMenuItem onClick={() => setCategoryFilter("all")}>All Categories</DropdownMenuItem>
                 {categories.map((category) => (
-                  <DropdownMenuItem key={category} onClick={() => setCategoryFilter(category)}>
-                    {category}
+                  <DropdownMenuItem key={category._id} onClick={() => setCategoryFilter(category.name)}>
+                    {category.name}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-
             <Button variant="outline" size="sm">
               <Download className="mr-2 h-4 w-4" />
               Export
@@ -258,50 +216,55 @@ export default function ItemsPage() {
                     <TableHead>Category</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Stock</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Adventures</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredItems.length === 0 ? (
+                  {!items || items.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center text-muted-foreground">
                         No items found.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredItems.map((item) => (
+                    items.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell>{item.category}</TableCell>
                         <TableCell>${item.price.toFixed(2)}</TableCell>
                         <TableCell>{item.stock}</TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              item.status === "in-stock"
-                                ? "default"
-                                : item.status === "low-stock"
-                                  ? "outline"
-                                  : "secondary"
-                            }
-                          >
-                            {item.status === "in-stock"
-                              ? "In Stock"
-                              : item.status === "low-stock"
-                                ? "Low Stock"
-                                : "Out of Stock"}
-                          </Badge>
+                          {item.adventures && item.adventures.map((adventure) => (
+                            <Badge key={adventure._id} variant="outline" className="mr-1">
+                              {adventure.name}
+                            </Badge>
+                          ))}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end space-x-2">
                             <Button variant="ghost" size="icon">
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => {
+                              setEditItem(item);
+                              setShowAddItem(true);
+                              reset({
+                                name: item.name,
+                                category: item.category,
+                                price: item.price,
+                                stock: item.stock,
+                                description: item.description,
+                                status: item.status,
+                                adventure: item.adventures?.[0]?._id || "none",
+                              });
+                              setSelectedAdventure(item.adventures?.[0]?._id || "");
+                              setItemType({ buy: item.purchase, rent: item.rent });
+                              setImages(item.images ? item.images.map(url => ({ url, file: null })) : []);
+                            }}>
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteItem(item._id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -317,22 +280,10 @@ export default function ItemsPage() {
 
         <TabsContent value="grid" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredItems.map((item) => (
+            {items && items.map((item) => (
               <Card key={item.id} className="overflow-hidden">
                 <div className="aspect-square relative">
                   <img src={item.image || "/placeholder.svg"} alt={item.name} className="object-cover w-full h-full" />
-                  <Badge
-                    className="absolute top-2 right-2"
-                    variant={
-                      item.status === "in-stock" ? "default" : item.status === "low-stock" ? "outline" : "secondary"
-                    }
-                  >
-                    {item.status === "in-stock"
-                      ? "In Stock"
-                      : item.status === "low-stock"
-                        ? "Low Stock"
-                        : "Out of Stock"}
-                  </Badge>
                 </div>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">{item.name}</CardTitle>
@@ -347,6 +298,12 @@ export default function ItemsPage() {
                       <span>{item.stock} in stock</span>
                     </div>
                   </div>
+                  {item.adventure && (items.adventures.map((adventure) => (
+                    <Badge variant="outline" className="mt-1">
+                      {adventure.name}
+                    </Badge>
+                  ))
+                  )}
                   <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
                 </CardContent>
                 <CardFooter className="flex justify-between pt-2">
@@ -355,8 +312,23 @@ export default function ItemsPage() {
                     <Button variant="ghost" size="sm">
                       <Eye className="h-4 w-4 mr-1" /> View
                     </Button>
-                    <Button variant="ghost" size="sm">
-                      <Edit className="h-4 w-4 mr-1" /> Edit
+                    <Button variant="ghost" size="icon" onClick={() => {
+                      setEditItem(item);
+                      setShowAddItem(true);
+                      reset({
+                        name: item.name,
+                        category: item.category,
+                        price: item.price,
+                        stock: item.stock,
+                        description: item.description,
+                        status: item.status,
+                        adventure: item.adventures?.[0]?._id || "none",
+                      });
+                      setSelectedAdventure(item.adventures?.[0]?._id || "");
+                      setItemType({ buy: item.purchase, rent: item.rent });
+                      setImages(item.images ? item.images.map(url => ({ url, file: null })) : []);
+                    }}>
+                      <Edit className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardFooter>
@@ -366,12 +338,20 @@ export default function ItemsPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={showAddItem} onOpenChange={setShowAddItem}>
+      <Dialog open={showAddItem} onOpenChange={(open) => {
+        setShowAddItem(open);
+        if (!open) {
+          setEditItem(null);
+          reset();
+          setImages([]);
+        }
+      }}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Add New Item</DialogTitle>
-            <DialogDescription>Add a new product to your inventory.</DialogDescription>
-          </DialogHeader>
+            <DialogTitle>{editItem ? "Edit Item" : "Add New Item"}</DialogTitle>
+            <DialogDescription>
+              {editItem ? "Edit the details of your item." : "Add a new product to your inventory."}
+            </DialogDescription>          </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
@@ -386,14 +366,17 @@ export default function ItemsPage() {
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={(value) => handleCategoryChange(value, field.onChange)}
+                        value={field.value}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
                           {categories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
+                            <SelectItem key={category._id} value={category.name}>
+                              {category.name}
                             </SelectItem>
                           ))}
                           <SelectItem value="new">Add New Category</SelectItem>
@@ -401,6 +384,31 @@ export default function ItemsPage() {
                       </Select>
                     )}
                   />
+                  {/* Add Category Dialog */}
+                  <Dialog open={showAddCategory} onOpenChange={setShowAddCategory}>
+                    <DialogContent className="sm:max-w-[400px]">
+                      <DialogHeader>
+                        <DialogTitle>Add New Category</DialogTitle>
+                        <DialogDescription>Enter a name for the new category.</DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleAddCategorySubmit}>
+                        <div className="space-y-2 py-2">
+                          <Label htmlFor="new-category-name">Category Name</Label>
+                          <Input
+                            id="new-category-name"
+                            value={newCategoryName}
+                            onChange={e => setNewCategoryName(e.target.value)}
+                            placeholder="Enter category name"
+                            autoFocus
+                          />
+                        </div>
+                        <DialogFooter>
+                          <Button type="button" variant="outline" onClick={() => { setShowAddCategory(false); setNewCategoryName(""); setPendingCategoryOnAdd(null); }}>Cancel</Button>
+                          <Button type="submit" disabled={!newCategoryName.trim()}>Add</Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -518,11 +526,12 @@ export default function ItemsPage() {
                   setShowAddItem(false)
                   reset()
                   setImages([])
+                  setEditItem(null)
                 }}
               >
                 Cancel
               </Button>
-              <Button type="submit">Add Item</Button>
+              <Button type="submit">{editItem ? "Update Item" : "Add Item"}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
