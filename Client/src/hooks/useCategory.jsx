@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getCategories } from "../Api/category.api";
+import { getCategories, createCategory } from "../Api/category.api";
 
 export function useCategory() {
     const [categories, setCategories] = useState([]);
@@ -20,6 +20,16 @@ export function useCategory() {
         fetchCategories();
     }, []);
 
+    const handleCreateCetegory = async (category) => {
+        try {
+            const res = await createCategory(category);
+            setCategories((prev) => [...prev, res.data.message]);
+        } catch (error) {
+            console.error("Error creating category:", error);
+            throw error;
+        }
+    }
 
-    return { categories, loading };
+
+    return { categories, loading, handleCreateCetegory };
 }

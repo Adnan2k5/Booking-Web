@@ -28,92 +28,9 @@ import { Textarea } from "../../../components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
 import { useForm, Controller } from "react-hook-form"
 import { Checkbox } from "../../../components/ui/checkbox"
-import { fetchAllAdventures } from "../../../Api/adventure.api"
-import { useEffect } from "react"
-
-// Mock data for items/products
-const mockItems = [
-  {
-    id: 1,
-    name: "Hiking Backpack",
-    description: "Durable 40L backpack perfect for multi-day hikes",
-    category: "Equipment",
-    price: 129.99,
-    stock: 45,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 2,
-    name: "Climbing Harness",
-    description: "Professional-grade climbing harness with adjustable leg loops",
-    category: "Safety Gear",
-    price: 89.99,
-    stock: 32,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 3,
-    name: "Waterproof Tent",
-    description: "3-person tent with rainfly and waterproof floor",
-    category: "Equipment",
-    price: 199.99,
-    stock: 18,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 4,
-    name: "Trekking Poles",
-    description: "Adjustable aluminum trekking poles with cork grips",
-    category: "Equipment",
-    price: 49.99,
-    stock: 60,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 5,
-    name: "Adventure First Aid Kit",
-    description: "Comprehensive first aid kit for outdoor adventures",
-    category: "Safety Gear",
-    price: 34.99,
-    stock: 75,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 6,
-    name: "Insulated Water Bottle",
-    description: "1L vacuum insulated stainless steel water bottle",
-    category: "Accessories",
-    price: 29.99,
-    stock: 0,
-    status: "out-of-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 7,
-    name: "Headlamp",
-    description: "300-lumen LED headlamp with adjustable brightness",
-    category: "Equipment",
-    price: 45.99,
-    stock: 28,
-    status: "in-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 8,
-    name: "Climbing Rope",
-    description: "60m dynamic climbing rope with middle mark",
-    category: "Safety Gear",
-    price: 159.99,
-    stock: 12,
-    status: "low-stock",
-    image: "/placeholder.svg?height=200&width=200",
-  },
-]
+import { useAdventures } from "../../../hooks/useAdventure"
+import { useCategory } from "../../../hooks/useCategory"
+import { toast } from "sonner"
 
 export default function ItemsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -130,24 +47,44 @@ export default function ItemsPage() {
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [showAddItem, setShowAddItem] = useState(false)
   const [images, setImages] = useState([])
-  const [adventures, setAdventures] = useState([])
   const [selectedAdventure, setSelectedAdventure] = useState("")
   const [itemType, setItemType] = useState({ rent: false, buy: true })
+  // State for add category dialog
+  const [showAddCategory, setShowAddCategory] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState("")
+  const [pendingCategoryOnAdd, setPendingCategoryOnAdd] = useState(null)
 
-  useEffect(() => {
-    const getAdventures = async () => {
-      try {
-        const response = await fetchAllAdventures()
-        if (response.data && response.data.adventures) {
-          setAdventures(response.data.adventures)
-        }
-      } catch (error) {
-        console.error("Error fetching adventures:", error)
-      }
+  const { adventures } = useAdventures();
+  const { categories, handleCreateCetegory } = useCategory();
+
+  // Handle adding a new category from dropdown
+  // UI-based add category
+  const handleCategoryChange = (value, onChange) => {
+    if (value === "new") {
+      setShowAddCategory(true);
+      setPendingCategoryOnAdd(() => onChange);
+    } else {
+      onChange(value);
     }
+  };
 
-    getAdventures()
-  }, [])
+  const handleAddCategorySubmit = async (e) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    try {
+        const created = await handleCreateCetegory(newCategoryName.trim());
+        if (created && created._id && pendingCategoryOnAdd) {
+          pendingCategoryOnAdd(created._id);
+        }
+    }
+    catch (error) {
+      toast.error("Error creating category");
+    }
+    setShowAddCategory(false);
+    setNewCategoryName("");
+    setPendingCategoryOnAdd(null);
+  };
+
 
   const handleImageUpload = (event) => {
     const files = Array.from(event.target.files)
@@ -167,6 +104,8 @@ export default function ItemsPage() {
   const handleRemoveImage = (index) => {
     setImages((prev) => prev.filter((_, i) => i !== index))
   }
+
+  const mockItems = []
 
   // Filter items based on search term and category
   const filteredItems = mockItems.filter((item) => {
@@ -189,8 +128,6 @@ export default function ItemsPage() {
     setImages([])
   }
 
-  // Get unique categories for filter dropdown
-  const categories = [...new Set(mockItems.map((item) => item.category))]
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-6">
@@ -234,13 +171,12 @@ export default function ItemsPage() {
               <DropdownMenuContent align="end" className="w-[200px]">
                 <DropdownMenuItem onClick={() => setCategoryFilter("all")}>All Categories</DropdownMenuItem>
                 {categories.map((category) => (
-                  <DropdownMenuItem key={category} onClick={() => setCategoryFilter(category)}>
-                    {category}
+                  <DropdownMenuItem key={category._id} onClick={() => setCategoryFilter(category.name)}>
+                    {category.name}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-
             <Button variant="outline" size="sm">
               <Download className="mr-2 h-4 w-4" />
               Export
@@ -386,14 +322,17 @@ export default function ItemsPage() {
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={(value) => handleCategoryChange(value, field.onChange)}
+                        value={field.value}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
                           {categories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
+                            <SelectItem key={category._id} value={category._id}>
+                              {category.name}
                             </SelectItem>
                           ))}
                           <SelectItem value="new">Add New Category</SelectItem>
@@ -401,6 +340,31 @@ export default function ItemsPage() {
                       </Select>
                     )}
                   />
+                  {/* Add Category Dialog */}
+                  <Dialog open={showAddCategory} onOpenChange={setShowAddCategory}>
+                    <DialogContent className="sm:max-w-[400px]">
+                      <DialogHeader>
+                        <DialogTitle>Add New Category</DialogTitle>
+                        <DialogDescription>Enter a name for the new category.</DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleAddCategorySubmit}>
+                        <div className="space-y-2 py-2">
+                          <Label htmlFor="new-category-name">Category Name</Label>
+                          <Input
+                            id="new-category-name"
+                            value={newCategoryName}
+                            onChange={e => setNewCategoryName(e.target.value)}
+                            placeholder="Enter category name"
+                            autoFocus
+                          />
+                        </div>
+                        <DialogFooter>
+                          <Button type="button" variant="outline" onClick={() => { setShowAddCategory(false); setNewCategoryName(""); setPendingCategoryOnAdd(null); }}>Cancel</Button>
+                          <Button type="submit" disabled={!newCategoryName.trim()}>Add</Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
