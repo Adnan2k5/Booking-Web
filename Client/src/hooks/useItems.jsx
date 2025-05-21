@@ -23,5 +23,6 @@ export function useBrowse() {
         fetchItems();
     }, [filters]);
 
+
     return { items, isLoading, error, filters, setFilters };
 }

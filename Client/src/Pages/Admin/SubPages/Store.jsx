@@ -31,6 +31,7 @@ import { Checkbox } from "../../../components/ui/checkbox"
 import { useAdventures } from "../../../hooks/useAdventure"
 import { useCategory } from "../../../hooks/useCategory"
 import { toast } from "sonner"
+import { useMyItems } from "../../../hooks/useMyItems"
 
 export default function ItemsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -56,6 +57,7 @@ export default function ItemsPage() {
 
   const { adventures } = useAdventures();
   const { categories, handleCreateCetegory } = useCategory();
+  const { handleCreateItem, items } = useMyItems();
 
   // Handle adding a new category from dropdown
   // UI-based add category
@@ -72,10 +74,10 @@ export default function ItemsPage() {
     e.preventDefault();
     if (!newCategoryName.trim()) return;
     try {
-        const created = await handleCreateCetegory(newCategoryName.trim());
-        if (created && created._id && pendingCategoryOnAdd) {
-          pendingCategoryOnAdd(created._id);
-        }
+      const created = await handleCreateCetegory(newCategoryName.trim());
+      if (created && created._id && pendingCategoryOnAdd) {
+        pendingCategoryOnAdd(created._id);
+      }
     }
     catch (error) {
       toast.error("Error creating category");
@@ -105,28 +107,37 @@ export default function ItemsPage() {
     setImages((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const mockItems = []
+  const onSubmit = async (data) => {
+    if (images.length === 0) {
+      toast.error("Please upload at least one image.");
+      return;
+    }
 
-  // Filter items based on search term and category
-  const filteredItems = mockItems.filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = categoryFilter === "all" || item.category.toLowerCase() === categoryFilter.toLowerCase()
-    return matchesSearch && matchesCategory
-  })
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("description", data.description);
+    formData.append("price", data.price);
+    formData.append("stock", data.stock);
+    formData.append("category", data.category);
+    formData.append("status", data.status);
+    if (selectedAdventure) formData.append("adventures", selectedAdventure);
+    formData.append("purchase", itemType.buy);
+    formData.append("rent", itemType.rent);
 
-  const onSubmit = (data) => {
-    console.log("Form data:", data)
-    console.log("Images:", images)
-    console.log("Selected Adventure:", selectedAdventure)
-    console.log("Item Type:", itemType)
-    // Here you would typically send the data to your API
-    setShowAddItem(false)
-    reset()
-    setImages([])
-  }
+    images.forEach((img) => { 
+      formData.append("images", img.file);
+    });
+
+    try {
+      await handleCreateItem(formData);
+      toast.success("Item posted successfully!");
+      reset();
+      setImages([]);
+      setShowAddItem(false);
+    } catch (error) {
+      toast.error("Failed to post item.");
+    }
+  };
 
 
   return (
@@ -199,14 +210,14 @@ export default function ItemsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredItems.length === 0 ? (
+                  {!items || items.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-muted-foreground">
                         No items found.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredItems.map((item) => (
+                    items.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell>{item.category}</TableCell>
@@ -253,7 +264,7 @@ export default function ItemsPage() {
 
         <TabsContent value="grid" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredItems.map((item) => (
+            {items && items.map((item) => (
               <Card key={item.id} className="overflow-hidden">
                 <div className="aspect-square relative">
                   <img src={item.image || "/placeholder.svg"} alt={item.name} className="object-cover w-full h-full" />
@@ -331,7 +342,7 @@ export default function ItemsPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {categories.map((category) => (
-                            <SelectItem key={category._id} value={category._id}>
+                            <SelectItem key={category._id} value={category.name}>
                               {category.name}
                             </SelectItem>
                           ))}

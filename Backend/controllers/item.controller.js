@@ -41,55 +41,51 @@ export const createItem = asyncHandler(async (req, res) => {
     name,
     description,
     price,
+    stock,
     category,
-    availableQuantity,
+    adventures,
+    purchase,
+    rent,
   } = req.body;
 
-  // if (
-  //   !name ||
-  //   !description ||
-  //   !price ||
-  //   !category ||
-  //   !availableQuantity ||
-  //   !location
-  // ) {
-  //   throw new ApiError(400, "All fields are required");
-  // }
+  if (
+    !name ||
+    !description ||
+    !price ||
+    !category ||
+    !stock || !adventures ||
+    !purchase || !rent
+  ) {
+    throw new ApiError(400, "All fields are required");
+  }
 
-  // if (!req.files || !req.files.images || req.files.images.length === 0) {
-  //   throw new ApiError(400, "Image is required");
-  // }
+  if (!req.files || !req.files.images || req.files.images.length === 0) {
+    throw new ApiError(400, "Image is required");
+  }
 
-  // const mediasUrl = await Promise.all(
-  //   req.files.images.map(async (image) => {
-  //     const link = await uploadOnCloudinary(image.path);
-  //     return link.url;
-  //   })
-  // );
+  const mediasUrl = await Promise.all(
+    req.files.images.map(async (image) => {
+      const link = await uploadOnCloudinary(image.path);
+      return link.url;
+    })
+  );
 
-  // const { lat, lng } = await getLatLongFromAddress(location);
+  await Item.create({
+    name,
+    description,
+    price,
+    stock,
+    category,
+    adventures,
+    purchase,
+    rent,
+    images: mediasUrl,
+    owner: req.user._id,
+  });
+  
 
-  // if (!lat || !lng) {
-  //   throw new ApiError(400, "Invalid location provided");
-  // }
-
-  // const item = await Item.create({
-  //   name,
-  //   description,
-  //   price,
-  //   category,
-  //   images: mediasUrl,
-  //   status: "available",
-  //   bookings: [],
-  //   availableQuantity,
-  //   location: {
-  //     type: "Point",
-  //     coordinates: [lng, lat],
-  //   },
-  //   owner: req.user._id,
-  // });
-
-  // res.status(201).json(new ApiResponse(201, "Item created successfully", item));
+  res.status(201).json(
+    new ApiResponse(201, "Item created successfully", {}));
 });
 
 export const updateItem = asyncHandler(async (req, res) => {
@@ -193,7 +189,10 @@ export const getAllItems = asyncHandler(async (req, res) => {
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  const items = await Item.find({}).populate("adventure", "name").skip(skip).limit(parseInt(limit));
+  const items = await Item.find({})
+    .populate("adventures", "name")
+    .skip(skip)
+    .limit(parseInt(limit));
 
   const total = await Item.countDocuments({});
 
