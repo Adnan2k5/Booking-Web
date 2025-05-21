@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAllItems} from "../Api/item.api";
-import { createItems, updateItem } from "../Api/items.api";
+import { createItems, updateItem, deleteItem } from "../Api/items.api";
 
 export function useMyItems() {
     const [items, setItems] = useState([]);
@@ -46,5 +46,15 @@ export function useMyItems() {
         }
     }
 
-    return { items, isLoading, error, setPage, setLimit, page, limit, handleCreateItem, handleEditItem };
+    const handleDeleteItem = async (itemId) => {
+        try {
+            const res = await deleteItem(itemId);
+            await fetchItems();
+        } catch (error) {
+            console.error("Error deleting item:", error);
+            throw error;
+        }
+    }
+
+    return { items, isLoading, error, setPage, setLimit, page, limit, handleCreateItem, handleEditItem, handleDeleteItem };
 }

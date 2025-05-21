@@ -155,9 +155,6 @@ export const deleteItem = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Item not found");
   }
 
-  if (item.owner.toString() !== req.user._id.toString()) {
-    throw new ApiError(403, "You are not authorized to delete this item");
-  }
 
   await Promise.all(
     item.images.map(async (image) => {
