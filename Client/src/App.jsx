@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { lazy, Suspense } from "react"
 import { Toaster } from "sonner"
-import Booking from "./Pages/Booking"
+import Booking from "./Pages/BookingSteps/Booking"
 import { ResetPass } from "./Pages/ResetPass"
 import { Loader } from "./components/Loader"
 import { AuthProvider } from "./Pages/AuthProvider"
@@ -29,7 +29,7 @@ import LocationsPage from "./Pages/Admin/SubPages/Location"
 // Lazy loaded components
 const LoginPage = lazy(() => import("./Pages/LoginPage"))
 const LandingPage = lazy(() => import("./Pages/LandingPage"))
-const BrowsingPage = lazy(() => import("./Pages/BrowsingPage"))
+const BrowsingPage = lazy(() => import("./Pages/Browsing/BrowsingPage"))
 const Shop = lazy(() => import("./Pages/Shop"))
 const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
 

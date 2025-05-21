@@ -18,7 +18,8 @@ export default function LoginOptionsPage() {
             title: "Explorer",
             description: t("joinAsExplorer"),
             image: "/src/assets/scubadiving-min.jpg",
-            path: "/login",
+            path1: "/login",
+            path2: "/login",
             color: "from-emerald-500 to-teal-600"
         },
         {
@@ -26,7 +27,8 @@ export default function LoginOptionsPage() {
             title: "Instructor",
             description: t("joinAsInstructor"),
             image: "/src/assets/face.jpeg",
-            path: "/instructor/register",
+            path1: "/instructor/register",
+            path2: "/login",
             color: "from-blue-500 to-indigo-600"
         },
         {
@@ -35,7 +37,8 @@ export default function LoginOptionsPage() {
             description: t("joinAsHotel"),
             image: "/src/assets/login.jpg",
             color: "from-amber-500 to-orange-600",
-            path: "/hotel/register"
+            path1: "/hotel/register",
+            path2: "/login",
         }
     ]
 
@@ -93,7 +96,6 @@ export default function LoginOptionsPage() {
                                 }}
                                 onHoverStart={() => setHoveredCard(card.id)}
                                 onHoverEnd={() => setHoveredCard(null)}
-                                onClick={() => navigate(card.path)}
                             >
                                 <div className="absolute inset-0 overflow-hidden rounded-2xl transform-style-3d rotate-y-[-15deg] shadow-2xl">
                                     {/* Background Image */}
@@ -101,25 +103,35 @@ export default function LoginOptionsPage() {
                                         className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
                                         style={{ backgroundImage: `url(${card.image})` }}
                                     />
-
-                                    {/* Overlay Gradient */}
                                     <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-80`} />
-
-                                    {/* Content */}
                                     <div className="absolute inset-0 flex flex-col justify-end p-8 text-white">
                                         <h3 className="text-3xl font-bold mb-2">{card.title}</h3>
                                         <p className="text-white/90 mb-6">{card.description}</p>
+                                        <div className="flex items-center justify-between">
+                                            <motion.div
+                                                onClick={() => { navigate(card.path2) }}
+                                                className="flex items-center text-sm font-semibold"
+                                                animate={{
+                                                    x: hoveredCard === card.id ? 10 : 0
+                                                }}
+                                                transition={{ duration: 0.2 }}
+                                            >
+                                                Sign In
+                                                <ArrowRight className="ml-2 h-4 w-4" />
+                                            </motion.div>
+                                            <motion.div
+                                                onClick={() => { navigate(card.path1) }}
+                                                className="flex items-center text-sm font-semibold"
+                                                animate={{
+                                                    x: hoveredCard === card.id ? 10 : 0
+                                                }}
+                                                transition={{ duration: 0.2 }}
+                                            >
+                                                Sign Up
+                                                <ArrowRight className="ml-2 h-4 w-4" />
+                                            </motion.div>
+                                        </div>
 
-                                        <motion.div
-                                            className="flex items-center text-sm font-semibold"
-                                            animate={{
-                                                x: hoveredCard === card.id ? 10 : 0
-                                            }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            {t("getStarted")}
-                                            <ArrowRight className="ml-2 h-4 w-4" />
-                                        </motion.div>
                                     </div>
                                 </div>
                             </motion.div>
