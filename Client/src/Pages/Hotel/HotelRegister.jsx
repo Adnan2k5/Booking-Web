@@ -10,12 +10,9 @@ import { InputOTPSlot, InputOTP, InputOTPGroup } from "../../components/ui/input
 import { toast } from "sonner"
 import { useDispatch } from "react-redux"
 import { Textarea } from "../../components/ui/textarea"
-import { VerifyUser } from "../../Auth/UserAuth"
-import { axiosClient } from "../../AxiosClient/axios"
 import { useNavigate } from "react-router-dom"
 import { X, Upload, FileText, Building, MapPin, Phone, Mail, User, ImageIcon } from "lucide-react"
-import { Checkbox } from "../../components/ui/checkbox"
-
+import { registerHotel, verify } from "../../Api/hotel.api.js"
 export const HotelRegister = () => {
     const [formData, setFormData] = useState({
         name: "",
@@ -41,7 +38,6 @@ export const HotelRegister = () => {
     const [otpDialog, setOtpDialog] = useState(false)
     const [otp, setOtp] = useState("")
     const [loading, setLoading] = useState(false)
-    const dispatch = useDispatch()
     const navigate = useNavigate()
 
 
@@ -75,22 +71,6 @@ export const HotelRegister = () => {
         }))
     }
 
-    const handleAmenityChange = (amenity) => {
-        setFormData((prev) => {
-            const currentAmenities = [...prev.amenities]
-            if (currentAmenities.includes(amenity)) {
-                return {
-                    ...prev,
-                    amenities: currentAmenities.filter((item) => item !== amenity),
-                }
-            } else {
-                return {
-                    ...prev,
-                    amenities: [...currentAmenities, amenity],
-                }
-            }
-        })
-    }
 
     const handleProfileImageChange = (e) => {
         const file = e.target.files[0]
@@ -137,14 +117,124 @@ export const HotelRegister = () => {
         }))
     }
 
+    // Refactored: Only send email to trigger OTP on submit, send full data after OTP
     const handleSubmit = async (e) => {
-        e.preventDefault()
+        e.preventDefault && e.preventDefault();
+        if (otpDialog) {
+            // This means user is submitting OTP, so send full registration data
+            if (error) {
+                toast.error(error)
+                return
+            }
+            // Validate required fields (repeat for safety)
+            if (!formData.name) {
+                toast.error("Hotel name is required")
+                return
+            }
+            if (!formData.location) {
+                toast.error("Location is required")
+                return
+            }
+            if (!formData.description) {
+                toast.error("Description is required")
+                return
+            }
+            if (!formData.rooms || formData.rooms <= 0) {
+                toast.error("Number of rooms is required and must be greater than 0")
+                return
+            }
+            if (!formData.businessLicense) {
+                toast.error("Business license is required")
+                return
+            }
+            if (formData.hotelImages.length === 0) {
+                toast.error("At least one hotel image is required")
+                return
+            }
+            setLoading(true)
+            const toastId = toast.loading("Processing your request...")
+            try {
+                const data = new FormData()
+                data.append("name", formData.name)
+                data.append("email", formData.email)
+                data.append("password", formData.password)
+                data.append("confirmPassword", formData.confirmPassword)
+                data.append("description", formData.description)
+                data.append("location", formData.location)
+                data.append("address", formData.address)
+                data.append("phone", formData.phone)
+                data.append("managerName", formData.managerName)
+                data.append("rooms", formData.rooms)
+                data.append("role", formData.role)
+                data.append("otp", otp)
+                formData.amenities.forEach((amenity) => {
+                    data.append("amenities[]", amenity)
+                })
+                if (formData.profileImage) data.append("profileImage", formData.profileImage)
+                if (formData.businessLicense) data.append("businessLicense", formData.businessLicense)
+                if (formData.taxCertificate) data.append("taxCertificate", formData.taxCertificate)
+                if (formData.insuranceDocument) data.append("insuranceDocument", formData.insuranceDocument)
+                if (formData.hotelImages && formData.hotelImages.length > 0) {
+                    formData.hotelImages.forEach((image) => {
+                        data.append("hotelImages", image.file)
+                    })
+                }
+                const res = await registerHotel(data)
+                if (res.status === 200) {
+                    toast.success("Hotel Registration successful!")
+                    setOtpDialog(false)
+                    setOtp("")
+                }
+            } catch (err) {
+                const message = err?.response?.data?.message || err.message || "Registration failed"
+                toast.error(message, { id: toastId })
+            } finally {
+                setLoading(false)
+            }
+        } else {
+            // This means user is clicking submit for the first time, so only send email for OTP
+            if (!formData.email) {
+                toast.error("Email is required")
+                return
+            }
+            setLoading(true)
+            const toastId = toast.loading("Sending OTP...")
+            try {
+                const data = { email: formData.email }
+                const res = await verify(data)
+                if (res.status === 200) {
+                    toast.success("OTP sent successfully", { id: toastId })
+                    setOtpDialog(true)
+                } else if (res.status === 409) {
+                    toast.error("User already exists", { id: toastId })
+                } else {
+                    toast.error("Failed to send OTP", { id: toastId })
+                }
+            } catch (err) {
+                const message = err?.response?.data?.message || err.message || "Failed to send OTP"
+                toast.error(message, { id: toastId })
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
+
+    const cancel = () => {
+        setOtpDialog(false)
+        setOtp("")
+    }
+
+    // Handles OTP verification and registration
+    const handleOtpVerification = async () => {
+        if (!otp || otp.length !== 6) {
+            toast.error("Please enter the 6-digit OTP")
+            return
+        }
+        // Validate required fields (repeat for safety)
         if (error) {
             toast.error(error)
             return
         }
-
-        // Validate required fields
         if (!formData.name) {
             toast.error("Hotel name is required")
             return
@@ -169,10 +259,8 @@ export const HotelRegister = () => {
             toast.error("At least one hotel image is required")
             return
         }
-
         setLoading(true)
         const toastId = toast.loading("Processing your request...")
-
         try {
             const data = new FormData()
             data.append("name", formData.name)
@@ -186,52 +274,30 @@ export const HotelRegister = () => {
             data.append("managerName", formData.managerName)
             data.append("rooms", formData.rooms)
             data.append("role", formData.role)
-
+            data.append("otp", otp)
             formData.amenities.forEach((amenity) => {
                 data.append("amenities[]", amenity)
             })
-
             if (formData.profileImage) data.append("profileImage", formData.profileImage)
             if (formData.businessLicense) data.append("businessLicense", formData.businessLicense)
             if (formData.taxCertificate) data.append("taxCertificate", formData.taxCertificate)
             if (formData.insuranceDocument) data.append("insuranceDocument", formData.insuranceDocument)
-
             if (formData.hotelImages && formData.hotelImages.length > 0) {
                 formData.hotelImages.forEach((image) => {
                     data.append("hotelImages", image.file)
                 })
             }
-
-            // This would be your actual API endpoint
-            const response = await axiosClient.post("/api/auth/hotel/register", data, {
-                headers: { "Content-Type": "multipart/form-data" },
-            })
-
-            toast.success("Registration successful! Please verify OTP sent to your email.", { id: toastId })
-            setOtpDialog(true)
+            const res = await registerHotel(data)
+            if (res.statusCode === 201) {
+                toast.success("Hotel Registration successful!")
+                setOtpDialog(false)
+                setOtp("")
+            }
         } catch (err) {
             const message = err?.response?.data?.message || err.message || "Registration failed"
             toast.error(message, { id: toastId })
         } finally {
             setLoading(false)
-        }
-    }
-
-    const cancel = () => {
-        setOtpDialog(false)
-        setOtp("")
-    }
-
-    const verifyOtp = async () => {
-        const data = { email: formData.email, otp: otp }
-        const res = await VerifyUser(data, dispatch)
-        if (res === 200) {
-            toast("Email Verified Successfully")
-            setOtpDialog(false)
-            setOtp("")
-            navigate("/hotel/pending-review")
-        } else if (res === 400) {
-            toast("Invalid OTP")
         }
     }
 
@@ -576,11 +642,12 @@ export const HotelRegister = () => {
 
                     <div className="pt-6 mt-4 border-t border-gray-200">
                         <Button
-                            type="submit"
+                            type="button"
+                            onClick={handleSubmit}
                             className="w-full bg-black hover:bg-gray-800 text-white transition-transform active:scale-95"
                             disabled={loading}
                         >
-                            {loading ? "Processing..." : "Submit Hotel Application"}
+                            {loading ? "Processing..." : otpDialog ? "Verify OTP" : "Submit Hotel Application"}
                         </Button>
                         <p className="mt-3 text-center text-sm text-gray-500">
                             By submitting, you agree to our terms and conditions. Your application will be reviewed by our team.
@@ -602,9 +669,14 @@ export const HotelRegister = () => {
                             <InputOTPSlot index={5} />
                         </InputOTPGroup>
                     </InputOTP>
-                    <button onClick={verifyOtp} className="bg-black text-white rounded-2xl py-2 w-full">
+                    <Button
+                        type="button"
+                        className="w-full bg-black hover:bg-gray-800 text-white rounded-2xl py-2"
+                        loading={loading}
+                        onClick={handleOtpVerification}
+                    >
                         Verify OTP
-                    </button>
+                    </Button>
                 </div>
             </Modal>
         </div>

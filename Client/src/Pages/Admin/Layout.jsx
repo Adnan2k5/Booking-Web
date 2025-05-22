@@ -19,10 +19,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { BarChart3, BookOpen, CalendarDays, ClipboardCheck, Compass, FileCheck, Hotel, LifeBuoy, LogOut, Mountain, Settings, ShoppingBag, Store, TicketCheck, User, Users } from 'lucide-react';
 import { Button } from '../../components/ui/button';
+import { useAuth } from '../AuthProvider';
 
 export default function AdminLayout() {
   const location = useLocation();
   const pathname = location.pathname;
+  const { user } = useAuth(); //user email and name to be added
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -39,7 +41,6 @@ export default function AdminLayout() {
         <AdminSidebar pathname={pathname} />
         <SidebarInset className="bg-muted/40">
           <div className="flex h-16 items-center gap-4 border-b bg-background px-6">
-            <SidebarTrigger />
             <div className="flex-1">
               <h1 className="text-lg font-semibold">Adventure Booking Admin</h1>
             </div>
@@ -60,8 +61,8 @@ export default function AdminLayout() {
 function AdminSidebar({ pathname }) {
   return (
     <Sidebar>
-      <SidebarHeader className="flex h-16 items-center border-b px-6">
-        <div className="flex items-center gap-2 font-semibold">
+      <SidebarHeader className="flex h-16 items-center justify-center border-b px-6">
+        <div className="flex items-center justify-center gap-2 font-semibold">
           <Mountain className="h-6 w-6" />
           <span>Adventure Admin</span>
         </div>

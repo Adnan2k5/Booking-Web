@@ -31,8 +31,9 @@ export const UserLogin = async (data, dispatch) => {
     withCredentials: true,
   });
   if (res.data.statusCode === 200) {
-    dispatch(loginSuccess(res.data.data));
-    return res.data.statusCode;
+    console.log(res.data.data);
+    dispatch(loginSuccess(res.data.data.user));
+    return res;
   }
   return res.data.statusCode;
 };

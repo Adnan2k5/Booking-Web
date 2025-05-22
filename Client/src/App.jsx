@@ -52,6 +52,8 @@ import InstructorPendingReview from "./Pages/Instructor/InstructorPendingReview"
 import InstructorsPage from "./Pages/Admin/SubPages/InstructorsVerification"
 import { HotelRegister } from "./Pages/Hotel/HotelRegister"
 import InstructorLayout from "./Pages/Instructor/InstructorLayout"
+import { Hotel } from "./Pages/Hotel/Hotel"
+import HotelPendingReview from "./Pages/Hotel/HotelPending"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -93,7 +95,9 @@ const App = () => {
                 <Route path="/instructor/register" element={<InstructorRegister />} />
                 <Route path="/instructor/pending-review" element={<InstructorPendingReview />} />
                 <Route path="/dashboard" element={<UserDashboard />} />
+                <Route path="/hotel" element={<Hotel />} />
                 <Route path="/hotel/register" element={<HotelRegister />} />
+                <Route path="/hotel/pending" element={<HotelPendingReview />} />
                 <Route
                   path="/dashboard/bookings"
                   element={
@@ -126,9 +130,6 @@ const App = () => {
                     </UserDashboardLayout>
                   }
                 />
-
-
-
                 <Route path="/instructor/" element={<InstructorRoute><InstructorLayout /></InstructorRoute>} />
                 <Route path="/instructor/dashboard" element={<InstructorRoute><InstructorDashboard /></InstructorRoute>} />
                 <Route path="/instructor/bookings" element={<InstructorRoute><InstructorBookings /></InstructorRoute>} />
@@ -158,6 +159,7 @@ const App = () => {
                   <Route path="/admin/declaration" element={<Dash_Declation />} />
                   <Route path="/admin/locations" element={<LocationsPage />} />
                 </Route>
+
               </Routes>
             </Suspense>
           </BrowserRouter>
