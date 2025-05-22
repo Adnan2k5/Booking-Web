@@ -8,11 +8,10 @@ import { Label } from "../../components/ui/label"
 import { Modal } from "antd"
 import { InputOTPSlot, InputOTP, InputOTPGroup } from "../../components/ui/input-otp"
 import { toast } from "sonner"
-import { useDispatch } from "react-redux"
 import { Textarea } from "../../components/ui/textarea"
-import { useNavigate } from "react-router-dom"
 import { X, Upload, FileText, Building, MapPin, Phone, Mail, User, ImageIcon } from "lucide-react"
 import { registerHotel, verify } from "../../Api/hotel.api.js"
+import { fetchLocations } from "../../Api/location.api.js"
 export const HotelRegister = () => {
     const [formData, setFormData] = useState({
         name: "",
@@ -38,9 +37,7 @@ export const HotelRegister = () => {
     const [otpDialog, setOtpDialog] = useState(false)
     const [otp, setOtp] = useState("")
     const [loading, setLoading] = useState(false)
-    const navigate = useNavigate()
-
-
+    const [location, setlocation] = useState([]);
     const [customAmenity, setCustomAmenity] = useState("");
     const [allAmenities, setAllAmenities] = useState([]);
 
@@ -62,6 +59,20 @@ export const HotelRegister = () => {
     useEffect(() => {
         passValidation()
     }, [formData.password, formData.confirmPassword])
+
+    const getLocation = async () => {
+        const res = await fetchLocations()
+        console.log(res)
+        if (res.statusCode === 200) {
+            setlocation(res.data)
+        } else {
+            toast.error("Failed to fetch locations")
+        }
+    }
+    useEffect(() => {
+        getLocation()
+    }, [])
+
 
     const handleChange = (e) => {
         const { name, value } = e.target
@@ -387,15 +398,22 @@ export const HotelRegister = () => {
                                         <MapPin className="h-4 w-4 mr-2" />
                                         Location
                                     </Label>
-                                    <Input
+                                    <select
                                         id="location"
                                         name="location"
                                         value={formData.location}
                                         onChange={handleChange}
-                                        placeholder="City, State"
-                                        required
-                                        className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
-                                    />
+                                        className="border rounded px-3 py-2 focus:ring-2 focus:ring-black transition-all focus:scale-[1.01]"
+                                    >
+                                        <option value="" disabled>
+                                            Select location
+                                        </option>
+                                        {location.map((loc) => (
+                                            <option key={loc._id} value={loc._id}>
+                                                {loc.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 <div className="space-y-2">
