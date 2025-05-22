@@ -260,21 +260,49 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full max-w-4xl mx-auto">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="basic">Basic Info</TabsTrigger>
-          <TabsTrigger value="media">Media</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="basic" className="text-base py-3">
+            Basic Info
+          </TabsTrigger>
+          <TabsTrigger value="media" className="text-base py-3">
+            Media
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="basic" className="space-y-4 pt-4">
-          <Input placeholder="Name" disabled={isSubmitting} {...register("name", { required: true })} />
-          {errors.name && <span className="text-red-500">Name is required</span>}
+        <TabsContent value="basic" className="space-y-6 pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                placeholder="Name"
+                disabled={isSubmitting}
+                {...register("name", { required: true })}
+                className="w-full"
+              />
+              {errors.name && <span className="text-red-500 text-sm">Name is required</span>}
+            </div>
 
-          <label className="block relative">
-            Location
+            <div className="space-y-2">
+              <Label htmlFor="exp">Experience Points</Label>
+              <Input
+                id="exp"
+                placeholder="Experience"
+                type="number"
+                disabled={isSubmitting}
+                {...register("exp", { required: true })}
+                className="w-full"
+              />
+              {errors.exp && <span className="text-red-500 text-sm">Experience is required</span>}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
             <div
-              className="block w-full mt-1 border rounded-md p-2 bg-white cursor-pointer select-none"
+              className="block w-full border rounded-md p-3 bg-white cursor-pointer select-none"
               onClick={() => setShowLocationDropdown((v) => !v)}
             >
               {selectedLocations.length === 0
@@ -285,62 +313,63 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
                   .join(", ")}
             </div>
             {showLocationDropdown && (
-              <div className="absolute z-10 bg-white border rounded-md mt-1 w-full max-h-48 overflow-auto shadow-lg">
+              <div className="absolute z-10 bg-white border rounded-md mt-1 w-full max-h-60 overflow-auto shadow-lg">
                 {locations.map((loc) => (
                   <div
                     key={loc._id}
-                    className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                    className="flex items-center px-4 py-3 hover:bg-gray-100 cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation()
                       toggleLocation(loc._id)
                     }}
                   >
-                    <input type="checkbox" checked={selectedLocations.includes(loc._id)} readOnly className="mr-2" />
+                    <input type="checkbox" checked={selectedLocations.includes(loc._id)} readOnly className="mr-3" />
                     <span>{loc.name}</span>
                   </div>
                 ))}
               </div>
             )}
-          </label>
-          {errors.location && <span className="text-red-500">Location is required</span>}
+            {errors.location && <span className="text-red-500 text-sm">Location is required</span>}
+          </div>
 
-          <Input placeholder="Description" disabled={isSubmitting} {...register("description", { required: true })} />
-          {errors.description && <span className="text-red-500">Description is required</span>}
-
-          <Input
-            placeholder="Experience"
-            type="number"
-            disabled={isSubmitting}
-            {...register("exp", { required: true })}
-          />
-          {errors.exp && <span className="text-red-500">Experience is required</span>}
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Input
+              id="description"
+              placeholder="Description"
+              disabled={isSubmitting}
+              {...register("description", { required: true })}
+              className="w-full"
+            />
+            {errors.description && <span className="text-red-500 text-sm">Description is required</span>}
+          </div>
         </TabsContent>
 
-        <TabsContent value="media" className="space-y-6 pt-4">
+        <TabsContent value="media" className="space-y-8 pt-4">
           {/* Thumbnail Image */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <ImageIcon size={16} /> Thumbnail Image
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-base font-medium">
+              <ImageIcon size={18} /> Thumbnail Image
             </Label>
             <Input
               type="file"
               accept="image/*"
               onChange={(e) => e.target.files[0] && setThumbnailFile(e.target.files[0])}
-              className="block mt-1"
+              className="block w-full p-2"
               disabled={isSubmitting}
             />
             {thumbnailPreview && (
-              <div className="relative mt-2 inline-block">
+              <div className="relative mt-3 inline-block">
                 <img
                   src={thumbnailPreview.url || "/placeholder.svg"}
                   alt="Thumbnail preview"
-                  className="h-32 w-auto object-cover rounded-md border border-gray-200"
+                  className="h-40 w-auto object-cover rounded-md border border-gray-200"
                 />
                 <Button
                   type="button"
                   variant="destructive"
                   size="sm"
-                  className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
+                  className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full"
                   onClick={handleRemoveThumbnail}
                 >
                   ×
@@ -350,29 +379,29 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
           </div>
 
           {/* Preview Video */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Video size={16} /> Preview Video
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-base font-medium">
+              <Video size={18} /> Preview Video
             </Label>
             <Input
               type="file"
               accept="video/*"
               onChange={(e) => e.target.files[0] && setPreviewVideoFile(e.target.files[0])}
-              className="block mt-1"
+              className="block w-full p-2"
               disabled={isSubmitting}
             />
             {previewVideoPreview && (
-              <div className="relative mt-2 inline-block">
+              <div className="relative mt-3 inline-block">
                 <video
                   src={previewVideoPreview.url}
                   controls
-                  className="h-32 w-auto object-cover rounded-md border border-gray-200"
+                  className="h-40 w-auto object-cover rounded-md border border-gray-200"
                 />
                 <Button
                   type="button"
                   variant="destructive"
                   size="sm"
-                  className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
+                  className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full"
                   onClick={handleRemovePreviewVideo}
                 >
                   ×
@@ -382,14 +411,14 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
           </div>
 
           {/* Regular Media Files */}
-          <div className="space-y-2">
-            <Label>Additional Media (images/videos)</Label>
+          <div className="space-y-3">
+            <Label className="text-base font-medium">Additional Media (images/videos)</Label>
             <Input
               type="file"
               accept="image/*,video/*"
               multiple
               onChange={(e) => setMediaFiles(Array.from(e.target.files))}
-              className="block mt-1"
+              className="block w-full p-2"
               disabled={isSubmitting}
             />
             <MediaPreview mediaPreviews={mediaPreviews} onRemove={handleRemoveMedia} isSubmitting={isSubmitting} />
@@ -397,11 +426,17 @@ const AdventureForm = ({ dialogmode, editAdventure, setShowAddAdventure, setDial
         </TabsContent>
       </Tabs>
 
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={() => setShowAddAdventure(false)} disabled={isSubmitting}>
+      <div className="flex justify-end space-x-4 pt-6 mt-6 border-t">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setShowAddAdventure(false)}
+          disabled={isSubmitting}
+          className="px-6 py-2"
+        >
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="px-8 py-2 bg-black hover:bg-gray-800 text-white">
           {dialogmode ? "Update" : "Create"}
         </Button>
       </div>

@@ -6,6 +6,7 @@ import { Dialog, DialogContent } from "../../components/ui/dialog"
 
 export const AdventureCard = ({ adventure, formatDate, onBook }) => {
   const [showPreview, setShowPreview] = useState(false)
+  console.log(adventure)
   return (
     <>
       <div className="bg-white rounded-xl shadow-lg overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-xl">

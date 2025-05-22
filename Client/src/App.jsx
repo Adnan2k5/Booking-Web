@@ -17,6 +17,7 @@ import ChatWidget from "./components/ChatWidget"
 import AdminDashboard from "./Pages/Admin/AdminDashboard"
 import AdminLayout from "./Pages/Admin/Layout"
 import AdventuresPage from "./Pages/Admin/SubPages/Adventures"
+import AdventureFormPage from "./Pages/Admin/SubPages/AdventureForm"
 import Dash_Bookings from "./Pages/Admin/SubPages/Bookings"
 import Dash_User from "./Pages/Admin/SubPages/Users"
 import Dash_Store from "./Pages/Admin/SubPages/Store"
@@ -130,16 +131,71 @@ const App = () => {
                     </UserDashboardLayout>
                   }
                 />
-                <Route path="/instructor/" element={<InstructorRoute><InstructorLayout /></InstructorRoute>} />
-                <Route path="/instructor/dashboard" element={<InstructorRoute><InstructorDashboard /></InstructorRoute>} />
-                <Route path="/instructor/bookings" element={<InstructorRoute><InstructorBookings /></InstructorRoute>} />
-                <Route path="/instructor/sessions" element={<InstructorRoute><InstructorSession /></InstructorRoute>} />
-                <Route path="/instructor/sessions/new" element={<InstructorRoute><SessionForm /></InstructorRoute>} />
-                <Route path="/instructor/profile" element={<InstructorRoute><InstructorProfile /></InstructorRoute>} />
-                <Route path="/instructor/settings" element={<InstructorRoute><InstructorSettings /></InstructorRoute>} />
+                <Route
+                  path="/instructor/"
+                  element={
+                    <InstructorRoute>
+                      <InstructorLayout />
+                    </InstructorRoute>
+                  }
+                />
+                <Route
+                  path="/instructor/dashboard"
+                  element={
+                    <InstructorRoute>
+                      <InstructorDashboard />
+                    </InstructorRoute>
+                  }
+                />
+                <Route
+                  path="/instructor/bookings"
+                  element={
+                    <InstructorRoute>
+                      <InstructorBookings />
+                    </InstructorRoute>
+                  }
+                />
+                <Route
+                  path="/instructor/sessions"
+                  element={
+                    <InstructorRoute>
+                      <InstructorSession />
+                    </InstructorRoute>
+                  }
+                />
+                <Route
+                  path="/instructor/sessions/new"
+                  element={
+                    <InstructorRoute>
+                      <SessionForm />
+                    </InstructorRoute>
+                  }
+                />
+                <Route
+                  path="/instructor/profile"
+                  element={
+                    <InstructorRoute>
+                      <InstructorProfile />
+                    </InstructorRoute>
+                  }
+                />
+                <Route
+                  path="/instructor/settings"
+                  element={
+                    <InstructorRoute>
+                      <InstructorSettings />
+                    </InstructorRoute>
+                  }
+                />
 
-
-                <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminRoute>
+                      <AdminLayout />
+                    </AdminRoute>
+                  }
+                >
                   <Route
                     index
                     element={
@@ -149,6 +205,8 @@ const App = () => {
                     }
                   />
                   <Route path="/admin/adventures" element={<AdventuresPage />} />
+                  <Route path="/admin/adventures/new" element={<AdventureFormPage />} />
+                  <Route path="/admin/adventures/edit/:id" element={<AdventureFormPage />} />
                   <Route path="/admin/bookings" element={<Dash_Bookings />} />
                   <Route path="/admin/users" element={<Dash_User />} />
                   <Route path="/admin/instructors" element={<InstructorsPage />} />
@@ -159,7 +217,6 @@ const App = () => {
                   <Route path="/admin/declaration" element={<Dash_Declation />} />
                   <Route path="/admin/locations" element={<LocationsPage />} />
                 </Route>
-
               </Routes>
             </Suspense>
           </BrowserRouter>

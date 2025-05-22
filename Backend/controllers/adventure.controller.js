@@ -12,7 +12,7 @@ export const getAllAdventure = asyncHandler(async (req, res) => {
   const adventures = await Adventure.find().populate("location");
 
   return res.status(200).json({
-    adventures
+    adventures,
   });
 });
 
@@ -39,6 +39,22 @@ export const createAdventure = asyncHandler(async (req, res) => {
     })
   );
 
+  let thumbnailUrl = "";
+  let previewVideoUrl = "";
+
+  if (req.files.thumbnail && req.files.thumbnail[0]) {
+    const thumbnailUpload = await uploadOnCloudinary(
+      req.files.thumbnail[0].path
+    );
+    thumbnailUrl = thumbnailUpload.url;
+  }
+
+  if (req.files.previewVideo && req.files.previewVideo[0]) {
+    const previewVideoUpload = await uploadOnCloudinary(
+      req.files.previewVideo[0].path
+    );
+    previewVideoUrl = previewVideoUpload.url;
+  }
   let locationsArray = location;
   if (typeof location === "string" && location.includes(",")) {
     locationsArray = location.split(",");
@@ -51,6 +67,8 @@ export const createAdventure = asyncHandler(async (req, res) => {
     description,
     location: locationsArray,
     medias: mediasUrl,
+    thumbnail: thumbnailUrl,
+    previewVideo: previewVideoUrl,
     exp,
   });
   await newAdventure.save();
@@ -177,7 +195,7 @@ export const getFilteredAdventures = asyncHandler(async (req, res) => {
 
   // Step 1: Find sessions within the date range
   let sessions = await Session.find({
-    startTime: { $gte: startOfDay, $lte: endOfDay }
+    startTime: { $gte: startOfDay, $lte: endOfDay },
   })
     .populate({
       path: "adventureId",
@@ -189,14 +207,18 @@ export const getFilteredAdventures = asyncHandler(async (req, res) => {
     });
 
   // Step 2: Filter out sessions where populate returned null
-  sessions = sessions.filter(session => session.adventureId && session.location);
+  sessions = sessions.filter(
+    (session) => session.adventureId && session.location
+  );
 
   // Step 3: Extract adventures
-  const adventures = sessions.map(session => session.adventureId);
-  const uniqueAdventures = Array.from(new Set(adventures.map(a => a._id.toString())))
-    .map(id => adventures.find(a => a._id.toString() === id));
+  const adventures = sessions.map((session) => session.adventureId);
+  const uniqueAdventures = Array.from(
+    new Set(adventures.map((a) => a._id.toString()))
+  ).map((id) => adventures.find((a) => a._id.toString() === id));
 
-  
   // Response
-  res.status(200).json({ data: uniqueAdventures, total: uniqueAdventures.length });
+  res
+    .status(200)
+    .json({ data: uniqueAdventures, total: uniqueAdventures.length });
 });

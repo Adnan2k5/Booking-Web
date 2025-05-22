@@ -127,6 +127,12 @@ export default function LandingPage() {
   }
 
   const handleNavigate = () => {
+    // Check if required fields are filled
+    if (!location || !date) {
+      toast.error(t("pleaseSelectLocationAndDate") || "Please select location and date")
+      return
+    }
+
     // Store group members in sessionStorage to access in booking page
     if (groupMembers.length > 0) {
       sessionStorage.setItem("groupMembers", JSON.stringify(groupMembers))
@@ -145,7 +151,7 @@ export default function LandingPage() {
           transition={{ duration: 1.5 }}
         />
         <video
-          src="https://res.cloudinary.com/dygmsxtsd/video/upload/v1740640091/skydiving_oh0ees.mp4"
+          src="https://res.cloudinary.com/dygmsxtsd/video/upload/v1747935986/5406499_Coll_wavebreak_Surfing_3840x2160_w7qryc.mp4"
           autoPlay
           loop
           muted
@@ -179,63 +185,76 @@ export default function LandingPage() {
           >
             <div className="flex flex-wrap md:flex-nowrap items-center gap-2">
               {/* Unified search container */}
-              <div className="relative flex-1 flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-                <div className="flex items-center pl-3">
-                  <MapPin className="h-5 w-5 text-gray-400" />
+              <div className="relative flex-1 flex flex-col md:flex-row gap-2">
+                {/* Adventure selection */}
+                <div className="flex-1 flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                  <div className="flex items-center pl-3">
+                    <Compass className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <select
+                    onChange={(e) => setadventure(e.target.value)}
+                    className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1 bg-transparent"
+                  >
+                    <option value="all">{t("selectAdventure")}</option>
+                    {adventures.map((adventure, index) => (
+                      <option key={index} value={adventure.name}>
+                        {adventure.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <Input
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1"
-                  type="text"
-                  placeholder={t("searchLocation")}
-                />
 
-                <div className="h-8 w-px bg-gray-300 mx-1"></div>
-
-                <div className="flex items-center pl-2">
-                  <Compass className="h-5 w-5 text-gray-400" />
+                {/* Location input */}
+                <div className="flex-1 flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                  <div className="flex items-center pl-3">
+                    <MapPin className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <Input
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1"
+                    type="text"
+                    placeholder={t("searchLocation")}
+                    required
+                  />
                 </div>
-                <select
-                  onChange={(e) => setadventure(e.target.value)}
-                  className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1 bg-transparent"
-                >
-                  <option value="all">{t("selectAdventure")}</option>
-                  {adventures.map((adventure, index) => (
-                    <option key={index} value={adventure.name}>
-                      {adventure.name}
-                    </option>
-                  ))}
-                </select>
 
-                <div className="h-8 w-px bg-gray-300 mx-1"></div>
-
-                <div className="flex items-center pl-2">
-                  <Calendar className="h-5 w-5 text-gray-400" />
+                {/* Date input */}
+                <div className="flex-1 flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                  <div className="flex items-center pl-3">
+                    <Calendar className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <Input
+                    onChange={(e) => setDate(e.target.value)}
+                    type="date"
+                    placeholder={t("selectDate")}
+                    className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1"
+                    required
+                  />
                 </div>
-                <Input
-                  onChange={(e) => setDate(e.target.value)}
-                  type="date"
-                  placeholder={t("selectDate")}
-                  className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1"
-                />
 
-                <Button
-                  onClick={() => setShowGroupDialog(true)}
-                  className="h-full px-4 border-l border-gray-200 bg-white hover:bg-gray-50 text-black"
-                >
-                  <Users className="h-5 w-5 mr-2" />
-                  <span className="hidden sm:inline">
-                    {groupMembers.length > 0 ? `${t("group")} (${groupMembers.length + 1})` : t("addGroup")}
-                  </span>
-                </Button>
-
-                <Button
-                  onClick={handleNavigate}
-                  className="h-full px-6 bg-black hover:bg-gray-800 text-white rounded-none"
-                >
-                  <Search className="h-5 w-5" />
-                </Button>
+                {/* Group button */}
+                <div className="flex-1 md:flex-initial flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                  <Button
+                    onClick={() => setShowGroupDialog(true)}
+                    className="w-full h-full px-4 py-6 bg-white hover:bg-gray-50 text-black"
+                  >
+                    <Users className="h-5 w-5 mr-2" />
+                    <span className="hidden sm:inline">
+                      {groupMembers.length > 0 ? `${t("group")} (${groupMembers.length + 1})` : t("addGroup")}
+                    </span>
+                  </Button>
+                </div>
               </div>
+
+              {/* Search button - separated and bigger */}
+              <Button
+                onClick={handleNavigate}
+                className="w-full md:w-auto mt-2 md:mt-0 py-6 px-8 bg-black hover:bg-gray-800 text-white text-lg font-medium rounded-lg shadow-md"
+                disabled={!location || !date}
+              >
+                <Search className="h-6 w-6 mr-2" />
+                <span>{t("search")}</span>
+              </Button>
             </div>
           </motion.div>
         </motion.div>
