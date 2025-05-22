@@ -1,17 +1,15 @@
+"use client"
+
 import { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { format } from "date-fns"
 import { useLocation, useNavigate } from "react-router-dom"
-import {
-  ArrowLeft,
-  ChevronRight,
-  MapPin,
-} from "lucide-react"
+import { ArrowLeft, ChevronRight, MapPin } from "lucide-react"
 import { Badge } from "../../components/ui/badge"
 import { useAuth } from "../AuthProvider.jsx"
 import { Loader } from "../../components/Loader.jsx"
 import { SearchFilterBar } from "./SearchFilterBar"
-import { CategorySelector } from "./CategorySelector"
+import CategorySelector from "./CategorySelector"
 import { AdventureCard } from "./AdventureCard"
 import { AdventureCardSkeleton } from "./AdventureCardSkeleton"
 import { NoResults } from "./NoResults"
@@ -40,21 +38,21 @@ export default function BrowsingPage() {
     borderRadius: "0.375rem",
   }
 
-  const { user, loading } = useAuth();
-  const { adventures: categories } = useAdventures();
-  const { adventures, isLoading, filters, setFilters } = useBrowse();
+  const { user, loading } = useAuth()
+  const { adventures: categories } = useAdventures()
+  const { adventures, isLoading, filters, setFilters } = useBrowse()
 
   const updateParams = (params, options = {}) => {
-    const queryParams = new URLSearchParams(location.search);
+    const queryParams = new URLSearchParams(location.search)
     Object.entries(params).forEach(([key, value]) => {
       if (value) {
-        queryParams.set(key, value);
+        queryParams.set(key, value)
       } else {
-        queryParams.delete(key);
+        queryParams.delete(key)
       }
-    });
-    navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true, ...options });
-  };
+    })
+    navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true, ...options })
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -79,25 +77,25 @@ export default function BrowsingPage() {
 
   useEffect(() => {
     // Parse URL params and set filters
-    const queryParams = new URLSearchParams(location.search);
-    const adventureParam = queryParams.get("adventure") || "";
-    const locationParam = queryParams.get("location") || "";
-    const dateParam = queryParams.get("date") || "";
+    const queryParams = new URLSearchParams(location.search)
+    const adventureParam = queryParams.get("adventure") || ""
+    const locationParam = queryParams.get("location") || ""
+    const dateParam = queryParams.get("date") || ""
 
     setFilters({
       adventure: adventureParam,
       location: locationParam,
       session_date: dateParam,
-    });
+    })
 
-    setAdventure(adventureParam.toLowerCase());
-    setLoc(locationParam.toLowerCase());
-    setDate(dateParam ? new Date(dateParam) : undefined);
+    setAdventure(adventureParam.toLowerCase())
+    setLoc(locationParam.toLowerCase())
+    setDate(dateParam ? new Date(dateParam) : undefined)
 
     if (location.search !== queryParams.toString()) {
-      navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
+      navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true })
     }
-  }, [location.search, setFilters, navigate, location.pathname]);
+  }, [location.search, setFilters, navigate, location.pathname])
 
   const onBook = (id) => {
     navigate(`/booking?id=${id}&location=${filters.location}&session_date=${filters.session_date}`, { replace: true })
@@ -106,27 +104,27 @@ export default function BrowsingPage() {
   const clearFilter = (type) => {
     switch (type) {
       case "adventure":
-        setAdventure("");
-        updateParams({ adventure: "" });
-        break;
+        setAdventure("")
+        updateParams({ adventure: "" })
+        break
       case "location":
-        setLoc("");
-        updateParams({ location: "" });
-        break;
+        setLoc("")
+        updateParams({ location: "" })
+        break
       case "date":
-        setDate(undefined);
-        updateParams({ date: "" });
-        break;
+        setDate(undefined)
+        updateParams({ date: "" })
+        break
       case "all":
-        setAdventure("");
-        setLoc("");
-        setDate(undefined);
-        setActiveCategory("");
-        setFilters({ adventure: "", location: "", session_date: "" });
-        updateParams({ adventure: "", location: "", date: "" });
-        break;
+        setAdventure("")
+        setLoc("")
+        setDate(undefined)
+        setActiveCategory("")
+        setFilters({ adventure: "", location: "", session_date: "" })
+        updateParams({ adventure: "", location: "", date: "" })
+        break
       default:
-        break;
+        break
     }
   }
 
@@ -152,7 +150,7 @@ export default function BrowsingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white p-4 sm:p-6 relative overflow-hidden">
       <Bubble />
 
       <div className="relative z-10 mx-auto max-w-7xl">
@@ -193,7 +191,7 @@ export default function BrowsingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 to-black bg-clip-text text-transparent">
             Discover Adventures
           </h1>
           <p className="text-gray-600 mt-2">Find your next unforgettable experience</p>
@@ -219,21 +217,31 @@ export default function BrowsingPage() {
               updateParams({
                 adventure,
                 location: loc,
-                date: date ? date.toISOString().split("T")[0] : ""
-              });
+                date: date ? date.toISOString().split("T")[0] : "",
+              })
             }}
             setSearchParams={updateParams}
           />
         </motion.div>
 
-        <CategorySelector
+        {/* <CategorySelector
           categories={categories}
           activeCategory={activeCategory}
-          setActiveCategory={setActiveCategory}
+          setActiveCategory={(category) => {
+            // If the same category is clicked again, deselect it
+            if (activeCategory === category) {
+              setActiveCategory("")
+              updateParams({ adventure: "" })
+            } else {
+              setActiveCategory(category)
+              setAdventure(category.toLowerCase())
+              updateParams({ adventure: category })
+            }
+          }}
           categoriesRef={categoriesRef}
           showScrollIndicator={showScrollIndicator}
           ChevronRight={ChevronRight}
-        />
+        /> */}
 
         <motion.div
           className="flex items-center gap-2 mb-6"
@@ -254,30 +262,30 @@ export default function BrowsingPage() {
             initial="hidden"
             animate="visible"
           >
-            {isLoading
-              ? Array(6)
+            {isLoading ? (
+              Array(6)
                 .fill(0)
                 .map((_, index) => (
-                  <motion.div
-                    key={`skeleton-${index}`}
-                    variants={itemVariants}
-                  >
+                  <motion.div key={`skeleton-${index}`} variants={itemVariants}>
                     <AdventureCardSkeleton />
                   </motion.div>
                 ))
-              : (!loc ? <motion.div
+            ) : !loc ? (
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center  py-12 bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-8"
               >
                 <div className="flex flex-col items-center gap-4">
-                  <MapPin size={48} className="text-blue-500" />
+                  <MapPin size={48} className="text-gray-800" />
                   <h3 className="text-xl font-semibold text-gray-800">Select a location to see adventures</h3>
                   <p className="text-gray-600 max-w-md">
                     Please use the search bar above to select a location and discover available adventures.
                   </p>
                 </div>
-              </motion.div> : adventures?.map((adventure) => (
+              </motion.div>
+            ) : (
+              adventures?.map((adventure) => (
                 <motion.div
                   key={adventure._id}
                   variants={itemVariants}
@@ -290,7 +298,8 @@ export default function BrowsingPage() {
                 >
                   <AdventureCard adventure={adventure} formatDate={formatDate} onBook={onBook} />
                 </motion.div>
-              )))}
+              ))
+            )}
           </motion.div>
         </AnimatePresence>
 
@@ -303,4 +312,3 @@ export default function BrowsingPage() {
     </div>
   )
 }
-
