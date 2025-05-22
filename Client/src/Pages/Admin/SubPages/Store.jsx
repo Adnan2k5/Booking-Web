@@ -34,7 +34,6 @@ import { toast } from "sonner"
 import { useMyItems } from "../../../hooks/useMyItems"
 
 export default function ItemsPage() {
-  const [searchTerm, setSearchTerm] = useState("")
   const { register, handleSubmit, control, reset } = useForm({
     defaultValues: {
       name: "",
@@ -57,7 +56,7 @@ export default function ItemsPage() {
 
   const { adventures } = useAdventures();
   const { categories, handleCreateCetegory } = useCategory();
-  const { handleCreateItem, items, handleEditItem, handleDeleteItem } = useMyItems();
+  const { handleCreateItem, items, handleEditItem, handleDeleteItem, search, setSearch, setCategory } = useMyItems();
   const [editItem, setEditItem] = useState(null); // Add this with other useState hooks
 
   // Handle adding a new category from dropdown
@@ -114,6 +113,8 @@ export default function ItemsPage() {
       return;
     }
 
+    const toastId = toast.loading("Uploading items...");
+
     const formData = new FormData();
     formData.append("name", data.name);
     formData.append("description", data.description);
@@ -136,17 +137,17 @@ export default function ItemsPage() {
     try {
       if (editItem) {
         await handleEditItem(editItem._id, formData);
-        toast.success("Item updated successfully!");
+        toast.success("Item updated successfully!", {id: toastId});
       } else {
         await handleCreateItem(formData);
-        toast.success("Item posted successfully!");
+        toast.success("Item posted successfully!", {id: toastId});
       }
       reset();
       setImages([]);
       setShowAddItem(false);
       setEditItem(null);
     } catch (error) {
-      toast.error(editItem ? "Failed to update item." : "Failed to post item.");
+      toast.error(editItem ? "Failed to update item." : "Failed to post item.", {id: toastId});
     }
   };
 
@@ -177,8 +178,8 @@ export default function ItemsPage() {
                 type="search"
                 placeholder="Search items..."
                 className="w-[200px] sm:w-[300px] pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
 
@@ -191,9 +192,9 @@ export default function ItemsPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuItem onClick={() => setCategoryFilter("all")}>All Categories</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCategory("")}>All Categories</DropdownMenuItem>
                 {categories.map((category) => (
-                  <DropdownMenuItem key={category._id} onClick={() => setCategoryFilter(category.name)}>
+                  <DropdownMenuItem key={category._id} onClick={() => setCategory(category.name)}>
                     {category.name}
                   </DropdownMenuItem>
                 ))}

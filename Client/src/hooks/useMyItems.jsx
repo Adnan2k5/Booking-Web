@@ -8,11 +8,13 @@ export function useMyItems() {
     const [error, setError] = useState(null);
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
+    const [search, setSearch] = useState("");
+    const [category, setCategory] = useState("");
 
     const fetchItems = async () => {
         setIsLoading(true);
         try {
-            const res = await getAllItems(page, limit);
+            const res = await getAllItems(page, limit, search, category);
             setItems(res.message);
         } catch (err) {
             setError(err);
@@ -24,7 +26,7 @@ export function useMyItems() {
 
     useEffect(() => {
         fetchItems();
-    }, [page, limit]);
+    }, [page, limit, search, category]);
 
     const handleCreateItem = async (item) => {
         try {
@@ -56,5 +58,5 @@ export function useMyItems() {
         }
     }
 
-    return { items, isLoading, error, setPage, setLimit, page, limit, handleCreateItem, handleEditItem, handleDeleteItem };
+    return { items, isLoading, error, setPage, setLimit, page, limit, handleCreateItem, handleEditItem, handleDeleteItem, setSearch, setCategory, search };
 }
