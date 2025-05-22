@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getAllItems} from "../Api/item.api";
 import { createItems, updateItem, deleteItem } from "../Api/items.api";
+import { toast } from "sonner"
 
 export function useMyItems() {
     const [items, setItems] = useState([]);
@@ -49,11 +50,14 @@ export function useMyItems() {
     }
 
     const handleDeleteItem = async (itemId) => {
+        const toastId = toast.loading("Deleting item...");
         try {
             const res = await deleteItem(itemId);
             await fetchItems();
+            toast.success("Item deleted successfully", { id: toastId });
         } catch (error) {
             console.error("Error deleting item:", error);
+            toast.error("Error deleting item", { id: toastId });
             throw error;
         }
     }
