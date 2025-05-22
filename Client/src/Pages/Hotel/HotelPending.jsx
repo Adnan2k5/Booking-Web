@@ -44,19 +44,11 @@ export default function HotelPendingReview() {
                             <ul className="text-sm text-blue-600 text-left list-disc pl-5 space-y-1">
                                 <li>Our team will verify all submitted documents</li>
                                 <li>We may contact you for additional information if needed</li>
-                                <li>Once approved, you'll receive an email confirmation</li>
-                                <li>You can then log in and start managing your hotel listing</li>
+                                <li>Once confirmed, you can see your hotel listing</li>
                             </ul>
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col space-y-3">
-                        <Button variant="outline" className="w-full" onClick={() => navigate("/contact-support")}>
-                            <HelpCircle className="mr-2 h-4 w-4" />
-                            Contact Support
-                        </Button>
-                        <Button variant="default" className="w-full" onClick={() => navigate("/")}>
-                            Return to Home
-                        </Button>
                     </CardFooter>
                 </Card>
             </motion.div>

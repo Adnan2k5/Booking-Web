@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { Eye, EyeClosed, Facebook, Linkedin, Lock, LogInIcon, Phone } from "lucide-react";
 import { MdEmail } from "react-icons/md";
 import { useForm } from "react-hook-form";
@@ -13,7 +13,6 @@ import {
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-import Cookies from "js-cookie";
 import { useAuth } from "./AuthProvider";
 import { Loader } from "../components/Loader";
 
@@ -28,6 +27,7 @@ export default function LoginPage() {
   const [value, setValue] = useState("");
   const [email, setEmail] = useState("");
   const [loader, setloader] = useState(false);
+  const { user, loading } = useAuth();
   const Navigate = useNavigate();
   const onSubmit = async (data) => {
     setloader(true);
@@ -44,14 +44,13 @@ export default function LoginPage() {
       } else {
         const res = await UserLogin(data, dispatch);
         setEmail(data.email);
-        if (res === 200) {
+        if (res.status === 200) {
           toast("Login Successfull");
-          Navigate("/browse")
         }
       }
     } catch (err) {
-      if(err.response){
-        if(err.response.status === 403){
+      if (err.response) {
+        if (err.response.status === 403) {
           toast("User Not Verified", email);
           setEmail(data.email);
           setopenOtp(true);
@@ -59,7 +58,7 @@ export default function LoginPage() {
         }
       }
     }
-    finally{
+    finally {
       setloader(false);
     }
   };
@@ -96,15 +95,26 @@ export default function LoginPage() {
     const authUrl = `https://www.facebook.com/v11.0/dialog/oauth?client_id=${import.meta.env.VITE_FACEBOOK_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state="{st=state123abc,ds=123456789}"&scope=email,public_profile&response_type=code`;
     window.location.href = authUrl;
   }
-  const {user , loading} = useAuth();
+
   useEffect(() => {
-    if(user.user !== null && !loading){
-      Navigate('/browse')
+    if (user.user !== null && !loading) {
+      if (user.user.role === "hotel") {
+        Navigate("/hotel");
+      }
+      else if (user.user.role === "instructor") {
+        Navigate("/instructor/dashboard");
+      }
+      else if (user.user.role === "admin") {
+        Navigate("/admin");
+      }
+      else {
+        Navigate("/browse");
+      }
     }
   }
-  ,[user,loading])
+    , [user, loading])
 
-    return (
+  return (
     <div className="min-h-screen flex flex-col items-center justify-center px-5">
       <div className="bg absolute w-full object-cover">
         {/* <video
@@ -116,7 +126,7 @@ export default function LoginPage() {
         /> */}
       </div>
       <div className="login relative  bg-gradient-to-b from-[#CEF2FF] to-white rounded-xl shadow-lg flex flex-col items-center justify-items-end  md:py-8 md:px-10 lg:w-1/2 py-4">
-        <Modal open={openOtp} footer={null} onCancel={()=>{cancel}}>
+        <Modal open={openOtp} footer={null} onCancel={() => { cancel }}>
           <div className="space-y-2 flex flex-col items-center gap-4">
             <h1>
               Enter One-Time Password sent on{" "}
@@ -181,7 +191,7 @@ export default function LoginPage() {
                 </div>
               )}
             </div>
-            <button 
+            <button
               type="button"
               onClick={() => setUsingPhone(!usingPhone)}
               className="text-gray-600 cursor-pointer w-fit md:text-sm text-xs text-left"
@@ -237,7 +247,7 @@ export default function LoginPage() {
                 )}
               </div>
               {!signup && (
-                <button type="button" onClick={()=>{Navigate('/reset')}} className="text-gray-600 md:text-sm w-fit text-xs text-center cursor-pointer">
+                <button type="button" onClick={() => { Navigate('/reset') }} className="text-gray-600 md:text-sm w-fit text-xs text-center cursor-pointer">
                   Forgot password?
                 </button>
               )}
@@ -248,7 +258,7 @@ export default function LoginPage() {
               </div>
             ) : (
               <div className="button w-full bg-black rounded-2xl ">
-                <button type="submit" className=" w-full cursor-pointer text-white  py-2">{loader ? <Loader btn={true}/> : "Sign In"}</button>
+                <button type="submit" className=" w-full cursor-pointer text-white  py-2">{loader ? <Loader btn={true} /> : "Sign In"}</button>
               </div>
             )}
           </form>
@@ -259,12 +269,12 @@ export default function LoginPage() {
           </p>
           <div className="google flex gap-5 md:mt-3">
             <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-              <GoogleLogin onSuccess={onGoogleLoginSucces}/>
+              <GoogleLogin onSuccess={onGoogleLoginSucces} />
             </GoogleOAuthProvider>
             <div className="flex gap-2 items-center border px-3 rounded-[5px]" onClick={linkedInLogin}>
-              <Linkedin/>
+              <Linkedin />
             </div>
-            <div className="flex gap-2 items-center border px-3 rounded-[5px]" onClick={facebookLogin}><Facebook/></div>
+            <div className="flex gap-2 items-center border px-3 rounded-[5px]" onClick={facebookLogin}><Facebook /></div>
           </div>
         </div>
       </div>
