@@ -1,9 +1,11 @@
 import { axiosClient } from "../AxiosClient/axios";
 
-export const getAllItems = async (page, limit) => {
+export const getAllItems = async (page, limit, search, category) => {
     try {
         const response = await axiosClient.get("api/items/", {
         params: {
+            search,
+            category,
             page,
             limit,
         },

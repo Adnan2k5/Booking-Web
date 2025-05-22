@@ -166,16 +166,25 @@ export const deleteItem = asyncHandler(async (req, res) => {
 });
 
 export const getAllItems = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 10, search, category } = req.query;
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  const items = await Item.find({})
+  // Build query object
+  const queryObj = {};
+  if (search) {
+    queryObj.name = { $regex: search, $options: "i" };
+  }
+  if (category) {
+    queryObj.category = category;
+  }
+
+  const items = await Item.find(queryObj)
     .populate("adventures", "name")
     .skip(skip)
     .limit(parseInt(limit));
 
-  const total = await Item.countDocuments({});
+  const total = await Item.countDocuments(queryObj);
 
   res.json(
     new ApiResponse(
