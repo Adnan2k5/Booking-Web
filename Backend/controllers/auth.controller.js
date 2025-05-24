@@ -528,9 +528,18 @@ const signInWithFacebook = asyncHandler(async (req, res) => {
         );
 });
 
+const logoutUser = asyncHandler(async (req, res) => {
+    res
+      .clearCookie("accessToken", { httpOnly: true, secure: true, sameSite: "None" })
+      .clearCookie("refreshToken", { httpOnly: true, secure: true, sameSite: "None" })
+      .status(200)
+      .json({ success: true, message: "Logged out successfully" });
+});
+
 
 
 export {
+    logoutUser,
     registerUser,
     registerInstructor,
     verifyOtp,

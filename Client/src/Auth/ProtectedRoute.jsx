@@ -33,7 +33,7 @@ export const InstructorRoute = ({ children }) => {
     if (user.user === null) {
       navigate('/login')
     }
-    else if (user.user.role !== 'instructor') {
+    else if (user.user.role === 'instructor') {
       navigate("/")
     }
     else if (user.user.role === 'instructor' && user.user.instructor !== null) {

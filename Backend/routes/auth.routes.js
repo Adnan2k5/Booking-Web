@@ -10,9 +10,11 @@ import {
     signInWithFacebook,
     signInWithGoogle,
     signInWithLinkedin,
-    registerInstructor  
+    registerInstructor,
+    logoutUser 
 } from '../controllers/auth.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
+import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 const authRoute = express.Router();
 authRoute.post('/signUp', registerUser);
@@ -32,6 +34,8 @@ authRoute.post('/instructor/register',
     { name: 'certificate', maxCount: 1 },
     { name: 'governmentId', maxCount: 1 }
   ]), registerUser, registerInstructor);
+
+authRoute.post('/logout', verifyJWT, logoutUser);
 
 
 export default authRoute;

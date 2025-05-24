@@ -21,6 +21,12 @@ import {
 import { Button } from "./ui/button"
 import { Avatar, AvatarFallback } from "./ui/avatar"
 import LanguageSelector from "./LanguageSelector"
+import { useDispatch } from "react-redux";
+import { logout } from "../Store/UserSlice";
+import { toast } from "sonner"
+import { axiosClient } from "../AxiosClient/axios"
+
+
 
 export const Nav_Landing = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -28,6 +34,20 @@ export const Nav_Landing = () => {
     const [loading, setLoading] = useState(false)
     const { user } = useAuth()
     const navigate = useNavigate()
+
+    const dispatch = useDispatch();
+
+    const handleLogout = async () => {
+        try {
+            await axiosClient.post("/api/auth/logout", {},{
+                withCredentials: true
+            });
+            dispatch(logout());
+            navigate("/"); 
+        } catch (error) {
+            toast.error("Logout failed. Please try again.");
+        }
+    };
 
     const languages = [
         { code: "en", name: "English" },
@@ -144,8 +164,8 @@ export const Nav_Landing = () => {
                                                 </DropdownMenuItem>
                                             </DropdownMenuGroup>
                                             <DropdownMenuSeparator />
-                                            <DropdownMenuItem>
-                                                <LogOut className="mr-2 h-4 w-4" />
+                                            <DropdownMenuItem onClick={handleLogout}>
+                                                <LogOut className="mr-2 h-4 w-4"/>
                                                 <span>{t("logout")}</span>
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
