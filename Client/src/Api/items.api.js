@@ -1,12 +1,18 @@
 import {axiosClient} from '../AxiosClient/axios';
 
 
-export const fetchAllItems = async ({ search } = {}) => {
-  const res = await axiosClient.get(`/api/items/discover`, {
+export const fetchAllItems = async ({ search, category, page, limit } = {}) => {
+  let url = '/api/items/discover';
+  const params = {};
+  
+  if (search) params.search = search;
+  if (category) params.category = category;
+  if (page) params.page = page;
+  if (limit) params.limit = limit;
+  
+  const res = await axiosClient.get(url, {
+    params,
     withCredentials: true,
-    params: {
-      search: search || 'all',
-    },
   });
   return res;
 };

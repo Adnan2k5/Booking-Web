@@ -29,11 +29,29 @@ export const discoverItems = asyncHandler(async (req, res) => {
     query,
     limit = 10,
     page = 1,
-    lat,
-    long,
-    lang,
   } = req.query;
-  //TODO: Write Controller
+  
+  const skip = (parseInt(page) - 1) * parseInt(limit);  
+  const queryObj = {};
+  if (query) {
+    queryObj.name = { $regex: query, $options: "i" };
+  }
+
+  if (category) {
+    queryObj.category = category;
+  }
+
+  queryObj.stock = { $gt: 0 }; // Only fetch items that are in stock
+
+  const items = await Item.find(queryObj)
+    .populate("adventures", "name")
+    .skip(skip)
+    .limit(parseInt(limit));
+
+  const total = await Item.countDocuments(queryObj);
+  res.status(200).json(
+    new ApiResponse(200, {items, total}, "Items fetched successfully")
+  );
 });
 
 export const createItem = asyncHandler(async (req, res) => {
