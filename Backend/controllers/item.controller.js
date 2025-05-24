@@ -26,15 +26,16 @@ export const getItemById = asyncHandler(async (req, res) => {
 export const discoverItems = asyncHandler(async (req, res) => {
   const {
     category,
-    query,
+    search,
     limit = 10,
     page = 1,
   } = req.query;
+
   
   const skip = (parseInt(page) - 1) * parseInt(limit);  
   const queryObj = {};
-  if (query) {
-    queryObj.name = { $regex: query, $options: "i" };
+  if (search) {
+    queryObj.name = { $regex: search, $options: "i" };
   }
 
   if (category) {

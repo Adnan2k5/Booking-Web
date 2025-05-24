@@ -34,5 +34,5 @@ export function useBrowse() {
     }, [filters]);
 
 
-    return { items, isLoading, error, filters, setFilters };
+    return { items, isLoading, error, filters, setFilters, page, setPage, limit, setLimit, total };
 }

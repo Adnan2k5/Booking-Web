@@ -12,7 +12,6 @@ import {
     DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { Badge } from "../components/ui/badge"
 import { CartContext } from "./Cart/CartContext"
 import { Link } from "react-router-dom"
 import { useBrowse } from "../hooks/useItems"
@@ -21,10 +20,17 @@ import { useCategory } from "../hooks/useCategory"
 
 export default function ItemsPage() {
     const { addToCart } = useContext(CartContext)
-    const { items, filters, setFilters } = useBrowse()
-
-
+    const { items, filters, setFilters, page, setPage, limit, total } = useBrowse()
     const { categories } = useCategory()
+
+    // Calculate total pages
+    const totalPages = Math.ceil(total / limit)
+
+    // Handle page change
+    const handlePageChange = (newPage) => {
+        setFilters((prev) => ({ ...prev, page: newPage }))
+        setPage(newPage)
+    }
 
     return (
 
@@ -171,6 +177,36 @@ export default function ItemsPage() {
                     </div>
                 </TabsContent>
             </Tabs>
+
+            {/* Pagination Controls */}
+            <div className="flex justify-center items-center gap-2 mt-6">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => handlePageChange(page - 1)}
+                >
+                    Prev
+                </Button>
+                {[...Array(totalPages)].map((_, idx) => (
+                    <Button
+                        key={idx + 1}
+                        variant={page === idx + 1 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(idx + 1)}
+                    >
+                        {idx + 1}
+                    </Button>
+                ))}
+                <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={() => handlePageChange(page + 1)}
+                >
+                    Next
+                </Button>
+            </div>
         </motion.div>
     )
 }
