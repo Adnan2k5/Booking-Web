@@ -7,18 +7,18 @@ import {
   ChevronRight,
   MapPin,
 } from "lucide-react"
-import { Badge } from "../components/ui/badge"
-import { useAuth } from "./AuthProvider.jsx"
-import { Loader } from "../components/Loader.jsx"
-import { SearchFilterBar } from "../components/BrowsingPage/SearchFilterBar"
-import { CategorySelector } from "../components/BrowsingPage/CategorySelector"
-import { AdventureCard } from "../components/BrowsingPage/AdventureCard"
-import { AdventureCardSkeleton } from "../components/BrowsingPage/AdventureCardSkeleton"
-import { NoResults } from "../components/BrowsingPage/NoResults"
-import { useAdventures } from "../hooks/useAdventure"
-import { useBrowse } from "../hooks/useBrowse"
-import { containerVariants, itemVariants } from "../assets/Animations"
-import { Bubble } from "../components/Bubble"
+import { Badge } from "../../components/ui/badge"
+import { useAuth } from "../AuthProvider.jsx"
+import { Loader } from "../../components/Loader.jsx"
+import { SearchFilterBar } from "./SearchFilterBar"
+import { CategorySelector } from "./CategorySelector"
+import { AdventureCard } from "./AdventureCard"
+import { AdventureCardSkeleton } from "./AdventureCardSkeleton"
+import { NoResults } from "./NoResults"
+import { useAdventures } from "../../hooks/useAdventure"
+import { useBrowse } from "../../hooks/useBrowse"
+import { containerVariants, itemVariants } from "../../assets/Animations"
+import { Bubble } from "../../components/Bubble"
 
 export default function BrowsingPage() {
   const location = useLocation()

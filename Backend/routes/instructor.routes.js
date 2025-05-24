@@ -1,12 +1,12 @@
-import express from 'express';
-import { verifyJWT } from '../middlewares/auth.middleware.js';
-
+import express from "express";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 import {
-    getAllInstructors,
-    deleteInstructor,
-    changeDocumentStatusById,
-} from '../controllers/instructor.controller.js';
+  getAllInstructors,
+  deleteInstructor,
+  changeDocumentStatusById,
+  getInstructorById,
+} from "../controllers/instructor.controller.js";
 
 const router = express.Router();
 
@@ -14,9 +14,8 @@ const router = express.Router();
 router.use(verifyJWT);
 
 // Route to get all instructors
-router.get('/', getAllInstructors);
-router.delete('/:id', deleteInstructor).put('/:id', changeDocumentStatusById);
-
-
+router.get("/", getAllInstructors);
+router.get("/:id", getInstructorById);
+router.delete("/:id", deleteInstructor).put("/:id", changeDocumentStatusById);
 
 export default router;

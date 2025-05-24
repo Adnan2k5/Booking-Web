@@ -20,6 +20,7 @@ import {
 } from "./ui/dropdown-menu"
 import { Button } from "./ui/button"
 import { Avatar, AvatarFallback } from "./ui/avatar"
+import LanguageSelector from "./LanguageSelector"
 
 export const Nav_Landing = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -38,6 +39,18 @@ export const Nav_Landing = () => {
 
     const changeLanguage = (code) => {
         i18n.changeLanguage(code)
+    }
+
+    const navigateprofile = () => {
+        if (user.user.role === "instructor") {
+            navigate("/instructor/dashboard")
+        } else if (user.user.role === "hotel") {
+            navigate("/hotel/profile")
+        } else if (user.user.role === "admin") {
+            navigate("/admin")
+        } else {
+            navigate("/dashboard")
+        }
     }
 
     return (
@@ -90,6 +103,9 @@ export const Nav_Landing = () => {
                             >
                                 {t("mission")}
                             </motion.li>
+                            <motion.li className="cursor-pointer hover:text-emerald-400 transition-colors">
+                                <LanguageSelector />
+                            </motion.li>
                             <li>
                                 {loading ? (
                                     <Loader />
@@ -100,7 +116,7 @@ export const Nav_Landing = () => {
                                                 variant="ghost"
                                                 className="relative h-10 w-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 p-0"
                                             >
-                                                <Avatar className="h-10 w-10">
+                                                <Avatar className="h-10 w-10 text-black">
                                                     <AvatarFallback>{user?.user?.email.charAt(0).toUpperCase()}</AvatarFallback>
                                                 </Avatar>
                                             </Button>
@@ -114,7 +130,7 @@ export const Nav_Landing = () => {
                                             </DropdownMenuLabel>
                                             <DropdownMenuSeparator />
                                             <DropdownMenuGroup>
-                                                <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                                                <DropdownMenuItem onClick={() => navigateprofile()}>
                                                     <User className="mr-2 h-4 w-4" />
                                                     <span>{t("profile")}</span>
                                                 </DropdownMenuItem>

@@ -2,28 +2,26 @@
 
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { format } from "date-fns"
 import { useNavigate, useLocation } from "react-router-dom"
 import { MapPin, Star, ArrowLeft, ChevronRight, Building, Check, Users, ShoppingCart } from 'lucide-react'
-import { cn } from "../lib/utils"
-import { Button } from "../components/ui/button"
-import { Badge } from "../components/ui/badge"
-import { useAuth } from "./AuthProvider"
+import { cn } from "../../lib/utils"
+import { Button } from "../../components/ui/button"
+import { Badge } from "../../components/ui/badge"
+import { useAuth } from "../AuthProvider"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
-import LanguageSelector from "../components/LanguageSelector"
-import { Navbar } from "../components/Navbar"
-import { getAdventure } from "../Api/adventure.api"
-import { useSessions } from "../hooks/useSession"
+import { Navbar } from "../../components/Navbar"
+import { getAdventure } from "../../Api/adventure.api"
+import { useSessions } from "../../hooks/useSession"
 
 // Import step components
-import { InstructorSelection } from "./BookingSteps/InstructorSelection"
-import { ShopSelection } from "./BookingSteps/ShopSelection"
-import { HotelSelection } from "./BookingSteps/HotelSelection"
-import { BookingSummary } from "./BookingSteps/BookingSummary"
+import { InstructorSelection } from "./InstructorSelection"
+import { ShopSelection } from "./ShopSelection"
+import { HotelSelection } from "./HotelSelection"
+import { BookingSummary } from "./BookingSummary"
 
 // Import data
-import { mockItems, mockHotels } from "../Data/mock_booking"
+import { mockItems, mockHotels } from "../../Data/mock_booking"
 
 export default function BookingFlow() {
   const navigate = useNavigate()
@@ -41,7 +39,7 @@ export default function BookingFlow() {
   const [currentInstructor, setCurrentInstructor] = useState(null)
   const [groupMembers, setGroupMembers] = useState([])
 
-  const { sessions, instructors } = useSessions({adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date")})
+  const { sessions, instructors } = useSessions({ adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date") })
 
   console.log("Sessions: ", sessions)
   // Load group members from sessionStorage if available
