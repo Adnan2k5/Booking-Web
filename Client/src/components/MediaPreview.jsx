@@ -1,20 +1,41 @@
-import React from "react"
+"use client"
 
-const MediaPreview = ({ mediaPreviews, onRemove, isSubmitting }) => (
-  <div className="flex flex-wrap gap-3 mt-2">
-    {mediaPreviews.map((media, idx) => (
-      <div key={idx} className="relative w-28 h-28 border rounded flex items-center justify-center bg-gray-50 overflow-hidden">
-        {media.type.startsWith('image') ? (
-          <img src={media.url} alt={media.name} className="object-cover w-full h-full" />
-        ) : media.type.startsWith('video') ? (
-          <video src={media.url} controls className="object-cover w-full h-full" />
-        ) : (
-          <span className="text-xs">{media.name}</span>
-        )}
-        <button type="button" onClick={() => onRemove(idx)} className="absolute top-1 right-1 bg-white bg-opacity-80 rounded-full px-1 text-xs text-red-600 hover:bg-opacity-100" disabled={isSubmitting}>✕</button>
-      </div>
-    ))}
-  </div>
-)
+// components/MediaPreview.jsx
+
+import { Button } from "../components/ui/button"
+
+const MediaPreview = ({ mediaPreviews, onRemove, isSubmitting }) => {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+      {mediaPreviews.map((media, idx) => (
+        <div key={idx} className="relative group">
+          {media.type === "image" ? (
+            <img
+              src={media.url || "/placeholder.svg"}
+              alt={media.name}
+              className="w-full h-40 object-cover rounded-md border border-gray-200"
+            />
+          ) : media.type === "video" ? (
+            <video src={media.url} controls className="w-full h-40 object-cover rounded-md border border-gray-200" />
+          ) : (
+            <div className="w-full h-40 flex items-center justify-center bg-gray-100 rounded-md border border-gray-200">
+              <span className="text-gray-500">{media.name}</span>
+            </div>
+          )}
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => onRemove(idx)}
+            disabled={isSubmitting}
+          >
+            ×
+          </Button>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default MediaPreview

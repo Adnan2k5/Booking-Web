@@ -16,7 +16,7 @@ const adventureSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Location",
-      }
+      },
     ],
     medias: {
       type: [
@@ -32,6 +32,12 @@ const adventureSchema = new mongoose.Schema(
         },
         message: "At least one media item is required",
       },
+    },
+    thumbnail: {
+      type: String,
+    },
+    previewVideo: {
+      type: String,
     },
     exp: {
       type: Number,

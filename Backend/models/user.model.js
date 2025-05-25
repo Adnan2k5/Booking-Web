@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema(
     refreshToken: { type: String },
     role: {
       type: String,
-      enum: ["user", "admin", "instructor"],
+      enum: ["user", "admin", "instructor", "hotel"],
       default: "user",
     },
     instructor: {
@@ -59,12 +59,12 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    friendRequests: [
-
-    ],
+    friendRequests: [],
   },
   {
+
     timestamps: true
+
   }
 );
 
@@ -78,7 +78,7 @@ userSchema.pre("save", async function (next) {
 
 userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
-}
+};
 
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
