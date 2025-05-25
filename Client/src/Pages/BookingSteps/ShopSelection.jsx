@@ -24,11 +24,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                 animate="visible"
             >
                 {mockItems.map((item) => {
-                    
-                    const buyCartItem = cartItems.find((ci) => ci._id === item._id && ci.purchase)
                     const rentCartItem = cartItems.find((ci) => ci._id === item._id && ci.rent)
-                    const rentQuantity = rentCartItem ? rentCartItem.quantity : 0
-
                     return (
                         <motion.div key={item._id} variants={itemVariants}>
                             <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-md">

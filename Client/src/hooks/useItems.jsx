@@ -10,6 +10,7 @@ export function useBrowse(initFilters = {}) {
         limit: 10,
         search: "",
         category: "",
+        adventureId: initFilters?.adventureId || "",
     });
 
     const [page, setPage] = useState(1);
@@ -30,9 +31,6 @@ export function useBrowse(initFilters = {}) {
         }
     };
     useEffect(() => {
-        if(initFilters?.category) {
-            setFilters(prev => ({ ...prev, category: initFilters.category, page: 1, limit: 4 }));
-        }
         fetchItems();
     }, [filters]);
 

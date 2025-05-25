@@ -29,6 +29,7 @@ export const discoverItems = asyncHandler(async (req, res) => {
     search,
     limit = 10,
     page = 1,
+    advenureId,
   } = req.query;
 
   
@@ -40,6 +41,10 @@ export const discoverItems = asyncHandler(async (req, res) => {
 
   if (category) {
     queryObj.category = category;
+  }
+
+  if (advenureId) {
+    queryObj.adventures = advenureId; // Filter by adventure ID
   }
 
   queryObj.stock = { $gt: 0 }; // Only fetch items that are in stock
