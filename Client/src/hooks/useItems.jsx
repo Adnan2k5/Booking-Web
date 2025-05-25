@@ -1,7 +1,7 @@
 import { fetchAllItems } from "../Api/items.api";
 import { useState, useEffect } from "react";
 
-export function useBrowse() {
+export function useBrowse(initFilters = {}) {
     const [items, setItems] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -30,6 +30,9 @@ export function useBrowse() {
         }
     };
     useEffect(() => {
+        if(initFilters?.category) {
+            setFilters(prev => ({ ...prev, category: initFilters.category, page: 1, limit: 4 }));
+        }
         fetchItems();
     }, [filters]);
 

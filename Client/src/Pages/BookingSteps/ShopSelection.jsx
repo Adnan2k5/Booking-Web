@@ -10,6 +10,7 @@ import { containerVariants, itemVariants } from "../../assets/Animations"
 
 export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRemoveFromCart }) => {
     const { t } = useTranslation()
+    console.log("ShopSelection rendered with items:", mockItems)
     return (
         <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-xl mb-8 border border-white/50">
             <div className="flex items-center gap-2 mb-6">
@@ -23,60 +24,50 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                 animate="visible"
             >
                 {mockItems.map((item) => {
-                    const buyCartItem = cartItems.find((ci) => ci.id === item.id && !ci.isRental)
-                    const rentCartItem = cartItems.find((ci) => ci.id === item.id && ci.isRental)
-                    const buyQuantity = buyCartItem ? buyCartItem.quantity : 0
+                    
+                    const buyCartItem = cartItems.find((ci) => ci._id === item._id && ci.purchase)
+                    const rentCartItem = cartItems.find((ci) => ci._id === item._id && ci.rent)
                     const rentQuantity = rentCartItem ? rentCartItem.quantity : 0
 
                     return (
-                        <motion.div key={item.id} variants={itemVariants}>
+                        <motion.div key={item._id} variants={itemVariants}>
                             <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-md">
                                 <div className="relative h-40 overflow-hidden">
-                                    <img src={item.img || "/placeholder.svg"} alt={item.name} className="w-full h-full object-cover" />
-                                    {(buyQuantity > 0 || rentQuantity > 0) && (
-                                        <div className="absolute top-2 right-2 flex gap-1">
-                                            {buyQuantity > 0 && (
-                                                <div className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-bold">
-                                                    {t("buy")}: {buyQuantity}
-                                                </div>
-                                            )}
-                                            {rentQuantity > 0 && (
-                                                <div className="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-bold">
-                                                    {t("rent")}: {rentQuantity}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
+                                    <img src={item.images[0] || "/placeholder.svg"} alt={item.name} className="w-full h-full object-cover" />
                                 </div>
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-lg font-bold text-gray-800">{item.name}</CardTitle>
                                 </CardHeader>
                                 <CardContent className="pb-2">
                                     <div className="flex items-center gap-1 mb-2">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                            <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                        {Array.from({ length: 5 }, (_, i) => (
+                                            <Star 
+                                                key={i} 
+                                                className={`w-3 h-3 ${i < Math.floor(item.totalReviews || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} 
+                                            />
                                         ))}
-                                        <span className="text-xs ml-1 text-gray-500">{item.rating}</span>
+                                        <span className="text-xs ml-1 text-gray-500">{item.totalReviews}</span>
+                                        <span className="text-xs ml-1 text-gray-500">{item.category}</span>
                                     </div>
                                     <div className="flex flex-col gap-2">
                                         <div className="flex justify-between items-center">
                                             <span className="font-bold text-blue-600">${item.price}</span>
-                                            {buyQuantity > 0 ? (
+                                            {item.stock > 0 ? (
                                                 <div className="flex items-center gap-2">
                                                     <Button
                                                         variant="outline"
                                                         size="icon"
                                                         className="h-7 w-7 rounded-full"
-                                                        onClick={() => handleRemoveFromCart(item.id, false)}
+                                                        onClick={() => handleRemoveFromCart(item._id, false)}
                                                     >
                                                         <Minus size={12} />
                                                     </Button>
-                                                    <span className="w-5 text-center font-medium">{buyQuantity}</span>
+                                                    <span className="w-5 text-center font-medium">{item.stock}</span>
                                                     <Button
                                                         variant="outline"
                                                         size="icon"
                                                         className="h-7 w-7 rounded-full"
-                                                        onClick={() => handleAddToCart(item.id, false)}
+                                                        onClick={() => handleAddToCart(item._id, false)}
                                                     >
                                                         <Plus size={12} />
                                                     </Button>
@@ -86,7 +77,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                                     variant="outline"
                                                     size="sm"
                                                     className="flex items-center gap-1"
-                                                    onClick={() => handleAddToCart(item.id, false)}
+                                                    onClick={() => handleAddToCart(item._id, false)}
                                                 >
                                                     <Plus size={12} />
                                                     {t("buy")}
@@ -94,27 +85,27 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                             )}
                                         </div>
 
-                                        {item.canRent && (
+                                        {item.rent && (
                                             <div className="flex justify-between items-center">
                                                 <span className="font-medium text-green-600">
-                                                    ${item.rentalPrice} <span className="text-xs">/day</span>
+                                                    ${item.price} <span className="text-xs">/day</span>
                                                 </span>
-                                                {rentQuantity > 0 ? (
+                                                {item.stock > 0 ? (
                                                     <div className="flex items-center gap-2">
                                                         <Button
                                                             variant="outline"
                                                             size="icon"
                                                             className="h-7 w-7 rounded-full"
-                                                            onClick={() => handleRemoveFromCart(item.id, true)}
+                                                            onClick={() => handleRemoveFromCart(item._id, true)}
                                                         >
                                                             <Minus size={12} />
                                                         </Button>
-                                                        <span className="w-5 text-center font-medium">{rentQuantity}</span>
+                                                        <span className="w-5 text-center font-medium">{item.stock}</span>
                                                         <Button
                                                             variant="outline"
                                                             size="icon"
                                                             className="h-7 w-7 rounded-full"
-                                                            onClick={() => handleAddToCart(item.id, true)}
+                                                            onClick={() => handleAddToCart(item._id, true)}
                                                         >
                                                             <Plus size={12} />
                                                         </Button>
@@ -124,7 +115,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                                         variant="outline"
                                                         size="sm"
                                                         className="flex items-center gap-1"
-                                                        onClick={() => handleAddToCart(item.id, true)}
+                                                        onClick={() => handleAddToCart(item._id, true)}
                                                     >
                                                         <Plus size={12} />
                                                         {t("rent")}
@@ -151,17 +142,17 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("yourCart")}</h3>
                     <div className="space-y-3">
                         {cartItems.map((cartItem) => {
-                            const item = mockItems.find((i) => i.id === cartItem.id)
-                            const price = cartItem.isRental ? item?.rentalPrice : item?.price
+                            const item = mockItems.find((i) => i._id === cartItem._id)
+                            const price = cartItem.rent ? item?.rent : item?.price
                             return (
                                 <div
-                                    key={`${cartItem.id}-${cartItem.isRental ? "rent" : "buy"}`}
+                                    key={`${cartItem._id}`}
                                     className="flex items-center justify-between"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="w-12 h-12 rounded-lg overflow-hidden">
                                             <img
-                                                src={item?.img || "/placeholder.svg"}
+                                                src={item?.images[0] || "/placeholder.svg"}
                                                 alt={item?.name}
                                                 className="w-full h-full object-cover"
                                             />
@@ -169,10 +160,10 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                         <div>
                                             <p className="font-medium text-gray-800">
                                                 {item?.name}{" "}
-                                                {cartItem.isRental && <span className="text-xs text-green-600">({t("rental")})</span>}
+                                                {cartItem.rent && <span className="text-xs text-green-600">({t("rental")})</span>}
                                             </p>
                                             <p className="text-sm text-gray-500">
-                                                {t("qty")}: {cartItem.quantity}
+                                                {t("qty")}: {cartItem.stock}
                                             </p>
                                         </div>
                                     </div>
@@ -186,8 +177,8 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                 $
                                 {cartItems
                                     .reduce((sum, item) => {
-                                        const itemData = mockItems.find((i) => i.id === item.id)
-                                        const price = item.isRental ? itemData?.rentalPrice : itemData?.price
+                                        const itemData = mockItems.find((i) => i._id === item._id)
+                                        const price = item.rent ? itemData?.price : itemData?.price
                                         return sum + (price || 0) * item.quantity
                                     }, 0)
                                     .toFixed(2)}

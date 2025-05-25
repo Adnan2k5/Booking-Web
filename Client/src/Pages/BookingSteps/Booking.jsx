@@ -21,7 +21,8 @@ import { HotelSelection } from "./HotelSelection"
 import { BookingSummary } from "./BookingSummary"
 
 // Import data
-import { mockItems, mockHotels } from "../../Data/mock_booking"
+import { mockHotels } from "../../Data/mock_booking"
+import { useBrowse } from "../../hooks/useItems"
 
 export default function BookingFlow() {
   const navigate = useNavigate()
@@ -41,7 +42,7 @@ export default function BookingFlow() {
 
   const { sessions, instructors } = useSessions({ adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date") })
 
-  console.log("Sessions: ", sessions)
+  const { items } = useBrowse() 
   // Load group members from sessionStorage if available
   useEffect(() => {
     const storedGroupMembers = sessionStorage.getItem("groupMembers")
@@ -75,30 +76,30 @@ export default function BookingFlow() {
 
   const handleAddToCart = (itemId, isRental = false) => {
     setCartItems((prev) => {
-      const existingItem = prev.find((item) => item.id === itemId && item.isRental === isRental)
+      const existingItem = prev.find((item) => item._id === itemId && item.rent === isRental)
       if (existingItem) {
         // Increment quantity if item already in cart
         return prev.map((item) =>
-          item.id === itemId && item.isRental === isRental ? { ...item, quantity: item.quantity + 1 } : item,
+          item._id === itemId && item.rent === isRental ? { ...item, quantity: item.quantity + 1 } : item,
         )
       } else {
         // Add new item with quantity 1
-        return [...prev, { id: itemId, quantity: 1, isRental }]
+        return [...prev, { _id: itemId, quantity: 1, isRental }]
       }
     })
   }
 
   const handleRemoveFromCart = (itemId, isRental = false) => {
     setCartItems((prev) => {
-      const existingItem = prev.find((item) => item.id === itemId && item.isRental === isRental)
+      const existingItem = prev.find((item) => item._id === itemId && item.rent === isRental)
       if (existingItem && existingItem.quantity > 1) {
         // Decrement quantity if more than 1
         return prev.map((item) =>
-          item.id === itemId && item.isRental === isRental ? { ...item, quantity: item.quantity - 1 } : item,
+          item._id === itemId && item.rent === isRental ? { ...item, quantity: item.quantity - 1 } : item,
         )
       } else {
         // Remove item if quantity would be 0
-        return prev.filter((item) => !(item.id === itemId && item.isRental === isRental))
+        return prev.filter((item) => !(item._id === itemId && item.rent === isRental))
       }
     })
   }
@@ -146,10 +147,10 @@ export default function BookingFlow() {
   // Calculate total price
   const calculateTotal = () => {
     const itemsPrice = cartItems.reduce((sum, item) => {
-      const itemData = mockItems.find((i) => i.id === item.id)
+      const itemData = items.find((i) => i._id === item._id)
       if (!itemData) return sum
 
-      const price = item.isRental ? itemData.rentalPrice || 0 : itemData.price || 0
+      const price = itemData.price;
       return sum + price * item.quantity
     }, 0)
 
@@ -354,7 +355,7 @@ export default function BookingFlow() {
                 className="w-full"
               >
                 <ShopSelection
-                  mockItems={mockItems}
+                  mockItems={items}
                   cartItems={cartItems}
                   handleAddToCart={handleAddToCart}
                   handleRemoveFromCart={handleRemoveFromCart}
@@ -381,7 +382,7 @@ export default function BookingFlow() {
                     selectedInstructor={selectedInstructor}
                     groupMembers={groupMembers}
                     cartItems={cartItems}
-                    mockItems={mockItems}
+                    mockItems={items}
                     selectedHotel={selectedHotel}
                     mockHotels={mockHotels}
                     calculateTotal={calculateTotal}
