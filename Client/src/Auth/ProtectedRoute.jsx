@@ -33,10 +33,10 @@ export const InstructorRoute = ({ children }) => {
     if (user.user === null) {
       navigate('/login')
     }
-    else if (user.user.role === 'instructor') {
+    else if (user.user.role !== 'instructor') {
       navigate("/")
     }
-    else if (user.user.role === 'instructor' && user.user.instructor !== null) {
+    else if (user.user.role !== 'instructor' && user.user.instructor !== null) {
       getStatus().then((res) => {
         if (res === false) {
           navigate("/instructor/pending-review")
