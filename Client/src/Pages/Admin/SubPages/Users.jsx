@@ -14,7 +14,8 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
 import { Card, CardContent } from "../../../components/ui/card"
 import { Badge } from "../../../components/ui/badge"
-import { fetchUsers } from "../../../Api/user.api"
+import { fetchUsers, deleteUser } from "../../../Api/user.api"
+import { toast } from "sonner"
 
 export default function Dash_User() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -24,7 +25,6 @@ export default function Dash_User() {
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(false)
 
-  console.log("Users:", users)
 
   const getUsers = useCallback(async () => {
     setLoading(true)
@@ -42,6 +42,18 @@ export default function Dash_User() {
   useEffect(() => {
     getUsers()
   }, [getUsers])
+
+  const handleDeleteUser = async (userId) => {
+    const toastId = toast.loading("Deleting user...")
+    try {
+      await deleteUser(userId)
+      await getUsers()
+      toast.success("User deleted successfully", { id: toastId })
+    } catch (error) {
+      console.error("Error deleting user:", error)
+      toast.error("Error deleting user", { id: toastId })
+    }
+  }
 
   return (
     <motion.div
@@ -77,8 +89,8 @@ export default function Dash_User() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[200px]">
               <DropdownMenuItem onClick={() => setRoleFilter("all")}>All Users</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setRoleFilter("user")}>Customers</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setRoleFilter("admin")}>Administrators</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRoleFilter("user")}>Explorers</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRoleFilter("admin")}>Admins</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setRoleFilter("instructor")}>Instructors</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -124,13 +136,7 @@ export default function Dash_User() {
                     <TableCell>{user.bookings?.length || 0}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button variant="ghost" size="icon">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user._id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

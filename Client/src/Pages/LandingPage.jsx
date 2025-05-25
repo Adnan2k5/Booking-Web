@@ -37,7 +37,6 @@ export default function LandingPage() {
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
   const [adventure, setadventure] = useState("")
-  const [activeSearchField, setActiveSearchField] = useState(null)
 
   const { adventures, loading: adventureLoading } = useAdventures()
 

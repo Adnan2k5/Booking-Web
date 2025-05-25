@@ -32,3 +32,18 @@ export const getUsers = asyncHandler(async (req, res) => {
     totalPages: Math.ceil(total / limit),
   });
 });
+
+
+export const deleteUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    throw new ApiError(400, "User ID is required");
+  }
+
+  const user = await User.findByIdAndDelete(id);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  res.status(200).json(new ApiResponse(200, "User deleted successfully", user));
+});

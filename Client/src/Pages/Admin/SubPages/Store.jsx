@@ -44,7 +44,6 @@ export default function ItemsPage() {
       status: "",
     },
   })
-  const [categoryFilter, setCategoryFilter] = useState("all")
   const [showAddItem, setShowAddItem] = useState(false)
   const [images, setImages] = useState([])
   const [selectedAdventure, setSelectedAdventure] = useState("")

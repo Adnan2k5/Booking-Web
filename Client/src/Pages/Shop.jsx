@@ -12,168 +12,25 @@ import {
     DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { Badge } from "../components/ui/badge"
 import { CartContext } from "./Cart/CartContext"
 import { Link } from "react-router-dom"
+import { useBrowse } from "../hooks/useItems"
+import { useCategory } from "../hooks/useCategory"
 
-// Mock data for items/products
-const mockItems = [
-    {
-        id: 1,
-        name: "Hiking Backpack",
-        description: "Durable 40L backpack perfect for multi-day hikes",
-        category: "Equipment",
-        brand: "OSPREY",
-        price: 129.99,
-        originalPrice: 149.99,
-        stock: 45,
-        status: "in-stock",
-        image: "/placeholder.svg?height=400&width=400",
-        images: [
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-        ],
-    },
-    {
-        id: 2,
-        name: "Climbing Harness",
-        description: "Professional-grade climbing harness with adjustable leg loops",
-        category: "Safety Gear",
-        brand: "BLACK DIAMOND",
-        price: 89.99,
-        originalPrice: 89.99,
-        stock: 32,
-        status: "in-stock",
-        image: "/placeholder.svg?height=400&width=400",
-        images: [
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-        ],
-    },
-    {
-        id: 3,
-        name: "Waterproof Tent",
-        description: "3-person tent with rainfly and waterproof floor",
-        category: "Equipment",
-        brand: "BIG AGNES",
-        price: 199.99,
-        originalPrice: 249.99,
-        stock: 18,
-        status: "in-stock",
-        image: "/placeholder.svg?height=400&width=400",
-        images: [
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-        ],
-    },
-    {
-        id: 4,
-        name: "Trekking Poles",
-        description: "Adjustable aluminum trekking poles with cork grips",
-        category: "Equipment",
-        brand: "BLACK DIAMOND",
-        price: 49.99,
-        originalPrice: 49.99,
-        stock: 60,
-        status: "in-stock",
-        image: "/placeholder.svg?height=400&width=400",
-        images: [
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-        ],
-    },
-    {
-        id: 5,
-        name: "Adventure First Aid Kit",
-        description: "Comprehensive first aid kit for outdoor adventures",
-        category: "Safety Gear",
-        brand: "ADVENTURE MEDICAL",
-        price: 34.99,
-        originalPrice: 34.99,
-        stock: 75,
-        status: "in-stock",
-        image: "/placeholder.svg?height=400&width=400",
-        images: [
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-        ],
-    },
-    {
-        id: 6,
-        name: "Insulated Water Bottle",
-        description: "1L vacuum insulated stainless steel water bottle",
-        category: "Accessories",
-        brand: "HYDRO FLASK",
-        price: 29.99,
-        originalPrice: 39.99,
-        stock: 0,
-        status: "out-of-stock",
-        image: "/placeholder.svg?height=400&width=400",
-        images: [
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-        ],
-    },
-    {
-        id: 7,
-        name: "Headlamp",
-        description: "300-lumen LED headlamp with adjustable brightness",
-        category: "Equipment",
-        brand: "PETZL",
-        price: 45.99,
-        originalPrice: 45.99,
-        stock: 28,
-        status: "in-stock",
-        image: "/placeholder.svg?height=400&width=400",
-        images: [
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-        ],
-    },
-    {
-        id: 8,
-        name: "Climbing Rope",
-        description: "60m dynamic climbing rope with middle mark",
-        category: "Safety Gear",
-        brand: "MAMMUT",
-        price: 159.99,
-        originalPrice: 189.99,
-        stock: 12,
-        status: "low-stock",
-        image: "/placeholder.svg?height=400&width=400",
-        images: [
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-        ],
-    },
-]
 
 export default function ItemsPage() {
-    const [searchTerm, setSearchTerm] = useState("")
-    const [categoryFilter, setCategoryFilter] = useState("all")
     const { addToCart } = useContext(CartContext)
+    const { items, filters, setFilters, page, setPage, limit, total } = useBrowse()
+    const { categories } = useCategory()
 
-    // Filter items based on search term and category
-    const filteredItems = mockItems.filter((item) => {
-        const matchesSearch =
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.brand.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesCategory = categoryFilter === "all" || item.category.toLowerCase() === categoryFilter.toLowerCase()
-        return matchesSearch && matchesCategory
-    })
+    // Calculate total pages
+    const totalPages = Math.ceil(total / limit)
 
-    // Get unique categories for filter dropdown
-    const categories = [...new Set(mockItems.map((item) => item.category))]
+    // Handle page change
+    const handlePageChange = (newPage) => {
+        setFilters((prev) => ({ ...prev, page: newPage }))
+        setPage(newPage)
+    }
 
     return (
 
@@ -192,11 +49,10 @@ export default function ItemsPage() {
                             type="search"
                             placeholder="Search products..."
                             className="w-[200px] sm:w-[300px] pl-8"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={filters.search || ""}
+                            onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
                         />
                     </div>
-
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">
@@ -206,10 +62,10 @@ export default function ItemsPage() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-[200px]">
-                            <DropdownMenuItem onClick={() => setCategoryFilter("all")}>All Categories</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setFilters((prev) => ({ ...prev, category: "" }))}>All Categories</DropdownMenuItem>
                             {categories.map((category) => (
-                                <DropdownMenuItem key={category} onClick={() => setCategoryFilter(category)}>
-                                    {category}
+                                <DropdownMenuItem key={category._id} onClick={() => setFilters((prev) => ({ ...prev, category: category.name }))}>
+                                    {category.name}
                                 </DropdownMenuItem>
                             ))}
                         </DropdownMenuContent>
@@ -227,37 +83,25 @@ export default function ItemsPage() {
 
                 <TabsContent value="grid" className="space-y-8">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                        {filteredItems.map((item) => (
-                            <div key={item.id} className="border rounded-md overflow-hidden group relative">
-                                <Link to={`/product/${item.id}`} className="block">
+                        {items.map((item) => (
+                            <div key={item._id} className="border rounded-md overflow-hidden group relative">
+                                <Link to={`/product/${item._id}`} className="block">
                                     <div className="aspect-square relative overflow-hidden">
                                         <img
-                                            src={item.image || "/placeholder.svg"}
+                                            src={item.images[0] || "/placeholder.svg"}
                                             alt={item.name}
                                             className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                                         />
-                                        {item.originalPrice > item.price && (
-                                            <Badge className="absolute top-2 right-2 bg-red-500">
-                                                -{Math.round((1 - item.price / item.originalPrice) * 100)}%
-                                            </Badge>
-                                        )}
                                     </div>
                                 </Link>
 
                                 <div className="p-3">
-                                    <div className="text-sm text-gray-500 uppercase font-medium">{item.brand}</div>
+                                    <div className="text-sm text-gray-500 uppercase font-medium">{item.category}</div>
                                     <h3 className="font-medium text-sm mt-1 line-clamp-2">{item.name}</h3>
 
                                     <div className="flex items-center justify-between mt-2">
                                         <div className="flex items-center gap-2">
-                                            {item.originalPrice > item.price ? (
-                                                <>
-                                                    <span className="text-gray-400 line-through text-sm">{item.originalPrice.toFixed(2)} €</span>
-                                                    <span className="font-bold text-red-500">{item.price.toFixed(2)} €</span>
-                                                </>
-                                            ) : (
-                                                <span className="font-bold">{item.price.toFixed(2)} €</span>
-                                            )}
+                                            <span className="font-bold">{item.price.toFixed(2)} €</span>
                                         </div>
                                     </div>
                                 </div>
@@ -278,7 +122,7 @@ export default function ItemsPage() {
                                     <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-white hover:bg-gray-100">
                                         <Heart className="h-4 w-4" />
                                     </Button>
-                                    <Link to={`/product/${item.id}`}>
+                                    <Link to={`/product/${item._id}`}>
                                         <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-white hover:bg-gray-100">
                                             <Eye className="h-4 w-4" />
                                         </Button>
@@ -291,38 +135,27 @@ export default function ItemsPage() {
 
                 <TabsContent value="list" className="space-y-4">
                     <div className="space-y-4">
-                        {filteredItems.map((item) => (
-                            <div key={item.id} className="border rounded-md overflow-hidden flex">
-                                <Link to={`/product/${item.id}`} className="block w-40 h-40">
+                        {items.map((item) => (
+                            <div key={item._id} className="border rounded-md overflow-hidden flex">
+                                <Link to={`/product/${item._id}`} className="block w-40 h-40">
                                     <div className="w-40 h-40 relative">
                                         <img
-                                            src={item.image || "/placeholder.svg"}
+                                            src={item.images[0] || "/placeholder.svg"}
                                             alt={item.name}
                                             className="object-cover w-full h-full"
                                         />
-                                        {item.originalPrice > item.price && (
-                                            <Badge className="absolute top-2 right-2 bg-red-500">
-                                                -{Math.round((1 - item.price / item.originalPrice) * 100)}%
-                                            </Badge>
-                                        )}
+
                                     </div>
                                 </Link>
 
                                 <div className="p-4 flex-1">
-                                    <div className="text-sm text-gray-500 uppercase font-medium">{item.brand}</div>
+                                    <div className="text-sm text-gray-500 uppercase font-medium">{item.category}</div>
                                     <h3 className="font-medium mt-1">{item.name}</h3>
                                     <p className="text-sm text-gray-500 mt-1 line-clamp-2">{item.description}</p>
 
                                     <div className="flex items-center justify-between mt-4">
                                         <div className="flex items-center gap-2">
-                                            {item.originalPrice > item.price ? (
-                                                <>
-                                                    <span className="text-gray-400 line-through">{item.originalPrice.toFixed(2)} €</span>
-                                                    <span className="font-bold text-red-500 text-lg">{item.price.toFixed(2)} €</span>
-                                                </>
-                                            ) : (
-                                                <span className="font-bold text-lg">{item.price.toFixed(2)} €</span>
-                                            )}
+                                            <span className="font-bold text-lg">{item.price.toFixed(2)} €</span>
                                         </div>
 
                                         <div className="flex gap-2">
@@ -330,7 +163,7 @@ export default function ItemsPage() {
                                                 <ShoppingBag className="h-4 w-4 mr-2" />
                                                 Add to cart
                                             </Button>
-                                            <Link to={`/product/${item.id}`}>
+                                            <Link to={`/product/${item._id}`}>
                                                 <Button variant="default" size="sm">
                                                     <Eye className="h-4 w-4 mr-2" />
                                                     View
@@ -344,6 +177,36 @@ export default function ItemsPage() {
                     </div>
                 </TabsContent>
             </Tabs>
+
+            {/* Pagination Controls */}
+            <div className="flex justify-center items-center gap-2 mt-6">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => handlePageChange(page - 1)}
+                >
+                    Prev
+                </Button>
+                {[...Array(totalPages)].map((_, idx) => (
+                    <Button
+                        key={idx + 1}
+                        variant={page === idx + 1 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(idx + 1)}
+                    >
+                        {idx + 1}
+                    </Button>
+                ))}
+                <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={() => handlePageChange(page + 1)}
+                >
+                    Next
+                </Button>
+            </div>
         </motion.div>
     )
 }

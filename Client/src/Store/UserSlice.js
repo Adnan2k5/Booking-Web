@@ -23,6 +23,7 @@ const userSlice = createSlice({
       state.loading = false;
     },
     logout: (state) => {
+      console.log('Logging out user');
       state.user = null;
       state.loading = false;
     },

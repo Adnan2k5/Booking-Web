@@ -22,10 +22,9 @@ import { toast } from "sonner"
 
 export default function InstructorsPage() {
     const [searchTerm, setSearchTerm] = useState("")
-    const [statusFilter, setStatusFilter] = useState("all")
     const [selectedInstructor, setSelectedInstructor] = useState(null)
     const [showDocuments, setShowDocuments] = useState(false)
-    const { instructors, isLoading, error, page, setPage, total, limit, deleteInstructorById, totalPages, changeDocumentStatus, setInstructors } = useInstructors()
+    const { instructors,  page, setPage, deleteInstructorById, totalPages, changeDocumentStatus } = useInstructors()
 
     const handleViewDocuments = (instructor) => {
         setSelectedInstructor(instructor)

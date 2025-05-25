@@ -26,14 +26,38 @@ export const getItemById = asyncHandler(async (req, res) => {
 export const discoverItems = asyncHandler(async (req, res) => {
   const {
     category,
-    query,
+    search,
     limit = 10,
     page = 1,
-    lat,
-    long,
-    lang,
+    advenureId,
   } = req.query;
-  //TODO: Write Controller
+
+  
+  const skip = (parseInt(page) - 1) * parseInt(limit);  
+  const queryObj = {};
+  if (search) {
+    queryObj.name = { $regex: search, $options: "i" };
+  }
+
+  if (category) {
+    queryObj.category = category;
+  }
+
+  if (advenureId) {
+    queryObj.adventures = advenureId; // Filter by adventure ID
+  }
+
+  queryObj.stock = { $gt: 0 }; // Only fetch items that are in stock
+
+  const items = await Item.find(queryObj)
+    .populate("adventures", "name")
+    .skip(skip)
+    .limit(parseInt(limit));
+
+  const total = await Item.countDocuments(queryObj);
+  res.status(200).json(
+    new ApiResponse(200, {items, total}, "Items fetched successfully")
+  );
 });
 
 export const createItem = asyncHandler(async (req, res) => {

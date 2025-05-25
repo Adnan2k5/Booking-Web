@@ -62,7 +62,9 @@ const userSchema = new mongoose.Schema(
     friendRequests: [],
   },
   {
-    Timestamps: true,
+
+    timestamps: true
+
   }
 );
 

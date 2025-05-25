@@ -10,3 +10,9 @@ export const fetchUsers = async ({
   const { data } = await axiosClient.get('/api/user', { params });
   return data;
 };
+
+
+export const deleteUser = async (userId) => {
+  const { data } = await axiosClient.delete(`/api/user/${userId}`);
+  return data;
+}
