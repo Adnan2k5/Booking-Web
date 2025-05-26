@@ -146,6 +146,7 @@ export const getHotel = asyncHandler(async (req, res) => {
     query.verified = verified;
   }
   const skip = (parseInt(page) - 1) * parseInt(limit);
+
   const hotels = await Hotel.find(query)
     .sort({ createdAt: -1 })
     .skip(skip)
@@ -153,6 +154,7 @@ export const getHotel = asyncHandler(async (req, res) => {
     .populate("owner", "name email")
     .populate("location", "name");
   const total = await Hotel.countDocuments(query);
+  
   res.status(200).json({
     hotels,
     total,

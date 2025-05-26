@@ -90,7 +90,7 @@ export const BookingSummary = ({
                             <div className="flex items-start gap-3">
                                 <Avatar className="h-12 w-12 border-2 border-white shadow-md">
                                     <AvatarImage src={selectedInstructor.img || "/placeholder.svg"} alt={selectedInstructor.name} />
-                                    <AvatarFallback>{selectedInstructor.name.charAt(0)}</AvatarFallback>
+                                    <AvatarFallback>{selectedInstructor?.name?.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div>
                                     <p className="font-medium text-gray-800">{selectedInstructor.name}</p>
