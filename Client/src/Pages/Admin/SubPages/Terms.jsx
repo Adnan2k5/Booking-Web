@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react" // Import useEffect
 import { motion } from "framer-motion"
 import { Search, Edit, FileText, Save } from "lucide-react"
 import { Button } from "../../../components/ui/button"
@@ -9,58 +9,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Card, CardContent } from "../../../components/ui/card"
 import { Badge } from "../../../components/ui/badge"
 import { Textarea } from "../../../components/ui/textarea"
-
-// Mock data for terms and conditions
-const mockTerms = [
-  {
-    id: 1,
-    title: "General Terms and Conditions",
-    version: "3.2",
-    lastUpdated: "2025-02-15",
-    status: "active",
-    createdBy: "John Smith",
-  },
-  {
-    id: 2,
-    title: "Booking and Cancellation Policy",
-    version: "2.1",
-    lastUpdated: "2025-01-20",
-    status: "active",
-    createdBy: "Sarah Johnson",
-  },
-  {
-    id: 3,
-    title: "Privacy Policy",
-    version: "4.0",
-    lastUpdated: "2025-03-05",
-    status: "active",
-    createdBy: "Michael Brown",
-  },
-  {
-    id: 4,
-    title: "Refund Policy",
-    version: "1.5",
-    lastUpdated: "2024-12-10",
-    status: "archived",
-    createdBy: "Emily Davis",
-  },
-  {
-    id: 5,
-    title: "Safety Guidelines",
-    version: "2.3",
-    lastUpdated: "2025-02-28",
-    status: "active",
-    createdBy: "David Wilson",
-  },
-]
+import { getAllTermDocuments } from "../../../Api/terms,api.js" // Import the API function
 
 export default function Dash_Terms() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTerm, setSelectedTerm] = useState(null)
   const [editMode, setEditMode] = useState(false)
   const [termContent, setTermContent] = useState("")
+  const [terms, setTerms] = useState([]) // State for API fetched terms
+  const [isLoading, setIsLoading] = useState(true) // Loading state
+  const [error, setError] = useState(null) // Error state
 
-  // Sample content for a selected term
+  // Sample content for a selected term - This might need to be fetched or adjusted
   const sampleContent = `
 # General Terms and Conditions
 
@@ -96,8 +56,31 @@ Last Updated: February 15, 2025
 Version: 3.2
   `
 
+  useEffect(() => {
+    const fetchTerms = async () => {
+      try {
+        setIsLoading(true)
+        const data = await getAllTermDocuments()
+        console.log("Fetched terms:", data)
+        // Assuming the API returns an array of term documents
+        // And each document has at least: id, title, version, status, lastUpdated
+        // You might need to map the data if the structure is different
+        setTerms(data || [])
+        setError(null)
+      } catch (err) {
+        console.error("Failed to fetch terms:", err)
+        setError("Failed to load terms. Please try again later.")
+        setTerms([]) // Set to empty array on error
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchTerms()
+  }, [])
+
   // Filter terms based on search term
-  const filteredTerms = mockTerms.filter((term) => {
+  const filteredTerms = terms.filter((term) => {
     return term.title.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
@@ -148,21 +131,39 @@ Version: 3.2
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTerms.map((term) => (
-                      <TableRow
-                        key={term.id}
-                        className={`cursor-pointer ${selectedTerm?.id === term.id ? "bg-muted/50" : ""}`}
-                        onClick={() => handleSelectTerm(term)}
-                      >
-                        <TableCell className="font-medium">{term.title}</TableCell>
-                        <TableCell>v{term.version}</TableCell>
-                        <TableCell>
-                          <Badge variant={term.status === "active" ? "default" : "secondary"}>
-                            {term.status.charAt(0).toUpperCase() + term.status.slice(1)}
-                          </Badge>
-                        </TableCell>
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan="3" className="text-center">Loading terms...</TableCell>
                       </TableRow>
-                    ))}
+                    ) : error ? (
+                      <TableRow>
+                        <TableCell colSpan="3" className="text-center text-red-500">{error}</TableCell>
+                      </TableRow>
+                    ) : filteredTerms.length === 0 && !searchTerm ? (
+                      <TableRow>
+                        <TableCell colSpan="3" className="text-center">No terms documents found.</TableCell>
+                      </TableRow>
+                    ) : filteredTerms.length === 0 && searchTerm ? (
+                       <TableRow>
+                        <TableCell colSpan="3" className="text-center">No terms matching your search.</TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredTerms.map((term) => (
+                        <TableRow
+                          key={term._id || term.id} 
+                          className={`cursor-pointer ${selectedTerm?._id === term._id || selectedTerm?.id === term.id ? "bg-muted/50" : ""}`}
+                          onClick={() => handleSelectTerm(term)}
+                        >
+                          <TableCell className="font-medium">{term.title}</TableCell>
+                          <TableCell>v{term.version}</TableCell>
+                          <TableCell>
+                            <Badge variant={term.status === "active" ? "default" : "secondary"}>
+                              {term.status ? term.status.charAt(0).toUpperCase() + term.status.slice(1) : 'N/A'}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
