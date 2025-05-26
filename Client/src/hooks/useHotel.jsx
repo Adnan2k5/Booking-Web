@@ -7,17 +7,13 @@ export function useHotels({ search = "", page = 1, limit = 10, status = "all" })
     const [error, setError] = useState(null);
     const [total, setTotal] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
-
     useEffect(() => {
         const fetchHotels = async () => {
             setIsLoading(true);
             try {
-                const res = await getHotel({ search, page, limit });
+                const res = await getHotel({ search, page, limit, status });
                 if (res && res.data) {
                     let hotelsData = res.data.hotels || [];
-                    if (status !== "all") {
-                        hotelsData = hotelsData.filter(hotel => hotel.status === status);
-                    }
                     setHotels(hotelsData);
                     setTotal(res.data.total || 0);
                     setTotalPages(res.data.totalPages || 1);

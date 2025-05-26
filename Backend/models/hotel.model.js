@@ -7,8 +7,8 @@ const HotelSchema = new mongoose.Schema(
       required: true,
     },
     location: {
-      type: String,
-      required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Location",
     },
     fullAddress: {
       type: String,
