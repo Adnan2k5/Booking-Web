@@ -7,7 +7,7 @@ import { Modal } from "antd"
 import { InputOTPSlot, InputOTP, InputOTPGroup } from "../../components/ui/input-otp"
 import { toast } from "sonner"
 import { Textarea } from "../../components/ui/textarea"
-import { X, Upload, FileText, Building, MapPin, Phone, Mail, User, ImageIcon } from "lucide-react"
+import { X, Upload, FileText, Building, MapPin, Phone, Mail, User, ImageIcon, Link, Euro } from "lucide-react"
 import { registerHotel, verify } from "../../Api/hotel.api.js"
 import { fetchLocations } from "../../Api/location.api.js"
 export const HotelRegister = () => {
@@ -29,6 +29,10 @@ export const HotelRegister = () => {
         taxCertificate: null,
         insuranceDocument: null,
         role: "hotel",
+        price: 0,
+        socialMedias: [],
+        website: "",
+        category: "hotel", // Add category to form data
     })
 
     const [error, setError] = useState("")
@@ -38,6 +42,9 @@ export const HotelRegister = () => {
     const [location, setlocation] = useState([]);
     const [customAmenity, setCustomAmenity] = useState("");
     const [allAmenities, setAllAmenities] = useState([]);
+    // Social media state
+    const [customSocial, setCustomSocial] = useState("");
+    const [allSocials, setAllSocials] = useState([]);
 
     const passValidation = () => {
         if (
@@ -71,6 +78,12 @@ export const HotelRegister = () => {
         getLocation()
     }, [])
 
+    // Helper to get current label (Hotel/Camping/Glamping)
+    const getLabel = () => {
+        if (formData.category === "camping") return "Camping";
+        if (formData.category === "glamping") return "Glamping";
+        return "Hotel";
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target
@@ -175,7 +188,10 @@ export const HotelRegister = () => {
                 data.append("managerName", formData.managerName)
                 data.append("rooms", formData.rooms)
                 data.append("role", formData.role)
+                data.append("price", formData.price)
+                data.append("website", formData.website)
                 data.append("otp", otp)
+                data.append("category", formData.category) // Add category to form data
                 formData.amenities.forEach((amenity) => {
                     data.append("amenities[]", amenity)
                 })
@@ -186,6 +202,11 @@ export const HotelRegister = () => {
                 if (formData.hotelImages && formData.hotelImages.length > 0) {
                     formData.hotelImages.forEach((image) => {
                         data.append("hotelImages", image.file)
+                    })
+                }
+                if (formData.socialMedias && formData.socialMedias.length > 0) {
+                    formData.socialMedias.forEach((link) => {
+                        data.append("socialMedias[]", link)
                     })
                 }
                 const res = await registerHotel(data)
@@ -283,7 +304,9 @@ export const HotelRegister = () => {
             data.append("managerName", formData.managerName)
             data.append("rooms", formData.rooms)
             data.append("role", formData.role)
+            data.append("price", formData.price)
             data.append("otp", otp)
+            data.append("category", formData.category)
             formData.amenities.forEach((amenity) => {
                 data.append("amenities[]", amenity)
             })
@@ -296,9 +319,14 @@ export const HotelRegister = () => {
                     data.append("hotelImages", image.file)
                 })
             }
+            if (formData.socialMedias && formData.socialMedias.length > 0) {
+                formData.socialMedias.forEach((link) => {
+                    data.append("socialMedias[]", link)
+                })
+            }
             const res = await registerHotel(data)
             if (res.statusCode === 201) {
-                toast.success("Hotel Registration successful!")
+                toast.success("Hotel Registration successful!", { id: toastId })
                 setOtpDialog(false)
                 setOtp("")
             }
@@ -314,11 +342,25 @@ export const HotelRegister = () => {
         <div className="min-h-screen flex items-center justify-center px-3 py-8 bg-gray-50">
             <Card className="w-full max-w-6xl p-6 shadow-lg">
                 <div className="mb-6 text-center">
-                    <h1 className="text-2xl font-bold text-gray-800">Hotel Registration</h1>
-                    <p className="text-gray-600">Register your hotel to join our adventure platform</p>
+                    <h1 className="text-2xl font-bold text-gray-800">{getLabel()} Registration</h1>
+                    <p className="text-gray-600">Register your {getLabel().toLowerCase()} to join our adventure platform</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="mb-4 flex items-center gap-4">
+                        <Label htmlFor="category">Category</Label>
+                        <select
+                            id="category"
+                            name="category"
+                            value={formData.category}
+                            onChange={handleChange}
+                            className="border rounded px-3 py-2 focus:ring-2 focus:ring-black transition-all focus:scale-[1.01]"
+                        >
+                            <option value="hotel">Hotel</option>
+                            <option value="camping">Camping</option>
+                            <option value="glamping">Glamping</option>
+                        </select>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         {/* Left Column - Basic Information */}
                         <div className="space-y-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
@@ -326,14 +368,14 @@ export const HotelRegister = () => {
                                 <div className="space-y-2">
                                     <Label htmlFor="name" className="flex items-center">
                                         <Building className="h-4 w-4 mr-2" />
-                                        Hotel Name
+                                        {getLabel()} Name
                                     </Label>
                                     <Input
                                         id="name"
                                         name="name"
                                         value={formData.name}
                                         onChange={handleChange}
-                                        placeholder="Enter hotel name"
+                                        placeholder={`Enter ${getLabel().toLowerCase()} name`}
                                         required
                                         className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
                                     />
@@ -390,29 +432,45 @@ export const HotelRegister = () => {
                                         <p>{error}</p>
                                     </div>
                                 )}
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="location" className="flex items-center">
-                                        <MapPin className="h-4 w-4 mr-2" />
-                                        Location
-                                    </Label>
-                                    <select
-                                        id="location"
-                                        name="location"
-                                        value={formData.location}
-                                        onChange={handleChange}
-                                        className="border rounded px-3 py-2 focus:ring-2 focus:ring-black transition-all focus:scale-[1.01]"
-                                    >
-                                        <option value="" disabled>
-                                            Select location
-                                        </option>
-                                        {location.map((loc) => (
-                                            <option key={loc._id} value={loc._id}>
-                                                {loc.name}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="location" className="flex items-center">
+                                            <MapPin className="h-4 w-4 mr-2" />
+                                            Location
+                                        </Label>
+                                        <select
+                                            id="location"
+                                            name="location"
+                                            value={formData.location}
+                                            onChange={handleChange}
+                                            className="border  rounded px-3 py-2 focus:ring-2 focus:ring-black transition-all focus:scale-[1.01]"
+                                        >
+                                            <option value="" disabled>
+                                                Select location
                                             </option>
-                                        ))}
-                                    </select>
+                                            {location.map((loc) => (
+                                                <option key={loc._id} value={loc._id}>
+                                                    {loc.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="address" className="flex items-center">
+                                            <Euro className="h-4 w-4 mr-2" />
+                                            Price
+                                        </Label>
+                                        <Input
+                                            id="price"
+                                            name="price"
+                                            value={formData.price}
+                                            onChange={handleChange}
+                                            placeholder="Enter Price"
+                                            className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
+                                        />
+                                    </div>
                                 </div>
+
 
                                 <div className="space-y-2">
                                     <Label htmlFor="address">Full Address</Label>
@@ -421,57 +479,123 @@ export const HotelRegister = () => {
                                         name="address"
                                         value={formData.address}
                                         onChange={handleChange}
-                                        placeholder="Enter complete address"
+                                        placeholder={`Enter complete ${getLabel().toLowerCase()} address`}
                                         className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
                                     />
                                 </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="phone" className="flex items-center">
-                                            <Phone className="h-4 w-4 mr-2" />
-                                            Contact Phone
-                                        </Label>
-                                        <Input
-                                            id="phone"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleChange}
-                                            placeholder="Contact number"
-                                            className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="managerName" className="flex items-center">
-                                            <User className="h-4 w-4 mr-2" />
-                                            Manager Name
-                                        </Label>
-                                        <Input
-                                            id="managerName"
-                                            name="managerName"
-                                            value={formData.managerName}
-                                            onChange={handleChange}
-                                            placeholder="Hotel manager"
-                                            className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="rooms">Number of Rooms</Label>
-                                    <Input
-                                        id="rooms"
-                                        name="rooms"
-                                        type="number"
-                                        value={formData.rooms}
-                                        onChange={handleChange}
-                                        placeholder="Total rooms available"
-                                        min="1"
-                                        required
-                                        className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
-                                    />
-                                </div>
+                                {formData.category !== "camping" && (
+                                    <>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="phone" className="flex items-center">
+                                                    <Phone className="h-4 w-4 mr-2" />
+                                                    Contact Phone
+                                                </Label>
+                                                <Input
+                                                    id="phone"
+                                                    name="phone"
+                                                    value={formData.phone}
+                                                    onChange={handleChange}
+                                                    placeholder="Contact number"
+                                                    className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="managerName" className="flex items-center">
+                                                    <User className="h-4 w-4 mr-2" />
+                                                    Manager Name
+                                                </Label>
+                                                <Input
+                                                    id="managerName"
+                                                    name="managerName"
+                                                    value={formData.managerName}
+                                                    onChange={handleChange}
+                                                    placeholder={`${getLabel()} manager`}
+                                                    className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="managerName" className="flex items-center">
+                                                    <Link className="h-4 w-4 mr-2" />
+                                                    {getLabel()} Website
+                                                </Label>
+                                                <Input
+                                                    id="website"
+                                                    name="website"
+                                                    value={formData.website}
+                                                    onChange={handleChange}
+                                                    placeholder={`${getLabel()} website URL`}
+                                                    className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Social Media Links</Label>
+                                                <div className="flex gap-2 mt-2">
+                                                    <input
+                                                        type="url"
+                                                        value={customSocial}
+                                                        onChange={(e) => setCustomSocial(e.target.value)}
+                                                        placeholder="Add social media URL"
+                                                        className="border rounded px-2 py-1 flex-1 focus:ring-2 focus:ring-black"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const trimmed = customSocial.trim();
+                                                            if (trimmed && !allSocials.includes(trimmed)) {
+                                                                setAllSocials((prev) => [...prev, trimmed]);
+                                                                setFormData((prev) => ({
+                                                                    ...prev,
+                                                                    socialMedias: [...prev.socialMedias, trimmed],
+                                                                }));
+                                                                setCustomSocial("");
+                                                            }
+                                                        }}
+                                                        className="bg-black text-white px-3 py-1 rounded hover:bg-gray-800"
+                                                    >
+                                                        Add
+                                                    </button>
+                                                </div>
+                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                    {allSocials.map((social) => (
+                                                        <div key={social} className="flex items-center gap-2 bg-blue-100 px-2 py-1 rounded">
+                                                            <a href={social} target="_blank" rel="noopener noreferrer" className="underline text-blue-700 max-w-[180px] truncate">{social}</a>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setAllSocials((prev) => prev.filter((s) => s !== social));
+                                                                    setFormData((prev) => ({
+                                                                        ...prev,
+                                                                        socialMedias: prev.socialMedias.filter((s) => s !== social),
+                                                                    }));
+                                                                }}
+                                                                className="text-red-500 hover:text-red-700"
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="rooms">Number of Rooms</Label>
+                                            <Input
+                                                id="rooms"
+                                                name="rooms"
+                                                type="number"
+                                                value={formData.rooms}
+                                                onChange={handleChange}
+                                                placeholder={`Total ${getLabel().toLowerCase()} rooms available`}
+                                                min="1"
+                                                required
+                                                className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
+                                            />
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -479,94 +603,98 @@ export const HotelRegister = () => {
                         <div className="space-y-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="description">Hotel Description</Label>
+                                    <Label htmlFor="description">{getLabel()} Description</Label>
                                     <Textarea
                                         id="description"
                                         name="description"
                                         value={formData.description}
                                         onChange={handleChange}
-                                        placeholder="Describe your hotel, its features, and what makes it special..."
+                                        placeholder={`Describe your ${getLabel().toLowerCase()}, its features, and what makes it special...`}
                                         className="min-h-32 transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
                                     />
                                 </div>
-
-                                <div className="space-y-2">
-                                    <Label>Amenities</Label>
-                                    <div className="flex gap-2 mt-2">
-                                        <input
-                                            type="text"
-                                            value={customAmenity}
-                                            onChange={(e) => setCustomAmenity(e.target.value)}
-                                            placeholder="Add amenity"
-                                            className="border rounded px-2 py-1 flex-1 focus:ring-2 focus:ring-black"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const trimmed = customAmenity.trim();
-                                                if (trimmed && !allAmenities.includes(trimmed)) {
-                                                    setAllAmenities((prev) => [...prev, trimmed]);
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        amenities: [...prev.amenities, trimmed],
-                                                    }));
-                                                    setCustomAmenity("");
-                                                }
-                                            }}
-                                            className="bg-black text-white px-3 py-1 rounded hover:bg-gray-800"
-                                        >
-                                            Add
-                                        </button>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        {allAmenities.map((amenity) => (
-                                            <div key={amenity} className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded">
-                                                <span>{amenity}</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setAllAmenities((prev) => prev.filter((a) => a !== amenity));
+                                {/* Hide amenities for camping */}
+                                {formData.category !== "camping" && (
+                                    <div className="space-y-2">
+                                        <Label>Amenities</Label>
+                                        <div className="flex gap-2 mt-2">
+                                            <input
+                                                type="text"
+                                                value={customAmenity}
+                                                onChange={(e) => setCustomAmenity(e.target.value)}
+                                                placeholder={`Add ${getLabel().toLowerCase()} amenity`}
+                                                className="border rounded px-2 py-1 flex-1 focus:ring-2 focus:ring-black"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const trimmed = customAmenity.trim();
+                                                    if (trimmed && !allAmenities.includes(trimmed)) {
+                                                        setAllAmenities((prev) => [...prev, trimmed]);
                                                         setFormData((prev) => ({
                                                             ...prev,
-                                                            amenities: prev.amenities.filter((a) => a !== amenity),
+                                                            amenities: [...prev.amenities, trimmed],
                                                         }));
-                                                    }}
-                                                    className="text-red-500 hover:text-red-700"
-                                                >
-                                                    <X size={14} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="profileImage" className="flex items-center">
-                                        <ImageIcon className="h-4 w-4 mr-2" />
-                                        Hotel Logo/Profile Image
-                                    </Label>
-                                    <Input
-                                        id="profileImage"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleProfileImageChange}
-                                        className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
-                                    />
-                                    {formData.profileImage && (
-                                        <div className="mt-2 w-24 h-24 relative">
-                                            <img
-                                                src={URL.createObjectURL(formData.profileImage) || "/placeholder.svg"}
-                                                alt="Hotel Logo"
-                                                className="w-full h-full object-cover rounded-md"
-                                            />
+                                                        setCustomAmenity("");
+                                                    }
+                                                }}
+                                                className="bg-black text-white px-3 py-1 rounded hover:bg-gray-800"
+                                            >
+                                                Add
+                                            </button>
                                         </div>
-                                    )}
-                                </div>
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {allAmenities.map((amenity) => (
+                                                <div key={amenity} className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded">
+                                                    <span>{amenity}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setAllAmenities((prev) => prev.filter((a) => a !== amenity));
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                amenities: prev.amenities.filter((a) => a !== amenity),
+                                                            }));
+                                                        }}
+                                                        className="text-red-500 hover:text-red-700"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {/* Hide logo/profile image for camping */}
+                                {formData.category !== "camping" && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="profileImage" className="flex items-center">
+                                            <ImageIcon className="h-4 w-4 mr-2" />
+                                            {getLabel()} Logo/Profile Image
+                                        </Label>
+                                        <Input
+                                            id="profileImage"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleProfileImageChange}
+                                            className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
+                                        />
+                                        {formData.profileImage && (
+                                            <div className="mt-2 w-24 h-24 relative">
+                                                <img
+                                                    src={URL.createObjectURL(formData.profileImage) || "/placeholder.svg"}
+                                                    alt={`${getLabel()} Logo`}
+                                                    className="w-full h-full object-cover rounded-md"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div className="space-y-2">
                                     <Label htmlFor="hotelImages" className="flex items-center">
                                         <Upload className="h-4 w-4 mr-2" />
-                                        Hotel Images (Max 6)
+                                        {getLabel()} Images (Max 6)
                                     </Label>
                                     <Input
                                         id="hotelImages"
@@ -582,7 +710,7 @@ export const HotelRegister = () => {
                                             <div key={index} className="relative group w-[31%] h-24">
                                                 <img
                                                     src={img.url || "/placeholder.svg"}
-                                                    alt={`Hotel ${index + 1}`}
+                                                    alt={`${getLabel()} ${index + 1}`}
                                                     className="w-full h-full object-cover rounded-md"
                                                 />
                                                 <button

@@ -51,6 +51,10 @@ export const HotelRegistration = asyncHandler(async (req, res) => {
     location,
     address,
     phone,
+    category,
+    price,
+    website,
+    socials,
     managerName,
     rooms,
     amenities,
@@ -104,11 +108,15 @@ export const HotelRegistration = asyncHandler(async (req, res) => {
     fullAddress: address,
     contactNo: phone,
     managerName,
+    category: category,
     noRoom: Number(rooms),
     description,
+    price: price,
     amenities: Array.isArray(amenities) ? amenities : [amenities],
+    socials: Array.isArray(socials) ? socials : [socials],
     logo: profileImageUrl,
     medias: hotelImagesUrls,
+    website: website,
     license: businessLicenseUrl,
     certificate: taxCertificateUrl,
     insurance: insuranceDocumentUrl,
@@ -154,7 +162,7 @@ export const getHotel = asyncHandler(async (req, res) => {
     .populate("owner", "name email")
     .populate("location", "name");
   const total = await Hotel.countDocuments(query);
-  
+
   res.status(200).json({
     hotels,
     total,

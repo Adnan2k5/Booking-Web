@@ -26,6 +26,12 @@ const HotelSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    category: {
+      type: String,
+      enum: ["camping", "hotel", "glamping"],
+      required: true,
+      default: "hotel",
+    },
     description: {
       type: String,
     },
@@ -40,6 +46,20 @@ const HotelSchema = new mongoose.Schema(
           type: String,
         },
       ],
+      required: true,
+    },
+    website: {
+      type: String,
+    },
+    socials: {
+      type: [
+        {
+          type: String,
+        },
+      ],
+    },
+    price: {
+      type: Number,
       required: true,
     },
     logo: {
