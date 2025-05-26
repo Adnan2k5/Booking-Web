@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { Search, Filter, Download, ChevronDown, Eye, Star, MapPin, Users, Check, XCircle } from 'lucide-react'
@@ -125,7 +123,7 @@ export default function HotelsPage() {
                 <DropdownMenuItem onClick={() => setStatusFilter("all")}>All Hotels</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setStatusFilter("pending")}>Pending Approval</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setStatusFilter("approved")}>Approved Hotels</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("declined")}>Declined Hotels</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter("rejected")}>Rejected Hotels</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 

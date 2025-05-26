@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Card } from "../../components/ui/card"
 import { Input } from "../../components/ui/input"
@@ -64,7 +62,7 @@ export const HotelRegister = () => {
         const res = await fetchLocations()
         console.log(res)
         if (res.statusCode === 200) {
-            setlocation(res.data)
+            setlocation(res.data);
         } else {
             toast.error("Failed to fetch locations")
         }
@@ -191,7 +189,7 @@ export const HotelRegister = () => {
                     })
                 }
                 const res = await registerHotel(data)
-                if (res.status === 200) {
+                if (res.statusCode === 201) {
                     toast.success("Hotel Registration successful!")
                     setOtpDialog(false)
                     setOtp("")

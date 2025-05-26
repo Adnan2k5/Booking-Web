@@ -134,7 +134,7 @@ export const getHotelById = asyncHandler(async (req, res) => {
 });
 
 export const getHotel = asyncHandler(async (req, res) => {
-  const { search = "", page = 1, limit = 10 } = req.query;
+  const { search = "", page = 1, limit = 10, verified } = req.query;
   const query = {};
   if (search) {
     query.$or = [
@@ -142,14 +142,17 @@ export const getHotel = asyncHandler(async (req, res) => {
       { location: { $regex: search, $options: "i" } },
     ];
   }
+  if (verified) {
+    query.verified = verified;
+  }
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const hotels = await Hotel.find(query)
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(parseInt(limit))
-    .populate("owner", "name email");
-
+    .populate("owner", "name email")
+    .populate("location", "name");
   const total = await Hotel.countDocuments(query);
   
   res.status(200).json({
