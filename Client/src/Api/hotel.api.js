@@ -35,10 +35,19 @@ export const getHotelByOwnerId = async (id) => {
   }
 };
 
-export const getHotel = async ({ search = '', page = 1, limit = 10 } = {}) => {
+export const getHotel = async ({
+  search = '',
+  page = 1,
+  limit = 10,
+  status = 'all',
+} = {}) => {
   try {
+    const params = { search, page, limit };
+    if (status && status !== 'all') {
+      params.verified = status;
+    }
     const res = await axiosClient.get('/api/hotel', {
-      params: { search, page, limit },
+      params,
       withCredentials: true,
     });
     return res;
