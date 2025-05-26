@@ -161,8 +161,8 @@ export default function HotelsPage() {
                     hotels.map((hotel) => (
                       <TableRow key={hotel._id}>
                         <TableCell className="font-medium">{hotel.name}</TableCell>
-                        <TableCell>{hotel.location}</TableCell>
-                        <TableCell>{hotel.managerName || '-'}</TableCell>
+                        <TableCell>{hotel.location.name}</TableCell>
+                        <TableCell>{(hotel.managerName && hotel.managerName) || '-'}</TableCell>
                         <TableCell>
                           <Badge
                             variant={getStatusBadgeVariant(hotel.verified)}
@@ -224,7 +224,7 @@ export default function HotelsPage() {
                   <CardHeader className="pb-2">
                     <CardTitle>{hotel.name}</CardTitle>
                     <CardDescription className="flex items-center">
-                      <MapPin className="h-3 w-3 mr-1" /> {hotel.location}
+                      <MapPin className="h-3 w-3 mr-1" /> {hotel.location.name}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2 pb-2">
@@ -310,11 +310,11 @@ export default function HotelsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm font-medium text-gray-500">Location</p>
-                        <p>{selectedHotel.location}</p>
+                        <p>{selectedHotel.location.name}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-500">Manager</p>
-                        <p>{selectedHotel.managerName}</p>
+                        <p>{selectedHotel.managerName && selectedHotel.managerName.name || "-"}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-500">Contact Email</p>

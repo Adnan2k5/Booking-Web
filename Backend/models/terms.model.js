@@ -19,7 +19,7 @@ const termsSchema = new mongoose.Schema({
         type: String,
     },
     publishedAt: {
-        type: Date,
+        type: Date, 
     },
     updatedAt: {
         type: Date,
