@@ -7,15 +7,28 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 export const ensureDefaultTerms = async () => {
     const count = await Terms.countDocuments();
     if (count === 0) {
-        await Terms.create({
-            title: "Default Terms", // Added title
-            version: "v1.0",
-            content: "Hello",
-            status: "published",
-            publishedBy: "System",
-            publishedAt: new Date(),
-            updatedAt: new Date(),
-        });
+        try {
+            await Terms.create({
+                title: "Default Terms", // Added title
+                version: "v1.0",
+                content: "Hello",
+                status: "published",
+                publishedBy: "System",
+                publishedAt: new Date(),
+                updatedAt: new Date(),
+            });
+        } catch (error) {
+            // If duplicate key error, check if default terms already exist
+            if (error.code === 11000) {
+                const existingDefault = await Terms.findOne({ title: "Default Terms", version: "v1.0" });
+                if (!existingDefault) {
+                    throw error; // Re-throw if it's not what we expected
+                }
+                // Default terms already exist, no need to create
+            } else {
+                throw error;
+            }
+        }
     }
 };
 
@@ -34,18 +47,37 @@ export const getTerms = asyncHandler(async (req, res) => {
 // Save or update draft for a specific title
 export const saveDraft = asyncHandler(async (req, res) => {
     const { title, content, version } = req.body;
+
+
     if (!title || !version) {
         throw new ApiError(400, "Title and version are required for draft");
     }
-    let draft = await Terms.findOne({ title, version, status: "draft" });
-    if (draft) {
-        draft.content = content;
-        draft.updatedAt = new Date();
-        await draft.save();
-    } else {
-        draft = await Terms.create({ title, version, content, status: "draft", updatedAt: new Date() });
+
+    // Check if a document with this title and version already exists (regardless of status)
+    const existingDocument = await Terms.findOne({ title, version });
+    
+    if (existingDocument) {
+        if (existingDocument.status === "published") {
+            throw new ApiError(409, "A published version with this title and version already exists. Please use a different version.");
+        } else {
+            // Update existing draft
+            existingDocument.content = content;
+            existingDocument.updatedAt = new Date();
+            await existingDocument.save();
+            return res.status(200).json(new ApiResponse(200, existingDocument, "Draft updated successfully"));
+        }
     }
-    res.status(200).json(new ApiResponse(200, draft, "Draft saved successfully"));
+
+    // Create new draft
+    const draft = await Terms.create({ 
+        title, 
+        version, 
+        content, 
+        status: "draft", 
+        updatedAt: new Date() 
+    });
+    
+    res.status(201).json(new ApiResponse(201, draft, "Draft saved successfully"));
 });
 
 // Publish terms (creates new published version for a specific title)
@@ -54,9 +86,15 @@ export const publishTerms = asyncHandler(async (req, res) => {
     if (!title || !version) {
         throw new ApiError(400, "Title and version are required for publishing");
     }
-    // Optionally, ensure no other version of the same title is currently a draft, or handle as needed.
-    // For example, delete existing drafts for this title:
-    // await Terms.deleteMany({ title, status: "draft" });
+
+    // Check if this title and version combination already exists
+    const existingDocument = await Terms.findOne({ title, version });
+    if (existingDocument && existingDocument.status === "published") {
+        throw new ApiError(409, "A published version with this title and version already exists");
+    }
+
+    // Delete existing drafts for this title and version
+    await Terms.deleteMany({ title, version, status: "draft" });
 
     const published = await Terms.create({
         title,

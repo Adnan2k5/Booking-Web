@@ -30,7 +30,7 @@ const termsSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-// Compound unique index for title and version
+// Compound unique index for title and version (allow same title with different versions)
 termsSchema.index({ title: 1, version: 1 }, { unique: true });
 
 export const Terms = mongoose.model("Terms", termsSchema);

@@ -22,6 +22,7 @@ export const getAllTerms = async (title) => {
 };
 
 export const saveDraftTerms = async (title, content, version) => {
+  console.log("Saving draft terms:", { title, content, version });
   try {
     const response = await axiosClient.post("/api/terms/draft", {
       title,
