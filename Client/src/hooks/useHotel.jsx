@@ -15,9 +15,6 @@ export function useHotels({ search = "", page = 1, limit = 10, status = "all" })
                 const res = await getHotel({ search, page, limit });
                 if (res && res.data) {
                     let hotelsData = res.data.hotels || [];
-                    if (status !== "all") {
-                        hotelsData = hotelsData.filter(hotel => hotel.status === status);
-                    }
                     setHotels(hotelsData);
                     setTotal(res.data.total || 0);
                     setTotalPages(res.data.totalPages || 1);

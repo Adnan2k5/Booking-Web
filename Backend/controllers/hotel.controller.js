@@ -143,12 +143,15 @@ export const getHotel = asyncHandler(async (req, res) => {
     ];
   }
   const skip = (parseInt(page) - 1) * parseInt(limit);
+
   const hotels = await Hotel.find(query)
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(parseInt(limit))
     .populate("owner", "name email");
+
   const total = await Hotel.countDocuments(query);
+  
   res.status(200).json({
     hotels,
     total,

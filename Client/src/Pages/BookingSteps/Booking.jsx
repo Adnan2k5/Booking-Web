@@ -21,8 +21,8 @@ import { HotelSelection } from "./HotelSelection"
 import { BookingSummary } from "./BookingSummary"
 
 // Import data
-import { mockHotels } from "../../Data/mock_booking"
 import { useBrowse } from "../../hooks/useItems"
+import { useHotels } from "../../hooks/useHotel"
 
 export default function BookingFlow() {
   const navigate = useNavigate()
@@ -39,9 +39,11 @@ export default function BookingFlow() {
   const [isInstructorDialogOpen, setIsInstructorDialogOpen] = useState(false)
   const [currentInstructor, setCurrentInstructor] = useState(null)
   const [groupMembers, setGroupMembers] = useState([])
+  const { hotels } = useHotels({search: "", page: 1, limit: 10, status: "all"});
 
   const { sessions, instructors } = useSessions({ adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date") })
   const { items } = useBrowse({adventureId: sessions.length > 0 ? sessions[0]?._id : ""}) 
+
   // Load group members from sessionStorage if available
   useEffect(() => {
     const storedGroupMembers = sessionStorage.getItem("groupMembers")
@@ -153,7 +155,7 @@ export default function BookingFlow() {
       return sum + price * item.quantity
     }, 0)
 
-    const hotelPrice = selectedHotel ? mockHotels.find((hotel) => hotel.id === selectedHotel)?.price || 0 : 0
+    const hotelPrice = selectedHotel ? hotels.find((hotel) => hotel._id === selectedHotel)?.price || 0 : 0
 
     // Calculate instructor price
     let instructorPrice = 0
@@ -373,7 +375,7 @@ export default function BookingFlow() {
                 className="w-full"
               >
                 <div className="space-y-8">
-                  <HotelSelection selectedHotel={selectedHotel} onSelectHotel={setSelectedHotel} />
+                  <HotelSelection selectedHotel={selectedHotel} onSelectHotel={setSelectedHotel}  hotels={hotels}/>
 
                   <BookingSummary
                     user={user}
@@ -383,7 +385,7 @@ export default function BookingFlow() {
                     cartItems={cartItems}
                     mockItems={items}
                     selectedHotel={selectedHotel}
-                    mockHotels={mockHotels}
+                    mockHotels={hotels}
                     calculateTotal={calculateTotal}
                   />
                 </div>

@@ -8,20 +8,9 @@ import { Card } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
 import { useTranslation } from "react-i18next"
 
-// Import mock data
-import { mockHotels } from "../../Data/mock_booking"
 
-export const HotelSelection = ({ selectedHotel, onSelectHotel }) => {
+export const HotelSelection = ({ hotels, selectedHotel, onSelectHotel }) => {
     const { t } = useTranslation()
-    const [priceFilter, setPriceFilter] = useState("all")
-
-    const filteredHotels = mockHotels.filter((hotel) => {
-        if (priceFilter === "all") return true
-        if (priceFilter === "budget" && hotel.price < 150) return true
-        if (priceFilter === "mid" && hotel.price >= 150 && hotel.price < 200) return true
-        if (priceFilter === "luxury" && hotel.price >= 200) return true
-        return false
-    })
 
     // Animation variants
     const containerVariants = {
@@ -57,36 +46,6 @@ export const HotelSelection = ({ selectedHotel, onSelectHotel }) => {
                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                     <Building className="w-6 h-6" /> {t("selectAccommodation")}
                 </h2>
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => setPriceFilter("all")}
-                        className={`px-3 py-1 rounded-full text-sm ${priceFilter === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                            }`}
-                    >
-                        {t("all")}
-                    </button>
-                    <button
-                        onClick={() => setPriceFilter("budget")}
-                        className={`px-3 py-1 rounded-full text-sm ${priceFilter === "budget" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                            }`}
-                    >
-                        {t("budget")}
-                    </button>
-                    <button
-                        onClick={() => setPriceFilter("mid")}
-                        className={`px-3 py-1 rounded-full text-sm ${priceFilter === "mid" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                            }`}
-                    >
-                        {t("midRange")}
-                    </button>
-                    <button
-                        onClick={() => setPriceFilter("luxury")}
-                        className={`px-3 py-1 rounded-full text-sm ${priceFilter === "luxury" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                            }`}
-                    >
-                        {t("luxury")}
-                    </button>
-                </div>
             </div>
 
             <motion.div
@@ -95,21 +54,21 @@ export const HotelSelection = ({ selectedHotel, onSelectHotel }) => {
                 initial="hidden"
                 animate="visible"
             >
-                {filteredHotels.map((hotel) => (
-                    <motion.div key={hotel.id} variants={itemVariants}>
+                {hotels.map((hotel) => (
+                    <motion.div key={hotel._id} variants={itemVariants}>
                         <Card
                             className={cn(
                                 "overflow-hidden h-full transition-all duration-300 cursor-pointer border-2",
-                                selectedHotel === hotel.id
+                                selectedHotel === hotel._id
                                     ? "border-blue-500 shadow-md shadow-blue-200"
                                     : "border-transparent hover:border-blue-200",
                             )}
-                            onClick={() => onSelectHotel(hotel.id === selectedHotel ? null : hotel.id)}
+                            onClick={() => onSelectHotel(hotel._id === selectedHotel ? null : hotel._id)}
                         >
                             <div className="flex flex-col md:flex-row">
                                 <div className="md:w-2/5 h-full">
                                     <img
-                                        src={hotel.img || "/placeholder.svg"}
+                                        src={hotel.medias[0] || "/placeholder.svg"}
                                         alt={hotel.name}
                                         className="w-full h-full object-cover md:h-48"
                                     />
@@ -132,10 +91,10 @@ export const HotelSelection = ({ selectedHotel, onSelectHotel }) => {
                                             <span className="text-sm font-normal text-gray-500">/night</span>
                                         </span>
                                         <Badge
-                                            variant={selectedHotel === hotel.id ? "default" : "outline"}
-                                            className={selectedHotel === hotel.id ? "bg-blue-600" : ""}
+                                            variant={selectedHotel === hotel._id ? "default" : "outline"}
+                                            className={selectedHotel === hotel._id ? "bg-blue-600" : ""}
                                         >
-                                            {selectedHotel === hotel.id ? t("selected") : t("select")}
+                                            {selectedHotel === hotel._id ? t("selected") : t("select")}
                                         </Badge>
                                     </div>
                                 </div>
@@ -144,8 +103,6 @@ export const HotelSelection = ({ selectedHotel, onSelectHotel }) => {
                     </motion.div>
                 ))}
             </motion.div>
-
-            {filteredHotels.length === 0 && <div className="text-center py-10 text-gray-500">{t("noHotelsFound")}</div>}
 
             <div className="mt-6 text-center text-sm text-gray-600">
                 <p>{t("hotelDiscountInfo")}</p>
