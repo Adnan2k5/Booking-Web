@@ -17,6 +17,7 @@ export const AdventureCard = ({ adventure, formatDate, onBook }) => {
     setIsVideoPlaying(false)
   }
 
+
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-xl">
       <div className="relative h-48 sm:h-52 md:h-48 lg:h-52 xl:h-56 overflow-hidden">
@@ -71,7 +72,9 @@ export const AdventureCard = ({ adventure, formatDate, onBook }) => {
         <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-1 line-clamp-2">{adventure.name}</h3>
 
         <div className="flex items-center text-gray-500 text-xs sm:text-sm mb-2">
-          <span>Location to be fetched as Name not co-ordinates</span>
+          {adventure.location && adventure.location.length > 0 && (
+            <span>{adventure.location[0].name}</span>
+          )}
         </div>
 
         <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2 sm:line-clamp-3 flex-1">

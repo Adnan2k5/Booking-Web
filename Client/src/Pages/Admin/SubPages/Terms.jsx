@@ -47,7 +47,7 @@ export default function Dash_Terms() {
 
   // Filter terms based on search term
   const filteredTerms = terms.filter((term) => {
-    return term.title.toLowerCase().includes(searchTerm.toLowerCase())
+    return term.title?.toLowerCase().includes(searchTerm.toLowerCase())
   })
   const handleSelectTerm = async (term) => {
     setSelectedTerm(term)
@@ -82,19 +82,19 @@ export default function Dash_Terms() {
       const currentVersion = selectedTerm.version.replace(/^v/, '') // Remove 'v' prefix
       const versionNumber = parseFloat(currentVersion) || 1.0
       const newVersion = `v${(versionNumber + 0.1).toFixed(1)}`
-        await saveDraftTerms(selectedTerm.title, termContent, newVersion)
+      await saveDraftTerms(selectedTerm.title, termContent, newVersion)
       setEditMode(false)
-      
+
       // Show success message
       setSuccessMessage("Changes saved successfully!")
       setTimeout(() => setSuccessMessage(""), 3000)
-      
+
       // Refresh the terms list to show updated data
       const data = await getAllTermDocuments()
       setTerms(data || [])
-      
+
       // Update selected term version to reflect the new draft
-      setSelectedTerm({...selectedTerm, version: newVersion})
+      setSelectedTerm({ ...selectedTerm, version: newVersion })
     } catch (err) {
       console.error("Failed to save changes:", err)
       setContentError("Failed to save changes. Please try again.") // Show error near content area    } finally {
@@ -110,24 +110,25 @@ export default function Dash_Terms() {
     try {
       setIsSaving(true)
       await saveDraftTerms(newTermTitle, "New terms content...", "v1.0")
-      
+
       // Refresh the terms list
       const data = await getAllTermDocuments()
       setTerms(data || [])
-      
+
       // Clear form and hide it
       setNewTermTitle("")
       setShowNewTermForm(false)
-      
+
       // Show success message
       setSuccessMessage("New term created successfully!")
       setTimeout(() => setSuccessMessage(""), 3000)
-      
+
       // Select the newly created term
       const newTerm = data.find(term => term.title === newTermTitle)
       if (newTerm) {
         handleSelectTerm(newTerm)
-      }    } catch (err) {
+      }
+    } catch (err) {
       console.error("Failed to create new term:", err)
       setContentError("Failed to create new term. Please try again.")
     } finally {
@@ -141,17 +142,17 @@ export default function Dash_Terms() {
     try {
       setIsSaving(true)
       await publishTerms(selectedTerm.title, termContent, selectedTerm.version, "Admin")
-      
+
       // Show success message
       setSuccessMessage("Term published successfully!")
       setTimeout(() => setSuccessMessage(""), 3000)
-      
+
       // Refresh the terms list
       const data = await getAllTermDocuments()
       setTerms(data || [])
-      
+
       // Update selected term status
-      setSelectedTerm({...selectedTerm, status: "published"})
+      setSelectedTerm({ ...selectedTerm, status: "published" })
       setEditMode(false)
     } catch (err) {
       console.error("Failed to publish term:", err)
@@ -165,7 +166,7 @@ export default function Dash_Terms() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}      className="space-y-6"
+      transition={{ duration: 0.5 }} className="space-y-6"
     >
       {/* Success Message */}
       {successMessage && (
@@ -204,16 +205,16 @@ export default function Dash_Terms() {
                 )}
               </div>
               <div className="flex justify-end space-x-2">                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowNewTermForm(false)
-                    setNewTermTitle("")
-                    setContentError(null)
-                  }}
-                  disabled={isSaving}
-                >
-                  Cancel
-                </Button>
+                variant="outline"
+                onClick={() => {
+                  setShowNewTermForm(false)
+                  setNewTermTitle("")
+                  setContentError(null)
+                }}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
                 <Button onClick={handleCreateNewTerm} disabled={isSaving || !newTermTitle.trim()}>
                   {isSaving ? "Creating..." : "Create"}
                 </Button>
@@ -260,13 +261,13 @@ export default function Dash_Terms() {
                       <TableCell colSpan="3" className="text-center">No terms documents found.</TableCell>
                     </TableRow>
                   ) : filteredTerms.length === 0 && searchTerm ? (
-                     <TableRow>
+                    <TableRow>
                       <TableCell colSpan="3" className="text-center">No terms matching your search.</TableCell>
                     </TableRow>
                   ) : (
                     filteredTerms.map((term) => (
                       <TableRow
-                        key={term._id || term.id} 
+                        key={term._id || term.id}
                         className={`cursor-pointer ${selectedTerm?._id === term._id || selectedTerm?.id === term.id ? "bg-muted/50" : ""}`}
                         onClick={() => handleSelectTerm(term)}
                       >                        <TableCell className="font-medium">{term.title}</TableCell>
@@ -297,7 +298,7 @@ export default function Dash_Terms() {
                   </div>                  <div className="flex gap-2">
                     {editMode ? (
                       <>
-                        <Button onClick={handleSaveChanges} disabled={isSaving}> 
+                        <Button onClick={handleSaveChanges} disabled={isSaving}>
                           {isSaving ? (
                             <>
                               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -313,8 +314,8 @@ export default function Dash_Terms() {
                             </>
                           )}
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           onClick={() => setEditMode(false)}
                           disabled={isSaving}
                         >
@@ -328,8 +329,8 @@ export default function Dash_Terms() {
                           Edit
                         </Button>
                         {selectedTerm.status === "draft" && (
-                          <Button 
-                            onClick={handlePublishTerm} 
+                          <Button
+                            onClick={handlePublishTerm}
                             disabled={isSaving || !termContent}
                             className="bg-green-600 hover:bg-green-700"
                           >
@@ -349,35 +350,35 @@ export default function Dash_Terms() {
                       <p className="mt-2 text-sm text-gray-500">Loading content...</p>
                     </div>
                   </div>) : contentError ? (
-                  <div className="text-red-500 min-h-[500px] flex flex-col items-center justify-center">
-                    <p className="mb-4">{contentError}</p>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleSelectTerm(selectedTerm)}
-                      disabled={isContentLoading}
-                    >
-                      Retry
-                    </Button>
-                  </div>
-                ) : editMode ? (
-                  <Textarea
-                    className="min-h-[500px] font-mono text-sm"
-                    value={termContent}
-                    onChange={(e) => setTermContent(e.target.value)}
-                    disabled={isSaving}
-                  />
-                ) : (
+                    <div className="text-red-500 min-h-[500px] flex flex-col items-center justify-center">
+                      <p className="mb-4">{contentError}</p>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleSelectTerm(selectedTerm)}
+                        disabled={isContentLoading}
+                      >
+                        Retry
+                      </Button>
+                    </div>
+                  ) : editMode ? (
+                    <Textarea
+                      className="min-h-[500px] font-mono text-sm"
+                      value={termContent}
+                      onChange={(e) => setTermContent(e.target.value)}
+                      disabled={isSaving}
+                    />
+                  ) : (
                   <div className="prose max-w-none dark:prose-invert min-h-[500px]">
                     {termContent ? (
-                        <pre className="whitespace-pre-wrap text-sm">{termContent}</pre>
+                      <pre className="whitespace-pre-wrap text-sm">{termContent}</pre>
                     ) : (
-                        <p className="text-sm text-muted-foreground">No content available for this term.</p>
+                      <p className="text-sm text-muted-foreground">No content available for this term.</p>
                     )}
                   </div>
                 )}
                 {/* Display saving error if any, distinct from content loading error */}
                 {isSaving && contentError && !isContentLoading && (
-                    <p className="text-red-500 text-sm mt-2">Error saving: {contentError}</p>
+                  <p className="text-red-500 text-sm mt-2">Error saving: {contentError}</p>
                 )}
               </CardContent>
             </Card>

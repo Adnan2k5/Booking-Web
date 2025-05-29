@@ -114,6 +114,14 @@ function AdminSidebar({ pathname }) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/manager"}>
+                  <Link to="/admin/manager">
+                    <User className="h-4 w-4" />
+                    <span>Admins</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === "/admin/users"}>
                   <Link to="/admin/users">
                     <User className="h-4 w-4" />

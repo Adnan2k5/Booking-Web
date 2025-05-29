@@ -21,6 +21,16 @@ export const BookingSummary = ({
     const { t } = useTranslation()
     const navigate = useNavigate()
 
+    // Debug logging to check data structure
+    console.log("BookingSummary Data:", {
+        cartItems,
+        mockItems,
+        selectedHotel,
+        mockHotels,
+        selectedInstructor,
+        adventure
+    })
+
     const formatDate = (dateString) => {
         try {
             const date = new Date(dateString)
@@ -65,7 +75,7 @@ export const BookingSummary = ({
                             <div className="flex items-start gap-3">
                                 <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
                                     <img
-                                        src={adventure.medias?.[0] || "/placeholder.svg"}
+                                        src={adventure.medias?.[0] || adventure.images?.[0] || adventure.image || "/placeholder.svg"}
                                         alt={adventure.name}
                                         className="w-full h-full object-cover"
                                     />
@@ -74,7 +84,7 @@ export const BookingSummary = ({
                                     <p className="font-medium text-gray-800">{adventure.name}</p>
                                     <div className="flex items-center gap-2 text-sm text-gray-500">
                                         <MapPin size={14} />
-                                        <span>{adventure.location[0].name}</span>
+                                        <span>{adventure.location?.[0]?.name || adventure.location || "Location not specified"}</span>
                                         <span className="text-gray-300">•</span>
                                         <span>{formatDate(adventure.date)}</span>
                                     </div>
@@ -89,17 +99,17 @@ export const BookingSummary = ({
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("yourInstructor")}</h3>
                             <div className="flex items-start gap-3">
                                 <Avatar className="h-12 w-12 border-2 border-white shadow-md">
-                                    <AvatarImage src={selectedInstructor.img || "/placeholder.svg"} alt={selectedInstructor.name} />
-                                    <AvatarFallback>{selectedInstructor?.name?.charAt(0)}</AvatarFallback>
+                                    <AvatarImage src={selectedInstructor.instructorId?.profilePicture || selectedInstructor.img || selectedInstructor.image || selectedInstructor.avatar || "/placeholder.svg"} alt={selectedInstructor.instructorId?.name || selectedInstructor.name} />
+                                    <AvatarFallback>{selectedInstructor?.instructorId?.name?.charAt(0) || selectedInstructor?.name?.charAt(0) || "I"}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <p className="font-medium text-gray-800">{selectedInstructor.name}</p>
-                                    <p className="text-sm text-gray-500">{selectedInstructor.specialty}</p>
+                                    <p className="font-medium text-gray-800">{selectedInstructor.instructorId?.name || selectedInstructor.name}</p>
+                                    <p className="text-sm text-gray-500">{selectedInstructor.instructorId?.instructor?.description?.[0] || selectedInstructor.specialty || selectedInstructor.specialization || selectedInstructor.expertise || "Professional Instructor"}</p>
                                 </div>
                             </div>
                             <div className="flex justify-between items-center pt-2 mt-2 border-t border-blue-100">
                                 <span className="text-gray-600">{t("instructorFee")}</span>
-                                <span className="font-medium">${selectedInstructor.price}</span>
+                                <span className="font-medium">${selectedInstructor.price || selectedInstructor.fee || 0}</span>
                             </div>
                             {groupMembers.length > 0 && (
                                 <div className="flex justify-between items-center pt-2">
@@ -156,16 +166,16 @@ export const BookingSummary = ({
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("selectedItems")}</h3>
                             <div className="space-y-3">
                                 {cartItems.map((cartItem) => {
-                                    const item = mockItems.find((i) => i.id === cartItem.id)
-                                    const price = cartItem.isRental ? item?.rentalPrice : item?.price
+                                    const item = mockItems.find((i) => i._id === cartItem._id)
+                                    const price = cartItem.rent ? item?.price : item?.price
                                     return (
                                         <div
-                                            key={`${cartItem.id}-${cartItem.isRental ? "rent" : "buy"}`}
+                                            key={`${cartItem._id}-${cartItem.rent ? "rent" : "buy"}`}
                                             className="flex items-start gap-3"
                                         >
                                             <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
                                                 <img
-                                                    src={item?.img || "/placeholder.svg"}
+                                                    src={item?.images?.[0] || "/placeholder.svg"}
                                                     alt={item?.name}
                                                     className="w-full h-full object-cover"
                                                 />
@@ -173,7 +183,7 @@ export const BookingSummary = ({
                                             <div className="flex-1">
                                                 <p className="font-medium text-gray-800">
                                                     {item?.name}{" "}
-                                                    {cartItem.isRental && <span className="text-xs text-green-600">({t("rental")})</span>}
+                                                    {cartItem.rent && <span className="text-xs text-green-600">({t("rental")})</span>}
                                                 </p>
                                                 <p className="text-sm text-gray-500">
                                                     {t("qty")}: {cartItem.quantity}
@@ -188,10 +198,11 @@ export const BookingSummary = ({
                                     <span className="font-medium">
                                         $
                                         {cartItems
-                                            .reduce((sum, item) => {
-                                                const itemData = mockItems.find((i) => i.id === item.id)
-                                                const price = item.isRental ? itemData?.rentalPrice : itemData?.price
-                                                return sum + (price || 0) * item.quantity
+                                            .reduce((sum, cartItem) => {
+                                                const itemData = mockItems.find((i) => i._id === cartItem._id)
+                                                const price = cartItem.rent ? itemData?.price : itemData?.price
+                                                const quantity = cartItem.quantity || 1
+                                                return sum + (price || 0) * quantity
                                             }, 0)
                                             .toFixed(2)}
                                     </span>
@@ -207,28 +218,28 @@ export const BookingSummary = ({
                             <div className="flex items-start gap-3">
                                 <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                                     <img
-                                        src={mockHotels.find((h) => h.id === selectedHotel)?.img || "/placeholder.svg"}
-                                        alt={mockHotels.find((h) => h.id === selectedHotel)?.name}
+                                        src={mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.medias?.[0] || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.logo || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.images?.[0] || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.img || "/placeholder.svg"}
+                                        alt={mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.name}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="font-medium text-gray-800">{mockHotels.find((h) => h.id === selectedHotel)?.name}</p>
+                                    <p className="font-medium text-gray-800">{mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.name}</p>
                                     <div className="flex items-center gap-2 text-sm text-gray-500">
                                         <MapPin size={14} />
-                                        <span>{mockHotels.find((h) => h.id === selectedHotel)?.location}</span>
+                                        <span>{mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.location?.name || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.location || "Location not specified"}</span>
                                     </div>
                                     <div className="flex items-center gap-1 mt-1">
                                         {[1, 2, 3, 4, 5].map((star) => (
-                                            <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                            <Star key={star} className={`w-3 h-3 ${star <= (mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.rating || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
                                         ))}
                                         <span className="text-xs ml-1 text-gray-500">
-                                            {mockHotels.find((h) => h.id === selectedHotel)?.rating}
+                                            {mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.rating}
                                         </span>
                                     </div>
                                 </div>
                                 <div className="font-medium text-blue-600">
-                                    ${mockHotels.find((h) => h.id === selectedHotel)?.price}
+                                    ${mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.price}
                                     <span className="text-xs font-normal text-gray-500">/night</span>
                                 </div>
                             </div>
@@ -252,10 +263,10 @@ export const BookingSummary = ({
                                     <span>
                                         $
                                         {cartItems
-                                            .reduce((sum, item) => {
-                                                const itemData = mockItems.find((i) => i.id === item.id)
-                                                const price = item.isRental ? itemData?.rentalPrice : itemData?.price
-                                                return sum + (price || 0) * item.quantity
+                                            .reduce((sum, cartItem) => {
+                                                const itemData = mockItems.find((i) => i._id === cartItem._id)
+                                                const price = cartItem.rent ? itemData?.price : itemData?.price
+                                                return sum + (price || 0) * cartItem.quantity
                                             }, 0)
                                             .toFixed(2)}
                                     </span>
@@ -265,7 +276,7 @@ export const BookingSummary = ({
                             {selectedHotel && (
                                 <div className="flex justify-between items-center">
                                     <span>{t("hotel")}</span>
-                                    <span>${mockHotels.find((h) => h.id === selectedHotel)?.price}</span>
+                                    <span>${mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.price}</span>
                                 </div>
                             )}
 
@@ -274,7 +285,7 @@ export const BookingSummary = ({
                                     <span>
                                         {t("instructor")} ({groupMembers.length + 1} {t("people")})
                                     </span>
-                                    <span>${selectedInstructor.price + groupMembers.length * 30}</span>
+                                    <span>${(selectedInstructor.price || selectedInstructor.fee || 0) + groupMembers.length * 30}</span>
                                 </div>
                             )}
 

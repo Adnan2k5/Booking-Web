@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { 
-    createTicket,
-    getUserTickets,
-    getTicketById,
-    addTicketResponse,
-    updateTicketStatus,
-    getAllTickets
+import {
+  createTicket,
+  getUserTickets,
+  getTicketById,
+  addTicketResponse,
+  updateTicketStatus,
+  getAllTickets,
 } from "../controllers/ticket.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyAdmin } from "../middlewares/admin.middleware.js";

@@ -37,7 +37,7 @@ export const HotelSelection = ({ hotels, selectedHotel, onSelectHotel }) => {
 
     return (
         <motion.div
-            className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-xl mb-8 border border-white/50"
+            className="bg-black/5 backdrop-blur-md rounded-2xl p-6 shadow-xl mb-8 border border-white/10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
@@ -76,7 +76,7 @@ export const HotelSelection = ({ hotels, selectedHotel, onSelectHotel }) => {
                                 <div className="md:w-3/5 p-4">
                                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
                                         <MapPin size={14} />
-                                        <span>{hotel.location}</span>
+                                        <span>{hotel.location?.name || hotel.location}</span>
                                     </div>
                                     <h3 className="text-lg font-bold text-gray-800 mb-2">{hotel.name}</h3>
                                     <div className="flex items-center gap-1 mb-3">
@@ -103,11 +103,6 @@ export const HotelSelection = ({ hotels, selectedHotel, onSelectHotel }) => {
                     </motion.div>
                 ))}
             </motion.div>
-
-            <div className="mt-6 text-center text-sm text-gray-600">
-                <p>{t("hotelDiscountInfo")}</p>
-                <p>{t("hotelOptionalInfo")}</p>
-            </div>
         </motion.div>
     )
 }

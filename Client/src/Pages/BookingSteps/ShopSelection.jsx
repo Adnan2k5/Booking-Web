@@ -12,7 +12,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
     const { t } = useTranslation()
     console.log("ShopSelection rendered with items:", mockItems)
     return (
-        <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-xl mb-8 border border-white/50">
+        <div className="bg-black/5 backdrop-blur-md rounded-2xl p-6 shadow-xl mb-8 border border-white/10">
             <div className="flex items-center gap-2 mb-6">
                 <h2 className="text-xl font-bold text-gray-800">{t("shopItems")}</h2>
             </div>
@@ -37,9 +37,9 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                 <CardContent className="pb-2">
                                     <div className="flex items-center gap-1 mb-2">
                                         {Array.from({ length: 5 }, (_, i) => (
-                                            <Star 
-                                                key={i} 
-                                                className={`w-3 h-3 ${i < Math.floor(item.totalReviews || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} 
+                                            <Star
+                                                key={i}
+                                                className={`w-3 h-3 ${i < Math.floor(item.totalReviews || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
                                             />
                                         ))}
                                         <span className="text-xs ml-1 text-gray-500">{item.totalReviews}</span>
@@ -48,7 +48,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                     <div className="flex flex-col gap-2">
                                         <div className="flex justify-between items-center">
                                             <span className="font-bold text-blue-600">${item.price}</span>
-                                            {item.stock > 0 ? (
+                                            {cartItems.find(ci => ci._id === item._id && !ci.rent)?.quantity > 0 ? (
                                                 <div className="flex items-center gap-2">
                                                     <Button
                                                         variant="outline"
@@ -58,7 +58,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                                     >
                                                         <Minus size={12} />
                                                     </Button>
-                                                    <span className="w-5 text-center font-medium">{item.stock}</span>
+                                                    <span className="w-5 text-center font-medium">{cartItems.find(ci => ci._id === item._id && !ci.rent)?.quantity || 0}</span>
                                                     <Button
                                                         variant="outline"
                                                         size="icon"
@@ -86,7 +86,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                                 <span className="font-medium text-green-600">
                                                     ${item.price} <span className="text-xs">/day</span>
                                                 </span>
-                                                {item.stock > 0 ? (
+                                                {cartItems.find(ci => ci._id === item._id && ci.rent)?.quantity > 0 ? (
                                                     <div className="flex items-center gap-2">
                                                         <Button
                                                             variant="outline"
@@ -96,7 +96,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                                         >
                                                             <Minus size={12} />
                                                         </Button>
-                                                        <span className="w-5 text-center font-medium">{item.stock}</span>
+                                                        <span className="w-5 text-center font-medium">{cartItems.find(ci => ci._id === item._id && ci.rent)?.quantity || 0}</span>
                                                         <Button
                                                             variant="outline"
                                                             size="icon"
@@ -159,7 +159,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                                 {cartItem.rent && <span className="text-xs text-green-600">({t("rental")})</span>}
                                             </p>
                                             <p className="text-sm text-gray-500">
-                                                {t("qty")}: {cartItem.stock}
+                                                {t("qty")}: {cartItem.quantity}
                                             </p>
                                         </div>
                                     </div>

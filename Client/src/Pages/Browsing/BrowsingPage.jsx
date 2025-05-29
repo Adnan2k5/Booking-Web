@@ -39,8 +39,9 @@ export default function BrowsingPage() {
   }
 
   const { user, loading } = useAuth()
-  const { adventures: categories } = useAdventures()
   const { adventures, isLoading, filters, setFilters } = useBrowse()
+
+  console.log(adventures)
 
   const updateParams = (params, options = {}) => {
     const queryParams = new URLSearchParams(location.search)

@@ -1,21 +1,19 @@
-"use client"
-
-import { useState, useContext } from "react"
 import { motion } from "framer-motion"
 import { Search, Filter, ChevronDown, Eye, Heart, ShoppingBag } from "lucide-react"
-import { Button } from "../components/ui/button"
-import { Input } from "../components/ui/input"
+import { Button } from "../../components/ui/button"
+import { Input } from "../../components/ui/input"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { CartContext } from "./Cart/CartContext"
+} from "../../components/ui/dropdown-menu"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
+import { CartContext } from "../Cart/CartContext"
 import { Link } from "react-router-dom"
-import { useBrowse } from "../hooks/useItems"
-import { useCategory } from "../hooks/useCategory"
+import { useBrowse } from "../../hooks/useItems"
+import { useCategory } from "../../hooks/useCategory"
+import { useContext } from "react"
 
 
 export default function ItemsPage() {
@@ -82,46 +80,31 @@ export default function ItemsPage() {
                 </div>
 
                 <TabsContent value="grid" className="space-y-8">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                        {items.map((item) => (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        {items?.map((item) => (
                             <div key={item._id} className="border rounded-md overflow-hidden group relative">
                                 <Link to={`/product/${item._id}`} className="block">
-                                    <div className="aspect-square relative overflow-hidden">
+                                    <div className="aspect-[16/9] relative overflow-hidden">
                                         <img
                                             src={item.images[0] || "/placeholder.svg"}
                                             alt={item.name}
-                                            className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                                            className="object-cover w-full h-full transition-all duration-300 group-hover:scale-105 group-hover:opacity-60"
                                         />
+
+                                        {/* Hover overlay with name and price */}
+                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-start p-4">
+                                            <div className="text-white text-left">
+                                                <div className="text-xs text-white uppercase font-medium mb-1">{item.category}</div>
+                                                <h3 className="font-semibold text-white text-lg mb-2 line-clamp-2">{item.name}</h3>
+                                                <div className="flex items-center justify-start">
+                                                    <span className="font-bold text-white text-xl">{item.price.toFixed(2)} €</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </Link>
 
-                                <div className="p-3">
-                                    <div className="text-sm text-gray-500 uppercase font-medium">{item.category}</div>
-                                    <h3 className="font-medium text-sm mt-1 line-clamp-2">{item.name}</h3>
-
-                                    <div className="flex items-center justify-between mt-2">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-bold">{item.price.toFixed(2)} €</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                    <Button
-                                        variant="secondary"
-                                        size="icon"
-                                        className="h-8 w-8 rounded-full bg-white hover:bg-gray-100"
-                                        onClick={(e) => {
-                                            e.preventDefault()
-                                            e.stopPropagation()
-                                            addToCart(item)
-                                        }}
-                                    >
-                                        <ShoppingBag className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-white hover:bg-gray-100">
-                                        <Heart className="h-4 w-4" />
-                                    </Button>
+                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                                     <Link to={`/product/${item._id}`}>
                                         <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-white hover:bg-gray-100">
                                             <Eye className="h-4 w-4" />
@@ -135,7 +118,7 @@ export default function ItemsPage() {
 
                 <TabsContent value="list" className="space-y-4">
                     <div className="space-y-4">
-                        {items.map((item) => (
+                        {items?.map((item) => (
                             <div key={item._id} className="border rounded-md overflow-hidden flex">
                                 <Link to={`/product/${item._id}`} className="block w-40 h-40">
                                     <div className="w-40 h-40 relative">

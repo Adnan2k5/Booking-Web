@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { fetchAllAdventures } from "../Api/adventure.api";
+import { useState, useEffect } from 'react';
+import { fetchAllAdventures } from '../Api/adventure.api';
 
 /**
  * useAdventures - Fetches and caches all adventures with pagination and search.
@@ -8,7 +8,6 @@ import { fetchAllAdventures } from "../Api/adventure.api";
 export function useAdventures() {
   const [adventures, setAdventures] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
 
   const fetchAdventures = async () => {
     setIsLoading(true);

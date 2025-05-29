@@ -56,6 +56,9 @@ export default function LoginPage() {
           setopenOtp(true);
           ResendOtp(data.email);
         }
+        else {
+          toast.error("Invalid Credentials")
+        }
       }
     }
     finally {

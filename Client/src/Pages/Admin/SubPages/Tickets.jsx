@@ -38,18 +38,21 @@ export default function Dash_Tickets() {
         }
 
         const response = await getAllTickets(filters)
-        if (response && response.tickets) {
-          setTickets(response.tickets)
-          setPagination((prev) => ({
-            ...prev,
-            totalPages: response.totalPages || 1,
-            page: response.currentPage || 1,
-          }))
-        } else {
-          setTickets(response || [])
-          if (!response.tickets) {
+        if (response && Array.isArray(response.tickets)) {
+          if (response.tickets.length === 0) {
+            setTickets([])
             setPagination((prev) => ({ ...prev, totalPages: 1, page: 1 }))
+          } else {
+            setTickets(response.tickets)
+            setPagination((prev) => ({
+              ...prev,
+              totalPages: response.totalPages || 1,
+              page: response.currentPage || 1,
+            }))
           }
+        } else {
+          setTickets([])
+          setPagination((prev) => ({ ...prev, totalPages: 1, page: 1 }))
         }
       } catch (err) {
         console.error("Error fetching tickets:", err)
@@ -186,33 +189,33 @@ export default function Dash_Tickets() {
                     <Badge
                       variant={
                         ticket.status === "open" ? "default"
-                        : ticket.status === "in-progress" ? "secondary"
-                        : ticket.status === "resolved" ? "outline"
-                        : ticket.status === "closed" ? "destructive"
-                        : "default"
+                          : ticket.status === "in-progress" ? "secondary"
+                            : ticket.status === "resolved" ? "outline"
+                              : ticket.status === "closed" ? "destructive"
+                                : "default"
                       }
                       className={
                         ticket.status === "open" ? "bg-blue-500 text-white"
-                        : ticket.status === "in-progress" ? "bg-yellow-500 text-black"
-                        : ticket.status === "resolved" ? "bg-green-500 text-white"
-                        : ticket.status === "closed" ? "bg-gray-500 text-white"
-                        : ""
+                          : ticket.status === "in-progress" ? "bg-yellow-500 text-black"
+                            : ticket.status === "resolved" ? "bg-green-500 text-white"
+                              : ticket.status === "closed" ? "bg-gray-500 text-white"
+                                : ""
                       }
                     >
                       {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                     <Badge
-                        className={
-                            ticket.priority === "high" ? "bg-red-500 text-white" :
-                            ticket.priority === "critical" ? "bg-red-700 text-white" :
+                    <Badge
+                      className={
+                        ticket.priority === "high" ? "bg-red-500 text-white" :
+                          ticket.priority === "critical" ? "bg-red-700 text-white" :
                             ticket.priority === "medium" ? "bg-orange-500 text-white" :
-                            "bg-gray-200 text-gray-700" // Low or default
-                        }
-                     >
-                        {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
-                     </Badge>
+                              "bg-gray-200 text-gray-700" // Low or default
+                      }
+                    >
+                      {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
+                    </Badge>
                   </TableCell>
                   <TableCell>{ticket.category}</TableCell>
                   <TableCell>{formatDate(ticket.createdAt)}</TableCell>
