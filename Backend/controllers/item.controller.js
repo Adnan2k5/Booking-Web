@@ -14,7 +14,7 @@ export const getItemById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Item ID is required");
   }
 
-  const item = await Item.findById(id).populate("owner", "name");
+  const item = await Item.findById(id);
 
   if (!item) {
     throw new ApiError(404, "Item not found");
@@ -24,16 +24,9 @@ export const getItemById = asyncHandler(async (req, res) => {
 });
 
 export const discoverItems = asyncHandler(async (req, res) => {
-  const {
-    category,
-    search,
-    limit = 10,
-    page = 1,
-    advenureId,
-  } = req.query;
+  const { category, search, limit = 10, page = 1, advenureId } = req.query;
 
-  
-  const skip = (parseInt(page) - 1) * parseInt(limit);  
+  const skip = (parseInt(page) - 1) * parseInt(limit);
   const queryObj = {};
   if (search) {
     queryObj.name = { $regex: search, $options: "i" };
@@ -55,9 +48,9 @@ export const discoverItems = asyncHandler(async (req, res) => {
     .limit(parseInt(limit));
 
   const total = await Item.countDocuments(queryObj);
-  res.status(200).json(
-    new ApiResponse(200, {items, total}, "Items fetched successfully")
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, { items, total }, "Items fetched successfully"));
 });
 
 export const createItem = asyncHandler(async (req, res) => {
@@ -77,8 +70,10 @@ export const createItem = asyncHandler(async (req, res) => {
     !description ||
     !price ||
     !category ||
-    !stock || !adventures ||
-    !purchase || !rent
+    !stock ||
+    !adventures ||
+    !purchase ||
+    !rent
   ) {
     throw new ApiError(400, "All fields are required");
   }
@@ -106,10 +101,8 @@ export const createItem = asyncHandler(async (req, res) => {
     images: mediasUrl,
     owner: req.user._id,
   });
-  
 
-  res.status(201).json(
-    new ApiResponse(201, "Item created successfully", {}));
+  res.status(201).json(new ApiResponse(201, "Item created successfully", {}));
 });
 
 export const updateItem = asyncHandler(async (req, res) => {
@@ -133,7 +126,6 @@ export const updateItem = asyncHandler(async (req, res) => {
   if (!item) {
     throw new ApiError(404, "Item not found");
   }
-
 
   // Update fields if provided
   if (name !== undefined) item.name = name;
@@ -179,7 +171,6 @@ export const deleteItem = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Item not found");
   }
 
-
   await Promise.all(
     item.images.map(async (image) => {
       const link = await deleteFromCloudinary(image);
@@ -210,12 +201,5 @@ export const getAllItems = asyncHandler(async (req, res) => {
 
   const total = await Item.countDocuments(queryObj);
 
-  res.json(
-    new ApiResponse(
-      200,
-      "Items fetched successfully",
-      items,
-      total
-    )
-  );
+  res.json(new ApiResponse(200, "Items fetched successfully", items, total));
 });

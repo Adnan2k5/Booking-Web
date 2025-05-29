@@ -211,14 +211,17 @@ export const getFilteredAdventures = asyncHandler(async (req, res) => {
     (session) => session.adventureId && session.location
   );
 
-  // Step 3: Extract adventures
-  const adventures = sessions.map((session) => session.adventureId);
-  const uniqueAdventures = Array.from(
-    new Set(adventures.map((a) => a._id.toString()))
-  ).map((id) => adventures.find((a) => a._id.toString() === id));
+  // Step 3: Extract unique adventure IDs
+  const adventureIds = sessions.map((session) => session.adventureId._id);
+  const uniqueAdventureIds = [
+    ...new Set(adventureIds.map((id) => id.toString())),
+  ];
+
+  // Step 4: Fetch adventures with populated location data
+  const adventures = await Adventure.find({
+    _id: { $in: uniqueAdventureIds },
+  }).populate("location");
 
   // Response
-  res
-    .status(200)
-    .json({ data: uniqueAdventures, total: uniqueAdventures.length });
+  res.status(200).json({ data: adventures, total: adventures.length });
 });

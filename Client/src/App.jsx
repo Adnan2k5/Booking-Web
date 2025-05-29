@@ -31,7 +31,7 @@ import LocationsPage from "./Pages/Admin/SubPages/Location"
 const LoginPage = lazy(() => import("./Pages/LoginPage"))
 const LandingPage = lazy(() => import("./Pages/LandingPage"))
 const BrowsingPage = lazy(() => import("./Pages/Browsing/BrowsingPage"))
-const Shop = lazy(() => import("./Pages/Shop"))
+const Shop = lazy(() => import("./Pages/Shop/Shop"))
 const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
 
 // i18n
@@ -55,6 +55,8 @@ import { HotelRegister } from "./Pages/Hotel/HotelRegister"
 import InstructorLayout from "./Pages/Instructor/InstructorLayout"
 import { Hotel } from "./Pages/Hotel/Hotel"
 import HotelPendingReview from "./Pages/Hotel/HotelPending"
+import Managers from "./Pages/Admin/SubPages/Managers"
+import { ItemPage } from "./Pages/Shop/ItemPage"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -80,7 +82,6 @@ const App = () => {
           <BrowserRouter>
             <Suspense fallback={<Loader />}>
               <Toaster />
-              <ChatWidget />
               <Routes>
                 {/* Public routes */}
                 <Route path="/login" element={<LoginPage />} />
@@ -92,6 +93,7 @@ const App = () => {
                 <Route path="/booking" element={<Booking />} />
                 <Route path="/confirmation" element={<ConfirmationPage />} />
                 <Route path="/shop" element={<Shop />} />
+                <Route path="/product/:productId" element={<ItemPage />} />
                 <Route path="/reset" element={<ResetPass />} />
                 <Route path="/instructor/register" element={<InstructorRegister />} />
                 <Route path="/instructor/pending-review" element={<InstructorPendingReview />} />
@@ -216,6 +218,7 @@ const App = () => {
                   <Route path="/admin/terms" element={<Dash_Terms />} />
                   <Route path="/admin/declaration" element={<Dash_Declation />} />
                   <Route path="/admin/locations" element={<LocationsPage />} />
+                  <Route path="/admin/manager" element={<Managers />} />
                 </Route>
               </Routes>
             </Suspense>

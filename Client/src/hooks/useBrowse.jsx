@@ -20,6 +20,7 @@ export function useBrowse() {
                 return;
             }
             const res = await fetchFilteredAdventures(filters);
+            console.log(res);
             setAdventures(res.data.data);
         } catch (err) {
             setError(err);

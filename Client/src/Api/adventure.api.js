@@ -21,10 +21,15 @@ export const fetchFilteredAdventures = async ({
   session_date = '',
 } = {}) => {
   const params = new URLSearchParams();
-  if (adventure && adventure.trim() !== '') params.append('adventure', adventure);
+  if (adventure && adventure.trim() !== '')
+    params.append('adventure', adventure);
   if (location && location.trim() !== '') params.append('location', location);
-  if (session_date && session_date.trim() !== '') params.append('session_date', session_date);
-  const res = await axiosClient.get(`/api/adventure/filter?${params.toString()}`);
+  if (session_date && session_date.trim() !== '')
+    params.append('session_date', session_date);
+  const res = await axiosClient.get(
+    `/api/adventure/filter?${params.toString()}`
+  );
+  console.log(res);
   return res;
 };
 

@@ -34,12 +34,16 @@ const userSchema = new mongoose.Schema(
     refreshToken: { type: String },
     role: {
       type: String,
-      enum: ["user", "admin", "instructor", "hotel"],
+      enum: ["user", "admin", "instructor", "hotel", "superadmin"],
       default: "user",
     },
     instructor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Instructor",
+    },
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Admin",
     },
     bookings: [
       {
@@ -62,9 +66,7 @@ const userSchema = new mongoose.Schema(
     friendRequests: [],
   },
   {
-
-    timestamps: true
-
+    timestamps: true,
   }
 );
 

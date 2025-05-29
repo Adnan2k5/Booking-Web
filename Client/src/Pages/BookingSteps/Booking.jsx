@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate, useLocation } from "react-router-dom"
 import { MapPin, Star, ArrowLeft, ChevronRight, Building, Check, Users, ShoppingCart } from 'lucide-react'
@@ -39,10 +39,13 @@ export default function BookingFlow() {
   const [isInstructorDialogOpen, setIsInstructorDialogOpen] = useState(false)
   const [currentInstructor, setCurrentInstructor] = useState(null)
   const [groupMembers, setGroupMembers] = useState([])
-  const { hotels } = useHotels({search: "", page: 1, limit: 10, status: "all"});
+  const { hotels } = useHotels({ search: "", page: 1, limit: 10, status: "all" });
+
+  // Ref for BookingSummary section
+  const bookingSummaryRef = useRef(null)
 
   const { sessions, instructors } = useSessions({ adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date") })
-  const { items } = useBrowse({adventureId: sessions.length > 0 ? sessions[0]?._id : ""}) 
+  const { items } = useBrowse({ adventureId: sessions.length > 0 ? sessions[0]?._id : "" })
 
   // Load group members from sessionStorage if available
   useEffect(() => {
@@ -85,7 +88,7 @@ export default function BookingFlow() {
         )
       } else {
         // Add new item with quantity 1
-        return [...prev, { _id: itemId, quantity: 1, isRental }]
+        return [...prev, { _id: itemId, quantity: 1, rent: isRental }]
       }
     })
   }
@@ -114,6 +117,23 @@ export default function BookingFlow() {
   const openInstructorDialog = (instructor) => {
     setCurrentInstructor(instructor)
     setIsInstructorDialogOpen(true)
+  }
+
+  // Hotel selection handler with smooth scroll to booking summary
+  const handleHotelSelect = (hotelId) => {
+    const newSelection = hotelId === selectedHotel ? null : hotelId
+    setSelectedHotel(newSelection)
+
+    // If a hotel is selected and we're on step 3, scroll to booking summary
+    if (newSelection && currentStep === 3 && bookingSummaryRef.current) {
+      setTimeout(() => {
+        bookingSummaryRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+          inline: 'nearest'
+        })
+      }, 300) // Small delay to allow the UI to update
+    }
   }
 
   const handleNext = () => {
@@ -375,19 +395,21 @@ export default function BookingFlow() {
                 className="w-full"
               >
                 <div className="space-y-8">
-                  <HotelSelection selectedHotel={selectedHotel} onSelectHotel={setSelectedHotel}  hotels={hotels}/>
+                  <HotelSelection selectedHotel={selectedHotel} onSelectHotel={handleHotelSelect} hotels={hotels} />
 
-                  <BookingSummary
-                    user={user}
-                    adventure={adventure}
-                    selectedInstructor={selectedInstructor}
-                    groupMembers={groupMembers}
-                    cartItems={cartItems}
-                    mockItems={items}
-                    selectedHotel={selectedHotel}
-                    mockHotels={hotels}
-                    calculateTotal={calculateTotal}
-                  />
+                  <div ref={bookingSummaryRef}>
+                    <BookingSummary
+                      user={user}
+                      adventure={adventure}
+                      selectedInstructor={selectedInstructor}
+                      groupMembers={groupMembers}
+                      cartItems={cartItems}
+                      mockItems={items}
+                      selectedHotel={selectedHotel}
+                      mockHotels={hotels}
+                      calculateTotal={calculateTotal}
+                    />
+                  </div>
                 </div>
               </motion.div>
             )}
