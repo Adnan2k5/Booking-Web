@@ -97,7 +97,7 @@ export default function ItemsPage() {
                                                 <div className="text-xs text-white uppercase font-medium mb-1">{item.category}</div>
                                                 <h3 className="font-semibold text-white text-lg mb-2 line-clamp-2">{item.name}</h3>
                                                 <div className="flex items-center justify-start">
-                                                    {item.purchase && <span className="font-bold text-white text-xl">{item.price.toFixed(2)} €</span>}
+                                                    {item.purchase && <span className="font-bold text-white text-xl">{item.price.toFixed(2)} €</span>}<br />
                                                     {item.rent && <span className="font-bold text-white text-xl">{item.rentalPrice.toFixed(2)} €/Day</span>}
                                                 </div>
                                             </div>
@@ -139,7 +139,7 @@ export default function ItemsPage() {
 
                                     <div className="flex items-center justify-between mt-4">
                                         <div className="flex items-center gap-2">
-                                            {item.purchase && <span className="font-bold text-lg">{item.price.toFixed(2)} €</span>}
+                                            {item.purchase && <span className="font-bold text-lg">{item.price.toFixed(2)} €</span>}<br />
                                             {item.rent && <span className="font-bold text-xl">{item.rentalPrice.toFixed(2)} €/Day</span>}
                                         </div>
 
