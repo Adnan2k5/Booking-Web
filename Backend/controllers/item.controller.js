@@ -40,7 +40,11 @@ export const discoverItems = asyncHandler(async (req, res) => {
     queryObj.adventures = advenureId; // Filter by adventure ID
   }
 
-  queryObj.stock = { $gt: 0 }; // Only fetch items that are in stock
+  // Only fetch items that are available for rent or purchase
+  queryObj.$or = [
+    { rentalStock: { $gt: 0 } },
+    { purchaseStock: { $gt: 0 } }
+  ];
 
   const items = await Item.find(queryObj)
     .populate("adventures", "name")
@@ -57,8 +61,10 @@ export const createItem = asyncHandler(async (req, res) => {
   const {
     name,
     description,
+    rentalPrice,
     price,
-    stock,
+    purchaseStock,
+    rentalStock,
     category,
     adventures,
     purchase,
@@ -68,9 +74,7 @@ export const createItem = asyncHandler(async (req, res) => {
   if (
     !name ||
     !description ||
-    !price ||
     !category ||
-    !stock ||
     !adventures ||
     !purchase ||
     !rent
@@ -93,7 +97,9 @@ export const createItem = asyncHandler(async (req, res) => {
     name,
     description,
     price,
-    stock,
+    rentalPrice,
+    rentalStock,
+    purchaseStock,
     category,
     adventures,
     purchase,
