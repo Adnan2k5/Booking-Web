@@ -48,7 +48,7 @@ export default function ItemsPage() {
   })
   const [showAddItem, setShowAddItem] = useState(false)
   const [images, setImages] = useState([])
-  const [selectedAdventure, setSelectedAdventure] = useState("")
+  const [selectedAdventures, setSelectedAdventures] = useState([])
   const [itemType, setItemType] = useState({ rent: false, buy: true })
   // State for add category dialog
   const [showAddCategory, setShowAddCategory] = useState(false)
@@ -120,12 +120,18 @@ export default function ItemsPage() {
     formData.append("name", data.name);
     formData.append("description", data.description);
     formData.append("price", data.price);
-    formData.append("stock", data.stock);
+    formData.append("purchaseStock", data.purchaseStock);
     formData.append("category", data.category);
     formData.append("status", data.status);
-    if (selectedAdventure) formData.append("adventures", selectedAdventure);
+    if (selectedAdventures.length > 0) {
+      selectedAdventures.forEach(adventureId => {
+        formData.append("adventures", adventureId);
+      });
+    }
     formData.append("purchase", itemType.buy);
     formData.append("rent", itemType.rent);
+    formData.append("rentalStock", data.rentalStock || 0);
+    formData.append("rentalPrice", data.rentalPrice || 0);
 
     images.forEach((img) => {
       if (img.file) {
@@ -145,6 +151,7 @@ export default function ItemsPage() {
       }
       reset();
       setImages([]);
+      setSelectedAdventures([]);
       setShowAddItem(false);
       setEditItem(null);
     } catch (error) {
@@ -217,7 +224,8 @@ export default function ItemsPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Price</TableHead>
-                    <TableHead>Stock</TableHead>
+                    <TableHead>Purchase Stock</TableHead>
+                    <TableHead>Rental Stock</TableHead>
                     <TableHead>Adventures</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -235,7 +243,8 @@ export default function ItemsPage() {
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell>{item.category}</TableCell>
                         <TableCell>${item.price.toFixed(2)}</TableCell>
-                        <TableCell>{item.stock}</TableCell>
+                        <TableCell>{item.purchaseStock}</TableCell>
+                        <TableCell>{item.rentalStock}</TableCell>
                         <TableCell>
                           {item.adventures && item.adventures.map((adventure) => (
                             <Badge key={adventure._id} variant="outline" className="mr-1">
@@ -245,9 +254,6 @@ export default function ItemsPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end space-x-2">
-                            <Button variant="ghost" size="icon">
-                              <Eye className="h-4 w-4" />
-                            </Button>
                             <Button variant="ghost" size="icon" onClick={() => {
                               setEditItem(item);
                               setShowAddItem(true);
@@ -255,12 +261,14 @@ export default function ItemsPage() {
                                 name: item.name,
                                 category: item.category,
                                 price: item.price,
-                                stock: item.stock,
+                                purchaseStock: item.purchaseStock,
                                 description: item.description,
                                 status: item.status,
-                                adventure: item.adventures?.[0]?._id || "none",
+                                rentalStock: item.rentalStock || "",
+                                rentalPrice: item.rentalPrice || "",
+
                               });
-                              setSelectedAdventure(item.adventures?.[0]?._id || "");
+                              setSelectedAdventures(item.adventures ? item.adventures.map(adv => adv._id) : []);
                               setItemType({ buy: item.purchase, rent: item.rent });
                               setImages(item.images ? item.images.map(url => ({ url, file: null })) : []);
                             }}>
@@ -285,19 +293,22 @@ export default function ItemsPage() {
             {items && items.map((item) => (
               <Card key={item.id} className="overflow-hidden">
                 <div className="aspect-square relative">
-                  <img src={item.image || "/placeholder.svg"} alt={item.name} className="object-cover w-full h-full" />
+                  <img src={item.images || "/placeholder.svg"} alt={item.name} className="object-cover w-full h-full" />
                 </div>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">{item.name}</CardTitle>
-                  <CardDescription className="flex items-center">
-                    <Tag className="h-3 w-3 mr-1" /> {item.category}
+                  <CardDescription className="flex flex-col">
+                    <div className="category flex items-center">
+                      <Tag className="h-3 w-3 mr-1" /> {item.category}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{item.description}</p>
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2 pb-2">
                   <div className="flex justify-between text-sm">
-                    <div className="flex items-center">
-                      <Package className="h-3 w-3 mr-1" />
-                      <span>{item.stock} in stock</span>
+                    <div className="flex flex-col">
+                      <span className="flex items-center"><Package className="h-3 w-3 mr-1" />{item.purchaseStock} in Purchase stock</span>
+                      <span className="flex items-center"><Package className="h-3 w-3 mr-1" />{item.rentalStock} in Rental stock</span>
                     </div>
                   </div>
                   {item.adventure && (items.adventures.map((adventure) => (
@@ -306,10 +317,13 @@ export default function ItemsPage() {
                     </Badge>
                   ))
                   )}
-                  <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
+
                 </CardContent>
                 <CardFooter className="flex justify-between pt-2">
-                  <div className="font-bold">${item.price.toFixed(2)}</div>
+                  <div className="price">
+                    <div className="font-bold">${item.price.toFixed(2)} Buy</div>
+                    <div className="font-bold">${item?.rentalPrice.toFixed(2)} Rent</div>
+                  </div>
                   <div className="flex space-x-2">
                     <Button variant="ghost" size="sm">
                       <Eye className="h-4 w-4 mr-1" /> View
@@ -324,9 +338,8 @@ export default function ItemsPage() {
                         stock: item.stock,
                         description: item.description,
                         status: item.status,
-                        adventure: item.adventures?.[0]?._id || "none",
                       });
-                      setSelectedAdventure(item.adventures?.[0]?._id || "");
+                      setSelectedAdventures(item.adventures ? item.adventures.map(adv => adv._id) : []);
                       setItemType({ buy: item.purchase, rent: item.rent });
                       setImages(item.images ? item.images.map(url => ({ url, file: null })) : []);
                     }}>
@@ -346,9 +359,10 @@ export default function ItemsPage() {
           setEditItem(null);
           reset();
           setImages([]);
+          setSelectedAdventures([]);
         }
       }}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>{editItem ? "Edit Item" : "Add New Item"}</DialogTitle>
             <DialogDescription>
@@ -357,7 +371,7 @@ export default function ItemsPage() {
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="">
                   <Label htmlFor="name">Item Name</Label>
                   <Input id="name" placeholder="Enter item name" {...register("name", { required: true })} />
                 </div>
@@ -438,32 +452,39 @@ export default function ItemsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="adventure">Associated Adventure</Label>
-                <Controller
-                  name="adventure"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value)
-                        setSelectedAdventure(value)
-                      }}
-                      value={field.value || "none"}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an adventure" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {adventures.map((adventure) => (
-                          <SelectItem key={adventure._id} value={adventure._id}>
-                            {adventure.title || adventure.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <Label>Associated Adventures</Label>
+                <div className="max-h-32 overflow-y-auto border rounded-md p-3 space-y-2">
+                  {adventures.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No adventures available</p>
+                  ) : (
+                    adventures.map((adventure) => (
+                      <div key={adventure._id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`adventure-${adventure._id}`}
+                          checked={selectedAdventures.includes(adventure._id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedAdventures(prev => [...prev, adventure._id]);
+                            } else {
+                              setSelectedAdventures(prev => prev.filter(id => id !== adventure._id));
+                            }
+                          }}
+                        />
+                        <Label
+                          htmlFor={`adventure-${adventure._id}`}
+                          className="text-sm cursor-pointer flex-1"
+                        >
+                          {adventure.title || adventure.name}
+                        </Label>
+                      </div>
+                    ))
                   )}
-                />
+                </div>
+                {selectedAdventures.length > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    {selectedAdventures.length} adventure(s) selected
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Item Availability</Label>
@@ -492,16 +513,16 @@ export default function ItemsPage() {
                 {itemType.rent &&
                   <div className="rental grid grid-cols-2 gap-4">
                     <div className="rentStock">
-                      <Label htmlfor="rentStock">
+                      <Label htmlFor="rentStock">
                         Rental Quantity
                       </Label>
                       <Input
-                        {...register("rentStock")}
+                        {...register("rentalStock")}
                         placeholder="Rental Quantity"
                       />
                     </div>
                     <div className="rentalPrice">
-                      <Label htmlfor="rentalPrice">
+                      <Label htmlFor="rentalPrice">
                         Rental Price
                       </Label>
                       <Input
@@ -550,6 +571,7 @@ export default function ItemsPage() {
                   setShowAddItem(false)
                   reset()
                   setImages([])
+                  setSelectedAdventures([])
                   setEditItem(null)
                 }}
               >

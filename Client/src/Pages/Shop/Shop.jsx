@@ -1,5 +1,5 @@
 import { motion } from "framer-motion"
-import { Search, Filter, ChevronDown, Eye, Heart, ShoppingBag, Grid, List } from "lucide-react"
+import { Search, Filter, ChevronDown, Eye, Heart, ShoppingBag, Grid, List, ShoppingCart } from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import {
@@ -31,7 +31,6 @@ export default function ItemsPage() {
     }
 
     return (
-
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -39,7 +38,7 @@ export default function ItemsPage() {
             className="space-y-6 max-w-7xl mx-auto px-4 py-8"
         >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                <h2 className="text-2xl font-bold tracking-tight">Products</h2>
+                <h2 className="text-2xl font-bold tracking-tight">Adventure Shop</h2>
                 <div className="flex items-center space-x-2">
                     <div className="relative">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -68,6 +67,17 @@ export default function ItemsPage() {
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    <div className="cart">
+                        <Link to="/cart">
+                            <Button variant="outline" size="sm" className="relative">
+                                <ShoppingCart className="mr-2 h-4 w-4" />
+                                Cart
+                                {/* <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-medium text-white bg-blue-600 rounded-full">
+                                    {items.length}
+                                </span> */}
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
             </div>
 
@@ -96,8 +106,9 @@ export default function ItemsPage() {
                                             <div className="text-white text-left">
                                                 <div className="text-xs text-white uppercase font-medium mb-1">{item.category}</div>
                                                 <h3 className="font-semibold text-white text-lg mb-2 line-clamp-2">{item.name}</h3>
-                                                <div className="flex items-center justify-start">
-                                                    {item.purchase && <span className="font-bold text-white text-xl">{item.price.toFixed(2)} €</span>}
+                                                <div className="flex flex-col  justify-start">
+                                                    {item.purchase && <span className="font-bold text-white text-xl">{item.price.toFixed(2)} €  or</span>}
+
                                                     {item.rent && <span className="font-bold text-white text-xl">{item.rentalPrice.toFixed(2)} €/Day</span>}
                                                 </div>
                                             </div>
@@ -138,8 +149,8 @@ export default function ItemsPage() {
                                     <p className="text-sm text-gray-500 mt-1 line-clamp-2">{item.description}</p>
 
                                     <div className="flex items-center justify-between mt-4">
-                                        <div className="flex items-center gap-2">
-                                            {item.purchase && <span className="font-bold text-lg">{item.price.toFixed(2)} €</span>}
+                                        <div className="flex flex-col items-start gap-2">
+                                            {item.purchase && <span className="font-bold text-lg">{item.price.toFixed(2)} € <spna className="font-normal">or</spna></span>}
                                             {item.rent && <span className="font-bold text-xl">{item.rentalPrice.toFixed(2)} €/Day</span>}
                                         </div>
 
