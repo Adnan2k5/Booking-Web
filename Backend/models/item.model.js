@@ -55,7 +55,7 @@ const itemSchema = new mongoose.Schema(
             min: 0,
         },
         purchaseStock: {
-            type: Boolean,
+            type: Number,
             default: 0,
             min: 0,
         },  
