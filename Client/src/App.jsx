@@ -81,6 +81,7 @@ const App = () => {
       <AuthProvider>
         <CartProvider>
           <BrowserRouter>
+            <ChatWidget />
             <Suspense fallback={<Loader />}>
               <Toaster />
               <Routes>
