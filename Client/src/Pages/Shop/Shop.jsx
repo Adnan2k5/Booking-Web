@@ -1,5 +1,5 @@
 import { motion } from "framer-motion"
-import { Search, Filter, ChevronDown, Eye, Heart, ShoppingBag } from "lucide-react"
+import { Search, Filter, ChevronDown, Eye, Heart, ShoppingBag, Grid, List } from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import {
@@ -74,8 +74,8 @@ export default function ItemsPage() {
             <Tabs defaultValue="grid" className="space-y-4">
                 <div className="flex items-center justify-between">
                     <TabsList>
-                        <TabsTrigger value="grid">Grid View</TabsTrigger>
-                        <TabsTrigger value="list">List View</TabsTrigger>
+                        <TabsTrigger value="grid"><Grid /></TabsTrigger>
+                        <TabsTrigger value="list"><List /></TabsTrigger>
                     </TabsList>
                 </div>
 

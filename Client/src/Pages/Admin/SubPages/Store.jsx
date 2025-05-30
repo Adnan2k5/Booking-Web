@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Search, Filter, Download, ChevronDown, Eye, Edit, Trash2, Plus, Tag, Package, X } from "lucide-react"
+import { Search, Filter, Download, ChevronDown, Eye, Edit, Trash2, Plus, Tag, Package, X, List, Grid } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import {
@@ -39,9 +39,11 @@ export default function ItemsPage() {
       name: "",
       category: "",
       price: "",
-      stock: "",
+      purchaseStock: "",
       description: "",
       status: "",
+      rentalStock: "",
+      rentalPrice: "",
     },
   })
   const [showAddItem, setShowAddItem] = useState(false)
@@ -136,17 +138,17 @@ export default function ItemsPage() {
     try {
       if (editItem) {
         await handleEditItem(editItem._id, formData);
-        toast.success("Item updated successfully!", {id: toastId});
+        toast.success("Item updated successfully!", { id: toastId });
       } else {
         await handleCreateItem(formData);
-        toast.success("Item posted successfully!", {id: toastId});
+        toast.success("Item posted successfully!", { id: toastId });
       }
       reset();
       setImages([]);
       setShowAddItem(false);
       setEditItem(null);
     } catch (error) {
-      toast.error(editItem ? "Failed to update item." : "Failed to post item.", {id: toastId});
+      toast.error(editItem ? "Failed to update item." : "Failed to post item.", { id: toastId });
     }
   };
 
@@ -166,8 +168,8 @@ export default function ItemsPage() {
       <Tabs defaultValue="list" className="space-y-4">
         <div className="flex items-center justify-between">
           <TabsList>
-            <TabsTrigger value="list">List View</TabsTrigger>
-            <TabsTrigger value="grid">Grid View</TabsTrigger>
+            <TabsTrigger value="list"><List /></TabsTrigger>
+            <TabsTrigger value="grid"><Grid /></TabsTrigger>
           </TabsList>
 
           <div className="flex items-center space-x-2">
@@ -424,7 +426,7 @@ export default function ItemsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="stock">Stock Quantity</Label>
-                  <Input id="stock" type="number" placeholder="0" {...register("stock", { required: true, min: 0 })} />
+                  <Input id="purchaseStock" type="number" placeholder="0" {...register("purchaseStock", { required: true, min: 0 })} />
                 </div>
               </div>
               <div className="space-y-2">
@@ -465,7 +467,7 @@ export default function ItemsPage() {
               </div>
               <div className="space-y-2">
                 <Label>Item Availability</Label>
-                <div className="flex space-x-4 items-center">
+                <div className="grid grid-cols-2 gap-4 items-center">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="buy"
@@ -487,6 +489,28 @@ export default function ItemsPage() {
                     </Label>
                   </div>
                 </div>
+                {itemType.rent &&
+                  <div className="rental grid grid-cols-2 gap-4">
+                    <div className="rentStock">
+                      <Label htmlfor="rentStock">
+                        Rental Quantity
+                      </Label>
+                      <Input
+                        {...register("rentStock")}
+                        placeholder="Rental Quantity"
+                      />
+                    </div>
+                    <div className="rentalPrice">
+                      <Label htmlfor="rentalPrice">
+                        Rental Price
+                      </Label>
+                      <Input
+                        {...register("rentalPrice")}
+                        placeholder="Rental Price"
+                        type="text"
+                      />
+                    </div>
+                  </div>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="image">Upload Images (Max 4)</Label>
