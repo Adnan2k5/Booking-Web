@@ -20,6 +20,7 @@ import itemRouter from "./routes/item.routes.js";
 import hotelRouter from "./routes/hotel.routes.js";
 import categoryRoute from "./routes/category.routes.js";
 import adminRouter from "./routes/admin.routes.js";
+import cartRouter from "./routes/cart.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
 import initSocketIO from "./socket/socket.js";
@@ -61,6 +62,7 @@ app.use("/api/category", categoryRoute);
 app.use("/api/instructor", instructorRouter);
 app.use("/api/hotel", hotelRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/cart", cartRouter);
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
