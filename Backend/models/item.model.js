@@ -15,7 +15,15 @@ const itemSchema = new mongoose.Schema(
         },
         price: {
             type: Number,
+            min: 0,
+            default: 0,
+        },
+        rentalPrice: {
+            type: Number,
             required: true,
+            min: 0,
+            default: 0, 
+
         },
         category: {
             type: String,
@@ -41,19 +49,24 @@ const itemSchema = new mongoose.Schema(
                 required: true,
             },
         ],
-        stock: {
+        rentalStock: {
             type: Number,
-            required: true,
             default: 0,
+            min: 0,
         },
-        rent: {
+        purchaseStock: {
             type: Boolean,
-            required: true,
+            default: 0,
+            min: 0,
         },  
         purchase: {
             type: Boolean,
             required: true,
         },
+        rent: {
+            type: Boolean,
+            required: true,
+        },  
         bookings: [
             {
                 type: mongoose.Schema.Types.ObjectId,

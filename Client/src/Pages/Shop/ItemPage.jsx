@@ -290,7 +290,8 @@ export const ItemPage = () => {
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Stock:</span>
-                                    <span className="font-medium">{item.stock} units</span>
+                                    <span className="font-medium">{item.purchaseStock} units</span>
+                                        <span className="font-medium">{item.rentalStock} units</span>
                                 </div>
                                 {item.adventures && item.adventures.length > 0 && (
                                     <div className="flex justify-between">
