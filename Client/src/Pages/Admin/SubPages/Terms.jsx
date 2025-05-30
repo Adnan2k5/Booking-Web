@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react" // Import useEffect
 import { motion } from "framer-motion"
-import { Search, Edit, FileText, Save } from "lucide-react"
+import { Search, Edit, FileText, Save, Trash2 } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
 import { Card, CardContent } from "../../../components/ui/card"
 import { Badge } from "../../../components/ui/badge"
 import { Textarea } from "../../../components/ui/textarea"
-import { getAllTermDocuments, getLiveTerms, saveDraftTerms, publishTerms } from "../../../Api/terms.api.js" // Import additional API functions
+import { getAllTermDocuments, getLiveTerms, saveDraftTerms, publishTerms, deleteTermsVersion } from "../../../Api/terms.api.js" // Import additional API functions
 
 export default function Dash_Terms() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -25,6 +25,8 @@ export default function Dash_Terms() {
   const [showNewTermForm, setShowNewTermForm] = useState(false) // State for new term form
   const [newTermTitle, setNewTermTitle] = useState("") // State for new term title
   const [successMessage, setSuccessMessage] = useState("") // Success message state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false) // State for delete confirmation dialog
+  const [isDeleting, setIsDeleting] = useState(false) // Deleting state
 
   useEffect(() => {
     const fetchTermsList = async () => {
@@ -135,7 +137,6 @@ export default function Dash_Terms() {
       setIsSaving(false)
     }
   }
-
   const handlePublishTerm = async () => {
     if (!selectedTerm || !termContent) return
 
@@ -159,6 +160,34 @@ export default function Dash_Terms() {
       setContentError("Failed to publish term. Please try again.")
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleDeleteTerm = async () => {
+    if (!selectedTerm) return
+
+    try {
+      setIsDeleting(true)
+      await deleteTermsVersion(selectedTerm.title, selectedTerm.version)
+
+      // Show success message
+      setSuccessMessage("Term deleted successfully!")
+      setTimeout(() => setSuccessMessage(""), 3000)
+
+      // Refresh the terms list
+      const data = await getAllTermDocuments()
+      setTerms(data || [])
+
+      // Clear selected term
+      setSelectedTerm(null)
+      setTermContent("")
+      setEditMode(false)
+      setShowDeleteConfirm(false)    } catch (err) {
+      console.error("Failed to delete term:", err)
+      setContentError("Failed to delete term. Please try again.")
+      setShowDeleteConfirm(false) // Close the confirmation dialog on error
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -217,6 +246,51 @@ export default function Dash_Terms() {
               </Button>
                 <Button onClick={handleCreateNewTerm} disabled={isSaving || !newTermTitle.trim()}>
                   {isSaving ? "Creating..." : "Create"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4 text-red-600">Delete Terms</h3>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Are you sure you want to delete "{selectedTerm?.title}" (Version {selectedTerm?.version})?
+              </p>
+              <p className="text-sm text-red-500 font-medium">
+                This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteTerm}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -321,8 +395,7 @@ export default function Dash_Terms() {
                         >
                           Cancel
                         </Button>
-                      </>
-                    ) : (
+                      </>                    ) : (
                       <>
                         <Button variant="outline" onClick={() => setEditMode(true)} disabled={isContentLoading}>
                           <Edit className="mr-2 h-4 w-4" />
@@ -337,6 +410,14 @@ export default function Dash_Terms() {
                             {isSaving ? "Publishing..." : "Publish"}
                           </Button>
                         )}
+                        <Button
+                          variant="destructive"
+                          onClick={() => setShowDeleteConfirm(true)}
+                          disabled={isSaving || isDeleting}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </Button>
                       </>
                     )}
                   </div>

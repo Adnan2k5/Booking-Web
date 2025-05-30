@@ -49,6 +49,7 @@ export const discoverItems = asyncHandler(async (req, res) => {
     .limit(parseInt(limit));
 
   const total = await Item.countDocuments(queryObj);
+
   res
     .status(200)
     .json(new ApiResponse(200, { items, total }, "Items fetched successfully"));
