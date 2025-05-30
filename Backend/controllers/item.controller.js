@@ -41,10 +41,7 @@ export const discoverItems = asyncHandler(async (req, res) => {
   }
 
   // Only fetch items that are available for rent or purchase
-  queryObj.$or = [
-    { rentalStock: { $gt: 0 } },
-    { purchaseStock: { $gt: 0 } }
-  ];
+  queryObj.$or = [{ rentalStock: { $gt: 0 } }, { purchaseStock: { $gt: 0 } }];
 
   const items = await Item.find(queryObj)
     .populate("adventures", "name")
@@ -71,14 +68,7 @@ export const createItem = asyncHandler(async (req, res) => {
     rent,
   } = req.body;
 
-  if (
-    !name ||
-    !description ||
-    !category ||
-    !adventures ||
-    !purchase ||
-    !rent
-  ) {
+  if (!name || !description || !category || !adventures || !purchase || !rent) {
     throw new ApiError(400, "All fields are required");
   }
 
@@ -117,11 +107,13 @@ export const updateItem = asyncHandler(async (req, res) => {
     name,
     description,
     price,
-    stock,
+    purchaseStock,
     category,
     adventures,
     purchase,
     rent,
+    rentalPrice,
+    rentalStock,
   } = req.body;
 
   if (!id) {
@@ -137,11 +129,13 @@ export const updateItem = asyncHandler(async (req, res) => {
   if (name !== undefined) item.name = name;
   if (description !== undefined) item.description = description;
   if (price !== undefined) item.price = price;
-  if (stock !== undefined) item.stock = stock;
+  if (purchaseStock !== undefined) item.purchaseStock = purchaseStock;
   if (category !== undefined) item.category = category;
   if (adventures !== undefined) item.adventures = adventures;
   if (purchase !== undefined) item.purchase = purchase;
   if (rent !== undefined) item.rent = rent;
+  if (rentalPrice !== undefined) item.rentalPrice = rentalPrice;
+  if (rentalStock !== undefined) item.rentalStock = rentalStock;
 
   // Handle images update
   if (req.files && req.files.images && req.files.images.length > 0) {

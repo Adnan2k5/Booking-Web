@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getAllItems} from "../Api/item.api";
+import { getAllItems } from "../Api/item.api";
 import { createItems, updateItem, deleteItem } from "../Api/items.api";
 import { toast } from "sonner"
 
