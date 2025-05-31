@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { MessageCircle, X, Minimize2, Maximize2, RotateCcw } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { useAuth } from "../Pages/AuthProvider"
+import { useNavigate } from "react-router-dom"
 
 // Mock data for chat messages
 const initialMessages = [
@@ -52,6 +53,7 @@ export default function ChatWidget() {
     const [messages, setMessages] = useState(initialMessages)
     const [showPredefinedQuestions, setShowPredefinedQuestions] = useState(true)
     const messagesEndRef = useRef(null)
+    const navigate = useNavigate()
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
@@ -73,7 +75,8 @@ export default function ChatWidget() {
     const handlePredefinedQuestion = (questionData) => {
         // Special handling for support - redirect to tickets page
         if (questionData.id === "support") {
-            window.location.href = "http://localhost:5173/dashboard/tickets"
+            navigate("/dashboard/tickets")
+            setIsOpen(false)
             return
         }
 
