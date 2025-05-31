@@ -15,14 +15,11 @@ export const Cart = () => {
     const navigate = useNavigate()
     const { cart, totalPrice, loading, error, updateCartItem, removeCartItem, clearCart } = useCart()
     const [loadingItems, setLoadingItems] = useState({})
-
-
-
-    const handleQuantityUpdate = async (itemId, newQuantity) => {
+    const handleQuantityUpdate = async (itemId, newQuantity, purchase) => {
         if (newQuantity < 1) return
         setLoadingItems(prev => ({ ...prev, [itemId]: true }))
         try {
-            await updateCartItem({ itemId, quantity: newQuantity })
+            await updateCartItem({ itemId, quantity: newQuantity, purchase })
             toast.success("Cart updated successfully")
         } catch (err) {
             toast.error("Failed to update cart")
@@ -30,11 +27,12 @@ export const Cart = () => {
             setLoadingItems(prev => ({ ...prev, [itemId]: false }))
         }
     }
+    console.log(totalPrice)
 
     const handleRemoveItem = async (itemId) => {
         setLoadingItems(prev => ({ ...prev, [itemId]: true }))
         try {
-            await removeCartItem({ itemId })
+            await removeCartItem({ itemId, purchase })
             toast.success("Item removed from cart")
         } catch (err) {
             toast.error("Failed to remove item")
@@ -95,7 +93,7 @@ export const Cart = () => {
             return sum + getItemTotal(item)
         }, 0)
 
-        const tax = subtotal * 0.19
+        const tax = totalPrice - subtotal
         return subtotal + tax
     }, [cart?.items])
 
@@ -113,7 +111,7 @@ export const Cart = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-white">
+            <div className="min-h-screen bg-white ">
                 <Navbar />
                 <div className="flex items-center justify-center min-h-[60vh]">
                     <div className="text-center">
@@ -126,7 +124,7 @@ export const Cart = () => {
     }
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-white mt-20">
             <Navbar />
 
             <motion.div
@@ -215,7 +213,7 @@ export const Cart = () => {
                                                         <img
                                                             src={item.item?.images?.[0] || "/placeholder.svg"}
                                                             alt={item.item?.name}
-                                                            className="w-full h-full object-cover grayscale"
+                                                            className="w-full h-full object-cover"
                                                         />
                                                     </div>
 
@@ -267,7 +265,7 @@ export const Cart = () => {
                                                                             <DateRangePicker
                                                                                 startDate={item.rentalPeriod.startDate ? new Date(item.rentalPeriod.startDate) : null}
                                                                                 endDate={item.rentalPeriod.endDate ? new Date(item.rentalPeriod.endDate) : null}
-                                                                                onChange={(startDate, endDate) => handleRentalDateChange(item._id, startDate, endDate)}
+                                                                                onChange={(startDate, endDate) => handleRentalDateChange(item.item._id, startDate, endDate, item.purchase)}
                                                                                 className="flex-1"
                                                                             />
                                                                             <div className="flex items-center gap-1 text-sm text-gray-600 bg-gray-50 px-2 py-1 rounded">
@@ -290,8 +288,8 @@ export const Cart = () => {
                                                                         <Button
                                                                             variant="outline"
                                                                             size="sm"
-                                                                            onClick={() => handleQuantityUpdate(item._id, item.quantity - 1)}
-                                                                            disabled={item.quantity <= 1 || loadingItems[item._id]}
+                                                                            onClick={() => handleQuantityUpdate(item.item._id, item.quantity - 1, item.purchase)}
+                                                                            disabled={item.quantity <= 1 || loadingItems[item.item._id]}
                                                                             className="h-8 w-8 p-0 border-black text-black hover:bg-black hover:text-white"
                                                                         >
                                                                             <Minus className="h-3 w-3" />
@@ -302,8 +300,8 @@ export const Cart = () => {
                                                                         <Button
                                                                             variant="outline"
                                                                             size="sm"
-                                                                            onClick={() => handleQuantityUpdate(item._id, item.quantity + 1)}
-                                                                            disabled={loadingItems[item._id]}
+                                                                            onClick={() => handleQuantityUpdate(item.item._id, item.quantity + 1, item.purchase)}
+                                                                            disabled={loadingItems[item.item._id]}
                                                                             className="h-8 w-8 p-0 border-black text-black hover:bg-black hover:text-white"
                                                                         >
                                                                             <Plus className="h-3 w-3" />
@@ -320,8 +318,8 @@ export const Cart = () => {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    onClick={() => handleRemoveItem(item._id)}
-                                                                    disabled={loadingItems[item._id]}
+                                                                    onClick={() => handleRemoveItem(item.item._id, item.purchase)}
+                                                                    disabled={loadingItems[item.item._id]}
                                                                     className="text-black hover:text-white hover:bg-black"
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
@@ -348,7 +346,7 @@ export const Cart = () => {
                         </div>
 
                         {/* Right Column - Checkout Summary */}
-                        <div className="lg:col-span-1">
+                        <div className="lg:col-span-1 ">
                             <div className="sticky top-8">
                                 <Card>
                                     <CardHeader>
@@ -370,7 +368,7 @@ export const Cart = () => {
                                             </div> */}
                                             <div className="flex justify-between text-sm">
                                                 <span>Platform Fee</span>
-                                                <span>€{(cart.items.reduce((sum, item) => sum + getItemTotal(item), 0) * 0.19).toFixed(2)}</span>
+                                                <span>€{(cart.items.reduce((sum, item) => sum + getItemTotal(item), 0) * 0.12).toFixed(2)}</span>
                                             </div>
                                         </div>
 
@@ -379,7 +377,7 @@ export const Cart = () => {
                                         {/* Total */}
                                         <div className="flex justify-between text-lg font-bold">
                                             <span>Total</span>
-                                            <span>€{calculatedTotalWithTax.toFixed(2)}</span>
+                                            <span>€{totalPrice.toFixed(2)}</span>
                                         </div>
 
                                         {/* Checkout Button */}
@@ -391,7 +389,7 @@ export const Cart = () => {
                                         </Button>
 
                                         <p className="text-xs text-gray-500 text-center">
-                                            Secure checkout powered by Stripe
+                                            Secure checkout powered by Paypal & Revoult
                                         </p>
                                     </CardContent>
                                 </Card>
