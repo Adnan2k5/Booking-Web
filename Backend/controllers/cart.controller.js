@@ -89,9 +89,11 @@ export const updateCartItem = asyncHandler(async (req, res) => {
   }
   let cart = await Cart.findOne({ user: userId });
   if (!cart) throw new ApiError(404, "Cart not found");
+  
   const cartItem = cart.items.find(
     (i) => i.item.toString() === itemId && i.purchase === !!purchase
   );
+
   if (!cartItem) throw new ApiError(404, "Item not found in cart");
   if (quantity !== undefined) cartItem.quantity = quantity;
   if (rentalPeriod !== undefined) cartItem.rentalPeriod = rentalPeriod;

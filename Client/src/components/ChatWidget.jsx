@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { MessageCircle, Send, X, Minimize2, Maximize2 } from "lucide-react"
-import { Button } from "./ui/button"
-import { Input } from "./ui/input"
+import { MessageCircle, X, Minimize2, Maximize2, RotateCcw } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { useAuth } from "../Pages/AuthProvider"
 
@@ -18,12 +16,41 @@ const initialMessages = [
     },
 ]
 
+// Predefined questions for quick start
+const predefinedQuestions = [
+    {
+        id: "register",
+        question: "How to register?",
+        response: "To register, click on the 'Sign Up' button in the top right corner of our website. Fill in your details including name, email, and password. You'll receive a confirmation email to verify your account."
+    },
+    {
+        id: "book",
+        question: "How to book an adventure?",
+        response: "To book an adventure: 1) Browse our available adventures, 2) Select your preferred date and time, 3) Add it to your cart, 4) Proceed to checkout and complete payment. You'll receive a confirmation email with all details."
+    },
+    {
+        id: "types",
+        question: "What types of adventures are available?",
+        response: "We offer various adventure types including hiking, rock climbing, water sports, wildlife safaris, mountain biking, paragliding, and cultural tours. Each adventure is designed for different skill levels from beginner to advanced."
+    },
+    {
+        id: "locations",
+        question: "What locations are you available in?",
+        response: "We operate in multiple exciting destinations including mountain ranges, coastal areas, national parks, and adventure hotspots. Check our locations page for the complete list of available destinations near you."
+    },
+    {
+        id: "support",
+        question: "Contact Support",
+        response: "You're now connected to our support team. Please describe your issue and we'll assist you as soon as possible. For urgent matters, you can also call our 24/7 helpline."
+    }
+]
+
 export default function ChatWidget() {
     const { user } = useAuth()
     const [isOpen, setIsOpen] = useState(false)
     const [isMinimized, setIsMinimized] = useState(false)
     const [messages, setMessages] = useState(initialMessages)
-    const [newMessage, setNewMessage] = useState("")
+    const [showPredefinedQuestions, setShowPredefinedQuestions] = useState(true)
     const messagesEndRef = useRef(null)
 
     // Auto-scroll to bottom when new messages arrive
@@ -42,50 +69,38 @@ export default function ChatWidget() {
         setIsMinimized(!isMinimized)
     }
 
-    const handleSendMessage = (e) => {
-        e.preventDefault()
-        if (!newMessage.trim()) return
+    // Handle predefined question click
+    const handlePredefinedQuestion = (questionData) => {
+        // Special handling for support - redirect to tickets page
+        if (questionData.id === "support") {
+            window.location.href = "http://localhost:5173/dashboard/tickets"
+            return
+        }
 
         // Add user message
         const userMessage = {
             id: messages.length + 1,
             sender: "user",
-            content: newMessage,
+            content: questionData.question,
             timestamp: new Date().toISOString(),
         }
 
-        setMessages([...messages, userMessage])
-        setNewMessage("")
+        setMessages(prev => [...prev, userMessage])
 
-        // Simulate agent response after a short delay
+        // Add agent response after a short delay
         setTimeout(() => {
             const agentMessage = {
                 id: messages.length + 2,
                 sender: "agent",
-                content: getAutoResponse(newMessage),
+                content: questionData.response,
                 timestamp: new Date().toISOString(),
             }
             setMessages((prev) => [...prev, agentMessage])
         }, 1000)
-    }
-
-    // Simple auto-response function
-    const getAutoResponse = (message) => {
-        const lowerMessage = message.toLowerCase()
-
-        if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
-            return "Hello there! How can I assist you with your adventure booking today?"
-        } else if (lowerMessage.includes("book") || lowerMessage.includes("reservation")) {
-            return "To make a booking, you can browse our adventures and select the one you're interested in. Would you like me to guide you through the process?"
-        } else if (lowerMessage.includes("cancel") || lowerMessage.includes("refund")) {
-            return "For cancellations and refunds, please refer to our cancellation policy. Typically, full refunds are available up to 48 hours before your adventure."
-        } else if (lowerMessage.includes("price") || lowerMessage.includes("cost")) {
-            return "Our adventure prices vary based on the activity and duration. You can see the exact price on each adventure's details page. Is there a specific adventure you're interested in?"
-        } else if (lowerMessage.includes("equipment") || lowerMessage.includes("gear")) {
-            return "We provide all necessary equipment for our adventures. You can also rent or purchase additional gear from our shop if needed."
-        } else {
-            return "Thank you for your message. Our team will get back to you shortly. Is there anything else I can help you with?"
-        }
+    }    // Reset chat to initial state
+    const resetChat = () => {
+        setMessages(initialMessages)
+        setShowPredefinedQuestions(true)
     }
 
     // Format timestamp to readable time
@@ -120,11 +135,17 @@ export default function ChatWidget() {
                             transition: { duration: 0.3 },
                         }}
                         exit={{ opacity: 0, y: 50, transition: { duration: 0.2 } }}
-                    >
-                        {/* Chat header */}
+                    >                        {/* Chat header */}
                         <div className="bg-blue-600 text-white p-3 flex justify-between items-center">
                             <h3 className="font-medium">Adventure Support</h3>
                             <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={resetChat} 
+                                    className="text-white hover:text-blue-100"
+                                    title="Reset chat"
+                                >
+                                    <RotateCcw size={18} />
+                                </button>
                                 <button onClick={toggleMinimize} className="text-white hover:text-blue-100">
                                     {isMinimized ? <Maximize2 size={18} /> : <Minimize2 size={18} />}
                                 </button>
@@ -132,9 +153,7 @@ export default function ChatWidget() {
                                     <X size={18} />
                                 </button>
                             </div>
-                        </div>
-
-                        {/* Chat messages */}
+                        </div>                        {/* Chat messages */}
                         {!isMinimized && (
                             <div className="flex-1 overflow-y-auto p-3 bg-gray-50">
                                 {messages.map((message) => (
@@ -168,24 +187,27 @@ export default function ChatWidget() {
                                         )}
                                     </div>
                                 ))}
-                                <div ref={messagesEndRef} />
-                            </div>
-                        )}
 
-                        {/* Chat input */}
-                        {!isMinimized && (
-                            <form onSubmit={handleSendMessage} className="p-3 border-t flex gap-2">
-                                <Input
-                                    type="text"
-                                    placeholder="Type your message..."
-                                    value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
-                                    className="flex-1"
-                                />
-                                <Button type="submit" size="icon" className="bg-blue-600">
-                                    <Send size={18} />
-                                </Button>
-                            </form>
+                                <div ref={messagesEndRef} />
+
+                                {/* Predefined Questions */}
+                                {showPredefinedQuestions && (
+                                    <div className="mt-3">
+                                        <p className="text-sm text-gray-600 mb-2">Quick questions:</p>
+                                        <div className="space-y-2">
+                                            {predefinedQuestions.map((item) => (
+                                                <button
+                                                    key={item.id}
+                                                    onClick={() => handlePredefinedQuestion(item)}
+                                                    className="w-full text-left p-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                                                >
+                                                    {item.question}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </motion.div>
                 )}
