@@ -1,5 +1,5 @@
 import { motion } from "framer-motion"
-import { Search, Filter, ChevronDown, Eye, Heart, ShoppingBag, Grid, List, ShoppingCart } from "lucide-react"
+import { Search, Filter, ChevronDown, Eye, Heart, ShoppingBag, Grid, List, ShoppingCart, ChevronLeftIcon } from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import {
@@ -35,8 +35,9 @@ export default function ItemsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="space-y-6 max-w-7xl mx-auto px-4 py-8"
+            className="space-y-6 max-w-7xl  mx-auto px-4 py-8"
         >
+            <div className="back flex items-center"><Link className="flex items-center" to="/browse"><ChevronLeftIcon /> Back</Link></div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                 <h2 className="text-2xl font-bold tracking-tight">Adventure Shop</h2>
                 <div className="flex items-center space-x-2">

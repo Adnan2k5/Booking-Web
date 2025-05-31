@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next"
 import { useAdventures } from "../hooks/useAdventure"
 import { Nav_Landing } from "../components/Nav_Landing"
 import { fadeIn, staggerContainer } from "../assets/Animations"
+import ReactPlayer from "react-player"
 
 export default function LandingPage() {
   const Navigate = useNavigate()
@@ -138,6 +139,13 @@ export default function LandingPage() {
     }
     Navigate(`/browse?adventure=${adventure}&location=${location}&date=${date}`)
   }
+  const onReady = () => {
+    const internalPlayer = playerRef.current.getInternalPlayer();
+    // Tries to set quality — doesn't always work depending on YouTube
+    if (internalPlayer.setPlaybackQuality) {
+      internalPlayer.setPlaybackQuality('hd1080'); // 'small', 'medium', 'large', 'hd720', 'hd1080', 'highres'
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -149,13 +157,7 @@ export default function LandingPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 1.5 }}
         />
-        <video
-          src="https://res.cloudinary.com/dygmsxtsd/video/upload/v1747935986/5406499_Coll_wavebreak_Surfing_3840x2160_w7qryc.mp4"
-          autoPlay
-          loop
-          muted
-          className="w-full h-full object-cover"
-        />
+        <ReactPlayer url={"https://youtu.be/FfPVvtNo92s"} onReady={onReady} controls={false} loop={true} playing={true} muted={true} width="100%" height="100%" />
       </div>
 
       <Nav_Landing />
