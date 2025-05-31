@@ -7,6 +7,7 @@ import { FriendRequest } from "../models/freindRequest.model.js";
 export const searchByEmailId = asyncHandler(async (req, res) => {
     const { email } = req.query;
 
+
     if (!email) {
         throw new ApiError(400, "Email is required");
     }

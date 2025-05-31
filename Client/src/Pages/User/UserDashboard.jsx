@@ -24,6 +24,7 @@ import { UserBookings } from "./UserBookings"
 import { UserTickets } from "./UserTickets"
 import { UserProfile } from "./UserProfile"
 import { UserSettings } from "./UserSettings"
+import { UserFriendRequests } from "./UserFriendRequests"
 import { useAuth } from "../AuthProvider"
 
 // Mock data for past bookings
@@ -158,13 +159,14 @@ export default function UserDashboard() {
                             </div>
                         </CardContent>
                     </Card>
-                </div>
-
-                {/* Main Content Tabs */}
+                </div>                {/* Main Content Tabs */}
                 <Tabs defaultValue="bookings" className="w-full">
-                    <TabsList className="grid grid-cols-4 mb-8 bg-gray-100 rounded-2xl">
+                    <TabsList className="grid grid-cols-5 mb-8 bg-gray-100 rounded-2xl">
                         <TabsTrigger value="bookings" className="rounded-xl">
                             My Bookings
+                        </TabsTrigger>
+                        <TabsTrigger value="friends" className="rounded-xl">
+                            Friends
                         </TabsTrigger>
                         <TabsTrigger value="tickets" className="rounded-xl">
                             Support Tickets
@@ -175,11 +177,14 @@ export default function UserDashboard() {
                         <TabsTrigger value="settings" className="rounded-xl">
                             Settings
                         </TabsTrigger>
-                    </TabsList>
-
-                    {/* Bookings Tab */}
+                    </TabsList>                    {/* Bookings Tab */}
                     <TabsContent value="bookings">
                         <UserBookings />
+                    </TabsContent>
+
+                    {/* Friends Tab */}
+                    <TabsContent value="friends">
+                        <UserFriendRequests />
                     </TabsContent>
 
                     {/* Support Tickets Tab */}
