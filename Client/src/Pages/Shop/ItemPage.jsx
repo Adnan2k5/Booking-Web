@@ -6,8 +6,10 @@ import { Button } from '../../components/ui/button'
 import { Badge } from '../../components/ui/badge'
 import { Navbar } from '../../components/Navbar'
 import StarRating from '../../components/StarRating'
+import DateRangePicker from '../../components/ui/DateRangePicker'
 import { ArrowLeft, ShoppingCart, Package, CreditCard, Banknote, Plus, Minus } from 'lucide-react'
 import { toast } from 'sonner'
+import { useCart } from '../../hooks/useCart'
 
 export const ItemPage = () => {
     const { productId } = useParams();
@@ -18,6 +20,20 @@ export const ItemPage = () => {
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [selectedOption, setSelectedOption] = useState('purchase');
+    const [rentalStartDate, setRentalStartDate] = useState(null);
+    const [rentalEndDate, setRentalEndDate] = useState(null);
+
+    // Cart functionality
+    const { addToCart, loading: cartLoading } = useCart();
+
+    const handleOptionChange = (option) => {
+        setSelectedOption(option);
+        // Reset rental dates when switching to purchase
+        if (option === 'purchase') {
+            setRentalStartDate(null);
+            setRentalEndDate(null);
+        }
+    };
 
     const fetchItemById = async () => {
         try {
@@ -39,16 +55,61 @@ export const ItemPage = () => {
         }
     }, [productId])
 
-    const handleAddToCart = () => {
-        const action = selectedOption === 'rent' ? 'rent' : 'purchase';
-        const message = `Added ${quantity} ${item.name} to cart (${action})`;
-        toast.success(message);
-        // TODO: Integrate with cart context
+    const handleAddToCart = async () => {
+        try {
+            // Validate rental dates if rent option is selected
+            if (selectedOption === 'rent' && (!rentalStartDate || !rentalEndDate)) {
+                toast.error('Please select rental period dates');
+                return;
+            }
+
+            const cartData = {
+                item: item._id,
+                quantity: quantity,
+                action: selectedOption, // 'rent' or 'purchase'
+                purchase: selectedOption === 'purchase', // true for purchase, false for rent
+            };
+
+            // Add rental period if rent option is selected
+            if (selectedOption === 'rent' && rentalStartDate && rentalEndDate) {
+                cartData.rentalPeriod = {
+                    startDate: rentalStartDate,
+                    endDate: rentalEndDate,
+                    days: Math.ceil((rentalEndDate - rentalStartDate) / (1000 * 60 * 60 * 24))
+                };
+            }
+
+            await addToCart(cartData);
+
+            const action = selectedOption === 'rent' ? 'rent' : 'purchase';
+            let message = `Added ${quantity} ${item.name} to cart (${action})`;
+
+            if (selectedOption === 'rent' && cartData.rentalPeriod) {
+                message += ` for ${cartData.rentalPeriod.days} days`;
+            }
+
+            toast.success(message);
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            toast.error('Failed to add item to cart. Please try again.');
+        }
     }
 
     const handleBuyNow = () => {
+        // Validate rental dates if rent option is selected
+        if (selectedOption === 'rent' && (!rentalStartDate || !rentalEndDate)) {
+            toast.error('Please select rental period dates');
+            return;
+        }
+
         const action = selectedOption === 'rent' ? 'rent' : 'purchase';
-        const message = `Proceeding to checkout for ${quantity} ${item.name} (${action})`;
+        let message = `Proceeding to checkout for ${quantity} ${item.name} (${action})`;
+
+        if (selectedOption === 'rent' && rentalStartDate && rentalEndDate) {
+            const days = Math.ceil((rentalEndDate - rentalStartDate) / (1000 * 60 * 60 * 24));
+            message += ` for ${days} days`;
+        }
+
         toast.success(message);
         // TODO: Navigate to checkout
     }
@@ -168,7 +229,7 @@ export const ItemPage = () => {
                                     <Badge variant="secondary" className="text-xs">
                                         {item.category}
                                     </Badge>
-                                    {item.stock <= 5 && (
+                                    {item.purchaseStock <= 5 && (
                                         <Badge variant="destructive" className="text-xs">
                                             Low Stock
                                         </Badge>
@@ -191,7 +252,7 @@ export const ItemPage = () => {
                         <Card className="rounded-xl">
                             <CardContent className="p-6">
                                 <div className="text-3xl font-bold text-gray-900 mb-4">
-                                    ${selectedOption === 'rent' ? Math.round(item.price * 0.3) : item.price}
+                                    ${selectedOption === 'rent' ? Math.round(item.rentalPrice) : item.price}
                                     {selectedOption === 'rent' && <span className="text-base font-normal text-gray-500">/day</span>}
                                 </div>
                                 {selectedOption === 'rent' && (
@@ -201,13 +262,13 @@ export const ItemPage = () => {
                                 {/* Purchase/Rent Options */}
                                 <div className="flex gap-2 mb-4">
                                     {item.purchase && (
-                                        <Badge variant={selectedOption === 'purchase' ? 'default' : 'outline'} className="flex items-center gap-1 cursor-pointer" onClick={() => setSelectedOption('purchase')}>
+                                        <Badge variant={selectedOption === 'purchase' ? 'default' : 'outline'} className="flex items-center gap-1 cursor-pointer" onClick={() => handleOptionChange('purchase')}>
                                             <CreditCard className="h-3 w-3" />
                                             Purchase
                                         </Badge>
                                     )}
                                     {item.rent && (
-                                        <Badge variant={selectedOption === 'rent' ? 'default' : 'outline'} className="flex items-center gap-1 cursor-pointer" onClick={() => setSelectedOption('rent')}>
+                                        <Badge variant={selectedOption === 'rent' ? 'default' : 'outline'} className="flex items-center gap-1 cursor-pointer" onClick={() => handleOptionChange('rent')}>
                                             <Banknote className="h-3 w-3" />
                                             Rent
                                         </Badge>
@@ -220,6 +281,29 @@ export const ItemPage = () => {
                                         Stock: <span className="font-semibold">{item.stock} available</span>
                                     </p>
                                 </div>
+
+                                {/* Rental Period Calendar - Only show when rent option is selected */}
+                                {selectedOption === 'rent' && (
+                                    <div className="mb-6">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Rental Period
+                                        </label>
+                                        <DateRangePicker
+                                            startDate={rentalStartDate}
+                                            endDate={rentalEndDate}
+                                            onChange={(startDate, endDate) => {
+                                                setRentalStartDate(startDate);
+                                                setRentalEndDate(endDate);
+                                            }}
+                                            className="w-full"
+                                        />
+                                        {rentalStartDate && rentalEndDate && (
+                                            <p className="text-sm text-gray-600 mt-2">
+                                                Total rental days: {Math.ceil((rentalEndDate - rentalStartDate) / (1000 * 60 * 60 * 24))}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Quantity Selector */}
                                 <div className="mb-6">
@@ -262,10 +346,10 @@ export const ItemPage = () => {
                                         className="w-full"
                                         size="lg"
                                         onClick={handleAddToCart}
-                                        disabled={item.stock === 0}
+                                        disabled={item.stock === 0 || cartLoading}
                                     >
                                         <ShoppingCart className="h-4 w-4 mr-2" />
-                                        Add to Cart
+                                        {cartLoading ? 'Adding...' : 'Add to Cart'}
                                     </Button>
                                 </div>
                             </CardContent>
@@ -291,7 +375,7 @@ export const ItemPage = () => {
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Stock:</span>
                                     <span className="font-medium">{item.purchaseStock} units</span>
-                                        <span className="font-medium">{item.rentalStock} units</span>
+                                    <span className="font-medium">{item.rentalStock} units</span>
                                 </div>
                                 {item.adventures && item.adventures.length > 0 && (
                                     <div className="flex justify-between">

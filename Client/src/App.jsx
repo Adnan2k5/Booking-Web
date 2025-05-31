@@ -57,6 +57,7 @@ import { Hotel } from "./Pages/Hotel/Hotel"
 import HotelPendingReview from "./Pages/Hotel/HotelPending"
 import Managers from "./Pages/Admin/SubPages/Managers"
 import { ItemPage } from "./Pages/Shop/ItemPage"
+import { Cart } from "./Pages/Shop/Cart"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -80,6 +81,7 @@ const App = () => {
       <AuthProvider>
         <CartProvider>
           <BrowserRouter>
+            <ChatWidget />
             <Suspense fallback={<Loader />}>
               <Toaster />
               <Routes>
@@ -93,6 +95,7 @@ const App = () => {
                 <Route path="/booking" element={<Booking />} />
                 <Route path="/confirmation" element={<ConfirmationPage />} />
                 <Route path="/shop" element={<Shop />} />
+                <Route path="/cart" element={<Cart />} />
                 <Route path="/product/:productId" element={<ItemPage />} />
                 <Route path="/reset" element={<ResetPass />} />
                 <Route path="/instructor/register" element={<InstructorRegister />} />
