@@ -21,9 +21,13 @@ export const getCartItems = asyncHandler(async (req, res) => {
       const itemPrice = item.price * cartItem.quantity;
       return total + itemPrice;
     } else {
-      const rentalPrice =
-        item.rentalPrice * cartItem.quantity * cartItem.rentalPeriod;
-      return total + rentalPrice;
+      const rentalDuration = Math.ceil(
+        (new Date(cartItem.rentalPeriod.endDate) -
+          new Date(cartItem.rentalPeriod.startDate)) /
+          (1000 * 60 * 60 * 24)
+      );
+      const rentalPrice = item.rentalPrice * cartItem.quantity * rentalDuration;
+      return total + rentalPrice + (total + rentalPrice) * 0.12;
     }
   }, 0);
   res
@@ -69,9 +73,13 @@ export const addToCart = asyncHandler(async (req, res) => {
       const itemPrice = item.price * cartItem.quantity;
       return total + itemPrice;
     } else {
-      const rentalPrice =
-        item.rentalPrice * cartItem.quantity * cartItem.rentalPeriod;
-      return total + rentalPrice;
+      const rentalDuration = Math.ceil(
+        (new Date(cartItem.rentalPeriod.endDate) -
+          new Date(cartItem.rentalPeriod.startDate)) /
+          (1000 * 60 * 60 * 24)
+      );
+      const rentalPrice = item.rentalPrice * cartItem.quantity * rentalDuration;
+      return total + rentalPrice + (total + rentalPrice) * 0.12;
     }
   }, 0);
 
@@ -88,10 +96,12 @@ export const updateCartItem = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Item id is required");
   }
   let cart = await Cart.findOne({ user: userId });
+  console.log(cart);
   if (!cart) throw new ApiError(404, "Cart not found");
   const cartItem = cart.items.find(
     (i) => i.item.toString() === itemId && i.purchase === !!purchase
   );
+  console.log(cart.items[0].item.toString(), itemId, purchase);
   if (!cartItem) throw new ApiError(404, "Item not found in cart");
   if (quantity !== undefined) cartItem.quantity = quantity;
   if (rentalPeriod !== undefined) cartItem.rentalPeriod = rentalPeriod;
@@ -106,9 +116,13 @@ export const updateCartItem = asyncHandler(async (req, res) => {
       const itemPrice = item.price * cartItem.quantity;
       return total + itemPrice;
     } else {
-      const rentalPrice =
-        item.rentalPrice * cartItem.quantity * cartItem.rentalPeriod;
-      return total + rentalPrice;
+      const rentalDuration = Math.ceil(
+        (new Date(cartItem.rentalPeriod.endDate) -
+          new Date(cartItem.rentalPeriod.startDate)) /
+          (1000 * 60 * 60 * 24)
+      );
+      const rentalPrice = item.rentalPrice * cartItem.quantity * rentalDuration;
+      return total + rentalPrice + (total + rentalPrice) * 0.12;
     }
   }, 0);
 
@@ -137,9 +151,13 @@ export const removeCartItem = asyncHandler(async (req, res) => {
       const itemPrice = item.price * cartItem.quantity;
       return total + itemPrice;
     } else {
-      const rentalPrice =
-        item.rentalPrice * cartItem.quantity * cartItem.rentalPeriod;
-      return total + rentalPrice;
+      const rentalDuration = Math.ceil(
+        (new Date(cartItem.rentalPeriod.endDate) -
+          new Date(cartItem.rentalPeriod.startDate)) /
+          (1000 * 60 * 60 * 24)
+      );
+      const rentalPrice = item.rentalPrice * cartItem.quantity * rentalDuration;
+      return total + rentalPrice + (total + rentalPrice) * 0.12;
     }
   }, 0);
 
