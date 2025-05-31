@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider"
@@ -22,103 +22,101 @@ import { useTranslation } from "react-i18next"
 import { useAdventures } from "../hooks/useAdventure"
 import { Nav_Landing } from "../components/Nav_Landing"
 import { fadeIn, staggerContainer } from "../assets/Animations"
+
+import { useFriend } from "../hooks/useFriend.jsx"
 import ReactPlayer from "react-player"
+
 
 export default function LandingPage() {
   const Navigate = useNavigate()
   const { user, loading } = useAuth()
   const { t, i18n } = useTranslation()
-
   const [location, setLocation] = useState("")
   const [date, setDate] = useState("")
 
   const [showGroupDialog, setShowGroupDialog] = useState(false)
   const [groupMembers, setGroupMembers] = useState([])
-  const [searchEmail, setSearchEmail] = useState("")
-  const [searchResults, setSearchResults] = useState([])
-  const [isSearching, setIsSearching] = useState(false)
   const [adventure, setadventure] = useState("")
+  const [searchEmail, setSearchEmail] = useState("")
+  const [showFriendsList, setShowFriendsList] = useState(true)
 
   const { adventures, loading: adventureLoading } = useAdventures()
+  const { 
+    friends, 
+    searchResult, 
+    loading: friendLoading, 
+    error, 
+    searchUser, 
+    sendRequest, 
+    clearSearchResult,
+    fetchFriends 
+  } = useFriend()
 
-  // Combine groupMembers from local state and sessionStorage (avoid duplicates)
-  let sessionGroupMembers = []
-  try {
-    const stored = sessionStorage.getItem("groupMembers")
-    sessionGroupMembers = stored ? JSON.parse(stored) : []
-  } catch {
-    sessionGroupMembers = []
-  }
-  const allGroupMembers = [
-    ...groupMembers,
-    ...sessionGroupMembers.filter((sess) => !groupMembers.some((local) => local.id === sess.id)),
-  ]
+  // Fetch friends when component mounts or dialog opens
+  useEffect(() => {
+    if (showGroupDialog && friends.length === 0) {
+      fetchFriends()
+    }
+  }, [showGroupDialog, fetchFriends, friends.length])
 
-  // Mock data for registered users
-  const mockUsers = [
-    {
-      id: 1,
-      email: "john.doe@example.com",
-      name: "John Doe",
-      avatar: "/placeholder.svg?height=100&width=100",
-    },
-    {
-      id: 2,
-      email: "sarah.smith@example.com",
-      name: "Sarah Smith",
-      avatar: "/placeholder.svg?height=100&width=100",
-    },
-    {
-      id: 3,
-      email: "mike.johnson@example.com",
-      name: "Mike Johnson",
-      avatar: "/placeholder.svg?height=100&width=100",
-    },
-    {
-      id: 4,
-      email: "emily.brown@example.com",
-      name: "Emily Brown",
-      avatar: "/placeholder.svg?height=100&width=100",
-    },
-  ]
+  // Clear search results when dialog closes
+  useEffect(() => {
+    if (!showGroupDialog) {
+      clearSearchResult()
+      setSearchEmail("")
+    }
+  }, [showGroupDialog, clearSearchResult])
 
-  const handleSearchFriends = (e) => {
+  const handleSearchFriends = async (e) => {
     e.preventDefault()
-    setIsSearching(true)
+    
+    if (!searchEmail.trim()) {
+      toast(t("pleaseEnterEmail"), { type: "error", position: "top-right" })
+      return
+    }
 
-    // Simulate API call with setTimeout
-    setTimeout(() => {
-      const results = mockUsers.filter(
-        (user) =>
-          user.email.toLowerCase().includes(searchEmail.toLowerCase()) &&
-          !groupMembers.some((member) => member.id === user.id),
-      )
-      setSearchResults(results)
-      setIsSearching(false)
-
-      if (results.length === 0) {
+    try {
+      console.log("Searching for user:", searchEmail)
+      const result = await searchUser(searchEmail)
+      if (!result) {
         toast(t("noUsersFound"), { type: "error", position: "top-right" })
       }
-    }, 800)
+    } catch (err) {
+      toast(t("searchFailed"), { type: "error", position: "top-right" })
+    }
   }
-
   const addGroupMember = (user) => {
+    // Check if user is already in group
+    if (groupMembers.some((member) => member._id === user._id)) {
+      toast(t("userAlreadyInGroup"), { type: "warning", position: "top-right" })
+      return
+    }
+
     setGroupMembers((prev) => [...prev, user])
-    setSearchResults([])
+    clearSearchResult()
     setSearchEmail("")
     toast(t("friendAdded"), { type: "success", position: "top-right" })
   }
 
+  const handleSendFriendRequest = async (userId) => {
+    try {
+      await sendRequest(userId)
+      toast(t("friendRequestSent"), { type: "success", position: "top-right" })
+    } catch (err) {
+      toast(t("failedToSendRequest"), { type: "error", position: "top-right" })
+    }
+  }
+
   const removeGroupMember = (userId) => {
     // Remove from local state
-    setGroupMembers((prev) => prev.filter((member) => member.id !== userId))
+    setGroupMembers((prev) => prev.filter((member) => member._id !== userId))
 
     // Remove from sessionStorage if present
     try {
       const stored = sessionStorage.getItem("groupMembers")
       if (stored) {
         const sessionMembers = JSON.parse(stored)
-        const updatedSessionMembers = sessionMembers.filter((member) => member.id !== userId)
+        const updatedSessionMembers = sessionMembers.filter((member) => member._id !== userId)
         sessionStorage.setItem("groupMembers", JSON.stringify(updatedSessionMembers))
       }
     } catch { }
@@ -334,45 +332,137 @@ export default function LandingPage() {
               value={searchEmail}
               onChange={(e) => setSearchEmail(e.target.value)}
               className="flex-1 focus:ring-2 focus:ring-gray-500"
-            />
-            <Button
+            />            <Button
               type="submit"
-              disabled={isSearching || !searchEmail}
+              disabled={friendLoading.search || !searchEmail}
               className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white"
             >
-              {isSearching ? t("searching") : t("search")}
+              {friendLoading.search ? t("searching") : t("search")}
               <Search size={16} />
             </Button>
-          </form>
-
-          {/* Search Results */}
-          {searchResults.length > 0 && (
+          </form>          {/* Search Results */}
+          {searchResult && (
             <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <h3 className="text-sm font-semibold text-gray-800 mb-3">{t("searchResults")}</h3>
               <div className="space-y-3">
-                {searchResults.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border border-gray-100">
-                        <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-gray-800">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
-                      </div>
+                <div className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border border-gray-100">
+                      <AvatarImage src={searchResult.user?.profilePicture || "/placeholder.svg"} alt={searchResult.user?.name} />
+                      <AvatarFallback>{searchResult.user?.name?.charAt(0) || searchResult.user?.email?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium text-gray-800">{searchResult.user?.name || "User"}</p>
+                      <p className="text-xs text-gray-500">{searchResult.user?.email}</p>
+                      {searchResult.isAlreadyFriend && (
+                        <p className="text-xs text-green-600">{t("alreadyFriends")}</p>
+                      )}
+                      {searchResult.hasPendingRequest && (
+                        <p className="text-xs text-orange-600">
+                          {searchResult.requestStatus?.isSentByMe ? t("requestSent") : t("requestReceived")}
+                        </p>
+                      )}
                     </div>
-                    <Button
-                      size="sm"
-                      onClick={() => addGroupMember(user)}
-                      className="flex items-center gap-1 bg-black hover:bg-gray-800 text-white"
-                    >
-                      <UserPlus size={14} />
-                      {t("add")}
-                    </Button>
                   </div>
-                ))}
+                  <div className="flex gap-2">
+                    {searchResult.isAlreadyFriend ? (
+                      <Button
+                        size="sm"
+                        onClick={() => addGroupMember(searchResult.user)}
+                        className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <UserPlus size={14} />
+                        {t("add")}
+                      </Button>
+                    ) : searchResult.hasPendingRequest ? (
+                      <Button
+                        size="sm"
+                        disabled
+                        className="flex items-center gap-1 bg-gray-400 text-white cursor-not-allowed"
+                      >
+                        {searchResult.requestStatus?.isSentByMe ? t("requestSent") : t("requestReceived")}
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => handleSendFriendRequest(searchResult.user._id)}
+                          disabled={friendLoading.action}
+                          className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                        >
+                          <UserPlus size={14} />
+                          {friendLoading.action ? t("sending") : t("sendRequest")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => addGroupMember(searchResult.user)}
+                          className="flex items-center gap-1 bg-black hover:bg-gray-800 text-white"
+                        >
+                          <UserPlus size={14} />
+                          {t("addDirectly")}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
+            </div>
+          )}
+
+          {/* Show error if search failed */}
+          {error.search && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+              <p className="text-red-600 text-sm">{error.search}</p>
+            </div>
+          )}
+
+          {/* Existing Friends List */}
+          {showFriendsList && friends.length > 0 && (
+            <div className="bg-blue-50 rounded-lg p-4 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-gray-800">{t("yourFriends")}</h3>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowFriendsList(!showFriendsList)}
+                  className="text-xs text-gray-600"
+                >
+                  {showFriendsList ? t("hide") : t("show")}
+                </Button>
+              </div>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {friends
+                  .filter(friend => !groupMembers.some(member => member._id === friend._id))
+                  .map((friend) => (
+                    <div key={friend._id} className="flex items-center justify-between bg-white p-2 rounded-lg shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-8 w-8 border border-gray-100">
+                          <AvatarImage src={friend.profilePicture || "/placeholder.svg"} alt={friend.name} />
+                          <AvatarFallback className="text-xs">{friend.name?.charAt(0) || friend.email?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-medium text-gray-800">{friend.name || "User"}</p>
+                          <p className="text-xs text-gray-500">{friend.email}</p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => addGroupMember(friend)}
+                        className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
+                      >
+                        <UserPlus size={12} />
+                        {t("add")}
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Loading friends */}
+          {friendLoading.friends && (
+            <div className="bg-gray-50 rounded-lg p-4 mb-4 text-center">
+              <p className="text-gray-600 text-sm">{t("loadingFriends")}</p>
             </div>
           )}
 
@@ -397,12 +487,10 @@ export default function LandingPage() {
                   <p className="text-xs text-gray-500">{t("groupLeader")}</p>
                 </div>
               </div>
-            </div>
-
-            <AnimatePresence>
-              {allGroupMembers.map((member) => (
+            </div>            <AnimatePresence>
+              {groupMembers.map((member) => (
                 <motion.div
-                  key={member.id}
+                  key={member._id}
                   className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm mb-2"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -411,18 +499,18 @@ export default function LandingPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10 border border-gray-100">
-                      <AvatarImage src={member.avatar || "/placeholder.svg"} alt={member.name} />
-                      <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                      <AvatarImage src={member.profilePicture || "/placeholder.svg"} alt={member.name} />
+                      <AvatarFallback>{member.name?.charAt(0) || member.email?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium text-gray-800">{member.name}</p>
+                      <p className="font-medium text-gray-800">{member.name || "User"}</p>
                       <p className="text-xs text-gray-500">{member.email}</p>
                     </div>
                   </div>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => removeGroupMember(member.id)}
+                    onClick={() => removeGroupMember(member._id)}
                     className="flex items-center gap-1 text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200"
                   >
                     <UserX size={14} />
