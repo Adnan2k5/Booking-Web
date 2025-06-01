@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { Ticket } from "../models/ticket.model.js";
+import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 // Create a new support ticket
@@ -52,10 +53,9 @@ const getUserTickets = asyncHandler(async (req, res) => {
 const getTicketById = asyncHandler(async (req, res) => {
   const { ticketId } = req.params;
 
-  const ticket = await Ticket.findById(ticketId).populate(
-    "responses.responder",
-    "name"
-  );
+  const ticket = await Ticket.findById(ticketId)
+    .populate("user", "name email")
+    .populate("responses.responder", "name");
 
   if (!ticket) {
     throw new ApiError(404, "Ticket not found");
@@ -63,7 +63,7 @@ const getTicketById = asyncHandler(async (req, res) => {
 
   // Check if user owns this ticket or is admin
   if (
-    ticket.user.toString() !== req.user._id.toString() &&
+    ticket.user._id.toString() !== req.user._id.toString() &&
     req.user.role !== "admin"
   ) {
     throw new ApiError(403, "You don't have permission to view this ticket");
@@ -158,12 +158,41 @@ const updateTicketStatus = asyncHandler(async (req, res) => {
 
 // Admin: Get all tickets (with filters)
 const getAllTickets = asyncHandler(async (req, res) => {
-  const { status, priority, category, page = 1, limit = 10 } = req.query;
+  const { status, priority, category, page = 1, limit = 10, search } = req.query;
 
+  // Create the base filter
   const filter = {};
   if (status) filter.status = status;
   if (priority) filter.priority = priority;
   if (category) filter.category = category;
+
+  // Add search functionality
+  if (search) {
+    // Create search conditions for ID, subject, and user name
+    const searchConditions = [
+      { subject: { $regex: search, $options: 'i' } }, // Case-insensitive search in subject
+      { description: { $regex: search, $options: 'i' } } // Also search in description
+    ];
+    
+    // If search looks like a valid ObjectId, include it in the search
+    if (/^[0-9a-fA-F]{24}$/.test(search)) {
+      searchConditions.push({ _id: search });
+    }
+
+    // To search by username, we need to find matching users first
+    const matchingUsers = await User.find({ 
+      name: { $regex: search, $options: 'i' } 
+    }).select('_id');
+    
+    // If we found users matching the search term, add their IDs to our search criteria
+    if (matchingUsers.length > 0) {
+      const userIds = matchingUsers.map(user => user._id);
+      searchConditions.push({ user: { $in: userIds } });
+    }
+
+    // Add the search conditions to the filter
+    filter.$or = searchConditions;
+  }
 
   const tickets = await Ticket.find(filter)
     .sort({ updatedAt: -1 })
@@ -180,11 +209,33 @@ const getAllTickets = asyncHandler(async (req, res) => {
         tickets,
         totalTickets,
         totalPages: Math.ceil(totalTickets / limit),
-        currentPage: page,
+        currentPage: Number(page),
       },
       "Tickets retrieved successfully"
     )
   );
+});
+
+// Admin: Delete a ticket
+const deleteTicket = asyncHandler(async (req, res) => {
+  const { ticketId } = req.params;
+
+  const ticket = await Ticket.findById(ticketId);
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  // Only admins can delete tickets
+  if (req.user.role !== "admin") {
+    throw new ApiError(403, "You don't have permission to delete tickets");
+  }
+
+  await Ticket.findByIdAndDelete(ticketId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Ticket deleted successfully"));
 });
 
 export {
@@ -194,4 +245,5 @@ export {
   addTicketResponse,
   updateTicketStatus,
   getAllTickets,
+  deleteTicket,
 };

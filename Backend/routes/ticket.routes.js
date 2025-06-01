@@ -6,6 +6,7 @@ import {
   addTicketResponse,
   updateTicketStatus,
   getAllTickets,
+  deleteTicket,
 } from "../controllers/ticket.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyAdmin } from "../middlewares/admin.middleware.js";
@@ -25,5 +26,6 @@ router.patch("/:ticketId/status", updateTicketStatus);
 
 // Admin routes
 router.get("/", getAllTickets);
+router.delete("/:ticketId", verifyAdmin, deleteTicket);
 
 export default router;

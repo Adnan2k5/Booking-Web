@@ -89,3 +89,11 @@ export const getAllTickets = async (filters = {}) => {
   );
   return response.data;
 };
+
+// Admin: Delete a ticket
+export const deleteTicket = async (ticketId) => {
+  const response = await axiosClient.delete(`/api/tickets/${ticketId}`, {
+    withCredentials: true,
+  });
+  return response.data;
+};
