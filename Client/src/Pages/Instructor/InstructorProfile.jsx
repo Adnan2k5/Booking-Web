@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Star, Upload, Check, Edit, Save, ImageIcon, X, Play } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
@@ -15,6 +15,8 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import InstructorLayout from "./InstructorLayout"
+import { useAuth } from "../AuthProvider"
+import { getAdventure } from "../../Api/adventure.api"
 
 export const InstructorProfile = () => {
     const { t } = useTranslation()
@@ -23,54 +25,86 @@ export const InstructorProfile = () => {
     const [activeTab, setActiveTab] = useState("profile")
     const [galleryUploadMode, setGalleryUploadMode] = useState(false)
     const [selectedMedia, setSelectedMedia] = useState(null)
+    const [fetchedAdventure, setFetchedAdventure] = useState(null)
+    const { user } = useAuth();
+
+    const fetchAdventure = async (adventureId) => {
+        try {
+            const res = await getAdventure(adventureId)
+            if (res.data) {
+                setFetchedAdventure(res.data)
+            }
+        } catch (error) {
+            console.error("Error fetching adventure:", error);
+        }
+    }
+
+    useEffect(() => {
+        if (user?.user?.instructor?.adventure) {
+            fetchAdventure(user?.user?.instructor?.adventure)
+        }
+    }, [user])
+
+    // Update profile data when user or adventure data changes
+    useEffect(() => {
+        if (user?.user) {
+            setProfileData(prev => ({
+                ...prev,
+                id: user.user._id || prev.id,
+                name: user.user.name || "",
+                email: user.user.email || "",
+                specialty: fetchedAdventure?.name || "",
+                experience: `0 years`,
+                rating: user.user.instructor?.avgReview || 0,
+                img: fetchedAdventure?.thumbnail || "/placeholder.svg?height=400&width=300",
+                bio: user.user.instructor?.description?.join(", ") || "Certified instructor with expertise in adventure activities.",
+                languages: user.user.instructor?.languages || [],
+                certificates: [
+                    {
+                        name: "Adventure Certification",
+                        verified: user.user.verified || false,
+                        link: user.user.instructor?.certificate
+                    },
+                ],
+                selectedAdventures: [fetchedAdventure?.name || ""].filter(Boolean),
+                verificationDocuments: [
+                    {
+                        type: "ID",
+                        name: "Government ID",
+                        status: user.user.instructor?.documentVerified || "pending",
+                        date: new Date(user.user.createdAt).toISOString().split("T")[0] || "2024-01-15",
+                        link: user.user.instructor?.governmentId
+                    },
+                ],
+                gallery: user.user.instructor?.portfolioMedias || []
+            }))
+        }
+    }, [user, fetchedAdventure])
 
     const [profileData, setProfileData] = useState({
-        id: 1,
-        name: "Alex Johnson",
-        email: "alex.johnson@example.com",
-        specialty: "Mountain Hiking",
-        experience: "8 years",
-        rating: 4.9,
-        img: "/placeholder.svg?height=400&width=300",
-        bio: "Certified mountain guide with expertise in alpine terrain and wilderness survival.",
-        languages: ["English", "Spanish", "French"],
+        id: user?.user?._id || 1,
+        name: user?.user?.name || "",
+        email: user?.user?.email || "",
+        specialty: fetchedAdventure?.name || "",
+        experience: `${fetchedAdventure?.exp || 0} years`,
+        rating: user?.user?.instructor?.avgReview || 0,
+        img: fetchedAdventure?.thumbnail || "/placeholder.svg?height=400&width=300",
+        bio: user?.user?.instructor?.description?.join(", ") || "Certified instructor with expertise in adventure activities.",
+        languages: user?.user?.instructor?.languages || [],
         certificates: [
-            { name: "Mountain Guide Certification", verified: true },
-            { name: "First Aid Certification", verified: true },
-            { name: "Avalanche Safety", verified: true },
+            { name: "Adventure Certification", verified: user?.user?.verified || false, link: user?.user?.instructor?.certificate },
         ],
-        selectedAdventures: ["Mountain Hiking", "Alpine Hiking"],
+        selectedAdventures: [fetchedAdventure?.name || ""],
         verificationDocuments: [
-            { type: "ID", name: "Passport", status: "verified", date: "2024-01-15" },
-            { type: "Certificate", name: "Mountain Guide License", status: "verified", date: "2024-02-10" },
-        ],
-        gallery: [
             {
-                id: 1,
-                type: "image",
-                url: "/src/assets/scubadiving.jpg",
-                caption: "Leading a mountain expedition",
-            },
-            {
-                id: 2,
-                type: "image",
-                url: "/src/assets/scubadiving-min.jpg",
-                caption: "Teaching survival skills",
-            },
-            {
-                id: 3,
-                type: "image",
-                url: "/src/assets/face.jpeg",
-                caption: "Alpine summit",
-            },
-            {
-                id: 4,
-                type: "video",
-                url: "https://res.cloudinary.com/dygmsxtsd/video/upload/v1740640091/skydiving_oh0ees.mp4",
-                thumbnail: "/src/assets/login.jpg",
-                caption: "Hiking technique tutorial",
+                type: "ID",
+                name: "Government ID",
+                status: user?.user?.instructor?.documentVerified || "pending",
+                date: new Date(user?.user?.createdAt).toISOString().split("T")[0] || "2024-01-15",
+                link: user?.user?.instructor?.governmentId
             },
         ],
+        gallery: user?.user?.instructor?.portfolioMedias || []
     })
 
     const [newCertificate, setNewCertificate] = useState({
@@ -430,9 +464,21 @@ export const InstructorProfile = () => {
                                                 )}
                                                 <span className="text-sm sm:text-base">{certificate.name}</span>
                                             </div>
-                                            <Badge variant={certificate.verified ? "success" : "outline"}>
-                                                {certificate.verified ? t("instructor.verified") : t("instructor.pending")}
-                                            </Badge>
+                                            <div className="flex items-center gap-2">
+                                                {certificate.link && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => window.open(certificate.link, '_blank')}
+                                                        className="text-xs"
+                                                    >
+                                                        {t("instructor.viewDocument") || "View Document"}
+                                                    </Button>
+                                                )}
+                                                <Badge variant={certificate.verified ? "success" : "outline"}>
+                                                    {certificate.verified ? t("instructor.verified") : t("instructor.pending")}
+                                                </Badge>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -508,31 +554,38 @@ export const InstructorProfile = () => {
                                                         {doc.type} • {doc.date}
                                                     </div>
                                                 </div>
-                                                <Badge
-                                                    variant={
-                                                        doc.status === "verified"
-                                                            ? "success"
+                                                <div className="flex items-center gap-2">
+                                                    {doc.link && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => window.open(doc.link, '_blank')}
+                                                            className="text-xs"
+                                                        >
+                                                            {t("instructor.viewDocument") || "View Document"}
+                                                        </Button>
+                                                    )}
+                                                    <Badge
+                                                        variant={
+                                                            doc.status === "verified"
+                                                                ? "success"
+                                                                : doc.status === "rejected"
+                                                                    ? "destructive"
+                                                                    : "outline"
+                                                        }
+                                                    >
+                                                        {doc.status === "verified"
+                                                            ? t("instructor.verified")
                                                             : doc.status === "rejected"
-                                                                ? "destructive"
-                                                                : "outline"
-                                                    }
-                                                >
-                                                    {doc.status === "verified"
-                                                        ? t("instructor.verified")
-                                                        : doc.status === "rejected"
-                                                            ? t("instructor.rejected")
-                                                            : t("instructor.pending")}
-                                                </Badge>
+                                                                ? t("instructor.rejected")
+                                                                : t("instructor.pending")}
+                                                    </Badge>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             </CardContent>
-                            <CardFooter className="flex justify-end">
-                                <Button variant="outline" className="w-full sm:w-auto">
-                                    {t("instructor.viewAllDocuments")}
-                                </Button>
-                            </CardFooter>
                         </Card>
                     </TabsContent>
 
