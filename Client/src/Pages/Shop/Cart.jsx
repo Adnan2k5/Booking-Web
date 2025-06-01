@@ -10,11 +10,14 @@ import { Link, useNavigate } from "react-router-dom"
 import { Navbar } from "../../components/Navbar"
 import { useState, useMemo } from "react"
 import { toast } from "sonner"
+import { createBooking } from "../../Api/booking.api";
 
 export const Cart = () => {
     const navigate = useNavigate()
     const { cart, totalPrice, loading, error, updateCartItem, removeCartItem, clearCart } = useCart()
     const [loadingItems, setLoadingItems] = useState({})
+    const [name, setName] = useState("");
+
     const handleQuantityUpdate = async (itemId, newQuantity, purchase) => {
         if (newQuantity < 1) return
         setLoadingItems(prev => ({ ...prev, [itemId]: true }))
@@ -27,7 +30,6 @@ export const Cart = () => {
             setLoadingItems(prev => ({ ...prev, [itemId]: false }))
         }
     }
-    console.log(totalPrice)
 
     const handleRemoveItem = async (itemId) => {
         setLoadingItems(prev => ({ ...prev, [itemId]: true }))
@@ -106,6 +108,17 @@ export const Cart = () => {
             })
         } catch (error) {
             return "Invalid date"
+        }
+    }
+
+    const handleBooking = async () => {
+        const id = toast.loading("Creating Booking....");
+        try {
+            await createBooking(name);
+            toast.success("Booking created successfully", {id});
+        }   
+        catch(e) {
+            toast.error(`Booking Failed ${e}`, {id});
         }
     }
 
@@ -384,6 +397,7 @@ export const Cart = () => {
                                         <Button
                                             className="w-full bg-black hover:bg-gray-800 text-white"
                                             size="lg"
+                                            onClick={handleBooking}
                                         >
                                             Proceed to Checkout
                                         </Button>
