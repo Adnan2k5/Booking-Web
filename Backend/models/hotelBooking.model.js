@@ -1,31 +1,54 @@
 import mongoose from "mongoose";
 
-const bookingSchema = new mongoose.Schema(
+const hotelBookingSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       index: true,
+      required: true,
     },
-    session: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Session",
-    },
+    hotels: [
+      {
+        hotel: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Hotel",
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          min: 1,
+          required: true,
+        },
+        startDate: {
+          type: Date,
+        },
+        endDate: {
+          type: Date,
+        },
+      },
+    ],
     status: {
       type: String,
       enum: ["pending", "confirmed", "cancelled"],
       default: "pending",
     },
+
     transactionId: {
       type: String,
+      trim: true,
     },
+
     amount: {
       type: Number,
+      min: 0,
     },
+
     bookingDate: {
       type: Date,
       default: Date.now,
     },
+
     modeOfPayment: {
       type: String,
       enum: ["card", "cash"],
@@ -37,4 +60,4 @@ const bookingSchema = new mongoose.Schema(
   }
 );
 
-export const Booking = mongoose.model("Booking", bookingSchema);
+export const ItemBooking = mongoose.model("hotelBooking", hotelBookingSchema);
