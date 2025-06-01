@@ -18,7 +18,7 @@ export function UserFriendRequests() {
         error,
         fetchFriends,
         fetchFriendRequests, searchUser,
-        sendFriendRequest,
+        sendRequest,
         acceptRequest,
         rejectRequest,
         removeFriendship, clearSearchResult
@@ -49,13 +49,19 @@ export function UserFriendRequests() {
 
     const handleSendFriendRequest = async (userId) => {
         try {
-            await sendFriendRequest(userId)
+            console.log("Sending friend request to user ID:", userId)
+            if (!userId) {
+                toast.error("Invalid user ID")
+                return
+            }
+            await sendRequest(userId)
             toast.success("Friend request sent!", {
                 position: "top-right"
             })
             clearSearchResult()
             setSearchEmail("")
         } catch (err) {
+            console.error("Error sending friend request:", err)
             toast.error("Failed to send friend request", {
                 position: "top-right"
             })
@@ -108,6 +114,8 @@ export function UserFriendRequests() {
             day: 'numeric'
         })
     }
+
+
 
     if (loading.requests || loading.friends) {
         return (
@@ -432,42 +440,42 @@ export function UserFriendRequests() {
                                             <Avatar className="h-12 w-12">
                                                 <AvatarImage
                                                     src={searchResult.profilePicture}
-                                                    alt={searchResult.name || "User"}
+                                                    alt={searchResult.user.name || "User"}
                                                 />
                                                 <AvatarFallback>
-                                                    {searchResult.name?.charAt(0) || searchResult.email?.charAt(0) || "U"}
+                                                    {searchResult.user?.name?.charAt(0) || searchResult.email?.charAt(0) || "U"}
                                                 </AvatarFallback>
                                             </Avatar>
                                             <div>
                                                 <p className="font-medium text-gray-900">
-                                                    {searchResult.name || "Unknown User"}
+                                                    {searchResult.user?.name || "Unknown User"}
                                                 </p>
                                                 <p className="text-sm text-gray-500">
                                                     {searchResult.email}
                                                 </p>
-                                                {searchResult.status && (
+                                                {searchResult && (
                                                     <Badge
                                                         variant={
-                                                            searchResult.status === 'friends' ? 'default' :
-                                                                searchResult.status === 'pending_sent' ? 'secondary' :
+                                                            searchResult.isAlreadyFriend === true ? 'default' :
+                                                                searchResult.hasPendingRequest === false ? 'secondary' :
                                                                     searchResult.status === 'pending_received' ? 'outline' :
                                                                         'secondary'
                                                         }
                                                         className="mt-1"
                                                     >
-                                                        {searchResult.status === 'friends' && 'Already Friends'}
-                                                        {searchResult.status === 'pending_sent' && 'Request Sent'}
+                                                        {searchResult.isAlreadyFriend === true && 'Already Friends'}
+                                                        {searchResult.hasPendingRequest === true && 'Request Sent'}
                                                         {searchResult.status === 'pending_received' && 'Request Pending'}
-                                                        {searchResult.status === 'none' && 'Not Connected'}
+                                                        {searchResult.requestStatus === null && 'Not Connected'}
                                                     </Badge>
                                                 )}
                                             </div>
                                         </div>
                                         <div>
-                                            {searchResult.status === 'none' && (
+                                            {searchResult.hasPendingRequest === false && (
                                                 <Button
                                                     size="sm"
-                                                    onClick={() => handleSendFriendRequest(searchResult._id)}
+                                                    onClick={() => handleSendFriendRequest(searchResult?.user?._id)}
                                                     disabled={loading.action}
                                                     className="bg-blue-600 hover:bg-blue-700 text-white"
                                                 >
