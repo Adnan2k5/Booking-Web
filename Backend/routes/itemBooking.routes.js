@@ -10,3 +10,5 @@ router.use(verifyJWT);
 router.get(
     '/create', createBooking
 );
+
+export default router;
