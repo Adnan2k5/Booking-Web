@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from "framer-motion"
-import { Calendar, Users, Star, Clock, MapPin, Filter, Search, Check } from "lucide-react"
+import { Calendar, Users, Star, Clock, MapPin, Filter, Search, Check } from 'lucide-react'
 import { Card, CardContent, } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
 import { Badge } from "../../components/ui/badge"
@@ -12,26 +12,7 @@ import InstructorLayout from './InstructorLayout'
 import { staggerContainer, fadeIn } from '../../assets/Animations'
 
 export const InstructorBookings = () => {
-
     const mockData = {
-        instructor: {
-            id: 1,
-            name: "Alex Johnson",
-            email: "alex.johnson@example.com",
-            specialty: "Mountain Hiking",
-            experience: "8 years",
-            rating: 4.9,
-            img: "/placeholder.svg?height=400&width=300",
-            bio: "Certified mountain guide with expertise in alpine terrain and wilderness survival.",
-            totalRevenue: 24580,
-            totalBookings: 156,
-            upcomingSessions: 12,
-            completedSessions: 144,
-            revenueIncrease: 12.5,
-            bookingIncrease: 8.2,
-            languages: ["English", "Spanish", "French"],
-            certificates: ["Mountain Guide Certification", "First Aid Certification", "Avalanche Safety"],
-        },
         upcomingBookings: [
             {
                 id: "B-1234",
@@ -109,156 +90,99 @@ export const InstructorBookings = () => {
                 rating: 4.7,
             },
         ],
-        monthlyRevenue: [
-            { month: "Jan", revenue: 1800 },
-            { month: "Feb", revenue: 2200 },
-            { month: "Mar", revenue: 2500 },
-            { month: "Apr", revenue: 2800 },
-            { month: "May", revenue: 3200 },
-            { month: "Jun", revenue: 3500 },
-            { month: "Jul", revenue: 3800 },
-            { month: "Aug", revenue: 3600 },
-            { month: "Sep", revenue: 3400 },
-            { month: "Oct", revenue: 3100 },
-            { month: "Nov", revenue: 2800 },
-            { month: "Dec", revenue: 2500 },
-        ],
-        adventureTypes: [
-            { name: "Mountain Climbing", bookings: 45, revenue: 5400 },
-            { name: "Wilderness Survival", bookings: 38, revenue: 4560 },
-            { name: "Rock Climbing", bookings: 32, revenue: 3840 },
-            { name: "Alpine Hiking", bookings: 41, revenue: 4920 },
-        ],
-        sessions: [
-            {
-                id: "S-1001",
-                title: "Mountain Climbing Basics",
-                adventure: "Mountain Climbing",
-                location: "Alpine Heights",
-                price: 120,
-                duration: "6 hours",
-                capacity: 8,
-                description: "Learn the fundamentals of mountain climbing in a safe environment with professional guidance.",
-                upcoming: [
-                    { date: "2025-04-20", time: "09:00 AM", booked: 4, available: 4 },
-                    { date: "2025-04-27", time: "09:00 AM", booked: 6, available: 2 },
-                    { date: "2025-05-04", time: "09:00 AM", booked: 2, available: 6 },
-                ],
-            },
-            {
-                id: "S-1002",
-                title: "Wilderness Survival Workshop",
-                adventure: "Wilderness Survival",
-                location: "Evergreen Forest",
-                price: 150,
-                duration: "8 hours",
-                capacity: 10,
-                description:
-                    "Master essential survival skills in the wilderness, including shelter building, fire making, and navigation.",
-                upcoming: [
-                    { date: "2025-04-22", time: "10:00 AM", booked: 6, available: 4 },
-                    { date: "2025-04-29", time: "10:00 AM", booked: 8, available: 2 },
-                    { date: "2025-05-06", time: "10:00 AM", booked: 3, available: 7 },
-                ],
-            },
-            {
-                id: "S-1003",
-                title: "Rock Climbing for Beginners",
-                adventure: "Rock Climbing",
-                location: "Granite Peaks",
-                price: 125,
-                duration: "5 hours",
-                capacity: 6,
-                description: "Introduction to rock climbing techniques, safety procedures, and equipment for beginners.",
-                upcoming: [
-                    { date: "2025-04-25", time: "08:30 AM", booked: 3, available: 3 },
-                    { date: "2025-05-02", time: "08:30 AM", booked: 5, available: 1 },
-                    { date: "2025-05-09", time: "08:30 AM", booked: 2, available: 4 },
-                ],
-            },
-        ],
     }
+
     const { t } = useTranslation()
+
     return (
         <InstructorLayout>
-            <div value="bookings" className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex items-center gap-2">
+            <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
+                <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+                    <div>
+                        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">{t("instructor.bookings")}</h2>
+                        <p className="text-muted-foreground text-sm sm:text-base">{t("instructor.manageYourBookings")}</p>
+                    </div>
+                    <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
                         <div className="relative w-full sm:w-64">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input type="search" placeholder={t("instructor.searchBookings")} className="w-full pl-8" />
+                            <Input type="search" placeholder={t("instructor.searchBookings")} className="w-full pl-8 text-sm" />
                         </div>
-                        <Button variant="outline" size="icon">
-                            <Filter className="h-4 w-4" />
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                            <Filter className="h-4 w-4 mr-1 sm:mr-0" />
+                            <span className="sm:hidden">{t("instructor.filter")}</span>
                         </Button>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Select defaultValue="all">
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder={t("instructor.filterByStatus")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t("instructor.allBookings")}</SelectItem>
-                                <SelectItem value="upcoming">{t("instructor.upcomingOnly")}</SelectItem>
-                                <SelectItem value="completed">{t("instructor.completedOnly")}</SelectItem>
-                                <SelectItem value="pending">{t("instructor.pendingOnly")}</SelectItem>
-                            </SelectContent>
-                        </Select>
                     </div>
                 </div>
 
+                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-end sm:space-y-0">
+                    <Select defaultValue="all">
+                        <SelectTrigger className="w-full sm:w-[180px]">
+                            <SelectValue placeholder={t("instructor.filterByStatus")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">{t("instructor.allBookings")}</SelectItem>
+                            <SelectItem value="upcoming">{t("instructor.upcomingOnly")}</SelectItem>
+                            <SelectItem value="completed">{t("instructor.completedOnly")}</SelectItem>
+                            <SelectItem value="pending">{t("instructor.pendingOnly")}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
                 <Tabs defaultValue="upcoming" className="space-y-4">
-                    <TabsList>
-                        <TabsTrigger value="upcoming">{t("instructor.upcoming")}</TabsTrigger>
-                        <TabsTrigger value="completed">{t("instructor.completed")}</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
+                        <TabsTrigger value="upcoming" className="text-sm sm:text-base">{t("instructor.upcoming")}</TabsTrigger>
+                        <TabsTrigger value="completed" className="text-sm sm:text-base">{t("instructor.completed")}</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="upcoming" className="space-y-4">
                         <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
                             {mockData.upcomingBookings.map((booking) => (
                                 <motion.div key={booking.id} variants={fadeIn}>
-                                    <Card>
-                                        <CardContent className="p-6">
-                                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="bg-primary/10 p-3 rounded-full">
-                                                        <Calendar className="h-6 w-6 text-primary" />
+                                    <Card className="hover:shadow-md transition-shadow">
+                                        <CardContent className="p-3 sm:p-4 lg:p-6">
+                                            <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+                                                <div className="flex flex-col space-y-3 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-4">
+                                                    <div className="bg-primary/10 p-2 sm:p-3 rounded-full w-fit flex-shrink-0">
+                                                        <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                                                     </div>
-                                                    <div>
-                                                        <h3 className="font-semibold text-lg">{booking.adventure}</h3>
-                                                        <div className="flex flex-col sm:flex-row sm:items-center text-sm text-muted-foreground gap-1 sm:gap-3">
-                                                            <div className="flex items-center">
-                                                                <MapPin className="h-3 w-3 mr-1" />
-                                                                <span>{booking.location}</span>
+                                                    <div className="space-y-1 flex-1 min-w-0">
+                                                        <h3 className="font-semibold text-base sm:text-lg truncate">{booking.adventure}</h3>
+                                                        <div className="flex flex-col space-y-1 sm:space-y-0 text-xs sm:text-sm text-muted-foreground">
+                                                            <div className="flex flex-col space-y-1 sm:flex-row sm:items-center sm:space-y-0">
+                                                                <div className="flex items-center">
+                                                                    <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                                                                    <span className="truncate">{booking.location}</span>
+                                                                </div>
+                                                                <div className="hidden sm:block mx-3">•</div>
+                                                                <div className="flex items-center">
+                                                                    <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+                                                                    <span className="whitespace-nowrap">
+                                                                        {new Date(booking.date).toLocaleDateString()} {booking.time}
+                                                                    </span>
+                                                                </div>
                                                             </div>
-                                                            <div className="hidden sm:block">•</div>
-                                                            <div className="flex items-center">
-                                                                <Clock className="h-3 w-3 mr-1" />
-                                                                <span>
-                                                                    {new Date(booking.date).toLocaleDateString()} {booking.time}
-                                                                </span>
-                                                            </div>
-                                                            <div className="hidden sm:block">•</div>
-                                                            <div>{booking.duration}</div>
+                                                            <div className="text-xs sm:text-sm text-muted-foreground">{booking.duration}</div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4 sm:flex-shrink-0">
                                                     <div className="flex items-center gap-2">
-                                                        <Users className="h-4 w-4 text-muted-foreground" />
-                                                        <span>
+                                                        <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                                                        <span className="text-xs sm:text-sm">
                                                             {booking.participants} {t("instructor.participants")}
                                                         </span>
                                                     </div>
                                                     <div className="font-semibold text-lg">${booking.amount}</div>
-                                                    <Badge variant={booking.status === "confirmed" ? "default" : "outline"}>
+                                                    <Badge variant={booking.status === "confirmed" ? "default" : "outline"} className="text-xs">
                                                         {booking.status === "confirmed" ? t("instructor.confirmed") : t("instructor.pending")}
                                                     </Badge>
                                                 </div>
                                             </div>
-                                            <div className="flex justify-end mt-4 gap-2">
-                                                <Button variant="outline">{t("instructor.contactParticipants")}</Button>
-                                                <Button>{t("instructor.viewDetails")}</Button>
+                                            <div className="flex flex-col space-y-2 sm:flex-row sm:justify-end sm:space-y-0 sm:space-x-2 mt-4 pt-3 border-t border-gray-100">
+                                                <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
+                                                    {t("instructor.contactParticipants")}
+                                                </Button>
+                                                <Button size="sm" className="w-full sm:w-auto text-xs sm:text-sm">{t("instructor.viewDetails")}</Button>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -271,39 +195,39 @@ export const InstructorBookings = () => {
                         <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
                             {mockData.recentBookings.map((booking) => (
                                 <motion.div key={booking.id} variants={fadeIn}>
-                                    <Card>
-                                        <CardContent className="p-6">
-                                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="bg-green-100 p-3 rounded-full">
-                                                        <Check className="h-6 w-6 text-green-600" />
+                                    <Card className="hover:shadow-md transition-shadow">
+                                        <CardContent className="p-3 sm:p-4 lg:p-6">
+                                            <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+                                                <div className="flex flex-col space-y-3 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-4">
+                                                    <div className="bg-green-100 p-2 sm:p-3 rounded-full w-fit flex-shrink-0">
+                                                        <Check className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                                                     </div>
-                                                    <div>
-                                                        <h3 className="font-semibold text-lg">{booking.adventure}</h3>
-                                                        <div className="flex flex-col sm:flex-row sm:items-center text-sm text-muted-foreground gap-1 sm:gap-3">
+                                                    <div className="space-y-1 flex-1 min-w-0">
+                                                        <h3 className="font-semibold text-base sm:text-lg truncate">{booking.adventure}</h3>
+                                                        <div className="flex flex-col space-y-1 sm:flex-row sm:items-center sm:space-y-0 text-xs sm:text-sm text-muted-foreground">
                                                             <div className="flex items-center">
-                                                                <MapPin className="h-3 w-3 mr-1" />
-                                                                <span>{booking.location}</span>
+                                                                <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                                                                <span className="truncate">{booking.location}</span>
                                                             </div>
-                                                            <div className="hidden sm:block">•</div>
+                                                            <div className="hidden sm:block mx-3">•</div>
                                                             <div className="flex items-center">
-                                                                <Clock className="h-3 w-3 mr-1" />
-                                                                <span>{new Date(booking.date).toLocaleDateString()}</span>
+                                                                <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+                                                                <span className="whitespace-nowrap">{new Date(booking.date).toLocaleDateString()}</span>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4 sm:flex-shrink-0">
                                                     <div className="flex items-center gap-2">
-                                                        <Users className="h-4 w-4 text-muted-foreground" />
-                                                        <span>
+                                                        <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                                                        <span className="text-xs sm:text-sm">
                                                             {booking.participants} {t("instructor.participants")}
                                                         </span>
                                                     </div>
                                                     <div className="font-semibold text-lg">${booking.amount}</div>
                                                     <div className="flex items-center">
-                                                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                                                        <span className="ml-1">{booking.rating}</span>
+                                                        <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 fill-current" />
+                                                        <span className="ml-1 text-sm">{booking.rating}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -318,3 +242,4 @@ export const InstructorBookings = () => {
         </InstructorLayout>
     )
 }
+export default InstructorBookings

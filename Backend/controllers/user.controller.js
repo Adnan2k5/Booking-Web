@@ -2,6 +2,12 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 
 export const getUser = asyncHandler(async (req, res) => {
+  if (req.user.role === "instructor") {
+    const user = await User.findById(req.user._id)
+      .populate("instructor")
+      .select("-password -refreshToken");
+    return res.status(200).json(user);
+  }
   return res.status(200).json(req.user);
 });
 
@@ -32,7 +38,6 @@ export const getUsers = asyncHandler(async (req, res) => {
     totalPages: Math.ceil(total / limit),
   });
 });
-
 
 export const deleteUser = asyncHandler(async (req, res) => {
   const { id } = req.params;

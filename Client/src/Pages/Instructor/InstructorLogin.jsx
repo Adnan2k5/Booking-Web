@@ -80,10 +80,7 @@ export const InstructorRegister = () => {
 
         if (name === "adventure") {
             const currentLocation = (adventures.find((adventure) => adventure._id === value))
-
-            setLocations(
-                currentLocation?.location
-            )
+            setLocations(currentLocation?.location)
         }
     }
 
@@ -122,7 +119,6 @@ export const InstructorRegister = () => {
             return;
         }
 
-        // Validate required fields
         if (!formData.bio) {
             toast.error("Bio is required");
             return;
@@ -206,17 +202,17 @@ export const InstructorRegister = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-3 py-8 bg-gray-50">
-            <Card className="w-full max-w-6xl p-6 shadow-lg ">
+        <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gray-50">
+            <Card className="w-full max-w-6xl p-4 sm:p-6 shadow-lg">
                 <div className="mb-6 text-center">
-                    <h1 className="text-2xl font-bold text-gray-800">Instructor Registration</h1>
-                    <p className="text-gray-600">Join our team of professional instructors</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Instructor Registration</h1>
+                    <p className="text-sm sm:text-base text-gray-600">Join our team of professional instructors</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-10">
                         {/* Left Column - Basic Information */}
-                        <div className="space-y-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm h-fit">
+                        <div className="space-y-6 bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm h-fit">
                             <div className="flex flex-col items-center mb-6">
                                 <ProfileImageUpload
                                     initialImage={formData.profileImage}
@@ -289,7 +285,7 @@ export const InstructorRegister = () => {
                         </div>
 
                         {/* Right Column - Professional Information */}
-                        <div className="space-y-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="space-y-6 bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">
                             <div className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="bio">Professional Bio</Label>
@@ -303,7 +299,7 @@ export const InstructorRegister = () => {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="adventure">Adventure Specialty</Label>
                                         <Select
@@ -360,7 +356,7 @@ export const InstructorRegister = () => {
                         >
                             {loading ? "Processing..." : "Submit Application"}
                         </Button>
-                        <p className="mt-3 text-center text-sm text-gray-500">
+                        <p className="mt-3 text-center text-xs sm:text-sm text-gray-500">
                             By submitting, you agree to our terms and conditions and verification process
                         </p>
                     </div>
@@ -368,8 +364,8 @@ export const InstructorRegister = () => {
             </Card>
 
             <Modal open={otpDialog} footer={null} onCancel={cancel}>
-                <div className="space-y-2 flex flex-col items-center gap-4">
-                    <h1>Enter One-Time Password sent</h1>
+                <div className="space-y-2 flex flex-col items-center gap-4 p-4">
+                    <h1 className="text-lg font-semibold">Enter One-Time Password sent</h1>
                     <InputOTP maxLength={6} value={otp} onChange={(value) => setOtp(value)}>
                         <InputOTPGroup>
                             <InputOTPSlot index={0} />
