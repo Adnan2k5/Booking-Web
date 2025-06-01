@@ -5,14 +5,12 @@ export const createTicket = async (ticketData) => {
   const formData = new FormData();
 
   // Add text fields
-  formData.append('name', ticketData.name);
-  formData.append('email', ticketData.email);
   formData.append('subject', ticketData.subject);
   formData.append('description', ticketData.description);
   formData.append('category', ticketData.category);
   if (ticketData.priority) formData.append('priority', ticketData.priority);
 
-  if (ticketData.attachments) {
+  if (ticketData.attachments && ticketData.attachments.length > 0) {
     ticketData.attachments.forEach((file) => {
       formData.append('attachments', file);
     });
@@ -73,7 +71,7 @@ export const updateTicketStatus = async (ticketId, status) => {
 
 // Admin: Get all tickets (with filters)
 export const getAllTickets = async (filters = {}) => {
-  const { status, priority, category, page = 1, limit = 10 } = filters;
+  const { status, priority, category, page = 1, limit = 10, search = "" } = filters;
 
   let queryParams = new URLSearchParams();
   if (status) queryParams.append('status', status);
@@ -81,6 +79,7 @@ export const getAllTickets = async (filters = {}) => {
   if (category) queryParams.append('category', category);
   queryParams.append('page', page);
   queryParams.append('limit', limit);
+  queryParams.append('search', search);
 
   const response = await axiosClient.get(
     `/api/tickets?${queryParams.toString()}`,
