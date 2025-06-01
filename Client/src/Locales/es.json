@@ -211,7 +211,8 @@
     "confirmed": "Confirmada",
     "pending": "Pendiente",
     "contactParticipants": "Contactar Participantes",
-    "viewDetails": "Ver Detalles"
+    "viewDetails": "Ver Detalles",
+    "viewDocument": "Ver Documentos"
   },
   "landingPage": {
     "heroTitle": "Descubre Tu Próxima Aventura",

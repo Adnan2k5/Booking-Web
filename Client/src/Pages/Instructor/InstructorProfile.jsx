@@ -290,8 +290,8 @@ export const InstructorProfile = () => {
                             <CardContent>
                                 <div className="flex flex-col lg:flex-row gap-8">
                                     <div className="lg:w-1/3 flex flex-col items-center">
-                                        <div className="relative">
-                                            <Avatar className="h-24 w-24 sm:h-32 sm:w-32 mb-4">
+                                        <div className="relative mb-4">
+                                            <Avatar className="h-24 w-24 sm:h-32 sm:w-32">
                                                 <AvatarImage src={profileData.img || "/placeholder.svg"} alt={profileData.name} />
                                                 <AvatarFallback>{profileData.name.charAt(0)}</AvatarFallback>
                                             </Avatar>
@@ -299,7 +299,7 @@ export const InstructorProfile = () => {
                                                 <div className="absolute inset-0 flex items-center justify-center">
                                                     <label
                                                         htmlFor="profile-photo"
-                                                        className="cursor-pointer bg-black bg-opacity-50 rounded-full h-24 w-24 sm:h-32 sm:w-32 flex items-center justify-center"
+                                                        className="cursor-pointer bg-black bg-opacity-50 rounded-full w-full h-full flex items-center justify-center"
                                                     >
                                                         <Upload className="h-6 w-6 text-white" />
                                                         <input

@@ -211,7 +211,8 @@
     "confirmed": "Bestätigt",
     "pending": "Ausstehend",
     "contactParticipants": "Teilnehmer kontaktieren",
-    "viewDetails": "Details ansehen"
+    "viewDetails": "Details ansehen",
+    "viewDocument": "Dokument ansehen"
   },
   "landingPage": {
     "heroTitle": "Entdecke Dein nächstes Abenteuer",
