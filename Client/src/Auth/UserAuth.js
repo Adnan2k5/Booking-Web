@@ -1,5 +1,6 @@
 import { loginStart, loginSuccess, setUser } from '../Store/UserSlice.js';
 import { axiosClient } from '../AxiosClient/axios.js';
+import { data } from 'react-router-dom';
 
 export const UserRegister = async (data) => {
   const res = await axiosClient.post('/api/auth/signUp', data, {
@@ -68,6 +69,46 @@ export const UpdatePass = async (data) => {
     return res;
   } catch (err) {
     return err;
+  }
+};
+
+export const VerifyNewEmail = async (data) => {
+  try {
+    const res = await axiosClient.post(
+      '/api/auth/verifyNewEmail',
+      { newEmail: data },
+      {
+        withCredentials: true,
+      }
+    );
+    console.log(res);
+    if (res.status === 200) {
+      return res;
+    } else {
+      return res.status;
+    }
+  } catch (err) {
+    if (err.response) {
+      return err.response.status;
+    }
+  }
+};
+
+export const UpdateEmail = async (data) => {
+  try {
+    const res = await axiosClient.post('/api/auth/updateEmail', data, {
+      withCredentials: true,
+    });
+    console.log(res);
+    if (res.status === 200) {
+      return res;
+    } else {
+      return res.status;
+    }
+  } catch (err) {
+    if (err.response) {
+      return err.response.status;
+    }
   }
 };
 

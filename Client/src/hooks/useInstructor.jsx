@@ -86,5 +86,5 @@ export function useInstructors() {
         }
     }
 
-    return { instructors, isLoading, error, page, setPage, total, limit, deleteInstructorById, checkInstructorStatus, totalPages, changeDocumentStatus };
+    return { instructors, isLoading, getProfile, error, page, setPage, total, limit, deleteInstructorById, checkInstructorStatus, totalPages, changeDocumentStatus };
 }

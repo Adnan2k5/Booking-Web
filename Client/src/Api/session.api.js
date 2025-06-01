@@ -28,7 +28,7 @@ export const createSession = async (data) => {
   }
 };
 
-export const getAllSessions = async (id) => {
+export const getInstructorSessions = async (id) => {
   const res = await axiosClient.get(`/api/session/${id}`, {
     withCredentials: true,
   });

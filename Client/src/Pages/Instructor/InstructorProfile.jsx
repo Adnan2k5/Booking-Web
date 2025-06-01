@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Star, Upload, Check, Edit, Save, ImageIcon, X, Play } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
@@ -15,6 +15,8 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import InstructorLayout from "./InstructorLayout"
+import { useAuth } from "../AuthProvider"
+import { getAdventure } from "../../Api/adventure.api"
 
 export const InstructorProfile = () => {
     const { t } = useTranslation()
@@ -23,54 +25,86 @@ export const InstructorProfile = () => {
     const [activeTab, setActiveTab] = useState("profile")
     const [galleryUploadMode, setGalleryUploadMode] = useState(false)
     const [selectedMedia, setSelectedMedia] = useState(null)
+    const [fetchedAdventure, setFetchedAdventure] = useState(null)
+    const { user } = useAuth();
+
+    const fetchAdventure = async (adventureId) => {
+        try {
+            const res = await getAdventure(adventureId)
+            if (res.data) {
+                setFetchedAdventure(res.data)
+            }
+        } catch (error) {
+            console.error("Error fetching adventure:", error);
+        }
+    }
+
+    useEffect(() => {
+        if (user?.user?.instructor?.adventure) {
+            fetchAdventure(user?.user?.instructor?.adventure)
+        }
+    }, [user])
+
+    // Update profile data when user or adventure data changes
+    useEffect(() => {
+        if (user?.user) {
+            setProfileData(prev => ({
+                ...prev,
+                id: user.user._id || prev.id,
+                name: user.user.name || "",
+                email: user.user.email || "",
+                specialty: fetchedAdventure?.name || "",
+                experience: `0 years`,
+                rating: user.user.instructor?.avgReview || 0,
+                img: fetchedAdventure?.thumbnail || "/placeholder.svg?height=400&width=300",
+                bio: user.user.instructor?.description?.join(", ") || "Certified instructor with expertise in adventure activities.",
+                languages: user.user.instructor?.languages || [],
+                certificates: [
+                    {
+                        name: "Adventure Certification",
+                        verified: user.user.verified || false,
+                        link: user.user.instructor?.certificate
+                    },
+                ],
+                selectedAdventures: [fetchedAdventure?.name || ""].filter(Boolean),
+                verificationDocuments: [
+                    {
+                        type: "ID",
+                        name: "Government ID",
+                        status: user.user.instructor?.documentVerified || "pending",
+                        date: new Date(user.user.createdAt).toISOString().split("T")[0] || "2024-01-15",
+                        link: user.user.instructor?.governmentId
+                    },
+                ],
+                gallery: user.user.instructor?.portfolioMedias || []
+            }))
+        }
+    }, [user, fetchedAdventure])
 
     const [profileData, setProfileData] = useState({
-        id: 1,
-        name: "Alex Johnson",
-        email: "alex.johnson@example.com",
-        specialty: "Mountain Hiking",
-        experience: "8 years",
-        rating: 4.9,
-        img: "/placeholder.svg?height=400&width=300",
-        bio: "Certified mountain guide with expertise in alpine terrain and wilderness survival.",
-        languages: ["English", "Spanish", "French"],
+        id: user?.user?._id || 1,
+        name: user?.user?.name || "",
+        email: user?.user?.email || "",
+        specialty: fetchedAdventure?.name || "",
+        experience: `${fetchedAdventure?.exp || 0} years`,
+        rating: user?.user?.instructor?.avgReview || 0,
+        img: fetchedAdventure?.thumbnail || "/placeholder.svg?height=400&width=300",
+        bio: user?.user?.instructor?.description?.join(", ") || "Certified instructor with expertise in adventure activities.",
+        languages: user?.user?.instructor?.languages || [],
         certificates: [
-            { name: "Mountain Guide Certification", verified: true },
-            { name: "First Aid Certification", verified: true },
-            { name: "Avalanche Safety", verified: true },
+            { name: "Adventure Certification", verified: user?.user?.verified || false, link: user?.user?.instructor?.certificate },
         ],
-        selectedAdventures: ["Mountain Hiking", "Alpine Hiking"],
+        selectedAdventures: [fetchedAdventure?.name || ""],
         verificationDocuments: [
-            { type: "ID", name: "Passport", status: "verified", date: "2024-01-15" },
-            { type: "Certificate", name: "Mountain Guide License", status: "verified", date: "2024-02-10" },
-        ],
-        gallery: [
             {
-                id: 1,
-                type: "image",
-                url: "/src/assets/scubadiving.jpg",
-                caption: "Leading a mountain expedition",
-            },
-            {
-                id: 2,
-                type: "image",
-                url: "/src/assets/scubadiving-min.jpg",
-                caption: "Teaching survival skills",
-            },
-            {
-                id: 3,
-                type: "image",
-                url: "/src/assets/face.jpeg",
-                caption: "Alpine summit",
-            },
-            {
-                id: 4,
-                type: "video",
-                url: "https://res.cloudinary.com/dygmsxtsd/video/upload/v1740640091/skydiving_oh0ees.mp4",
-                thumbnail: "/src/assets/login.jpg",
-                caption: "Hiking technique tutorial",
+                type: "ID",
+                name: "Government ID",
+                status: user?.user?.instructor?.documentVerified || "pending",
+                date: new Date(user?.user?.createdAt).toISOString().split("T")[0] || "2024-01-15",
+                link: user?.user?.instructor?.governmentId
             },
         ],
+        gallery: user?.user?.instructor?.portfolioMedias || []
     })
 
     const [newCertificate, setNewCertificate] = useState({
@@ -114,7 +148,6 @@ export const InstructorProfile = () => {
     }
 
     const handleSaveProfile = () => {
-        // In a real app, this would be an API call
         toast.success(t("instructor.profileUpdatedSuccessfully"))
         setEditMode(false)
     }
@@ -134,14 +167,11 @@ export const InstructorProfile = () => {
                 file: file,
             }))
         } else if (type === "profile") {
-            // Handle profile image update
-            // In a real app, this would upload the image and get a URL
             toast.success(t("instructor.profilePhotoUpdated"))
         } else if (type === "gallery") {
             setNewMedia((prev) => ({
                 ...prev,
                 file: file,
-                // Set type based on file mimetype
                 type: file.type.startsWith("video/") ? "video" : "image",
             }))
         }
@@ -191,8 +221,6 @@ export const InstructorProfile = () => {
             return
         }
 
-        // In a real app, you would upload the file to a server and get a URL
-        // For this example, we'll create a local object URL
         const mediaUrl = URL.createObjectURL(newMedia.file)
 
         setProfileData((prev) => ({
@@ -231,16 +259,16 @@ export const InstructorProfile = () => {
 
     return (
         <InstructorLayout>
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold tracking-tight">{t("instructor.profileInformation")}</h2>
+            <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
+                <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">{t("instructor.profileInformation")}</h2>
                     {!editMode ? (
-                        <Button onClick={() => setEditMode(true)} className="flex items-center gap-2">
+                        <Button onClick={() => setEditMode(true)} className="flex items-center gap-2 w-full sm:w-auto">
                             <Edit className="h-4 w-4" />
                             {t("instructor.editProfile")}
                         </Button>
                     ) : (
-                        <Button onClick={handleSaveProfile} className="flex items-center gap-2">
+                        <Button onClick={handleSaveProfile} className="flex items-center gap-2 w-full sm:w-auto">
                             <Save className="h-4 w-4" />
                             {t("instructor.saveChanges")}
                         </Button>
@@ -248,9 +276,9 @@ export const InstructorProfile = () => {
                 </div>
 
                 <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="profile">Profile</TabsTrigger>
-                        <TabsTrigger value="gallery">Gallery</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
+                        <TabsTrigger value="profile" className="text-sm sm:text-base">Profile</TabsTrigger>
+                        <TabsTrigger value="gallery" className="text-sm sm:text-base">Gallery</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="profile" className="space-y-6">
@@ -260,10 +288,10 @@ export const InstructorProfile = () => {
                                 <CardDescription>{t("instructor.manageProfileDescription")}</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="flex flex-col md:flex-row gap-8">
-                                    <div className="md:w-1/3 flex flex-col items-center">
-                                        <div className="relative">
-                                            <Avatar className="h-32 w-32 mb-4">
+                                <div className="flex flex-col lg:flex-row gap-8">
+                                    <div className="lg:w-1/3 flex flex-col items-center">
+                                        <div className="relative mb-4">
+                                            <Avatar className="h-24 w-24 sm:h-32 sm:w-32">
                                                 <AvatarImage src={profileData.img || "/placeholder.svg"} alt={profileData.name} />
                                                 <AvatarFallback>{profileData.name.charAt(0)}</AvatarFallback>
                                             </Avatar>
@@ -271,7 +299,7 @@ export const InstructorProfile = () => {
                                                 <div className="absolute inset-0 flex items-center justify-center">
                                                     <label
                                                         htmlFor="profile-photo"
-                                                        className="cursor-pointer bg-black bg-opacity-50 rounded-full h-32 w-32 flex items-center justify-center"
+                                                        className="cursor-pointer bg-black bg-opacity-50 rounded-full w-full h-full flex items-center justify-center"
                                                     >
                                                         <Upload className="h-6 w-6 text-white" />
                                                         <input
@@ -293,10 +321,10 @@ export const InstructorProfile = () => {
                                                     className="text-center font-semibold text-lg mb-2"
                                                 />
                                             ) : (
-                                                <h3 className="font-semibold text-xl">{profileData.name}</h3>
+                                                <h3 className="font-semibold text-lg sm:text-xl">{profileData.name}</h3>
                                             )}
 
-                                            <p className="text-muted-foreground">{profileData.specialty}</p>
+                                            <p className="text-muted-foreground text-sm sm:text-base">{profileData.specialty}</p>
 
                                             <div className="flex items-center justify-center mt-2">
                                                 <Star className="h-4 w-4 text-yellow-500 fill-current" />
@@ -315,7 +343,7 @@ export const InstructorProfile = () => {
                                         </div>
                                     </div>
 
-                                    <div className="md:w-2/3">
+                                    <div className="lg:w-2/3">
                                         <div className="space-y-4">
                                             <div>
                                                 <h4 className="font-medium mb-2">{t("instructor.bio")}</h4>
@@ -326,7 +354,7 @@ export const InstructorProfile = () => {
                                                         className="min-h-[100px]"
                                                     />
                                                 ) : (
-                                                    <p className="text-muted-foreground">{profileData.bio}</p>
+                                                    <p className="text-muted-foreground text-sm sm:text-base">{profileData.bio}</p>
                                                 )}
                                             </div>
 
@@ -340,7 +368,7 @@ export const InstructorProfile = () => {
                                                             <Badge
                                                                 key={language}
                                                                 variant={profileData.languages.includes(language) ? "default" : "outline"}
-                                                                className="cursor-pointer"
+                                                                className="cursor-pointer text-xs sm:text-sm"
                                                                 onClick={() => handleLanguageToggle(language)}
                                                             >
                                                                 {language}
@@ -350,7 +378,7 @@ export const InstructorProfile = () => {
                                                 ) : (
                                                     <div className="flex flex-wrap gap-2">
                                                         {profileData.languages.map((language, index) => (
-                                                            <Badge key={index} variant="outline">
+                                                            <Badge key={index} variant="outline" className="text-xs sm:text-sm">
                                                                 {language}
                                                             </Badge>
                                                         ))}
@@ -362,14 +390,19 @@ export const InstructorProfile = () => {
                                 </div>
                             </CardContent>
                         </Card>
+
                         <Card>
                             <CardHeader>
-                                <div className="flex justify-between items-center">
+                                <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
                                     <div>
                                         <CardTitle>{t("instructor.certificationsAndLicenses")}</CardTitle>
                                         <CardDescription>{t("instructor.yourVerifiedCredentials")}</CardDescription>
                                     </div>
-                                    <Button variant="outline" onClick={() => setCertificateUploadMode(!certificateUploadMode)}>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setCertificateUploadMode(!certificateUploadMode)}
+                                        className="w-full sm:w-auto"
+                                    >
                                         {certificateUploadMode ? t("instructor.cancel") : t("instructor.addCertificate")}
                                     </Button>
                                 </div>
@@ -389,7 +422,7 @@ export const InstructorProfile = () => {
                                             </div>
                                             <div>
                                                 <label className="text-sm font-medium">{t("instructor.certificateFile")}</label>
-                                                <div className="mt-1 flex items-center">
+                                                <div className="mt-1 flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0">
                                                     <label className="cursor-pointer">
                                                         <div className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                                             <Upload className="h-4 w-4 mr-2" />
@@ -401,19 +434,24 @@ export const InstructorProfile = () => {
                                                             onChange={(e) => handleFileChange(e, "certificate")}
                                                         />
                                                     </label>
-                                                    <span className="ml-3 text-sm text-gray-500">
+                                                    <span className="ml-0 sm:ml-3 text-sm text-gray-500">
                                                         {newCertificate.file ? newCertificate.file.name : t("instructor.noFileSelected")}
                                                     </span>
                                                 </div>
                                             </div>
-                                            <Button onClick={handleAddCertificate}>{t("instructor.submitForVerification")}</Button>
+                                            <Button onClick={handleAddCertificate} className="w-full sm:w-auto">
+                                                {t("instructor.submitForVerification")}
+                                            </Button>
                                         </div>
                                     </div>
                                 )}
 
                                 <div className="space-y-3">
                                     {profileData.certificates.map((certificate, index) => (
-                                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                                        <div
+                                            key={index}
+                                            className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-3 border rounded-lg"
+                                        >
                                             <div className="flex items-center gap-2">
                                                 {certificate.verified ? (
                                                     <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center">
@@ -424,11 +462,23 @@ export const InstructorProfile = () => {
                                                         <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
                                                     </div>
                                                 )}
-                                                <span>{certificate.name}</span>
+                                                <span className="text-sm sm:text-base">{certificate.name}</span>
                                             </div>
-                                            <Badge variant={certificate.verified ? "success" : "outline"}>
-                                                {certificate.verified ? t("instructor.verified") : t("instructor.pending")}
-                                            </Badge>
+                                            <div className="flex items-center gap-2">
+                                                {certificate.link && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => window.open(certificate.link, '_blank')}
+                                                        className="text-xs"
+                                                    >
+                                                        {t("instructor.viewDocument") || "View Document"}
+                                                    </Button>
+                                                )}
+                                                <Badge variant={certificate.verified ? "success" : "outline"}>
+                                                    {certificate.verified ? t("instructor.verified") : t("instructor.pending")}
+                                                </Badge>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -472,7 +522,7 @@ export const InstructorProfile = () => {
                                             </div>
                                             <div>
                                                 <label className="text-sm font-medium">{t("instructor.documentFile")}</label>
-                                                <div className="mt-1 flex items-center">
+                                                <div className="mt-1 flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0">
                                                     <label className="cursor-pointer">
                                                         <div className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                                             <Upload className="h-4 w-4 mr-2" />
@@ -480,62 +530,76 @@ export const InstructorProfile = () => {
                                                         </div>
                                                         <input type="file" className="hidden" onChange={(e) => handleFileChange(e, "document")} />
                                                     </label>
-                                                    <span className="ml-3 text-sm text-gray-500">
+                                                    <span className="ml-0 sm:ml-3 text-sm text-gray-500">
                                                         {newDocument.file ? newDocument.file.name : t("instructor.noFileSelected")}
                                                     </span>
                                                 </div>
                                             </div>
-                                            <Button onClick={handleAddDocument}>{t("instructor.submitForVerification")}</Button>
+                                            <Button onClick={handleAddDocument} className="w-full sm:w-auto">
+                                                {t("instructor.submitForVerification")}
+                                            </Button>
                                         </div>
                                     </div>
 
                                     <div className="space-y-3">
                                         <h4 className="font-medium">{t("instructor.submittedDocuments")}</h4>
                                         {profileData.verificationDocuments.map((doc, index) => (
-                                            <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                                            <div
+                                                key={index}
+                                                className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-3 border rounded-lg"
+                                            >
                                                 <div>
-                                                    <div className="font-medium">{doc.name}</div>
-                                                    <div className="text-sm text-muted-foreground">
+                                                    <div className="font-medium text-sm sm:text-base">{doc.name}</div>
+                                                    <div className="text-xs sm:text-sm text-muted-foreground">
                                                         {doc.type} • {doc.date}
                                                     </div>
                                                 </div>
-                                                <Badge
-                                                    variant={
-                                                        doc.status === "verified"
-                                                            ? "success"
+                                                <div className="flex items-center gap-2">
+                                                    {doc.link && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => window.open(doc.link, '_blank')}
+                                                            className="text-xs"
+                                                        >
+                                                            {t("instructor.viewDocument") || "View Document"}
+                                                        </Button>
+                                                    )}
+                                                    <Badge
+                                                        variant={
+                                                            doc.status === "verified"
+                                                                ? "success"
+                                                                : doc.status === "rejected"
+                                                                    ? "destructive"
+                                                                    : "outline"
+                                                        }
+                                                    >
+                                                        {doc.status === "verified"
+                                                            ? t("instructor.verified")
                                                             : doc.status === "rejected"
-                                                                ? "destructive"
-                                                                : "outline"
-                                                    }
-                                                >
-                                                    {doc.status === "verified"
-                                                        ? t("instructor.verified")
-                                                        : doc.status === "rejected"
-                                                            ? t("instructor.rejected")
-                                                            : t("instructor.pending")}
-                                                </Badge>
+                                                                ? t("instructor.rejected")
+                                                                : t("instructor.pending")}
+                                                    </Badge>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             </CardContent>
-                            <CardFooter className="flex justify-end">
-                                <Button variant="outline">{t("instructor.viewAllDocuments")}</Button>
-                            </CardFooter>
                         </Card>
                     </TabsContent>
 
                     <TabsContent value="gallery">
                         <Card>
                             <CardHeader>
-                                <div className="flex justify-between items-center">
+                                <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
                                     <div>
                                         <CardTitle>Gallery</CardTitle>
                                         <CardDescription>Showcase your adventures and experiences</CardDescription>
                                     </div>
                                     <Button
                                         onClick={() => setGalleryUploadMode(!galleryUploadMode)}
-                                        className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600"
+                                        className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 w-full sm:w-auto"
                                     >
                                         {galleryUploadMode ? "Cancel" : "Add Media"}
                                     </Button>
@@ -576,7 +640,7 @@ export const InstructorProfile = () => {
                                             </div>
                                             <div>
                                                 <label className="text-sm font-medium">Upload File</label>
-                                                <div className="mt-1 flex items-center">
+                                                <div className="mt-1 flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0">
                                                     <label className="cursor-pointer">
                                                         <div className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                                             <Upload className="h-4 w-4 mr-2" />
@@ -589,14 +653,14 @@ export const InstructorProfile = () => {
                                                             accept={newMedia.type === "image" ? "image/*" : "video/*"}
                                                         />
                                                     </label>
-                                                    <span className="ml-3 text-sm text-gray-500">
+                                                    <span className="ml-0 sm:ml-3 text-sm text-gray-500">
                                                         {newMedia.file ? newMedia.file.name : "No file selected"}
                                                     </span>
                                                 </div>
                                             </div>
                                             <Button
                                                 onClick={handleAddMedia}
-                                                className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600"
+                                                className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 w-full sm:w-auto"
                                             >
                                                 Add to Gallery
                                             </Button>
@@ -604,7 +668,7 @@ export const InstructorProfile = () => {
                                     </motion.div>
                                 )}
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {profileData.gallery.map((item) => (
                                         <motion.div
                                             key={item.id}

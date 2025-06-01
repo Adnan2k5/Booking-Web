@@ -2,6 +2,12 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 
 export const getUser = asyncHandler(async (req, res) => {
+  if (req.user.role === "instructor") {
+    const user = await User.findById(req.user._id)
+      .populate("instructor")
+      .select("-password -refreshToken");
+    return res.status(200).json(user);
+  }
   return res.status(200).json(req.user);
 });
 
@@ -33,7 +39,6 @@ export const getUsers = asyncHandler(async (req, res) => {
   });
 });
 
-
 export const deleteUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!id) {
@@ -46,4 +51,16 @@ export const deleteUser = asyncHandler(async (req, res) => {
   }
 
   res.status(200).json(new ApiResponse(200, "User deleted successfully", user));
+});
+
+export const updateUser = asyncHandler(async (req, res) => {
+  const updatedUser = await User.findByIdAndUpdate(req.params.id, {
+    $set: req.body,
+  });
+  if (!updatedUser) {
+    throw new ApiError(404, "User not found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedUser, "User updated successfully"));
 });

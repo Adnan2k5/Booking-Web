@@ -19,14 +19,14 @@ export const ProfileImageUpload = ({ initialImage, onChange, getInitial }) => {
     }
 
     return (
-        <div className="relative w-28 h-28 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 flex items-center justify-center overflow-hidden cursor-pointer group shadow-md border-2 border-white">
+        <div className="relative w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 flex items-center justify-center overflow-hidden cursor-pointer group shadow-md border-2 border-white">
             {previewUrl ? (
                 <img src={previewUrl || "/placeholder.svg"} alt="Profile" className="w-full h-full object-cover" />
             ) : (
-                <span className="text-4xl font-bold text-blue-500">{getInitial()}</span>
+                <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-500">{getInitial()}</span>
             )}
             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera className="text-white" />
+                <Camera className="text-white w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
                 <input
                     type="file"
                     accept="image/*"
