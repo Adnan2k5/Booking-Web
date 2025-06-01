@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 
-const cartSchema = new mongoose.Schema(
+const itemBookingSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
       index: true,
+      required: true,
     },
     items: [
       {
@@ -17,8 +17,8 @@ const cartSchema = new mongoose.Schema(
         },
         quantity: {
           type: Number,
-          required: true,
           min: 1,
+          required: true,
         },
         rentalPeriod: {
           startDate: {
@@ -34,12 +34,40 @@ const cartSchema = new mongoose.Schema(
         },
         purchase: {
           type: Boolean,
-          default: false, // true if the item is being purchased
+          default: false,
         },
       },
     ],
+    status: {
+      type: String,
+      enum: ["pending", "confirmed", "cancelled"],
+      default: "pending",
+    },
+
+    transactionId: {
+      type: String,
+      trim: true,
+    },
+
+    amount: {
+      type: Number,
+      min: 0,
+    },
+
+    bookingDate: {
+      type: Date,
+      default: Date.now,
+    },
+
+    modeOfPayment: {
+      type: String,
+      enum: ["card", "cash"],
+      default: "card",
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-export const Cart = mongoose.model("Cart", cartSchema);
+export const ItemBooking = mongoose.model("ItemBooking", itemBookingSchema);
