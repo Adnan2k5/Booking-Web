@@ -60,4 +60,4 @@ const hotelBookingSchema = new mongoose.Schema(
   }
 );
 
-export const ItemBooking = mongoose.model("hotelBooking", hotelBookingSchema);
+export const HotelBooking = mongoose.model("hotelBooking", hotelBookingSchema);

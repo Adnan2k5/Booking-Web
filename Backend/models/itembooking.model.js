@@ -20,13 +20,19 @@ const itemBookingSchema = new mongoose.Schema(
           min: 1,
           required: true,
         },
-        startDate: {
-          type: Date,
+        rentalPeriod: {
+          startDate: {
+            type: Date,
+          },
+          endDate: {
+            type: Date,
+          },
+          days: {
+            type: Number,
+            min: 1,
+          },
         },
-        endDate: {
-          type: Date,
-        },
-        purchased: {
+        purchase: {
           type: Boolean,
           default: false,
         },
