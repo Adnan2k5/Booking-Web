@@ -14,7 +14,7 @@ import { Textarea } from "./ui/textarea"
 import { Label } from "./ui/label"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../Pages/AuthProvider"
-import { createPreset, getAllSessions, deleteSession, createSession } from "../Api/session.api"
+import { createPreset, getInstructorSessions, deleteSession, createSession } from "../Api/session.api"
 import { toast } from "sonner"
 
 // Constants
@@ -30,7 +30,6 @@ const PRICING_UNITS = [
     { value: "perPerson", label: "Per Person" },
     { value: "perGroup", label: "Per Group" },
     { value: "perDay", label: "Per Day" },
-    { value: "perMonth", label: "Per Month" }
 ]
 
 const DEFAULT_FORM_STATE = {
@@ -66,7 +65,7 @@ const useSessions = (instructorId) => {
 
         setLoading(true)
         try {
-            const res = await getAllSessions(instructorId)
+            const res = await getInstructorSessions(instructorId)
             if (res.status === 200) {
                 setSessions(res.data)
             } else {

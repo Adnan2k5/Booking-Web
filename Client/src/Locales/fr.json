@@ -212,7 +212,14 @@
     "pending": "En Attente",
     "contactParticipants": "Contacter les Participants",
     "viewDetails": "Voir les Détails",
-    "viewDocument": "Voir les Documents"
+    "viewDocument": "Voir les Documents",
+    "currentEmail": "E-mail Actuel",
+    "newEmail": "Nouvel E-mail",
+    "pleaseEnterNewEmail": "Veuillez saisir une nouvelle adresse e-mail",
+    "securitySettings": "Paramètres de Sécurité",
+    "manageYourSecurityPreferences": "Gérez vos préférences de sécurité et d'authentification",
+    "language": "Langue",
+    "changePassword": "Changer le Mot de Passe"
   },
   "landingPage": {
     "heroTitle": "Découvrez Votre Prochaine Aventure",

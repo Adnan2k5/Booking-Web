@@ -9,13 +9,21 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { Globe, Lock } from 'lucide-react'
 import InstructorLayout from "./InstructorLayout"
+import { UpdateEmail, VerifyNewEmail, VerifyUser } from "../../Auth/UserAuth"
+import { useAuth } from "../AuthProvider"
+import { Modal } from "antd"
+import { InputOTPSlot, InputOTP, InputOTPGroup } from "../../components/ui/input-otp"
 
 const InstructorSettings = () => {
     const { t } = useTranslation()
     const [loading, setLoading] = useState(false)
+    const { user } = useAuth();
+    const [newEmail, setNewEmail] = useState("");
+    const [openOtp, setOtpSent] = useState(false);
+    const [otp, setOtp] = useState("");
 
     const [settings, setSettings] = useState({
-        email: "alex.johnson@example.com",
+        email: user?.user?.email || "",
         newEmail: "",
         currentPassword: "",
         newPassword: "",
@@ -54,24 +62,51 @@ const InstructorSettings = () => {
         }
     }
 
-    const handleEmailUpdate = (e) => {
-        e.preventDefault()
-        if (!settings.newEmail) {
+    const handleEmailUpdate = async (e) => {
+        e.preventDefault(); // Prevent form submission and page refresh
+        if (!newEmail) {
             toast.error(t("instructor.pleaseEnterNewEmail"))
             return
         }
-
         setLoading(true)
-        setTimeout(() => {
-            setSettings((prev) => ({
-                ...prev,
-                email: settings.newEmail,
-                newEmail: "",
-            }))
-            setLoading(false)
-            toast.success(t("instructor.emailUpdatedSuccessfully"))
-        }, 1000)
+        try {
+            const res = await VerifyNewEmail(newEmail);
+            if (res.status === 200) {
+                setOtpSent(true);
+            }
+        } catch (error) {
+            console.error("Error verifying email:", error);
+            toast.error("An error occurred while verifying email");
+        } finally {
+            setLoading(false);
+        }
     }
+
+    const verifyOtp = async () => {
+        if (!otp) {
+            toast.error("Please enter OTP");
+            return;
+        }
+        setLoading(true);
+        try {
+            const data = { email: newEmail, otp: otp };
+            const res = await UpdateEmail(data);
+            console.log(res.statusCode);
+            if (res.status) {
+                toast("Email Verified Successfully");
+                setOtpSent(false);
+                setOtp("");
+                setNewEmail("");
+            } else if (res === 400) {
+                toast("Invalid Otp");
+            }
+        } catch (error) {
+            console.error("Error verifying OTP:", error);
+            toast.error("An error occurred while verifying OTP");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handlePasswordUpdate = (e) => {
         e.preventDefault()
@@ -107,14 +142,14 @@ const InstructorSettings = () => {
                     <p className="text-muted-foreground text-sm sm:text-base">{t("instructor.manageYourAccountSettings")}</p>
                 </div>
 
-                <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-2 sm:space-y-6">
                     <section id="account">
                         <Card>
-                            <CardHeader className="p-4 sm:p-6">
+                            <CardHeader className="p-2 sm:p-6">
                                 <CardTitle className="text-lg sm:text-xl">{t("instructor.accountSettings")}</CardTitle>
                                 <CardDescription className="text-sm">{t("instructor.manageYourAccountInformation")}</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+                            <CardContent className="space-y-2 sm:space-y-6 p-2 sm:p-6">
                                 <div>
                                     <h3 className="text-base sm:text-lg font-medium">{t("instructor.emailAddress")}</h3>
                                     <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 break-all">
@@ -127,8 +162,8 @@ const InstructorSettings = () => {
                                             <Input
                                                 id="newEmail"
                                                 type="email"
-                                                value={settings.newEmail}
-                                                onChange={(e) => handleSettingChange(null, "newEmail", e.target.value)}
+                                                value={newEmail}
+                                                onChange={(e) => setNewEmail(e.target.value)}
                                                 placeholder="new.email@example.com"
                                                 className="text-sm"
                                             />
@@ -228,6 +263,34 @@ const InstructorSettings = () => {
                         </Card>
                     </section>
                 </div>
+                <Modal open={openOtp} footer={null} onCancel={() => setOtpSent(false)}>
+                    <div className="space-y-2 flex flex-col items-center gap-4">
+                        <h1>
+                            Enter One-Time Password sent on{" "}
+                            <span className="text-blue-500">{newEmail}</span>
+                        </h1>
+                        <InputOTP
+                            maxLength={6}
+                            value={otp}
+                            onChange={(value) => setOtp(value)}
+                        >
+                            <InputOTPGroup>
+                                <InputOTPSlot index={0} />
+                                <InputOTPSlot index={1} />
+                                <InputOTPSlot index={2} />
+                                <InputOTPSlot index={3} />
+                                <InputOTPSlot index={4} />
+                                <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                        </InputOTP>
+                        <button
+                            onClick={verifyOtp}
+                            className="bg-black text-white rounded-2xl py-2 w-full"
+                        >
+                            Verify OTP
+                        </button>
+                    </div>
+                </Modal>
             </div>
         </InstructorLayout>
     )
