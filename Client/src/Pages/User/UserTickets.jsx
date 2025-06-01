@@ -9,6 +9,9 @@ import {
     Loader2,
     Upload,
     X,
+    Send,
+    User,
+    UserCog
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge"
@@ -38,6 +41,10 @@ import { toast } from "sonner";
 export const UserTickets = () => {
     const [isNewTicketDialogOpen, setIsNewTicketDialogOpen] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState(null);
+    const [isTicketDetailDialogOpen, setIsTicketDetailDialogOpen] = useState(false);
+    const [ticketDetailLoading, setTicketDetailLoading] = useState(false);
+    const [newResponse, setNewResponse] = useState('');
+    const [isSubmittingResponse, setIsSubmittingResponse] = useState(false);
     
     // Form state for new ticket
     const [formData, setFormData] = useState({
@@ -56,6 +63,8 @@ export const UserTickets = () => {
         error,
         getUserTickets,
         createTicket,
+        getTicketById,
+        addTicketResponse,
         clearError,
     } = useTicket(); 
        // Fetch user tickets on component mount
@@ -75,12 +84,58 @@ export const UserTickets = () => {
         if (error) {
             toast.error(error);
         }
-    }, [error]);
+    }, [error]);    const handleOpenTicketDetail = async (ticket) => {
+        setIsTicketDetailDialogOpen(true);
+        setTicketDetailLoading(true);
+        try {
+            const result = await getTicketById(ticket._id);
+            if (result.success) {
+                setSelectedTicket(result.data.data);
+            } else {
+                toast.error(result.error || 'Failed to load ticket details');
+                setIsTicketDetailDialogOpen(false);
+            }
+        } catch (error) {
+            toast.error('Failed to load ticket details');
+            console.error('Error loading ticket details:', error);
+            setIsTicketDetailDialogOpen(false);
+        } finally {
+            setTicketDetailLoading(false);
+        }
+    };    const handleAddResponse = async () => {
+        if (!newResponse.trim()) {
+            toast.error('Please enter a response message');
+            return;
+        }
 
-    const handleOpenTicketDetail = (ticket) => {
-        setSelectedTicket(ticket);
-        // You can implement navigation to ticket detail page here
-        console.log("Opening ticket:", ticket);
+        setIsSubmittingResponse(true);
+        try {
+            const result = await addTicketResponse(selectedTicket._id, newResponse.trim());
+            if (result.success) {
+                setSelectedTicket(result.data.data);
+                setNewResponse('');
+                toast.success('Response added successfully');
+                // Refresh tickets list to update response count
+                getUserTickets();
+            } else {
+                toast.error(result.error || 'Failed to add response');
+            }
+        } catch (error) {
+            toast.error('Failed to add response');
+            console.error('Error adding response:', error);
+        } finally {
+            setIsSubmittingResponse(false);
+        }
+    };
+
+    const handleTicketDetailDialogClose = () => {
+        setIsTicketDetailDialogOpen(false);
+        setSelectedTicket(null);
+        setNewResponse('');
+    };
+
+    const handleOpenNewTicketDialog = () => {
+        setIsNewTicketDialogOpen(true);
     };
 
     const handleFormChange = (field, value) => {
@@ -195,6 +250,16 @@ export const UserTickets = () => {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
+        });
+    };
+
+    const formatDateTime = (dateString) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
     };
 
@@ -551,6 +616,191 @@ export const UserTickets = () => {
                             )}
                         </Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Ticket Detail Dialog */}
+            <Dialog open={isTicketDetailDialogOpen} onOpenChange={handleTicketDetailDialogClose}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Ticket Details</DialogTitle>
+                        <DialogDescription>
+                            View ticket information and conversation history
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {ticketDetailLoading ? (
+                        <div className="text-center py-8">
+                            <Loader2 className="h-8 w-8 mx-auto text-gray-400 mb-2 animate-spin" />
+                            <p className="text-gray-500">Loading ticket details...</p>
+                        </div>
+                    ) : selectedTicket ? (
+                        <div className="space-y-6">
+                            {/* Ticket Information */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl">
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Ticket ID</label>
+                                    <p className="text-sm text-gray-900">{selectedTicket._id}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Status</label>
+                                    <div className="mt-1">
+                                        <Badge className={`${getStatusColor(selectedTicket.status)}`}>
+                                            {selectedTicket.status}
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Priority</label>
+                                    <div className="mt-1">
+                                        <Badge variant="outline" className={`${getPriorityColor(selectedTicket.priority)}`}>
+                                            {selectedTicket.priority}
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Category</label>
+                                    <p className="text-sm text-gray-900">{selectedTicket.category}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Created</label>
+                                    <p className="text-sm text-gray-900">{formatDateTime(selectedTicket.createdAt)}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Last Updated</label>
+                                    <p className="text-sm text-gray-900">{formatDateTime(selectedTicket.updatedAt)}</p>
+                                </div>
+                            </div>
+
+                            {/* Subject and Description */}
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Subject</label>
+                                    <p className="text-lg font-medium text-gray-900 mt-1">{selectedTicket.subject}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Description</label>
+                                    <div className="mt-1 p-4 bg-gray-50 rounded-lg border">
+                                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedTicket.description}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Attachments */}
+                            {selectedTicket.attachments && selectedTicket.attachments.length > 0 && (
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Attachments</label>
+                                    <div className="mt-2 space-y-2">
+                                        {selectedTicket.attachments.map((attachment, index) => (
+                                            <div key={index} className="flex items-center space-x-2">
+                                                <a 
+                                                    href={attachment} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-600 hover:text-blue-800 text-sm underline"
+                                                >
+                                                    Attachment {index + 1}
+                                                </a>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Conversation History */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-600 mb-3 block">Conversation</label>
+                                <div className="space-y-4 max-h-80 overflow-y-auto border rounded-lg p-4 bg-white">
+                                    {/* Original ticket message */}
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                            <User className="h-4 w-4 text-blue-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-sm font-medium text-gray-900">You</span>
+                                                <span className="text-xs text-gray-500">{formatDateTime(selectedTicket.createdAt)}</span>
+                                            </div>
+                                            <div className="bg-blue-50 rounded-lg p-3">
+                                                <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedTicket.description}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Responses */}
+                                    {selectedTicket.responses && selectedTicket.responses.map((response, index) => (
+                                        <div key={index} className="flex items-start gap-3">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                                response.isAdmin ? 'bg-green-100' : 'bg-blue-100'
+                                            }`}>
+                                                {response.isAdmin ? (
+                                                    <UserCog className="h-4 w-4 text-green-600" />
+                                                ) : (
+                                                    <User className="h-4 w-4 text-blue-600" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-sm font-medium text-gray-900">
+                                                        {response.isAdmin ? 'Support Team' : 'You'}
+                                                    </span>
+                                                    <span className="text-xs text-gray-500">{formatDateTime(response.timestamp)}</span>
+                                                </div>
+                                                <div className={`rounded-lg p-3 ${
+                                                    response.isAdmin ? 'bg-green-50' : 'bg-blue-50'
+                                                }`}>
+                                                    <p className="text-sm text-gray-900 whitespace-pre-wrap">{response.message}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Add Response */}
+                            {selectedTicket.status !== 'closed' && (
+                                <div className="space-y-3">
+                                    <label className="text-sm font-medium text-gray-600">Add Response</label>
+                                    <Textarea
+                                        value={newResponse}
+                                        onChange={(e) => setNewResponse(e.target.value)}
+                                        placeholder="Type your response here..."
+                                        className="min-h-[100px]"
+                                        disabled={isSubmittingResponse}
+                                    />
+                                    <div className="flex justify-end">
+                                        <Button
+                                            onClick={handleAddResponse}
+                                            disabled={isSubmittingResponse || !newResponse.trim()}
+                                            className="bg-black text-white hover:bg-gray-800 rounded-xl"
+                                        >
+                                            {isSubmittingResponse ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Sending...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Send className="mr-2 h-4 w-4" />
+                                                    Send Response
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedTicket.status === 'closed' && (
+                                <div className="text-center py-4">
+                                    <p className="text-sm text-gray-500">This ticket has been closed. No further responses can be added.</p>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="text-center py-8">
+                            <p className="text-gray-500">Failed to load ticket details</p>
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
             </div>

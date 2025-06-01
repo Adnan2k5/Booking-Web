@@ -63,7 +63,6 @@ export const useTicket = () => {
       setLoading(false);
     }
   }, []);
-
   // Get a specific ticket by ID
   const handleGetTicketById = useCallback(async (ticketId) => {
     setLoading(true);
@@ -71,7 +70,7 @@ export const useTicket = () => {
     
     try {
       const response = await getTicketById(ticketId);
-      setCurrentTicket(response.ticket);
+      setCurrentTicket(response.data);
       
       return { success: true, data: response };
     } catch (err) {
@@ -82,7 +81,6 @@ export const useTicket = () => {
       setLoading(false);
     }
   }, []);
-
   // Add response to a ticket
   const handleAddTicketResponse = useCallback(async (ticketId, message) => {
     setLoading(true);
@@ -93,13 +91,13 @@ export const useTicket = () => {
       
       // Update the current ticket if it matches
       if (currentTicket && currentTicket._id === ticketId) {
-        setCurrentTicket(response.ticket);
+        setCurrentTicket(response.data);
       }
       
       // Update the ticket in the tickets array
       setTickets(prevTickets => 
         prevTickets.map(ticket => 
-          ticket._id === ticketId ? response.ticket : ticket
+          ticket._id === ticketId ? response.data : ticket
         )
       );
       
