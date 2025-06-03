@@ -219,7 +219,12 @@
     "securitySettings": "Sicherheitseinstellungen",
     "manageYourSecurityPreferences": "Verwalten Sie Ihre Sicherheitseinstellungen und Authentifizierung",
     "language": "Sprache",
-    "changePassword": "Passwort ändern"
+    "changePassword": "Passwort ändern",
+    "currentPasswordIncorrect": "Aktuelles Passwort ist falsch",
+    "nextScheduledSessions": "Ihre nächsten geplanten Sitzungen",
+    "somethingWentWrong": "Etwas ist schief gelaufen",
+    "upcomingBookings": "Bevorstehende Buchungen",
+    "viewAllBookings": "Alle Buchungen anzeigen"
   },
   "landingPage": {
     "heroTitle": "Entdecke Dein nächstes Abenteuer",
@@ -236,5 +241,18 @@
     "ctaTitle": "Bereit für Dein nächstes Abenteuer?",
     "ctaDescription": "Schließe dich Tausenden von Abenteurern an, die den Nervenkitzel mit uns erlebt haben",
     "ctaButton": "Jetzt buchen"
-  }
+  },
+  "Choose Your Account Type": "Wählen Sie Ihren Kontotyp",
+  "Joiin As Explorer": "Als Entdecker beitreten",
+  "Join As Hotel": "Als Hotel beitreten",
+  "Join As Instructor": "Als Instruktor beitreten",
+  "accommodation": "Unterkunft",
+  "failedToSendRequest": "Anfrage konnte nicht gesendet werden",
+  "friendRequestSent": "Freundschaftsanfrage gesendet",
+  "login": "Anmelden",
+  "pleaseEnterEmail": "Bitte geben Sie eine E-Mail-Adresse ein",
+  "pleaseSelectLocationAndDate": "Bitte wählen Sie Ort und Datum aus",
+  "searchFailed": "Suche fehlgeschlagen. Bitte versuchen Sie es erneut.",
+  "selectAccountType": "Wählen Sie Ihren Kontotyp zum Fortfahren",
+  "userAlreadyInGroup": "Benutzer ist bereits in der Gruppe"
 }
