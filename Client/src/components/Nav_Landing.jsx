@@ -65,7 +65,7 @@ export const Nav_Landing = () => {
         if (user.user.role === "instructor") {
             navigate("/instructor/dashboard")
         } else if (user.user.role === "hotel") {
-            navigate("/hotel/profile")
+            navigate("/hotel")
         } else if (user.user.role === "admin") {
             navigate("/admin")
         } else {

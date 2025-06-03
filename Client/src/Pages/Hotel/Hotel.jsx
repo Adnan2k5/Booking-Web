@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { Separator } from '../../components/ui/separator';
 import { Button } from '../../components/ui/button';
 import { Loader } from '../../components/Loader';
-import { MapPin, Phone, Home, Users, PocketIcon as Pool, Award, FileText, Shield } from 'lucide-react';
+import { HotelUpdateModal } from '../../components/HotelUpdateModal';
+import { MapPin, Phone, Home, Users, PocketIcon as Pool, Award, FileText, Shield, Star, DollarSign, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Hotel = () => {
@@ -15,9 +16,9 @@ export const Hotel = () => {
     const [loading, setLoading] = useState(true);
     const [hotel, setHotel] = useState(null);
     const [activeImage, setActiveImage] = useState(null);
-    const Navigate = useNavigate();
-
-    const fetchHotel = async () => {
+    const [updateModalOpen, setUpdateModalOpen] = useState(false);
+    const [updateType, setUpdateType] = useState('price');
+    const Navigate = useNavigate();    const fetchHotel = async () => {
         setLoading(true);
         try {
             const res = await getHotelByOwnerId(user.user._id);
@@ -37,6 +38,15 @@ export const Hotel = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleUpdateSuccess = (updatedHotel) => {
+        setHotel(updatedHotel);
+    };
+
+    const openUpdateModal = (type) => {
+        setUpdateType(type);
+        setUpdateModalOpen(true);
     };
 
     useEffect(() => {
@@ -108,10 +118,38 @@ export const Hotel = () => {
                                             <li className="flex items-center gap-2">
                                                 <Phone className="h-4 w-4 text-muted-foreground" />
                                                 <span>Contact: {hotel.contactNo}</span>
-                                            </li>
-                                            <li className="flex items-center gap-2">
+                                            </li>                                            <li className="flex items-center gap-2">
                                                 <Home className="h-4 w-4 text-muted-foreground" />
                                                 <span>Rooms: {hotel.noRoom}</span>
+                                            </li>                                            <li className="flex items-center gap-2 justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                                    <span>Base Price: ${hotel.price}</span>
+                                                </div>
+                                                <Button 
+                                                    size="sm" 
+                                                    variant="outline"
+                                                    onClick={() => openUpdateModal('price')}
+                                                >
+                                                    <Edit className="h-3 w-3" />
+                                                </Button>
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                                <span>Price per Night: ${hotel.pricePerNight || hotel.price}</span>
+                                            </li>
+                                            <li className="flex items-center gap-2 justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Star className="h-4 w-4 text-muted-foreground" />
+                                                    <span>Rating: {hotel.rating || 0}/5</span>
+                                                </div>
+                                                <Button 
+                                                    size="sm" 
+                                                    variant="outline"
+                                                    onClick={() => openUpdateModal('rating')}
+                                                >
+                                                    <Edit className="h-3 w-3" />
+                                                </Button>
                                             </li>
                                             <li className="flex items-start gap-2">
                                                 <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
@@ -258,10 +296,18 @@ export const Hotel = () => {
                                     </TabsContent>
                                 </Tabs>
                             </CardContent>
-                        </Card>
-                    </div>
+                        </Card>                    </div>
                 </div>
             </div>
+            
+            {/* Update Modal */}
+            <HotelUpdateModal
+                isOpen={updateModalOpen}
+                onClose={() => setUpdateModalOpen(false)}
+                hotel={hotel}
+                onSuccess={handleUpdateSuccess}
+                updateType={updateType}
+            />
         </div>
     );
 };

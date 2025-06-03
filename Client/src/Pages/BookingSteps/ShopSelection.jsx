@@ -10,7 +10,7 @@ import { containerVariants, itemVariants } from "../../assets/Animations"
 
 export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRemoveFromCart }) => {
     const { t } = useTranslation()
-    console.log("ShopSelection rendered with items:", mockItems)
+
     return (
         <div className="bg-black/5 backdrop-blur-md rounded-2xl p-6 shadow-xl mb-8 border border-white/10">
             <div className="flex items-center gap-2 mb-6">

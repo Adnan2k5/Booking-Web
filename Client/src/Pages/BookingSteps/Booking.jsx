@@ -37,15 +37,24 @@ export default function BookingFlow() {
   const [isLoading, setIsLoading] = useState(true)
   const [adventure, setAdventure] = useState(null)
   const [isInstructorDialogOpen, setIsInstructorDialogOpen] = useState(false)
-  const [currentInstructor, setCurrentInstructor] = useState(null)
+  const [currentInstructor, setCurrentInstructor] = useState(null)  
   const [groupMembers, setGroupMembers] = useState([])
-  const { hotels } = useHotels({ search: "", page: 1, limit: 10, status: "all" });
+  
+  // Get location from query params or adventure location
+  const locationFilter = query.get("location") || (adventure?.location?.[0]?.name);
+  const { hotels } = useHotels({ 
+    search: "", 
+    page: 1, 
+    limit: 10, 
+    status: "all", 
+    location: locationFilter || null 
+  });
 
   // Ref for BookingSummary section
   const bookingSummaryRef = useRef(null)
 
   const { sessions, instructors } = useSessions({ adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date") })
-  const { items } = useBrowse({ adventureId: sessions.length > 0 ? sessions[0]?._id : "" })
+  const { items } = useBrowse({ adventureId: sessions.length > 0 ? sessions[0]?.adventureId : "" })
 
   // Load group members from sessionStorage if available
   useEffect(() => {

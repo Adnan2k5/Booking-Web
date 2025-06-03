@@ -40,11 +40,29 @@ export const getHotel = async ({
   page = 1,
   limit = 10,
   status = 'all',
+  location = null,
+  minPrice = null,
+  maxPrice = null,
+  minRating = null,
+  sortBy = 'createdAt',
+  sortOrder = 'desc',
 } = {}) => {
   try {
-    const params = { search, page, limit };
+    const params = { search, page, limit, sortBy, sortOrder };
     if (status && status !== 'all') {
       params.verified = status;
+    }
+    if (location !== null) {
+      params.location = location;
+    }
+    if (minPrice !== null) {
+      params.minPrice = minPrice;
+    }
+    if (maxPrice !== null) {
+      params.maxPrice = maxPrice;
+    }
+    if (minRating !== null) {
+      params.minRating = minRating;
     }
     const res = await axiosClient.get('/api/hotel', {
       params,
@@ -72,6 +90,32 @@ export const reject = async (id) => {
     const res = await axiosClient.put(`/api/hotel/reject/${id}`, {
       withCredentials: true,
     });
+    return res;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const updateHotelRating = async (id, rating) => {
+  try {
+    const res = await axiosClient.put(
+      `/api/hotel/rating/${id}`,
+      { rating },
+      { withCredentials: true }
+    );
+    return res;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const updateHotelPrice = async (id, priceData) => {
+  try {
+    const res = await axiosClient.put(
+      `/api/hotel/price/${id}`,
+      priceData,
+      { withCredentials: true }
+    );
     return res;
   } catch (err) {
     return err;

@@ -7,11 +7,10 @@ import { Modal } from "antd"
 import { InputOTPSlot, InputOTP, InputOTPGroup } from "../../components/ui/input-otp"
 import { toast } from "sonner"
 import { Textarea } from "../../components/ui/textarea"
-import { X, Upload, FileText, Building, MapPin, Phone, Mail, User, ImageIcon, Link, Euro } from "lucide-react"
+import { X, Upload, FileText, Building, MapPin, Phone, Mail, User, ImageIcon, Link, Euro, Star } from "lucide-react"
 import { registerHotel, verify } from "../../Api/hotel.api.js"
 import { fetchLocations } from "../../Api/location.api.js"
-export const HotelRegister = () => {
-    const [formData, setFormData] = useState({
+export const HotelRegister = () => {    const [formData, setFormData] = useState({
         name: "",
         email: "",
         password: "",
@@ -30,9 +29,11 @@ export const HotelRegister = () => {
         insuranceDocument: null,
         role: "hotel",
         price: 0,
+        pricePerNight: 0,
+        rating: 0,
         socialMedias: [],
         website: "",
-        category: "hotel", // Add category to form data
+        category: "hotel",
     })
 
     const [error, setError] = useState("")
@@ -175,8 +176,7 @@ export const HotelRegister = () => {
             }
             setLoading(true)
             const toastId = toast.loading("Processing your request...")
-            try {
-                const data = new FormData()
+            try {                const data = new FormData()
                 data.append("name", formData.name)
                 data.append("email", formData.email)
                 data.append("password", formData.password)
@@ -189,9 +189,11 @@ export const HotelRegister = () => {
                 data.append("rooms", formData.rooms)
                 data.append("role", formData.role)
                 data.append("price", formData.price)
+                data.append("pricePerNight", formData.pricePerNight)
+                data.append("rating", formData.rating)
                 data.append("website", formData.website)
                 data.append("otp", otp)
-                data.append("category", formData.category) // Add category to form data
+                data.append("category", formData.category)
                 formData.amenities.forEach((amenity) => {
                     data.append("amenities[]", amenity)
                 })
@@ -454,18 +456,53 @@ export const HotelRegister = () => {
                                                 </option>
                                             ))}
                                         </select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="address" className="flex items-center">
+                                    </div>                                    <div className="space-y-2">
+                                        <Label htmlFor="price" className="flex items-center">
                                             <Euro className="h-4 w-4 mr-2" />
-                                            Price
+                                            Base Price
                                         </Label>
                                         <Input
                                             id="price"
                                             name="price"
+                                            type="number"
                                             value={formData.price}
                                             onChange={handleChange}
-                                            placeholder="Enter Price"
+                                            placeholder="Enter base price"
+                                            className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="pricePerNight" className="flex items-center">
+                                            <Euro className="h-4 w-4 mr-2" />
+                                            Price Per Night
+                                        </Label>
+                                        <Input
+                                            id="pricePerNight"
+                                            name="pricePerNight"
+                                            type="number"
+                                            value={formData.pricePerNight}
+                                            onChange={handleChange}
+                                            placeholder="Enter price per night"
+                                            className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
+                                        />
+                                    </div>                                    <div className="space-y-2">
+                                        <Label htmlFor="rating" className="flex items-center">
+                                            <Star className="h-4 w-4 mr-2" />
+                                            Initial Rating
+                                        </Label>
+                                        <Input
+                                            id="rating"
+                                            name="rating"
+                                            type="number"
+                                            min="0"
+                                            max="5"
+                                            step="0.1"
+                                            value={formData.rating}
+                                            onChange={handleChange}
+                                            placeholder="Enter rating (0-5)"
                                             className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
                                         />
                                     </div>

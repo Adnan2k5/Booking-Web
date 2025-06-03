@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Search, Filter, Download, ChevronDown, Eye, Star, MapPin, Users, Check, XCircle } from 'lucide-react'
 import { Button } from "../../../components/ui/button"
@@ -24,19 +24,44 @@ import {
 import { toast } from "sonner"
 import { useHotels } from '../../../hooks/useHotel'
 import { approve, reject } from "../../../Api/hotel.api"
+import { fetchLocations } from "../../../Api/location.api"
 
 export default function HotelsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [minRating, setMinRating] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
   const [page, setPage] = useState(1);
-  const limit = 10;
-
-  const { hotels, isLoading, totalPages } = useHotels({
+  const [locations, setLocations] = useState([]);
+  const limit = 10;  const { hotels, isLoading, totalPages } = useHotels({
     search: searchTerm,
     page,
     limit,
     status: statusFilter,
+    location: locationFilter || null,
+    minPrice: minPrice || null,
+    maxPrice: maxPrice || null,
+    minRating: minRating || null,
+    sortBy,
+    sortOrder,
   });
+
+  // Fetch locations on component mount
+  useEffect(() => {
+    const getLocations = async () => {
+      try {
+        const res = await fetchLocations();
+        setLocations(res.data || []);
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+      }
+    };
+    getLocations();
+  }, []);
 
   const [selectedHotel, setSelectedHotel] = useState(null)
   const [showHotelDetails, setShowHotelDetails] = useState(false)
@@ -125,12 +150,81 @@ export default function HotelsPage() {
                 <DropdownMenuItem onClick={() => setStatusFilter("approved")}>Approved Hotels</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setStatusFilter("rejected")}>Rejected Hotels</DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button variant="outline" size="sm">
+            </DropdownMenu>            <Button variant="outline" size="sm">
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
+          </div>
+        </div>        {/* Enhanced Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-muted/50 rounded-lg">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Location</label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  {locationFilter ? locations.find(loc => loc._id === locationFilter)?.name || "Select location" : "All Locations"}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[200px]">
+                <DropdownMenuItem onClick={() => setLocationFilter("")}>All Locations</DropdownMenuItem>
+                {locations.map((location) => (
+                  <DropdownMenuItem key={location._id} onClick={() => setLocationFilter(location._id)}>
+                    {location.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Min Price</label>
+            <Input
+              type="number"
+              placeholder="Min price"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Max Price</label>
+            <Input
+              type="number"
+              placeholder="Max price"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Min Rating</label>
+            <Input
+              type="number"
+              min="0"
+              max="5"
+              step="0.1"
+              placeholder="Min rating"
+              value={minRating}
+              onChange={(e) => setMinRating(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Sort By</label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  {sortBy === 'createdAt' && 'Date Created'}
+                  {sortBy === 'pricePerNight' && 'Price per Night'}
+                  {sortBy === 'rating' && 'Rating'}
+                  {sortBy === 'name' && 'Name'}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px]">
+                <DropdownMenuItem onClick={() => setSortBy("createdAt")}>Date Created</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("pricePerNight")}>Price per Night</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("rating")}>Rating</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("name")}>Name</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -138,24 +232,22 @@ export default function HotelsPage() {
           <Card>
             <CardContent className="p-0">
               <Table>
-                <TableHeader>
-                  <TableRow>
+                <TableHeader>                  <TableRow>
                     <TableHead>Hotel Name</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Manager</TableHead>
-
+                    <TableHead>Price/Night</TableHead>
+                    <TableHead>Rating</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {isLoading ? (
+                <TableBody>                  {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={6}>Loading...</TableCell>
-                    </TableRow>
-                  ) : hotels.length === 0 ? (
+                      <TableCell colSpan={7}>Loading...</TableCell>
+                    </TableRow>) : hotels.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6}>No hotels found.</TableCell>
+                      <TableCell colSpan={7}>No hotels found.</TableCell>
                     </TableRow>
                   ) : (
                     hotels.map((hotel) => (
@@ -163,6 +255,13 @@ export default function HotelsPage() {
                         <TableCell className="font-medium">{hotel.name}</TableCell>
                         <TableCell>{hotel.location.name}</TableCell>
                         <TableCell>{(hotel.managerName && hotel.managerName) || '-'}</TableCell>
+                        <TableCell>${hotel.pricePerNight || hotel.price || 0}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                            <span>{hotel.rating || 0}/5</span>
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <Badge
                             variant={getStatusBadgeVariant(hotel.verified)}

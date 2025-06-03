@@ -6,6 +6,14 @@ const HotelSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    pricePerNight: {
+      type: Number,
+      required: true,
+    },
+    rating: {
+      type: Number,
+      default: 0,
+    },
     location: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Location",
