@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Search, Filter, Download, ChevronDown, Eye, Star, MapPin, Users, Check, XCircle } from 'lucide-react'
 import { Button } from "../../../components/ui/button"
@@ -24,28 +24,44 @@ import {
 import { toast } from "sonner"
 import { useHotels } from '../../../hooks/useHotel'
 import { approve, reject } from "../../../Api/hotel.api"
+import { fetchLocations } from "../../../Api/location.api"
 
 export default function HotelsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [minRating, setMinRating] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
   const [page, setPage] = useState(1);
-  const limit = 10;
-  const { hotels, isLoading, totalPages } = useHotels({
+  const [locations, setLocations] = useState([]);
+  const limit = 10;  const { hotels, isLoading, totalPages } = useHotels({
     search: searchTerm,
     page,
     limit,
     status: statusFilter,
+    location: locationFilter || null,
     minPrice: minPrice || null,
     maxPrice: maxPrice || null,
     minRating: minRating || null,
     sortBy,
     sortOrder,
   });
+
+  // Fetch locations on component mount
+  useEffect(() => {
+    const getLocations = async () => {
+      try {
+        const res = await fetchLocations();
+        setLocations(res.data || []);
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+      }
+    };
+    getLocations();
+  }, []);
 
   const [selectedHotel, setSelectedHotel] = useState(null)
   const [showHotelDetails, setShowHotelDetails] = useState(false)
@@ -139,10 +155,27 @@ export default function HotelsPage() {
               Export
             </Button>
           </div>
-        </div>
-
-        {/* Enhanced Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+        </div>        {/* Enhanced Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-muted/50 rounded-lg">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Location</label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  {locationFilter ? locations.find(loc => loc._id === locationFilter)?.name || "Select location" : "All Locations"}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[200px]">
+                <DropdownMenuItem onClick={() => setLocationFilter("")}>All Locations</DropdownMenuItem>
+                {locations.map((location) => (
+                  <DropdownMenuItem key={location._id} onClick={() => setLocationFilter(location._id)}>
+                    {location.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Min Price</label>
             <Input

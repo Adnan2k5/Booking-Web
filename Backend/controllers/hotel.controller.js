@@ -150,6 +150,7 @@ export const getHotel = asyncHandler(async (req, res) => {
     page = 1, 
     limit = 10, 
     verified, 
+    location,
     minPrice, 
     maxPrice, 
     minRating, 
@@ -157,13 +158,29 @@ export const getHotel = asyncHandler(async (req, res) => {
     sortOrder = "desc" 
   } = req.query;
   
-  const query = {};
+  let query = {};
   
   if (search) {
     query.$or = [
       { name: { $regex: search, $options: "i" } },
       { location: { $regex: search, $options: "i" } },
     ];
+  }
+  
+  // Location filtering - handle both location ID and location name
+  if (location) {
+    // First, try to find location by name to get the ID
+    const { Location } = await import("../models/location.model.js");
+    const locationDoc = await Location.findOne({ 
+      name: { $regex: location, $options: "i" } 
+    });
+    
+    if (locationDoc) {
+      query.location = locationDoc._id;
+    } else {
+      // If no location found by name, try by ID (for backward compatibility)
+      query.location = location;
+    }
   }
   
   if (verified) {

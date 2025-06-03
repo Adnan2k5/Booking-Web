@@ -6,6 +6,7 @@ export function useHotels({
     page = 1, 
     limit = 10, 
     status = "all",
+    location = null,
     minPrice = null,
     maxPrice = null,
     minRating = null,
@@ -27,6 +28,7 @@ export function useHotels({
                     page, 
                     limit, 
                     status,
+                    location,
                     minPrice,
                     maxPrice,
                     minRating,
@@ -51,10 +53,9 @@ export function useHotels({
                 setTotalPages(1);
             } finally {
                 setIsLoading(false);
-            }
-        };
+            }        };
         fetchHotels();
-    }, [search, page, limit, status, minPrice, maxPrice, minRating, sortBy, sortOrder]);
+    }, [search, page, limit, status, location, minPrice, maxPrice, minRating, sortBy, sortOrder]);
 
     return { hotels, isLoading, error, total, totalPages };
 }
