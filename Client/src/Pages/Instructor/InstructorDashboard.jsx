@@ -14,9 +14,8 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, 
 import SessionCalendar from "../../components/SessionCalendar"
 import UpcomingBookingsCard from "../../components/UpcomingBookingsCard"
 import { fetchAllAdventures, getAdventure } from "../../Api/adventure.api"
+import { getInstructorSessions } from "../../Api/session.api"
 import { staggerContainer, fadeIn } from "../../assets/Animations"
-import { COLORS } from "../../assets/Animations"
-import { getInstructorById } from "../../Api/instructor.api"
 
 // Mock data for the instructor dashboard
 const mockData = {
@@ -198,18 +197,55 @@ const InstructorDashboard = () => {
     const [timeRange, setTimeRange] = useState("month")
     const [adventureTypes, setAdventureTypes] = useState([])
 
+
+    const [upcomingSessionsCount, setUpcomingSessionsCount] = useState(0)
+    const [isLoadingSessions, setIsLoadingSessions] = useState(false)
+
+    const fetchUpcomingSessions = async () => {
+        if (!user?.user?._id) return
+
+        setIsLoadingSessions(true)
+        try {
+            const res = await getInstructorSessions(user.user._id)
+            if (res.status === 200 && res.data) {
+                const sessions = res.data
+                const now = new Date()
+
+                // Count sessions that start after current time
+                const upcomingCount = sessions.filter(session => {
+                    const sessionStart = new Date(session.startTime)
+                    return sessionStart > now
+                }).length
+
+                setUpcomingSessionsCount(upcomingCount)
+            }
+        } catch (error) {
+            console.error("Error fetching sessions:", error)
+            setUpcomingSessionsCount(0)
+        } finally {
+            setIsLoadingSessions(false)
+        }
+    }
+
     useEffect(() => {
         if (!user.user) {
             toast.error("Please login to access the instructor dashboard")
             navigate("/login")
+            return
         }
-        getAdventure(user?.user?.instructor.adventure).then((res) => {
-            setAdventureTypes(res.data)
-        }).catch((err) => {
-            console.error(err)
-        });
-    }, [user, navigate])
 
+        // Check if the user has instructor data and adventure ID
+        if (user?.user?.instructor?.adventure) {
+            getAdventure(user.user.instructor.adventure).then((res) => {
+                setAdventureTypes(res.data)
+            }).catch((err) => {
+                toast.error("Failed to load adventure data")
+            });
+        } else {
+            toast.error("No adventure ID found for instructor")
+        }
+        fetchUpcomingSessions()
+    }, [user, navigate])
 
     return (
         <InstructorLayout>
@@ -306,7 +342,9 @@ const InstructorDashboard = () => {
                                         <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
                                     </CardHeader>
                                     <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
-                                        <div className="text-lg sm:text-xl lg:text-2xl font-bold">{mockData.instructor.upcomingSessions}</div>
+                                        <div className="text-lg sm:text-xl lg:text-2xl font-bold">
+                                            {isLoadingSessions ? "..." : upcomingSessionsCount}
+                                        </div>
                                         <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
                                             <span className="text-blue-500">{t("instructor.scheduled")}</span>
                                             <span>•</span>

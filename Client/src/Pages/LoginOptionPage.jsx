@@ -6,17 +6,26 @@ import { useNavigate } from "react-router-dom"
 import { ArrowRight } from 'lucide-react'
 import { useTranslation } from "react-i18next"
 import { Nav_Landing } from "../components/Nav_Landing"
+import ReactPlayer from "react-player"
 
 export default function LoginOptionsPage() {
     const navigate = useNavigate()
     const { t } = useTranslation()
     const [hoveredCard, setHoveredCard] = useState(null)
 
+    const onReady = (reactPlayer) => {
+        const internalPlayer = reactPlayer.getInternalPlayer();
+        // Tries to set quality — doesn't always work depending on YouTube
+        if (internalPlayer.setPlaybackQuality) {
+            internalPlayer.setPlaybackQuality('hd1080'); // 'small', 'medium', 'large', 'hd720', 'hd1080', 'highres'
+        }
+    };
+
     const cards = [
         {
             id: "explorer",
             title: "Explorer",
-            description: t("joinAsExplorer"),
+            description: t("Joiin As Explorer"),
             image: "/src/assets/scubadiving-min.jpg",
             path1: "/login",
             path2: "/login",
@@ -25,7 +34,7 @@ export default function LoginOptionsPage() {
         {
             id: "instructor",
             title: "Instructor",
-            description: t("joinAsInstructor"),
+            description: t("Join As Instructor"),
             image: "/src/assets/face.jpeg",
             path1: "/instructor/register",
             path2: "/login",
@@ -34,7 +43,7 @@ export default function LoginOptionsPage() {
         {
             id: "hotel",
             title: "Hotel",
-            description: t("joinAsHotel"),
+            description: t("Join As Hotel"),
             image: "/src/assets/login.jpg",
             color: "from-amber-500 to-orange-600",
             path1: "/hotel/register",
@@ -43,22 +52,42 @@ export default function LoginOptionsPage() {
     ]
 
     return (
-        <div className="min-h-screen flex flex-col relative bg-white">
+        <div className="min-h-screen flex flex-col relative ">
+            {/* Background Video - Fixed at 100vh */}
+            <div className="bg absolute top-0 left-0 w-full h-screen overflow-hidden -z-50">
+                <motion.div
+                    className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 z-10"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1.5 }}
+                />
+                <ReactPlayer
+                    url={"https://youtu.be/FfPVvtNo92s"}
+                    onReady={onReady}
+                    controls={false}
+                    loop={true}
+                    playing={true}
+                    muted={true}
+                    width="100%"
+                    height="100%"
+                />
+            </div>
+
             <Nav_Landing />
 
             <div className="flex-1 flex items-center justify-center">
                 <div className="max-w-7xl w-full px-4 py-16 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <motion.h1
-                            className="text-4xl md:text-5xl font-bold text-black mb-4"
+                            className="text-4xl md:text-5xl font-bold text-white mb-4"
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5 }}
                         >
-                            {t("chooseYourAdventure")}
+                            {t("Choose Your Account Type")}
                         </motion.h1>
                         <motion.p
-                            className="text-lg text-gray-600 max-w-2xl mx-auto"
+                            className="text-lg text-gray-300 max-w-2xl mx-auto"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.5, delay: 0.2 }}

@@ -112,6 +112,23 @@ export const UpdateEmail = async (data) => {
   }
 };
 
+export const UpdatePassword = async (data) => {
+  try {
+    const res = await axiosClient.post('/api/auth/updatePassword', data, {
+      withCredentials: true,
+    });
+    if (res.status === 200) {
+      return res;
+    } else {
+      return res.status;
+    }
+  } catch (err) {
+    if (err.response) {
+      return err;
+    }
+  }
+};
+
 export const GoogleLoginSuccess = async (response, dispatch) => {
   await axiosClient
     .post(
