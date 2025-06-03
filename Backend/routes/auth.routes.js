@@ -24,7 +24,7 @@ authRoute.post("/login", loginUser);
 authRoute.post("/verifyOtp", verifyOtp);
 authRoute.post("/resendOtp", resendOtp);
 authRoute.post("/forgotPassword", forgotPassword);
-authRoute.post("/updatePassword", updatePassword);
+authRoute.post("/updatePassword", verifyJWT, updatePassword);
 authRoute.post("/signInWithGoogle", signInWithGoogle);
 authRoute.post("/signInWithApple", signInWithApple);
 authRoute.post("/signInWithLinkedin", signInWithLinkedin);
