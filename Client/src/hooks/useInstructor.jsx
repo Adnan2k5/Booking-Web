@@ -10,7 +10,7 @@ export function useInstructors() {
     const [totalPages, setTotalPages] = useState(0);
     const limit = 10;
 
-    const fetchItems = async () => {
+    const getProfile = async () => {
         setIsLoading(true);
         try {
             const res = await getAllInstructors();
@@ -27,7 +27,7 @@ export function useInstructors() {
         }
     };
     useEffect(() => {
-        fetchItems();
+        getProfile();
     }, [page]);
 
     const deleteInstructorById = async (id) => {
