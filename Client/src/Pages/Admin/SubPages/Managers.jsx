@@ -234,7 +234,7 @@ export default function Managers() {
                                         Loading...
                                     </TableCell>
                                 </TableRow>
-                            ) : users.length === 0 ? (
+                            ) : !users || users.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center">
                                         No admins found
@@ -254,15 +254,19 @@ export default function Managers() {
                                                 ))
                                             ) : (
                                                 <Badge variant="outline">Admin</Badge>
-                                            )}
+                                            )}                                        </TableCell>
+                                        <TableCell>
+                                            {user?.createdAt && new Date(user.createdAt).getTime() 
+                                                ? format(new Date(user.createdAt), 'dd/MM/yyyy') 
+                                                : 'N/A'
+                                            }
                                         </TableCell>
-                                        <TableCell> {format(new Date(user.createdAt), 'dd/MM/yyyy')}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end space-x-2">
                                                 <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user._id)}>
+                                                <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user?._id)}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
