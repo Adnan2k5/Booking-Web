@@ -45,7 +45,7 @@ export default function BookingFlow() {
   const bookingSummaryRef = useRef(null)
 
   const { sessions, instructors } = useSessions({ adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date") })
-  const { items } = useBrowse({ adventureId: sessions.length > 0 ? sessions[0]?._id : "" })
+  const { items } = useBrowse({ adventureId: sessions.length > 0 ? sessions[0]?.adventureId : "" })
 
   // Load group members from sessionStorage if available
   useEffect(() => {

@@ -6,6 +6,8 @@ import {
   getHotelById,
   HotelRegistration,
   rejectHotel,
+  updateHotelPrice,
+  updateHotelRating,
   verifyHotel,
 } from "../controllers/hotel.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -28,5 +30,7 @@ router.route("/:id").get(getHotelById);
 router.route("/").get(getHotel);
 router.route("/approve/:id").put(approveHotel);
 router.route("/reject/:id").put(rejectHotel);
+router.route("/rating/:id").put(updateHotelRating);
+router.route("/price/:id").put(updateHotelPrice);
 
 export default router;

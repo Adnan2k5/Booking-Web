@@ -1,17 +1,38 @@
 import { useState, useEffect } from "react";
 import { getHotel } from "../Api/hotel.api";
 
-export function useHotels({ search = "", page = 1, limit = 10, status = "all" }) {
+export function useHotels({ 
+    search = "", 
+    page = 1, 
+    limit = 10, 
+    status = "all",
+    minPrice = null,
+    maxPrice = null,
+    minRating = null,
+    sortBy = "createdAt",
+    sortOrder = "desc"
+}) {
     const [hotels, setHotels] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [total, setTotal] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
+    
     useEffect(() => {
         const fetchHotels = async () => {
             setIsLoading(true);
             try {
-                const res = await getHotel({ search, page, limit, status });
+                const res = await getHotel({ 
+                    search, 
+                    page, 
+                    limit, 
+                    status,
+                    minPrice,
+                    maxPrice,
+                    minRating,
+                    sortBy,
+                    sortOrder
+                });
                 if (res && res.data) {
                     let hotelsData = res.data.hotels || [];
                     setHotels(hotelsData);
@@ -33,7 +54,7 @@ export function useHotels({ search = "", page = 1, limit = 10, status = "all" })
             }
         };
         fetchHotels();
-    }, [search, page, limit, status]);
+    }, [search, page, limit, status, minPrice, maxPrice, minRating, sortBy, sortOrder]);
 
     return { hotels, isLoading, error, total, totalPages };
 }

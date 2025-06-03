@@ -53,6 +53,8 @@ export const HotelRegistration = asyncHandler(async (req, res) => {
     phone,
     category,
     price,
+    pricePerNight,
+    rating,
     website,
     socials,
     managerName,
@@ -100,7 +102,6 @@ export const HotelRegistration = asyncHandler(async (req, res) => {
     role: "hotel",
     verified: true,
   });
-
   // Create hotel
   const hotel = await Hotel.create({
     name,
@@ -112,6 +113,8 @@ export const HotelRegistration = asyncHandler(async (req, res) => {
     noRoom: Number(rooms),
     description,
     price: price,
+    pricePerNight: pricePerNight ? Number(pricePerNight) : price, // Use pricePerNight if provided, otherwise fallback to price
+    rating: rating ? Number(rating) : 0, // Use provided rating or default to 0
     amenities: Array.isArray(amenities) ? amenities : [amenities],
     socials: Array.isArray(socials) ? socials : [socials],
     logo: profileImageUrl,
@@ -142,21 +145,51 @@ export const getHotelById = asyncHandler(async (req, res) => {
 });
 
 export const getHotel = asyncHandler(async (req, res) => {
-  const { search = "", page = 1, limit = 10, verified } = req.query;
+  const { 
+    search = "", 
+    page = 1, 
+    limit = 10, 
+    verified, 
+    minPrice, 
+    maxPrice, 
+    minRating, 
+    sortBy = "createdAt", 
+    sortOrder = "desc" 
+  } = req.query;
+  
   const query = {};
+  
   if (search) {
     query.$or = [
       { name: { $regex: search, $options: "i" } },
       { location: { $regex: search, $options: "i" } },
     ];
   }
+  
   if (verified) {
     query.verified = verified;
   }
+  
+  // Price filtering
+  if (minPrice || maxPrice) {
+    query.pricePerNight = {};
+    if (minPrice) query.pricePerNight.$gte = Number(minPrice);
+    if (maxPrice) query.pricePerNight.$lte = Number(maxPrice);
+  }
+  
+  // Rating filtering
+  if (minRating) {
+    query.rating = { $gte: Number(minRating) };
+  }
+  
   const skip = (parseInt(page) - 1) * parseInt(limit);
+  
+  // Sorting
+  const sortOptions = {};
+  sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
 
   const hotels = await Hotel.find(query)
-    .sort({ createdAt: -1 })
+    .sort(sortOptions)
     .skip(skip)
     .limit(parseInt(limit))
     .populate("owner", "name email")
@@ -199,4 +232,50 @@ export const rejectHotel = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json(new ApiResponse(200, { hotel }, "Hotel rejected successfully"));
+});
+
+export const updateHotelRating = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { rating } = req.body;
+
+  if (!rating || rating < 0 || rating > 5) {
+    throw new ApiError(400, "Rating must be between 0 and 5");
+  }
+
+  const hotel = await Hotel.findByIdAndUpdate(
+    id,
+    { rating: Number(rating) },
+    { new: true }
+  );
+
+  if (!hotel) {
+    throw new ApiError(404, "Hotel not found");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, { hotel }, "Hotel rating updated successfully"));
+});
+
+export const updateHotelPrice = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { pricePerNight, price } = req.body;
+
+  const updateData = {};
+  if (pricePerNight) updateData.pricePerNight = Number(pricePerNight);
+  if (price) updateData.price = Number(price);
+
+  if (Object.keys(updateData).length === 0) {
+    throw new ApiError(400, "Please provide pricePerNight or price to update");
+  }
+
+  const hotel = await Hotel.findByIdAndUpdate(id, updateData, { new: true });
+
+  if (!hotel) {
+    throw new ApiError(404, "Hotel not found");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, { hotel }, "Hotel price updated successfully"));
 });
