@@ -1,18 +1,30 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { useNavigate } from "react-router-dom"
-import { CheckCircle, ArrowLeft, Calendar, MapPin } from "lucide-react"
+import { useNavigate, useLocation } from "react-router-dom"
+import { CheckCircle, ArrowLeft, Calendar, MapPin, Users, ShoppingCart, Building } from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { BackgroundElems } from "./BackgroundElems"
 
 export default function Confirmation() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [bookingData, setBookingData] = useState(null)
 
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [])
+    
+    // Get booking data from navigation state
+    if (location.state) {
+      setBookingData(location.state)
+    }
+  }, [location.state])
+
+  // Generate a mock booking reference if not available
+  const generateBookingRef = () => {
+    return `ADV-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-100 to-indigo-100 p-4 sm:p-6 relative overflow-hidden">
@@ -45,39 +57,117 @@ export default function Confirmation() {
             className="mx-auto mb-6 text-green-500"
           >
             <CheckCircle size={80} className="mx-auto" />
-          </motion.div>
-
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Booking Successful!</h2>
+          </motion.div>          <h2 className="text-2xl font-bold text-gray-800 mb-4">Booking Successful!</h2>
           <p className="text-gray-600 mb-8">
-            Your adventure has been booked successfully. We've sent a confirmation email with all the details.
-          </p>
-
-          <div className="bg-blue-50 rounded-xl p-6 mb-8">
+            {bookingData ? 
+              `Your ${bookingData.adventure?.name || 'adventure'} has been booked successfully. We've sent a confirmation email with all the details.` :
+              'Your adventure has been booked successfully. We\'ve sent a confirmation email with all the details.'
+            }
+          </p><div className="bg-blue-50 rounded-xl p-6 mb-8">
             <h3 className="font-bold text-gray-800 mb-4">Booking Details</h3>
             <div className="space-y-3 text-left">
-              <div className="flex items-start gap-3">
-                <Calendar className="text-blue-600 mt-0.5" size={18} />
-                <div>
-                  <p className="font-medium text-gray-800">Mountain Hiking Expedition</p>
-                  <p className="text-sm text-gray-500">June 15, 2023 at 9:00 AM</p>
+              {/* Adventure Details */}
+              {bookingData?.adventure && (
+                <div className="flex items-start gap-3">
+                  <Calendar className="text-blue-600 mt-0.5" size={18} />
+                  <div>
+                    <p className="font-medium text-gray-800">{bookingData.adventure.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {bookingData.adventure.date ? new Date(bookingData.adventure.date).toLocaleDateString() : 'Date TBD'} 
+                      {bookingData.adventure.time && ` at ${bookingData.adventure.time}`}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <MapPin className="text-blue-600 mt-0.5" size={18} />
-                <div>
-                  <p className="font-medium text-gray-800">Meeting Point</p>
-                  <p className="text-sm text-gray-500">Alpine Mountains Visitor Center</p>
+              )}
+              
+              {/* Location Details */}
+              {bookingData?.adventure?.location && (
+                <div className="flex items-start gap-3">
+                  <MapPin className="text-blue-600 mt-0.5" size={18} />
+                  <div>
+                    <p className="font-medium text-gray-800">Location</p>
+                    <p className="text-sm text-gray-500">
+                      {Array.isArray(bookingData.adventure.location) 
+                        ? bookingData.adventure.location[0]?.name || 'Location TBD'
+                        : bookingData.adventure.location}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Instructor Details */}
+              {bookingData?.selectedInstructor && (
+                <div className="flex items-start gap-3">
+                  <Users className="text-blue-600 mt-0.5" size={18} />
+                  <div>
+                    <p className="font-medium text-gray-800">Instructor</p>
+                    <p className="text-sm text-gray-500">
+                      {bookingData.selectedInstructor.instructorId?.name || bookingData.selectedInstructor.name}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Group Size */}
+              {bookingData?.groupMembers && bookingData.groupMembers.length > 0 && (
+                <div className="flex items-start gap-3">
+                  <Users className="text-blue-600 mt-0.5" size={18} />
+                  <div>
+                    <p className="font-medium text-gray-800">Group Size</p>
+                    <p className="text-sm text-gray-500">
+                      {bookingData.groupMembers.length + 1} people
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Items Booked */}
+              {bookingData?.cartItems && bookingData.cartItems.length > 0 && (
+                <div className="flex items-start gap-3">
+                  <ShoppingCart className="text-blue-600 mt-0.5" size={18} />
+                  <div>
+                    <p className="font-medium text-gray-800">Items Booked</p>
+                    <p className="text-sm text-gray-500">
+                      {bookingData.cartItems.length} items selected
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Hotel Booking */}
+              {bookingData?.selectedHotel && (
+                <div className="flex items-start gap-3">
+                  <Building className="text-blue-600 mt-0.5" size={18} />
+                  <div>
+                    <p className="font-medium text-gray-800">Accommodation</p>
+                    <p className="text-sm text-gray-500">Hotel booking confirmed</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Booking Reference */}
               <div className="flex items-start gap-3">
                 <div className="w-[18px] h-[18px] rounded-full bg-blue-600 flex items-center justify-center text-white text-xs mt-0.5">
                   #
                 </div>
                 <div>
                   <p className="font-medium text-gray-800">Booking Reference</p>
-                  <p className="text-sm text-gray-500">ADV-2023-06789</p>
+                  <p className="text-sm text-gray-500">{generateBookingRef()}</p>
                 </div>
               </div>
+
+              {/* Total Amount */}
+              {bookingData?.totalAmount && (
+                <div className="flex items-start gap-3 pt-2 border-t border-blue-200">
+                  <div className="w-[18px] h-[18px] rounded-full bg-green-600 flex items-center justify-center text-white text-xs mt-0.5">
+                    $
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800">Total Amount</p>
+                    <p className="text-sm text-gray-500">${bookingData.totalAmount.toFixed(2)}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

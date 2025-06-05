@@ -7,6 +7,14 @@ export const createBooking = async (name) => {
   return res;
 };
 
+// New cart-independent item booking
+export const createDirectItemBooking = async (bookingData) => {
+  const res = await axiosClient.post('/api/itemBooking/create-direct', bookingData, {
+    withCredentials: true,
+  });
+  return res;
+};
+
 export const createHotelBooking = async (bookingData) => {
   const res = await axiosClient.post('/api/hotelBooking/create', bookingData, {
     withCredentials: true,

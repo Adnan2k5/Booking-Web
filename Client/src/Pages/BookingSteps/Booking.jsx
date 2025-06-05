@@ -172,16 +172,13 @@ export default function BookingFlow() {
       }, 300) // Small delay to allow the UI to update
     }
   }
-
   const handleNext = () => {
     if (currentStep < 3) {
       setCurrentStep((prev) => prev + 1)
       // Scroll to top when changing steps
       window.scrollTo({ top: 0, behavior: "smooth" })
-    } else {
-      // Proceed to payment/confirmation
-      navigate("/confirmation")
     }
+    // For step 3, let the BookingSummary component handle the booking
   }
 
   const handleSkip = () => {
@@ -477,9 +474,7 @@ export default function BookingFlow() {
             className="bg-white/50 backdrop-blur-sm border-white/50 hover:bg-white/70"
           >
             Back
-          </Button>
-
-          <div className="flex gap-3">
+          </Button>          <div className="flex gap-3">
             {currentStep < 3 && (
               <Button
                 variant="outline"
@@ -490,13 +485,15 @@ export default function BookingFlow() {
               </Button>
             )}
 
-            <Button
-              onClick={handleNext}
-              className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white gap-2"
-            >
-              {currentStep === 3 ? "Proceed to Payment" : "Next"}
-              <ChevronRight size={16} />
-            </Button>
+            {currentStep < 3 && (
+              <Button
+                onClick={handleNext}
+                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white gap-2"
+              >
+                Next
+                <ChevronRight size={16} />
+              </Button>
+            )}
           </div>
         </div>
       </div>
