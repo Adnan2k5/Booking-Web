@@ -1,9 +1,11 @@
-import React from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
 import { Button } from "../../components/ui/button"
-import { MapPin, Calendar, User, Star } from "lucide-react"
-export const UserBookings = () => {
+import { Calendar, MapPin, Star, User } from "lucide-react"
+import UserLayout from "./UserLayout"
+
+
+const UserBookings = () => {
     const mockBookings = [
         {
             id: "B-1234",
@@ -99,5 +101,27 @@ export const UserBookings = () => {
                 </Card>
             ))}
         </div>
+    )
+}
+
+
+export default function UserBookingsPage() {
+    return (
+        <UserLayout>
+            <div className="min-h-screen">
+                <div className="max-w-7xl mx-auto">
+                    {/* Header */}
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+                        <div>
+                            <h1 className="text-3xl font-bold text-black">My Bookings</h1>
+                            <p className="text-gray-600">Manage your adventure bookings</p>
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <UserBookings />
+                </div>
+            </div>
+        </UserLayout>
     )
 }
