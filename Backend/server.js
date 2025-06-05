@@ -24,6 +24,8 @@ import adminRouter from "./routes/admin.routes.js";
 import cartRouter from "./routes/cart.routes.js";
 import landingRouter from "./routes/landing.routes.js";
 import itemBookingRouter from "./routes/itemBooking.routes.js";
+import hotelBookingRouter from './routes/hotelBooking.routes.js';
+import sessionBookingRouter from './routes/sessionBooking.routes.js';
 import friendRouter from "./routes/friend.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
@@ -72,6 +74,8 @@ app.use("/api/cart", cartRouter);
 app.use("/api/friends", friendRouter);
 app.use("/api/itemBooking", itemBookingRouter);
 app.use("/api/events", landingRouter);
+app.use('/api/hotelBooking', hotelBookingRouter);
+app.use('/api/sessionBooking', sessionBookingRouter);
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {

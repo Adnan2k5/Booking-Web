@@ -65,9 +65,15 @@ export default function DateRangePicker({ startDate, endDate, onChange, classNam
         } else {
             setMonth(month + 1)
         }
-    }
-
+    }   
     const handleDateClick = (date) => {
+        // Prevent selecting past dates
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        if (date < today) {
+            return
+        }
+
         if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
             // Start new selection
             setSelectedStartDate(date)
@@ -128,27 +134,31 @@ export default function DateRangePicker({ startDate, endDate, onChange, classNam
         // Add empty cells for days before the first day of the month
         for (let i = 0; i < firstDay; i++) {
             days.push(<div key={`empty-${i}`} className="h-9 w-9"></div>)
-        }
-
-        // Add days of the month
+        }        // Add days of the month
         for (let i = 1; i <= daysInMonth; i++) {
             const date = new Date(year, month, i)
             const isToday = new Date().toDateString() === date.toDateString()
             const isStart = isStartDate(date)
             const isEnd = isEndDate(date)
             const isInRange = isDateInRange(date)
+            
+            // Check if date is in the past
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            const isPastDate = date < today
 
             days.push(
                 <div
                     key={i}
-                    className={`h-9 w-9 flex items-center justify-center rounded-md cursor-pointer text-sm
+                    className={`h-9 w-9 flex items-center justify-center rounded-md text-sm
+            ${isPastDate ? "text-gray-300 cursor-not-allowed" : "cursor-pointer"}
             ${isToday ? "border border-gray-300" : ""}
             ${isStart || isEnd ? "bg-primary text-white" : ""}
             ${isInRange ? "bg-primary/20" : ""}
-            ${!isStart && !isEnd && !isInRange ? "hover:bg-gray-100" : ""}
+            ${!isStart && !isEnd && !isInRange && !isPastDate ? "hover:bg-gray-100" : ""}
           `}
-                    onClick={() => handleDateClick(date)}
-                    onMouseEnter={() => handleMouseEnter(date)}
+                    onClick={() => !isPastDate && handleDateClick(date)}
+                    onMouseEnter={() => !isPastDate && handleMouseEnter(date)}
                     onMouseLeave={handleMouseLeave}
                 >
                     {i}
@@ -169,21 +179,13 @@ export default function DateRangePicker({ startDate, endDate, onChange, classNam
         if (!selectedEndDate) return `From ${formatDate(selectedStartDate)}`
 
         return `${formatDate(selectedStartDate)} - ${formatDate(selectedEndDate)}`
-    }
-
-    // Calculate duration in months
-    const calculateDurationInMonths = () => {
+    }    // Calculate duration in nights
+    const calculateDurationInNights = () => {
         if (!selectedStartDate || !selectedEndDate) return 0
 
-        let months = (selectedEndDate.getFullYear() - selectedStartDate.getFullYear()) * 12
-        months += selectedEndDate.getMonth() - selectedStartDate.getMonth()
-
-        // If end date day is greater than or equal to start date day, add 1 more month
-        if (selectedEndDate.getDate() >= selectedStartDate.getDate()) {
-            months += 1
-        }
-
-        return Math.max(1, months) // Minimum 1 month
+        const diffTime = Math.abs(selectedEndDate - selectedStartDate)
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        return Math.max(1, diffDays) // Minimum 1 night
     }
 
     return (
@@ -216,15 +218,14 @@ export default function DateRangePicker({ startDate, endDate, onChange, classNam
                                 </div>
                             ))}
                         </div>
-                        <div className="grid grid-cols-7 gap-1">{renderCalendar()}</div>
-                        {selectedStartDate && (
+                        <div className="grid grid-cols-7 gap-1">{renderCalendar()}</div>                        {selectedStartDate && (
                             <div className="mt-3 text-xs text-muted-foreground">
                                 {selectedEndDate ? (
                                     <span>
-                                        Duration: {calculateDurationInMonths()} {calculateDurationInMonths() === 1 ? "month" : "months"}
+                                        Duration: {calculateDurationInNights()} {calculateDurationInNights() === 1 ? "night" : "nights"}
                                     </span>
                                 ) : (
-                                    <span>Select end date</span>
+                                    <span>Select check-out date</span>
                                 )}
                             </div>
                         )}

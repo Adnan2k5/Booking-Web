@@ -4,6 +4,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Button } from "../../components/ui/button"
 import { Separator } from "../../components/ui/separator"
 import { useNavigate } from "react-router-dom"
+import { useState } from "react"
+import { toast } from "sonner"
+import { createSessionBooking, createHotelBooking, createBooking, createDirectItemBooking } from "../../Api/booking.api"
 
 export const BookingSummary = ({
     user,
@@ -15,15 +18,132 @@ export const BookingSummary = ({
     selectedHotel,
     mockHotels,
     calculateTotal,
+    checkInDate,
+    checkOutDate,
+    calculateNights,
 }) => {
     const { t } = useTranslation()
     const navigate = useNavigate()
+
+    const [isBooking, setIsBooking] = useState(false)
+
     const params = new URLSearchParams(window.location.search)
     const date = params.get("session_date");
 
     const sessionDate = date ? new Date(date).toLocaleDateString() : "Not specified";
 
 
+
+
+    const handleCompleteBooking = async () => {
+        if (isBooking) return;
+        setIsBooking(true);
+
+        const bookingId = toast.loading("Creating your booking...");
+        
+        try {
+            const bookingResults = [];
+            
+            // 1. Create Session Booking (for adventure/instructor)
+            if (selectedInstructor) {
+                const sessionBookingData = {
+                    session: selectedInstructor._id,
+                    amount: (selectedInstructor.price || 0) + (groupMembers.length * 30),
+                    transactionId: `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    modeOfPayment: "card"
+                };
+
+                console.log("Creating session booking:", sessionBookingData);
+                const sessionResult = await createSessionBooking(sessionBookingData);
+                bookingResults.push({ type: 'session', result: sessionResult });
+            }            // 2. Create Item Booking (for cart items) - Direct approach without cart
+            if (cartItems.length > 0) {
+                console.log("Creating direct item booking with items:", cartItems);
+                
+                // Calculate total amount for items
+                const itemsTotal = cartItems.reduce((total, item) => {
+                    const itemPrice = item.price || 0;
+                    const quantity = item.quantity || 1;
+                    
+                    if (item.purchased) {
+                        return total + (itemPrice * quantity);
+                    } else {
+                        // For rental items, calculate based on rental period
+                        const days = item.endDate && item.startDate 
+                            ? Math.ceil((new Date(item.endDate) - new Date(item.startDate)) / (1000 * 60 * 60 * 24))
+                            : 1;
+                        return total + (itemPrice * quantity * days);
+                    }
+                }, 0);
+
+                // Format items for direct booking API
+                const formattedItems = cartItems.map(item => ({
+                    item: item._id || item.id,
+                    quantity: item.quantity || 1,
+                    purchased: item.purchased || false,
+                    startDate: item.startDate || null,
+                    endDate: item.endDate || null
+                }));
+
+                const itemBookingData = {
+                    items: formattedItems,
+                    totalAmount: itemsTotal
+                };
+
+                console.log("Direct item booking data:", itemBookingData);
+                const itemResult = await createDirectItemBooking(itemBookingData);
+                bookingResults.push({ type: 'items', result: itemResult });
+            }
+
+            // 3. Create Hotel Booking (for accommodation)
+            if (selectedHotel && checkInDate && checkOutDate) {
+                const hotel = mockHotels.find(h => h._id === selectedHotel || h.id === selectedHotel);
+                const nights = calculateNights();
+                const hotelAmount = (hotel?.pricePerNight || hotel?.price || 0) * nights;
+
+                const hotelBookingData = {
+                    hotels: [{
+                        hotel: selectedHotel,
+                        checkInDate: checkInDate.toISOString(),
+                        checkOutDate: checkOutDate.toISOString(),
+                        nights: nights,
+                        pricePerNight: hotel?.pricePerNight || hotel?.price || 0
+                    }],
+                    amount: hotelAmount,
+                    transactionId: `hotel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    modeOfPayment: "card"
+                };
+
+                console.log("Creating hotel booking:", hotelBookingData);
+                const hotelResult = await createHotelBooking(hotelBookingData);
+                bookingResults.push({ type: 'hotel', result: hotelResult });
+            }
+
+            // Success handling
+            toast.success("Booking created successfully!", { id: bookingId });
+            
+            console.log("All bookings completed:", bookingResults);
+            
+            // Navigate to confirmation page with booking details
+            navigate("/confirmation", { 
+                state: { 
+                    bookingResults,
+                    totalAmount: calculateTotal(),
+                    adventure,
+                    selectedInstructor,
+                    selectedHotel,
+                    cartItems,
+                    groupMembers
+                }
+            });
+
+        } catch (error) {
+            console.error("Booking error:", error);
+            toast.error(`Booking failed: ${error.message || error}`, { id: bookingId });
+        } finally {
+            setIsBooking(false);
+        }
+    };
 
     return (
         <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-xl mb-8 border border-white/50">
@@ -196,13 +316,19 @@ export const BookingSummary = ({
                                         alt={mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.name}
                                         className="w-full h-full object-cover"
                                     />
-                                </div>
-                                <div className="flex-1">
+                                </div>                                <div className="flex-1">
                                     <p className="font-medium text-gray-800">{mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.name}</p>
                                     <div className="flex items-center gap-2 text-sm text-gray-500">
                                         <MapPin size={14} />
                                         <span>{mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.location?.name || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.location || "Location not specified"}</span>
                                     </div>
+                                    {checkInDate && checkOutDate && (
+                                        <div className="text-sm text-gray-600 mt-1">
+                                            <p>Check-in: {formatDate(checkInDate)}</p>
+                                            <p>Check-out: {formatDate(checkOutDate)}</p>
+                                            <p className="font-medium">{calculateNights()} {calculateNights() === 1 ? "night" : "nights"}</p>
+                                        </div>
+                                    )}
                                     <div className="flex items-center gap-1 mt-1">
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             <Star key={star} className={`w-3 h-3 ${star <= (mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.rating || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
@@ -212,9 +338,14 @@ export const BookingSummary = ({
                                         </span>
                                     </div>
                                 </div>
-                                <div className="font-medium text-blue-600">
-                                    ${mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.price}
-                                    <span className="text-xs font-normal text-gray-500">/night</span>
+                                <div className="font-medium text-blue-600 text-right">
+                                    <div>
+                                        ${(mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.pricePerNight || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.price || 0) * calculateNights()}
+                                        <span className="text-xs font-normal text-gray-500 block">total</span>
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                        ${mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.pricePerNight || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.price || 0}/night
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -245,12 +376,12 @@ export const BookingSummary = ({
                                             .toFixed(2)}
                                     </span>
                                 </div>
-                            )}
-
-                            {selectedHotel && (
+                            )}                            {selectedHotel && (
                                 <div className="flex justify-between items-center">
-                                    <span>{t("hotel")}</span>
-                                    <span>${mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.price}</span>
+                                    <span>
+                                        {t("hotel")} {checkInDate && checkOutDate && `(${calculateNights()} ${calculateNights() === 1 ? "night" : "nights"})`}
+                                    </span>
+                                    <span>${(mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.pricePerNight || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.price || 0) * calculateNights()}</span>
                                 </div>
                             )}
 
@@ -278,13 +409,12 @@ export const BookingSummary = ({
                         <div className="flex justify-between items-center text-xl font-bold">
                             <span>{t("total")}</span>
                             <span>${calculateTotal().toFixed(2)}</span>
-                        </div>
-
-                        <Button
-                            onClick={() => navigate("/confirmation")}
-                            className="w-full mt-6 bg-white text-blue-600 hover:bg-blue-50"
+                        </div>                        <Button
+                            onClick={handleCompleteBooking}
+                            disabled={isBooking}
+                            className="w-full mt-6 bg-white text-blue-600 hover:bg-blue-50 disabled:opacity-50"
                         >
-                            {t("proceedToPayment")}
+                            {isBooking ? "Creating Booking..." : t("proceedToPayment")}
                         </Button>
                     </div>
                 </div>
