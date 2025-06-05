@@ -1,5 +1,3 @@
-"use client"
-
 import { useTranslation } from "react-i18next"
 import { MapPin, Star, ClipboardCheck } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
@@ -20,29 +18,12 @@ export const BookingSummary = ({
 }) => {
     const { t } = useTranslation()
     const navigate = useNavigate()
+    const params = new URLSearchParams(window.location.search)
+    const date = params.get("session_date");
 
-    // Debug logging to check data structure
-    console.log("BookingSummary Data:", {
-        cartItems,
-        mockItems,
-        selectedHotel,
-        mockHotels,
-        selectedInstructor,
-        adventure
-    })
+    const sessionDate = date ? new Date(date).toLocaleDateString() : "Not specified";
 
-    const formatDate = (dateString) => {
-        try {
-            const date = new Date(dateString)
-            if (isNaN(date.getTime())) {
-                return "Invalid date"
-            }
-            return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-        } catch (error) {
-            console.error("Date formatting error:", error)
-            return "Invalid date"
-        }
-    }
+
 
     return (
         <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-xl mb-8 border border-white/50">
@@ -52,9 +33,7 @@ export const BookingSummary = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Left column - User and Adventure */}
                 <div>
-                    {/* User Profile */}
                     <div className="bg-blue-50 rounded-xl p-4 mb-6">
                         <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("yourProfile")}</h3>
                         <div className="flex items-center gap-4">
@@ -67,8 +46,6 @@ export const BookingSummary = ({
                             </div>
                         </div>
                     </div>
-
-                    {/* Adventure Details */}
                     <div className="bg-blue-50 rounded-xl p-4 mb-6">
                         <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("adventureDetails")}</h3>
                         <div className="flex flex-col gap-3">
@@ -85,15 +62,12 @@ export const BookingSummary = ({
                                     <div className="flex items-center gap-2 text-sm text-gray-500">
                                         <MapPin size={14} />
                                         <span>{adventure.location?.[0]?.name || adventure.location || "Location not specified"}</span>
-                                        <span className="text-gray-300">•</span>
-                                        <span>{formatDate(adventure.date)}</span>
+                                        <span className="ml-2 text-xs text-gray-400">{sessionDate}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    {/* Instructor Details (if selected) */}
                     {selectedInstructor && (
                         <div className="bg-blue-50 rounded-xl p-4">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("yourInstructor")}</h3>
@@ -280,21 +254,21 @@ export const BookingSummary = ({
                                 </div>
                             )}
 
-                            {selectedInstructor && (
+                            {selectedInstructor && groupMembers.length > 0 && (
                                 <div className="flex justify-between items-center">
                                     <span>
-                                        {t("instructor")} ({groupMembers.length + 1} {t("people")})
+                                        {t("Group Fee")} ({groupMembers.length + 1} {t("Members")})
                                     </span>
                                     <span>${(selectedInstructor.price || selectedInstructor.fee || 0) + groupMembers.length * 30}</span>
                                 </div>
                             )}
 
-                            {!selectedInstructor && groupMembers.length > 0 && (
+                            {selectedInstructor && (
                                 <div className="flex justify-between items-center">
                                     <span>
-                                        {t("groupFee")} ({groupMembers.length} {t("additionalPeople")})
+                                        {t("Platform Fee")}
                                     </span>
-                                    <span>${groupMembers.length * 30}</span>
+                                    <span>${calculateTotal() * 0.12}</span>
                                 </div>
                             )}
                         </div>
