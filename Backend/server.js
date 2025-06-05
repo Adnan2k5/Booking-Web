@@ -22,7 +22,8 @@ import hotelRouter from "./routes/hotel.routes.js";
 import categoryRoute from "./routes/category.routes.js";
 import adminRouter from "./routes/admin.routes.js";
 import cartRouter from "./routes/cart.routes.js";
-import itemBookingRouter from './routes/itemBooking.routes.js';
+import landingRouter from "./routes/landing.routes.js";
+import itemBookingRouter from "./routes/itemBooking.routes.js";
 import friendRouter from "./routes/friend.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
@@ -69,11 +70,13 @@ app.use("/api/hotel", hotelRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/friends", friendRouter);
-app.use('/api/itemBooking', itemBookingRouter);
+app.use("/api/itemBooking", itemBookingRouter);
+app.use("/api/events", landingRouter);
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);  connectDB();
+  console.log(`Server is running on port ${PORT}`);
+  connectDB();
   initCloudinary();
   ensureDefaultTerms();
   ensureDefaultDeclaration();

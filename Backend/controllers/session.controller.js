@@ -263,19 +263,22 @@ export const getAllSessions = asyncHandler(async (req, res, next) => {
   return res.status(200).json(sessions);
 });
 
-
 export const getInstructorSessions = asyncHandler(async (req, res, next) => {
   const { location, session_date, adventure } = req.query;
 
   if (!location || !session_date || !adventure) {
-    return res.status(400).json({ message: "Location, sessionDate, and adventure are required" });
+    return res
+      .status(400)
+      .json({ message: "Location, sessionDate, and adventure are required" });
   }
 
   const sessions = await Session.find({
     adventureId: adventure,
     startTime: {
       $gte: new Date(session_date),
-      $lt: new Date(new Date(session_date).setDate(new Date(session_date).getDate() + 1)),
+      $lt: new Date(
+        new Date(session_date).setDate(new Date(session_date).getDate() + 1)
+      ),
     },
   })
     .populate({
@@ -284,8 +287,9 @@ export const getInstructorSessions = asyncHandler(async (req, res, next) => {
       populate: {
         path: "instructor",
         select: "description avgReview portfolioMedias certificate languages",
-      }
-    }).select("")
+      },
+    })
+    .select("");
 
   if (!sessions || sessions.length === 0) {
     return res.status(404).json({ message: "No sessions found" });

@@ -58,6 +58,7 @@ import HotelPendingReview from "./Pages/Hotel/HotelPending"
 import Managers from "./Pages/Admin/SubPages/Managers"
 import { ItemPage } from "./Pages/Shop/ItemPage"
 import { Cart } from "./Pages/Shop/Cart"
+import EventsPage from "./Pages/Admin/SubPages/Events"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -222,6 +223,7 @@ const App = () => {
                   <Route path="/admin/declaration" element={<Dash_Declation />} />
                   <Route path="/admin/locations" element={<LocationsPage />} />
                   <Route path="/admin/manager" element={<Managers />} />
+                  <Route path="/admin/events" element={<EventsPage />} />
                 </Route>
               </Routes>
             </Suspense>
