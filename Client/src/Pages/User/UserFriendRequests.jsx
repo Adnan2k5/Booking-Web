@@ -387,9 +387,6 @@ export function UserFriendRequests() {
                                                 <p className="text-sm text-gray-500">
                                                     {friend.email}
                                                 </p>
-                                                <p className="text-xs text-gray-400">
-                                                    Friends since {formatDate(friend.friendsSince || friend.createdAt)}
-                                                </p>
                                             </div>
                                         </div>
                                         <div className="flex gap-2">

@@ -219,7 +219,12 @@
     "securitySettings": "Configuración de Seguridad",
     "manageYourSecurityPreferences": "Gestiona tus preferencias de seguridad y autenticación",
     "language": "Idioma",
-    "changePassword": "Cambiar Contraseña"
+    "changePassword": "Cambiar Contraseña",
+    "currentPasswordIncorrect": "La contraseña actual es incorrecta",
+    "nextScheduledSessions": "Tus próximas sesiones programadas",
+    "somethingWentWrong": "Algo salió mal",
+    "upcomingBookings": "Próximas Reservas",
+    "viewAllBookings": "Ver Todas las Reservas"
   },
   "landingPage": {
     "heroTitle": "Descubre Tu Próxima Aventura",
@@ -236,5 +241,18 @@
     "ctaTitle": "¿Listo para Tu Próxima Aventura?",
     "ctaDescription": "Únete a miles de aventureros que han experimentado la emoción con nosotros",
     "ctaButton": "Reservar Ahora"
-  }
+  },
+  "Choose Your Account Type": "Elige Tu Tipo de Cuenta",
+  "Joiin As Explorer": "Unirse Como Explorador",
+  "Join As Hotel": "Unirse Como Hotel",
+  "Join As Instructor": "Unirse Como Instructor",
+  "accommodation": "Alojamiento",
+  "failedToSendRequest": "Error al enviar la solicitud",
+  "friendRequestSent": "Solicitud de amistad enviada",
+  "login": "Iniciar Sesión",
+  "pleaseEnterEmail": "Por favor ingrese una dirección de correo electrónico",
+  "pleaseSelectLocationAndDate": "Por favor seleccione ubicación y fecha",
+  "searchFailed": "Búsqueda fallida. Por favor intente de nuevo.",
+  "selectAccountType": "Seleccione su tipo de cuenta para continuar",
+  "userAlreadyInGroup": "El usuario ya está en el grupo"
 }

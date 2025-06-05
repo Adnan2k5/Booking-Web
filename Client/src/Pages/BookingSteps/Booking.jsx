@@ -37,19 +37,21 @@ export default function BookingFlow() {
   const [isLoading, setIsLoading] = useState(true)
   const [adventure, setAdventure] = useState(null)
   const [isInstructorDialogOpen, setIsInstructorDialogOpen] = useState(false)
-  const [currentInstructor, setCurrentInstructor] = useState(null)  
+  const [currentInstructor, setCurrentInstructor] = useState(null)
   const [groupMembers, setGroupMembers] = useState([])
+
   const [checkInDate, setCheckInDate] = useState(null)
   const [checkOutDate, setCheckOutDate] = useState(null)
   
+
   // Get location from query params or adventure location
   const locationFilter = query.get("location") || (adventure?.location?.[0]?.name);
-  const { hotels } = useHotels({ 
-    search: "", 
-    page: 1, 
-    limit: 10, 
-    status: "all", 
-    location: locationFilter || null 
+  const { hotels } = useHotels({
+    search: "",
+    page: 1,
+    limit: 10,
+    status: "all",
+    location: locationFilter || null
   });
 
   // Ref for BookingSummary section
