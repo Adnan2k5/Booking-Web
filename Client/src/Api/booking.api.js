@@ -6,3 +6,82 @@ export const createBooking = async (name) => {
   });
   return res;
 };
+
+export const createHotelBooking = async (bookingData) => {
+  const res = await axiosClient.post('/api/hotelBooking/create', bookingData, {
+    withCredentials: true,
+  });
+  return res;
+}
+
+export const createSessionBooking = async (bookingData) => {
+  const res = await axiosClient.post('/api/sessionBooking/create', bookingData, {
+    withCredentials: true,
+  });
+  return res;
+}
+
+// Get all session bookings (admin only)
+export const getAllSessionBookings = async (queryParams = {}) => {
+  const params = new URLSearchParams(queryParams).toString();
+  const res = await axiosClient.get(`/api/sessionBooking${params ? `?${params}` : ''}`, {
+    withCredentials: true,
+  });
+  return res;
+}
+
+// Get current user's session bookings
+export const getCurrentUserSessionBookings = async (queryParams = {}) => {
+  const params = new URLSearchParams(queryParams).toString();
+  const res = await axiosClient.get(`/api/sessionBooking/my-bookings${params ? `?${params}` : ''}`, {
+    withCredentials: true,
+  });
+  return res;
+}
+
+// Get session bookings by user ID (admin only)
+export const getSessionBookingsByUserId = async (userId, queryParams = {}) => {
+  if (!userId) throw new Error('User ID is required');
+  const params = new URLSearchParams(queryParams).toString();
+  const res = await axiosClient.get(`/api/sessionBooking/user/${userId}${params ? `?${params}` : ''}`, {
+    withCredentials: true,
+  });
+  return res;
+}
+
+// Get session booking by ID
+export const getSessionBookingById = async (bookingId) => {
+  if (!bookingId) throw new Error('Booking ID is required');
+  const res = await axiosClient.get(`/api/sessionBooking/${bookingId}`, {
+    withCredentials: true,
+  });
+  return res;
+}
+
+// Update session booking status
+export const updateSessionBookingStatus = async (bookingId, status) => {
+  if (!bookingId) throw new Error('Booking ID is required');
+  if (!status) throw new Error('Status is required');
+  const res = await axiosClient.patch(`/api/sessionBooking/${bookingId}/status`, { status }, {
+    withCredentials: true,
+  });
+  return res;
+}
+
+// Cancel session booking
+export const cancelSessionBooking = async (bookingId) => {
+  if (!bookingId) throw new Error('Booking ID is required');
+  const res = await axiosClient.patch(`/api/sessionBooking/${bookingId}/cancel`, {}, {
+    withCredentials: true,
+  });
+  return res;
+}
+
+// Delete session booking (admin only)
+export const deleteSessionBooking = async (bookingId) => {
+  if (!bookingId) throw new Error('Booking ID is required');
+  const res = await axiosClient.delete(`/api/sessionBooking/${bookingId}`, {
+    withCredentials: true,
+  });
+  return res;
+}
