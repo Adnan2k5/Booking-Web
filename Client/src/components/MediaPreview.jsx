@@ -1,8 +1,4 @@
-"use client"
-
-// components/MediaPreview.jsx
-
-import { Button } from "../components/ui/button"
+import { Button } from "./ui/button"
 
 const MediaPreview = ({ mediaPreviews, onRemove, isSubmitting }) => {
   return (

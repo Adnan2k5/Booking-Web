@@ -6,8 +6,12 @@ import { ResetPass } from "./Pages/ResetPass"
 import { Loader } from "./components/Loader"
 import { AuthProvider } from "./Pages/AuthProvider"
 import { AdminRoute, InstructorRoute } from "./Auth/ProtectedRoute"
-import UserDashboard from "./Pages/User/UserDashboard"
-import UserDashboardLayout from "./components/UserDashboardLayout"
+import UserDashboardPage from "./Pages/User/UserDashboardPage"
+import UserBookingsPage from "./Pages/User/UserBookingsPage"
+import UserFriendsPage from "./Pages/User/UserFriendsPage"
+import UserTicketsPage from "./Pages/User/UserTicketsPage"
+import UserProfilePage from "./Pages/User/UserProfilePage"
+import UserSettingsPage from "./Pages/User/UserSettingsPage"
 import InstructorDashboard from "./Pages/Instructor/InstructorDashboard"
 import SessionForm from "./Pages/Instructor/SessionForm"
 import ConfirmationPage from "./Pages/ConfirmationPage/Confirmation"
@@ -58,6 +62,7 @@ import HotelPendingReview from "./Pages/Hotel/HotelPending"
 import Managers from "./Pages/Admin/SubPages/Managers"
 import { ItemPage } from "./Pages/Shop/ItemPage"
 import { Cart } from "./Pages/Shop/Cart"
+import EventsPage from "./Pages/Admin/SubPages/Events"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -100,42 +105,15 @@ const App = () => {
                 <Route path="/reset" element={<ResetPass />} />
                 <Route path="/instructor/register" element={<InstructorRegister />} />
                 <Route path="/instructor/pending-review" element={<InstructorPendingReview />} />
-                <Route path="/dashboard" element={<UserDashboard />} />
+                <Route path="/dashboard" element={<UserDashboardPage />} />
+                <Route path="/dashboard/bookings" element={<UserBookingsPage />} />
+                <Route path="/dashboard/friends" element={<UserFriendsPage />} />
+                <Route path="/dashboard/tickets" element={<UserTicketsPage />} />
+                <Route path="/dashboard/profile" element={<UserProfilePage />} />
+                <Route path="/dashboard/settings" element={<UserSettingsPage />} />
                 <Route path="/hotel" element={<Hotel />} />
                 <Route path="/hotel/register" element={<HotelRegister />} />
                 <Route path="/hotel/pending" element={<HotelPendingReview />} />
-                <Route
-                  path="/dashboard/bookings"
-                  element={
-                    <UserDashboardLayout>
-                      <UserDashboard />
-                    </UserDashboardLayout>
-                  }
-                />
-                <Route
-                  path="/dashboard/tickets"
-                  element={
-                    <UserDashboardLayout>
-                      <UserDashboard />
-                    </UserDashboardLayout>
-                  }
-                />
-                <Route
-                  path="/dashboard/profile"
-                  element={
-                    <UserDashboardLayout>
-                      <UserDashboard />
-                    </UserDashboardLayout>
-                  }
-                />
-                <Route
-                  path="/dashboard/settings"
-                  element={
-                    <UserDashboardLayout>
-                      <UserDashboard />
-                    </UserDashboardLayout>
-                  }
-                />
                 <Route
                   path="/instructor/"
                   element={
@@ -222,6 +200,7 @@ const App = () => {
                   <Route path="/admin/declaration" element={<Dash_Declation />} />
                   <Route path="/admin/locations" element={<LocationsPage />} />
                   <Route path="/admin/manager" element={<Managers />} />
+                  <Route path="/admin/events" element={<EventsPage />} />
                 </Route>
               </Routes>
             </Suspense>
