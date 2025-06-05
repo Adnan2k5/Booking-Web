@@ -106,9 +106,7 @@ export default function Managers() {
                 }
             }
         })
-    }
-
-    // Reset form
+    }    // Reset form
     const resetForm = () => {
         setAddAdminForm({
             name: "",
@@ -117,6 +115,7 @@ export default function Managers() {
             adminRoles: [],
         })
         setAddAdminError("")
+        setIsEdit(false)
     }
 
     const handleEdit = (user) => {
@@ -173,8 +172,10 @@ export default function Managers() {
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                <h2 className="text-2xl font-bold tracking-tight">Admin Management</h2>
-                <Button onClick={() => setShowAddAdmin(true)} size="sm" className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold tracking-tight">Admin Management</h2>                <Button onClick={() => {
+                    resetForm()
+                    setShowAddAdmin(true)
+                }} size="sm" className="flex items-center gap-2">
                     <UserPlus className="h-4 w-4" /> Add Admin
                 </Button>
             </div>
@@ -234,7 +235,7 @@ export default function Managers() {
                                         Loading...
                                     </TableCell>
                                 </TableRow>
-                            ) : users.length === 0 ? (
+                            ) : !users || users.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center">
                                         No admins found
@@ -254,15 +255,19 @@ export default function Managers() {
                                                 ))
                                             ) : (
                                                 <Badge variant="outline">Admin</Badge>
-                                            )}
+                                            )}                                        </TableCell>
+                                        <TableCell>
+                                            {user?.createdAt && new Date(user.createdAt).getTime() 
+                                                ? format(new Date(user.createdAt), 'dd/MM/yyyy') 
+                                                : 'N/A'
+                                            }
                                         </TableCell>
-                                        <TableCell> {format(new Date(user.createdAt), 'dd/MM/yyyy')}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end space-x-2">
                                                 <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user._id)}>
+                                                <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user?._id)}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>

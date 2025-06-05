@@ -33,12 +33,16 @@ export default function BookingFlow() {
   const [currentStep, setCurrentStep] = useState(1)
   const [cartItems, setCartItems] = useState([])
   const [selectedHotel, setSelectedHotel] = useState(null)
-  const [selectedInstructor, setSelectedInstructor] = useState(null)
+  const [selectedInstructor, setSelectedInstructor] = useState(null)  
   const [isLoading, setIsLoading] = useState(true)
   const [adventure, setAdventure] = useState(null)
   const [isInstructorDialogOpen, setIsInstructorDialogOpen] = useState(false)
   const [currentInstructor, setCurrentInstructor] = useState(null)
   const [groupMembers, setGroupMembers] = useState([])
+
+  const [checkInDate, setCheckInDate] = useState(null)
+  const [checkOutDate, setCheckOutDate] = useState(null)
+  
 
   // Get location from query params or adventure location
   const locationFilter = query.get("location") || (adventure?.location?.[0]?.name);
@@ -122,10 +126,36 @@ export default function BookingFlow() {
     setSelectedInstructor((prev) => (prev?.id === instructorId ? null : instructor))
     setIsInstructorDialogOpen(false)
   }
-
   const openInstructorDialog = (instructor) => {
     setCurrentInstructor(instructor)
     setIsInstructorDialogOpen(true)
+  }
+  // Handle date changes for hotel booking with validation
+  const handleDateChange = (startDate, endDate) => {
+    // Validate dates
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    if (startDate < today) {
+      toast.error("Check-in date cannot be in the past")
+      return
+    }
+    
+    if (endDate && endDate <= startDate) {
+      toast.error("Check-out date must be after check-in date")
+      return
+    }
+    
+    setCheckInDate(startDate)
+    setCheckOutDate(endDate)
+  }
+
+  // Calculate number of nights for hotel booking
+  const calculateNights = () => {
+    if (!checkInDate || !checkOutDate) return 1
+    const diffTime = Math.abs(checkOutDate - checkInDate)
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return Math.max(1, diffDays) // Minimum 1 night
   }
 
   // Hotel selection handler with smooth scroll to booking summary
@@ -144,16 +174,13 @@ export default function BookingFlow() {
       }, 300) // Small delay to allow the UI to update
     }
   }
-
   const handleNext = () => {
     if (currentStep < 3) {
       setCurrentStep((prev) => prev + 1)
       // Scroll to top when changing steps
       window.scrollTo({ top: 0, behavior: "smooth" })
-    } else {
-      // Proceed to payment/confirmation
-      navigate("/confirmation")
     }
+    // For step 3, let the BookingSummary component handle the booking
   }
 
   const handleSkip = () => {
@@ -173,7 +200,6 @@ export default function BookingFlow() {
       navigate(-1)
     }
   }
-
   // Calculate total price
   const calculateTotal = () => {
     const itemsPrice = cartItems.reduce((sum, item) => {
@@ -184,7 +210,14 @@ export default function BookingFlow() {
       return sum + price * item.quantity
     }, 0)
 
-    const hotelPrice = selectedHotel ? hotels.find((hotel) => hotel._id === selectedHotel)?.price || 0 : 0
+    // Calculate hotel price based on number of nights
+    let hotelPrice = 0
+    if (selectedHotel) {
+      const hotel = hotels.find((hotel) => hotel._id === selectedHotel)
+      const pricePerNight = hotel?.pricePerNight || hotel?.price || 0
+      const nights = calculateNights()
+      hotelPrice = pricePerNight * nights
+    }
 
     // Calculate instructor price
     let instructorPrice = 0
@@ -402,9 +435,16 @@ export default function BookingFlow() {
                 animate="visible"
                 exit="exit"
                 className="w-full"
-              >
-                <div className="space-y-8">
-                  <HotelSelection selectedHotel={selectedHotel} onSelectHotel={handleHotelSelect} hotels={hotels} />
+              >                <div className="space-y-8">
+                  <HotelSelection 
+                    selectedHotel={selectedHotel} 
+                    onSelectHotel={handleHotelSelect} 
+                    hotels={hotels}
+                    checkInDate={checkInDate}
+                    checkOutDate={checkOutDate}
+                    onDateChange={handleDateChange}
+                    calculateNights={calculateNights}
+                  />
 
                   <div ref={bookingSummaryRef}>
                     <BookingSummary
@@ -417,6 +457,9 @@ export default function BookingFlow() {
                       selectedHotel={selectedHotel}
                       mockHotels={hotels}
                       calculateTotal={calculateTotal}
+                      checkInDate={checkInDate}
+                      checkOutDate={checkOutDate}
+                      calculateNights={calculateNights}
                     />
                   </div>
                 </div>
@@ -433,9 +476,7 @@ export default function BookingFlow() {
             className="bg-white/50 backdrop-blur-sm border-white/50 hover:bg-white/70"
           >
             Back
-          </Button>
-
-          <div className="flex gap-3">
+          </Button>          <div className="flex gap-3">
             {currentStep < 3 && (
               <Button
                 variant="outline"
@@ -446,13 +487,15 @@ export default function BookingFlow() {
               </Button>
             )}
 
-            <Button
-              onClick={handleNext}
-              className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white gap-2"
-            >
-              {currentStep === 3 ? "Proceed to Payment" : "Next"}
-              <ChevronRight size={16} />
-            </Button>
+            {currentStep < 3 && (
+              <Button
+                onClick={handleNext}
+                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white gap-2"
+              >
+                Next
+                <ChevronRight size={16} />
+              </Button>
+            )}
           </div>
         </div>
       </div>
