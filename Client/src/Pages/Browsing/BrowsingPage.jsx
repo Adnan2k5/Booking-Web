@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { format } from "date-fns"
-import { useLocation, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { ArrowLeft, ChevronRight, MapPin } from "lucide-react"
 import { Badge } from "../../components/ui/badge"
 import { useAuth } from "../AuthProvider.jsx"
@@ -156,16 +156,17 @@ export default function BrowsingPage() {
 
       <div className="relative z-10 mx-auto max-w-7xl">
         <div className="flex justify-between items-center mb-6">
-          <motion.button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            aria-label="Go back"
-          >
-            <ArrowLeft size={18} />
-            <span className="text-sm font-medium">Back</span>
-          </motion.button>
+          <Link to={-1} className="flex items-center gap-2">
+            <motion.button
+              className="flex items-center gap-2 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              aria-label="Go back"
+            >
+              <ArrowLeft size={18} />
+              <span className="text-sm font-medium">Back</span>
+            </motion.button>
+          </Link>
 
           <motion.div
             className="flex items-center gap-3"

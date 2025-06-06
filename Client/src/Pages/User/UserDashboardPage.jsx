@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback } from "../../components/ui/avatar"
 import { Badge } from "../../components/ui/badge"
 import { Button } from "../../components/ui/button"
 import { useAuth } from "../AuthProvider"
+import { Separator } from "../../components/ui/separator"
+import { Link } from "react-router-dom"
 
 export default function UserDashboardPage() {
     const { user } = useAuth();
@@ -26,7 +28,7 @@ export default function UserDashboardPage() {
 
     return (
         <UserLayout>
-            <div className="min-h-screen bg-white p-4 sm:p-6">
+            <div className="min-h-screen  p-4 sm:p-6">
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
@@ -35,13 +37,13 @@ export default function UserDashboardPage() {
                             <p className="text-gray-600">Welcome back, {userProfile.name}</p>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            <Button variant="outline" className="flex items-center gap-2 rounded-xl border-gray-300 hover:bg-gray-50">
+                        <div className="flex px-3 items-center gap-3">
+                            <Link to="/browse" variant="outline" className="flex px-3 py-1 text-white bg-black items-center gap-2 rounded-xl  hover:bg-gray-800">
                                 <Calendar className="h-4 w-4" />
                                 Browse Adventures
-                            </Button>
+                            </Link>
 
-                            <Button className="bg-black text-white hover:bg-gray-800 rounded-xl">Shop</Button>
+                            <Link to="/shop" className="bg-black px-3 py-1 text-white hover:bg-gray-800 rounded-xl">Shop</Link>
                         </div>
                     </div>
 
@@ -113,6 +115,52 @@ export default function UserDashboardPage() {
                                 </div>
                             </CardContent>
                         </Card>
+                    </div>
+                    <div className="stats">
+                        <div className="lg:col-span-2">
+                            <Card className="rounded-2xl border-gray-200">
+                                <CardHeader>
+                                    <CardTitle>Adventure Stats</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-6">
+                                        <div>
+                                            <h4 className="font-medium mb-3">Experience Progress</h4>
+                                            <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-black rounded-full"
+                                                    style={{ width: `${progressPercentage}%` }}
+                                                ></div>
+                                            </div>
+                                            <div className="flex justify-between mt-2 text-sm">
+                                                <span>{userProfile.experience} XP</span>
+                                                <span>{userProfile.nextLevel} XP (Next Level)</span>
+                                            </div>
+                                        </div>
+
+                                        <Separator />
+
+                                        <div>
+                                            <h4 className="font-medium mb-3">Achievements</h4>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                                <div className="flex flex-col items-center p-3 bg-gray-50 rounded-2xl">
+                                                    <Award className="h-8 w-8 text-black mb-2" />
+                                                    <span className="text-sm font-medium">First Adventure</span>
+                                                </div>
+                                                <div className="flex flex-col items-center p-3 bg-gray-50 rounded-2xl">
+                                                    <Award className="h-8 w-8 text-black mb-2" />
+                                                    <span className="text-sm font-medium">Adventure Explorer</span>
+                                                </div>
+                                                <div className="flex flex-col items-center p-3 bg-gray-100 rounded-2xl opacity-50">
+                                                    <Award className="h-8 w-8 text-gray-400 mb-2" />
+                                                    <span className="text-sm font-medium">Adventure Master</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 </div>
             </div>
