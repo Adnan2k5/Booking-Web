@@ -376,39 +376,40 @@ const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 const updatePassword = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { extpassword, newpassword } = req.body;
 
-  if (email?.trim() === "" || !email || password?.trim() === "" || !password) {
-    throw new ApiError(400, "Email and Password are Required");
+  if (
+    extpassword?.trim() === "" ||
+    !extpassword ||
+    newpassword?.trim() === "" ||
+    !newpassword
+  ) {
+    throw new ApiError(400, "Current and New Password are Required");
   }
 
-  const user = await User.findOne({ email: email }).select("email");
+  console.log(req.user);
+
+  const user = await User.findById(req.user._id).select("password email");
 
   if (!user) {
     throw new ApiError(404, "User not found");
   }
 
-  const otpExist = await Otp.findOne({ userId: user._id });
+  const isMatch = await user.isPasswordCorrect(extpassword);
 
-  if (!otpExist) {
-    throw new ApiError(402, "User not Authorized");
+  if (!isMatch) {
+    throw new ApiError(400, "Current password is incorrect");
   }
 
-  if (!otpExist.verified) {
-    throw new ApiError(403, "User not verified");
-  }
-
-  user.password = password;
+  user.password = newpassword;
 
   await user.save();
-
-  await Otp.deleteMany({ userId: user._id });
 
   res.status(200).json(
     new ApiResponse(
       200,
       {
-        email: email,
+        user,
       },
       "Password Updated Successfully"
     )

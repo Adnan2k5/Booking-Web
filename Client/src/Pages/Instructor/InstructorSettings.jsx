@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { Globe, Lock } from 'lucide-react'
 import InstructorLayout from "./InstructorLayout"
-import { UpdateEmail, VerifyNewEmail, VerifyUser } from "../../Auth/UserAuth"
+import { UpdateEmail, UpdatePassword, VerifyNewEmail, VerifyUser } from "../../Auth/UserAuth"
 import { useAuth } from "../AuthProvider"
 import { Modal } from "antd"
 import { InputOTPSlot, InputOTP, InputOTPGroup } from "../../components/ui/input-otp"
@@ -29,20 +29,6 @@ const InstructorSettings = () => {
         newPassword: "",
         confirmPassword: "",
         language: "en",
-        darkMode: false,
-        emailNotifications: {
-            bookings: true,
-            reviews: true,
-            messages: true,
-            promotions: false,
-        },
-        pushNotifications: {
-            bookings: true,
-            reviews: true,
-            messages: true,
-            promotions: false,
-        },
-        twoFactorAuth: false,
     })
 
     const handleSettingChange = (section, field, value) => {
@@ -108,7 +94,7 @@ const InstructorSettings = () => {
         }
     };
 
-    const handlePasswordUpdate = (e) => {
+    const handlePasswordUpdate = async (e) => {
         e.preventDefault()
 
         if (!settings.currentPassword || !settings.newPassword || !settings.confirmPassword) {
@@ -121,17 +107,20 @@ const InstructorSettings = () => {
             return
         }
 
-        setLoading(true)
-        setTimeout(() => {
-            setSettings((prev) => ({
-                ...prev,
-                currentPassword: "",
-                newPassword: "",
-                confirmPassword: "",
-            }))
-            setLoading(false)
+        const res = await UpdatePassword({
+            extpassword: settings.currentPassword,
+            newpassword: settings.newPassword,
+        })
+
+        if (res.statusCode === 200) {
             toast.success(t("instructor.passwordUpdatedSuccessfully"))
-        }, 1000)
+        }
+        else if (res.status === 400) {
+            toast.error(t("instructor.currentPasswordIncorrect"))
+        }
+        else {
+            toast.error(t("instructor.somethingWentWrong"))
+        }
     }
 
     return (
