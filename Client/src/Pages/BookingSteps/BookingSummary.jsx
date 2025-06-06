@@ -103,8 +103,8 @@ export const BookingSummary = ({
 
                 const itemBookingData = {
                     items: formattedItems,
-                    totalAmount: itemsTotal
                 };
+
 
                 console.log("Direct item booking data:", itemBookingData);
                 const itemResult = await createDirectItemBooking(itemBookingData);

@@ -88,18 +88,29 @@ export default function BookingFlow() {
       navigate("/login")
     }
   }, [user, navigate, t])
-
-  const handleAddToCart = (itemId, isRental = false) => {
+  const handleAddToCart = (itemId, isRental = false, rentalData = null) => {
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item._id === itemId && item.rent === isRental)
-      if (existingItem) {
-        // Increment quantity if item already in cart
+      if (existingItem && !isRental) {
+        // Increment quantity if item already in cart (for purchase items only)
         return prev.map((item) =>
           item._id === itemId && item.rent === isRental ? { ...item, quantity: item.quantity + 1 } : item,
         )
       } else {
         // Add new item with quantity 1
-        return [...prev, { _id: itemId, quantity: 1, rent: isRental }]
+        const newItem = { 
+          _id: itemId, 
+          quantity: 1, 
+          rent: isRental 
+        }
+        
+        // Add rental dates if it's a rental item
+        if (isRental && rentalData) {
+          newItem.startDate = rentalData.startDate
+          newItem.endDate = rentalData.endDate
+        }
+        
+        return [...prev, newItem]
       }
     })
   }
