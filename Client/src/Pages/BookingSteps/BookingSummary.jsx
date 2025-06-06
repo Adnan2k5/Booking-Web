@@ -74,21 +74,19 @@ export const BookingSummary = ({
                             : 1;
                         return total + (itemPrice * quantity * days);
                     }
-                }, 0);
-
-                // Format items for direct booking API
+                }, 0);                // Format items for direct booking API
                 const formattedItems = cartItems.map(item => ({
                     item: item._id || item.id,
                     quantity: item.quantity || 1,
-                    purchased: item.purchased || false,
+                    purchased: !item.rent, // Convert rent property: rent=true -> purchased=false, rent=false -> purchased=true
                     startDate: item.startDate || null,
                     endDate: item.endDate || null
                 }));
 
                 const itemBookingData = {
                     items: formattedItems,
-                    totalAmount: itemsTotal
                 };
+
 
                 console.log("Direct item booking data:", itemBookingData);
                 const itemResult = await createDirectItemBooking(itemBookingData);
@@ -117,25 +115,67 @@ export const BookingSummary = ({
                 console.log("Creating hotel booking:", hotelBookingData);
                 const hotelResult = await createHotelBooking(hotelBookingData);
                 bookingResults.push({ type: 'hotel', result: hotelResult });
-            }
-
-            // Success handling
+            }            // Success handling
             toast.success("Booking created successfully!", { id: bookingId });
             
             console.log("All bookings completed:", bookingResults);
             
             // Navigate to confirmation page with booking details
-            navigate("/confirmation", { 
-                state: { 
-                    bookingResults,
-                    totalAmount: calculateTotal(),
-                    adventure,
-                    selectedInstructor,
-                    selectedHotel,
-                    cartItems,
-                    groupMembers
+            const totalAmount = calculateTotal();
+            
+            // Create serializable data for navigation state - extract only essential data
+            const serializableBookingResults = bookingResults.map(booking => ({
+                type: booking.type,
+                result: {
+                    _id: booking.result?._id || booking.result?.id,
+                    id: booking.result?.id || booking.result?._id,
+                    bookingId: booking.result?.bookingId,
+                    amount: booking.result?.amount,
+                    status: booking.result?.status,
+                    createdAt: booking.result?.createdAt,
+                    message: booking.result?.message
                 }
-            });
+            }));
+
+            const serializableState = {
+                bookingResults: serializableBookingResults,
+                totalAmount,
+                adventure: {
+                    _id: adventure._id,
+                    name: adventure.name,
+                    location: adventure.location,
+                    date: adventure.date,
+                    medias: adventure.medias,
+                    images: adventure.images,
+                    image: adventure.image
+                },
+                selectedInstructor: selectedInstructor ? {
+                    _id: selectedInstructor._id,
+                    name: selectedInstructor.name || selectedInstructor.instructorId?.name,
+                    price: selectedInstructor.price || selectedInstructor.fee,
+                    profilePicture: selectedInstructor.instructorId?.profilePicture || selectedInstructor.img || selectedInstructor.image || selectedInstructor.avatar,
+                    specialty: selectedInstructor.instructorId?.instructor?.description?.[0] || selectedInstructor.specialty || selectedInstructor.specialization || selectedInstructor.expertise
+                } : null,
+                selectedHotel: selectedHotel,
+                cartItems: cartItems.map(item => ({
+                    _id: item._id,
+                    name: item.name,
+                    quantity: item.quantity,
+                    rent: item.rent,
+                    purchased: item.purchased,
+                    price: item.price,
+                    startDate: item.startDate,
+                    endDate: item.endDate
+                })),
+                groupMembers: groupMembers.map(member => ({
+                    id: member.id,
+                    name: member.name,
+                    email: member.email,
+                    avatar: member.avatar
+                }))
+            };
+            
+            navigate("/confirmation", { state: serializableState });
 
         } catch (error) {
             console.error("Booking error:", error);

@@ -44,20 +44,20 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
   }
 
   // Check if session already has a booking (assuming one booking per session)
-  if (sessionExists.booking) {
-    throw new ApiError(400, "Session is already booked");
-  }
+  // if (sessionExists.booking) {
+  //   throw new ApiError(400, "Session is already booked");
+  // }
 
   // Check if user already has a booking for this session
-  const existingBooking = await Booking.findOne({
-    user: req.user._id,
-    session: session,
-    status: { $ne: "cancelled" }
-  });
+  // const existingBooking = await Booking.findOne({
+  //   user: req.user._id,
+  //   session: session,
+  //   status: { $ne: "cancelled" }
+  // });
 
-  if (existingBooking) {
-    throw new ApiError(400, "You have already booked this session");
-  }
+  // if (existingBooking) {
+  //   throw new ApiError(400, "You have already booked this session");
+  // }
 
   // Create the booking
   const booking = await Booking.create({

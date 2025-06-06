@@ -83,7 +83,6 @@ export default function BookingFlow() {
     fetchAdventure()
   }, [])
 
-
   useEffect(() => {
     if (!user.user) {
       toast(t("pleaseLogin"), { type: "error" })
@@ -91,17 +90,53 @@ export default function BookingFlow() {
     }
   }, [user, navigate, t])
 
-  const handleAddToCart = (itemId, isRental = false) => {
+  const handleAddToCart = (itemId, isRental = false, rentalData = null) => {
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item._id === itemId && item.rent === isRental)
       if (existingItem) {
-        // Increment quantity if item already in cart
-        return prev.map((item) =>
-          item._id === itemId && item.rent === isRental ? { ...item, quantity: item.quantity + 1 } : item,
-        )
+        // For rental items, check if dates match before incrementing quantity
+        if (isRental && rentalData) {
+          const datesMatch = existingItem.startDate && existingItem.endDate &&
+            new Date(existingItem.startDate).getTime() === new Date(rentalData.startDate).getTime() &&
+            new Date(existingItem.endDate).getTime() === new Date(rentalData.endDate).getTime()
+          
+          if (datesMatch) {
+            // Same rental period - increment quantity
+            return prev.map((item) =>
+              item._id === itemId && item.rent === isRental ? { ...item, quantity: item.quantity + 1 } : item,
+            )
+          } else {
+            // Different rental period - create new entry
+            const newItem = { 
+              _id: itemId, 
+              quantity: 1, 
+              rent: isRental,
+              startDate: rentalData.startDate,
+              endDate: rentalData.endDate
+            }
+            return [...prev, newItem]
+          }
+        } else {
+          // Purchase item - increment quantity
+          return prev.map((item) =>
+            item._id === itemId && item.rent === isRental ? { ...item, quantity: item.quantity + 1 } : item,
+          )
+        }
       } else {
         // Add new item with quantity 1
-        return [...prev, { _id: itemId, quantity: 1, rent: isRental }]
+        const newItem = { 
+          _id: itemId, 
+          quantity: 1, 
+          rent: isRental 
+        }
+        
+        // Add rental dates if it's a rental item
+        if (isRental && rentalData) {
+          newItem.startDate = rentalData.startDate
+          newItem.endDate = rentalData.endDate
+        }
+        
+        return [...prev, newItem]
       }
     })
   }
