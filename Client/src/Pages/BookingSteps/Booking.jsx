@@ -81,21 +81,45 @@ export default function BookingFlow() {
     fetchAdventure()
   }, [])
 
-
   useEffect(() => {
     if (!user.user) {
       toast(t("pleaseLogin"), { type: "error" })
       navigate("/login")
     }
   }, [user, navigate, t])
+
   const handleAddToCart = (itemId, isRental = false, rentalData = null) => {
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item._id === itemId && item.rent === isRental)
-      if (existingItem && !isRental) {
-        // Increment quantity if item already in cart (for purchase items only)
-        return prev.map((item) =>
-          item._id === itemId && item.rent === isRental ? { ...item, quantity: item.quantity + 1 } : item,
-        )
+      if (existingItem) {
+        // For rental items, check if dates match before incrementing quantity
+        if (isRental && rentalData) {
+          const datesMatch = existingItem.startDate && existingItem.endDate &&
+            new Date(existingItem.startDate).getTime() === new Date(rentalData.startDate).getTime() &&
+            new Date(existingItem.endDate).getTime() === new Date(rentalData.endDate).getTime()
+          
+          if (datesMatch) {
+            // Same rental period - increment quantity
+            return prev.map((item) =>
+              item._id === itemId && item.rent === isRental ? { ...item, quantity: item.quantity + 1 } : item,
+            )
+          } else {
+            // Different rental period - create new entry
+            const newItem = { 
+              _id: itemId, 
+              quantity: 1, 
+              rent: isRental,
+              startDate: rentalData.startDate,
+              endDate: rentalData.endDate
+            }
+            return [...prev, newItem]
+          }
+        } else {
+          // Purchase item - increment quantity
+          return prev.map((item) =>
+            item._id === itemId && item.rent === isRental ? { ...item, quantity: item.quantity + 1 } : item,
+          )
+        }
       } else {
         // Add new item with quantity 1
         const newItem = { 

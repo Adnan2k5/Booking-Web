@@ -21,26 +21,49 @@ export const createHotelBooking = asyncHandler(async (req, res) => {
 
   if (!amount || amount <= 0) {
     throw new ApiError(400, "Valid amount is required");
-  }
-
-  // Validate hotel data
+  }  // Validate hotel data and process quantities
+  const processedHotels = [];
   for (const hotelData of hotels) {
-    const { hotel, quantity, startDate, endDate } = hotelData;
+    const { hotel, quantity, startDate, endDate, checkInDate, checkOutDate, nights, pricePerNight } = hotelData;
 
     if (!hotel) {
       throw new ApiError(400, "Hotel ID is required for each hotel");
     }
 
-    if (!quantity || quantity < 1) {
-      throw new ApiError(400, "Quantity must be at least 1");
+    // Handle different frontend data structures
+    let numQuantity = 1; // Default quantity for hotel bookings is 1 room
+    let bookingStartDate, bookingEndDate;
+
+    // Check if using the old structure (quantity, startDate, endDate)
+    if (quantity !== undefined) {
+      console.log('Quantity received:', quantity, 'Type:', typeof quantity);
+      
+      if (quantity === null || quantity === '') {
+        throw new ApiError(400, "Quantity is required");
+      }
+      
+      numQuantity = Number(quantity);
+      console.log('Converted quantity:', numQuantity, 'Is NaN:', isNaN(numQuantity), 'Is Integer:', Number.isInteger(numQuantity));
+      
+      if (isNaN(numQuantity) || numQuantity < 1 || !Number.isInteger(numQuantity)) {
+        throw new ApiError(400, "Quantity must be at least 1");
+      }
+      
+      bookingStartDate = startDate;
+      bookingEndDate = endDate;
+    } else {
+      // New structure (checkInDate, checkOutDate, no quantity field)
+      bookingStartDate = checkInDate;
+      bookingEndDate = checkOutDate;
+      console.log('Using new hotel booking structure - checkInDate:', checkInDate, 'checkOutDate:', checkOutDate);
     }
 
-    if (!startDate || !endDate) {
-      throw new ApiError(400, "Start date and end date are required");
+    if (!bookingStartDate || !bookingEndDate) {
+      throw new ApiError(400, "Check-in date and check-out date are required");
     }
 
-    if (new Date(startDate) >= new Date(endDate)) {
-      throw new ApiError(400, "Start date must be before end date");
+    if (new Date(bookingStartDate) >= new Date(bookingEndDate)) {
+      throw new ApiError(400, "Check-out date must be after check-in date");
     }
 
     // Check if hotel exists
@@ -52,13 +75,19 @@ export const createHotelBooking = asyncHandler(async (req, res) => {
     // Check if hotel is approved
     if (hotelExists.verified !== "approved") {
       throw new ApiError(400, `Hotel ${hotelExists.name} is not approved for booking`);
-    }
+    }    // Add processed hotel data with numeric quantity
+    processedHotels.push({
+      hotel,
+      quantity: numQuantity,
+      startDate: bookingStartDate,
+      endDate: bookingEndDate
+    });
   }
 
   // Create the booking
   const booking = await HotelBooking.create({
     user: req.user._id,
-    hotels,
+    hotels: processedHotels,
     amount,
     transactionId,
     modeOfPayment,

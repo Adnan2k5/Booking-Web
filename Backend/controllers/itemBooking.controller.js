@@ -64,9 +64,7 @@ export const createDirectBooking = asyncHandler(async (req, res) => {
         // Ensure dates are provided for rental items
         if (!item.purchased && (!item.startDate || !item.endDate)) {
             throw new ApiError(400, "Start date and end date are required for rental items");
-        }
-
-        // Validate dates for rental items
+        }        // Validate dates for rental items
         if (!item.purchased && item.startDate && item.endDate) {
             const startDate = new Date(item.startDate);
             const endDate = new Date(item.endDate);
@@ -75,7 +73,13 @@ export const createDirectBooking = asyncHandler(async (req, res) => {
                 throw new ApiError(400, "End date must be after start date for rental items");
             }
             
-            if (startDate < new Date()) {
+            // Check if start date is in the past (allow same day bookings)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Set to start of today
+            const startDateOnly = new Date(startDate);
+            startDateOnly.setHours(0, 0, 0, 0); // Set to start of start date
+            
+            if (startDateOnly < today) {
                 throw new ApiError(400, "Start date cannot be in the past");
             }
         }
