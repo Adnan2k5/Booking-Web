@@ -35,7 +35,7 @@ const UserLayout = ({ children }) => {
     const navItems = [
         {
             icon: <LayoutDashboard className="h-5 w-5" />,
-            label: t("dashboard"),
+            label: t("dashboard.title"),
             path: "/dashboard",
         },
         {
@@ -126,8 +126,8 @@ const UserLayout = ({ children }) => {
                                                         <Link
                                                             to={item.path}
                                                             className={`flex items-center gap-3 px-3 py-2.5 sm:py-3 rounded-md text-sm sm:text-base transition-colors ${isActive(item.path)
-                                                                    ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                                                                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                                ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                                                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                                                                 }`}
                                                             onClick={() => setIsMobileMenuOpen(false)}
                                                         >
@@ -167,45 +167,6 @@ const UserLayout = ({ children }) => {
                             <div className="hidden sm:block">
                                 <LanguageSelector variant="minimal" />
                             </div>
-
-                            {/* Notifications */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9">
-                                        <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-                                        {notifications.some((n) => n.unread) && (
-                                            <span className="absolute -top-1 -right-1 h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-red-500"></span>
-                                        )}
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-[280px] sm:w-[320px] max-h-[400px] overflow-y-auto">
-                                    <DropdownMenuLabel className="text-sm sm:text-base">{t("notifications")}</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    {notifications.map((notification) => (
-                                        <DropdownMenuItem key={notification.id} className="cursor-pointer p-0">
-                                            <div className={`p-3 sm:p-4 w-full ${notification.unread ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}>
-                                                <div className="flex justify-between items-start gap-2">
-                                                    <div className="font-medium text-sm sm:text-base truncate">{notification.title}</div>
-                                                    {notification.unread && (
-                                                        <Badge variant="outline" className="ml-2 bg-blue-100 text-blue-800 border-blue-200 text-xs shrink-0">
-                                                            New
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                                <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{notification.message}</div>
-                                                <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">{notification.time}</div>
-                                            </div>
-                                        </DropdownMenuItem>
-                                    ))}
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="cursor-pointer">
-                                        <div className="text-center w-full py-2 text-blue-600 dark:text-blue-400 text-sm sm:text-base">
-                                            {t("viewAllNotifications")}
-                                        </div>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-
                             {/* User Menu */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -262,8 +223,8 @@ const UserLayout = ({ children }) => {
                                         <Link
                                             to={item.path}
                                             className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${isActive(item.path)
-                                                    ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                                                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                                                 }`}
                                         >
                                             <span className="shrink-0">{item.icon}</span>
