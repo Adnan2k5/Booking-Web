@@ -33,7 +33,7 @@ export default function BookingFlow() {
   const [currentStep, setCurrentStep] = useState(1)
   const [cartItems, setCartItems] = useState([])
   const [selectedHotel, setSelectedHotel] = useState(null)
-  const [selectedInstructor, setSelectedInstructor] = useState(null)  
+  const [selectedInstructor, setSelectedInstructor] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [adventure, setAdventure] = useState(null)
   const [isInstructorDialogOpen, setIsInstructorDialogOpen] = useState(false)
@@ -42,7 +42,7 @@ export default function BookingFlow() {
 
   const [checkInDate, setCheckInDate] = useState(null)
   const [checkOutDate, setCheckOutDate] = useState(null)
-  
+
 
   // Get location from query params or adventure location
   const locationFilter = query.get("location") || (adventure?.location?.[0]?.name);
@@ -99,7 +99,7 @@ export default function BookingFlow() {
           const datesMatch = existingItem.startDate && existingItem.endDate &&
             new Date(existingItem.startDate).getTime() === new Date(rentalData.startDate).getTime() &&
             new Date(existingItem.endDate).getTime() === new Date(rentalData.endDate).getTime()
-          
+
           if (datesMatch) {
             // Same rental period - increment quantity
             return prev.map((item) =>
@@ -107,9 +107,9 @@ export default function BookingFlow() {
             )
           } else {
             // Different rental period - create new entry
-            const newItem = { 
-              _id: itemId, 
-              quantity: 1, 
+            const newItem = {
+              _id: itemId,
+              quantity: 1,
               rent: isRental,
               startDate: rentalData.startDate,
               endDate: rentalData.endDate
@@ -124,18 +124,18 @@ export default function BookingFlow() {
         }
       } else {
         // Add new item with quantity 1
-        const newItem = { 
-          _id: itemId, 
-          quantity: 1, 
-          rent: isRental 
+        const newItem = {
+          _id: itemId,
+          quantity: 1,
+          rent: isRental
         }
-        
+
         // Add rental dates if it's a rental item
         if (isRental && rentalData) {
           newItem.startDate = rentalData.startDate
           newItem.endDate = rentalData.endDate
         }
-        
+
         return [...prev, newItem]
       }
     })
@@ -170,17 +170,17 @@ export default function BookingFlow() {
     // Validate dates
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    
+
     if (startDate < today) {
       toast.error("Check-in date cannot be in the past")
       return
     }
-    
+
     if (endDate && endDate <= startDate) {
       toast.error("Check-out date must be after check-in date")
       return
     }
-    
+
     setCheckInDate(startDate)
     setCheckOutDate(endDate)
   }
@@ -199,14 +199,23 @@ export default function BookingFlow() {
     setSelectedHotel(newSelection)
 
     // If a hotel is selected and we're on step 3, scroll to booking summary
-    if (newSelection && currentStep === 3 && bookingSummaryRef.current) {
-      setTimeout(() => {
-        bookingSummaryRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-          inline: 'nearest'
-        })
-      }, 300) // Small delay to allow the UI to update
+    if (newSelection && currentStep === 3) {
+      // Use a longer timeout and multiple checks to ensure the ref is available
+      const scrollToBookingSummary = () => {
+        if (bookingSummaryRef.current) {
+          bookingSummaryRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'nearest'
+          })
+        } else {
+          // If ref is still not available, try again after a short delay
+          setTimeout(scrollToBookingSummary, 100)
+        }
+      }
+
+      // Initial delay to allow the UI to update and animations to settle
+      setTimeout(scrollToBookingSummary, 500)
     }
   }
   const handleNext = () => {
@@ -471,9 +480,9 @@ export default function BookingFlow() {
                 exit="exit"
                 className="w-full"
               >                <div className="space-y-8">
-                  <HotelSelection 
-                    selectedHotel={selectedHotel} 
-                    onSelectHotel={handleHotelSelect} 
+                  <HotelSelection
+                    selectedHotel={selectedHotel}
+                    onSelectHotel={handleHotelSelect}
                     hotels={hotels}
                     checkInDate={checkInDate}
                     checkOutDate={checkOutDate}
