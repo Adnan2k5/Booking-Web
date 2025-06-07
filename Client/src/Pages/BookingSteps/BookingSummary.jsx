@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { toast } from "sonner"
 import { createSessionBooking, createHotelBooking, createBooking, createDirectItemBooking } from "../../Api/booking.api"
+import { format } from "date-fns"
 
 export const BookingSummary = ({
     user,
@@ -40,10 +41,10 @@ export const BookingSummary = ({
         setIsBooking(true);
 
         const bookingId = toast.loading("Creating your booking...");
-        
+
         try {
             const bookingResults = [];
-            
+
             // 1. Create Session Booking (for adventure/instructor)
             if (selectedInstructor) {
                 const sessionBookingData = {
@@ -59,17 +60,17 @@ export const BookingSummary = ({
             }            // 2. Create Item Booking (for cart items) - Direct approach without cart
             if (cartItems.length > 0) {
                 console.log("Creating direct item booking with items:", cartItems);
-                
+
                 // Calculate total amount for items
                 const itemsTotal = cartItems.reduce((total, item) => {
                     const itemPrice = item.price || 0;
                     const quantity = item.quantity || 1;
-                    
+
                     if (item.purchased) {
                         return total + (itemPrice * quantity);
                     } else {
                         // For rental items, calculate based on rental period
-                        const days = item.endDate && item.startDate 
+                        const days = item.endDate && item.startDate
                             ? Math.ceil((new Date(item.endDate) - new Date(item.startDate)) / (1000 * 60 * 60 * 24))
                             : 1;
                         return total + (itemPrice * quantity * days);
@@ -117,12 +118,12 @@ export const BookingSummary = ({
                 bookingResults.push({ type: 'hotel', result: hotelResult });
             }            // Success handling
             toast.success("Booking created successfully!", { id: bookingId });
-            
+
             console.log("All bookings completed:", bookingResults);
-            
+
             // Navigate to confirmation page with booking details
             const totalAmount = calculateTotal();
-            
+
             // Create serializable data for navigation state - extract only essential data
             const serializableBookingResults = bookingResults.map(booking => ({
                 type: booking.type,
@@ -174,7 +175,7 @@ export const BookingSummary = ({
                     avatar: member.avatar
                 }))
             };
-            
+
             navigate("/confirmation", { state: serializableState });
 
         } catch (error) {
@@ -364,8 +365,8 @@ export const BookingSummary = ({
                                     </div>
                                     {checkInDate && checkOutDate && (
                                         <div className="text-sm text-gray-600 mt-1">
-                                            <p>Check-in: {formatDate(checkInDate)}</p>
-                                            <p>Check-out: {formatDate(checkOutDate)}</p>
+                                            <p>Check-in: {checkInDate instanceof Date ? format(checkInDate, "MMM dd, yyyy") : "Invalid date"}</p>
+                                            <p>Check-out: {checkOutDate instanceof Date ? format(checkOutDate, "MMM dd, yyyy") : "Invalid date"}</p>
                                             <p className="font-medium">{calculateNights()} {calculateNights() === 1 ? "night" : "nights"}</p>
                                         </div>
                                     )}
@@ -399,7 +400,12 @@ export const BookingSummary = ({
                                 <span>{t("adventure")}</span>
                                 <span>{t("included")}</span>
                             </div>
-
+                            {selectedInstructor && (
+                                <div className="flex justify-between items-center">
+                                    <span>{t("instructorPrice")}</span>
+                                    <span>${selectedInstructor.price || selectedInstructor.fee || 0}</span>
+                                </div>
+                            )}
                             {cartItems.length > 0 && (
                                 <div className="flex justify-between items-center">
                                     <span>
@@ -439,7 +445,7 @@ export const BookingSummary = ({
                                     <span>
                                         {t("Platform Fee")}
                                     </span>
-                                    <span>${calculateTotal() * 0.12}</span>
+                                    <span>${(calculateTotal() * 0.12).toFixed(2)}</span>
                                 </div>
                             )}
                         </div>
