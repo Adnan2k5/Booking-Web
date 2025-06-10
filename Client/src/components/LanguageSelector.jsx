@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
+import { useDispatch, useSelector } from "react-redux"
 import { motion, AnimatePresence } from "framer-motion"
 import { Check, Globe } from "lucide-react"
 import { Button } from "./ui/button"
 import { updateLanguageHeaders } from "../Api/language.api.js"
+import { setLanguage } from "../Store/LanguageSlice.js"
 
 const languages = [
     {
@@ -42,33 +44,59 @@ const languages = [
 
 const LanguageSelector = ({ variant = "default" }) => {
     const { i18n } = useTranslation()
+    const dispatch = useDispatch()
+    const currentLanguageCode = useSelector((state) => state.language.currentLanguage)
     const [isOpen, setIsOpen] = useState(false)
     const [currentLanguage, setCurrentLanguage] = useState(
-        languages.find((lang) => lang.code === i18n.language) || languages[0],
+        languages.find((lang) => lang.code === currentLanguageCode) || languages[0],
     )
 
     useEffect(() => {
-        // Update current language when i18n language changes
-        const lang = languages.find((lang) => lang.code === i18n.language)
+        // Update current language when Redux state changes
+        const lang = languages.find((lang) => lang.code === currentLanguageCode)
         if (lang) {
             setCurrentLanguage(lang)
-            // Update axios headers when language changes from other sources
-            updateLanguageHeaders(lang.code)
+            // Update i18n if it's different
+            if (i18n.language !== currentLanguageCode) {
+                i18n.changeLanguage(currentLanguageCode)
+            }
+            // Update axios headers
+            updateLanguageHeaders(currentLanguageCode)
         }
-    }, [i18n.language])
+    }, [currentLanguageCode, i18n])
 
-    // Initialize headers on component mount
+    // Initialize language on component mount
     useEffect(() => {
-        const currentLang = i18n.language || 'en'
-        updateLanguageHeaders(currentLang)
+        // Initialize Redux state from localStorage if needed
+        const savedLanguage = localStorage.getItem('selectedLanguage')
+        if (savedLanguage && savedLanguage !== currentLanguageCode) {
+            dispatch(setLanguage(savedLanguage))
+        }
+
+        // Set initial headers
+        updateLanguageHeaders(currentLanguageCode)
     }, [])
 
     const changeLanguage = (language) => {
+        // Show loading indicator or message
+        const prevLanguage = currentLanguageCode
+
+        // Update Redux state (this will trigger localStorage save)
+        dispatch(setLanguage(language.code))
+
+        // Update i18n immediately
         i18n.changeLanguage(language.code)
-        setCurrentLanguage(language)
-        setIsOpen(false)
-        // Update axios headers with the new language
+
+        // Update axios headers
         updateLanguageHeaders(language.code)
+
+        // Close dropdown
+        setIsOpen(false)
+
+        // Refresh the page after a short delay to allow state updates
+        setTimeout(() => {
+            window.location.reload()
+        }, 100)
     }
 
     // Variants for animations

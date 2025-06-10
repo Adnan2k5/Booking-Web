@@ -6,6 +6,7 @@ import { Label } from "../../components/ui/label"
 import { Separator } from "../../components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
 import { useTranslation } from "react-i18next"
+import { useDispatch, useSelector } from "react-redux"
 import { toast } from "sonner"
 import { Globe, Lock } from 'lucide-react'
 import InstructorLayout from "./InstructorLayout"
@@ -14,9 +15,12 @@ import { useAuth } from "../AuthProvider"
 import { Modal } from "antd"
 import { InputOTPSlot, InputOTP, InputOTPGroup } from "../../components/ui/input-otp"
 import { updateLanguageHeaders } from "../../Api/language.api.js"
+import { setLanguage } from "../../Store/LanguageSlice.js"
 
 const InstructorSettings = () => {
     const { t, i18n } = useTranslation()
+    const dispatch = useDispatch()
+    const currentLanguageCode = useSelector((state) => state.language.currentLanguage)
     const [loading, setLoading] = useState(false)
     const { user } = useAuth();
     const [newEmail, setNewEmail] = useState("");
@@ -29,7 +33,7 @@ const InstructorSettings = () => {
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
-        language: i18n.language || "en",
+        language: currentLanguageCode || "en",
     })
 
     const handleSettingChange = (section, field, value) => {
@@ -49,8 +53,16 @@ const InstructorSettings = () => {
 
             // Handle language change specifically
             if (field === "language") {
+                // Update Redux state
+                dispatch(setLanguage(value))
+                // Update i18n
                 i18n.changeLanguage(value)
+                // Update axios headers
                 updateLanguageHeaders(value)
+                // Refresh page to apply language changes to all API calls
+                setTimeout(() => {
+                    window.location.reload()
+                }, 100)
             }
         }
     }
@@ -179,7 +191,7 @@ const InstructorSettings = () => {
                                     <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
                                         <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                                         <Select
-                                            value={i18n.language}
+                                            value={currentLanguageCode}
                                             onValueChange={(value) => handleSettingChange(null, "language", value)}
                                         >
                                             <SelectTrigger className="w-full sm:w-[180px]">
