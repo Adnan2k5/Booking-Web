@@ -28,12 +28,14 @@ import hotelBookingRouter from "./routes/hotelBooking.routes.js";
 import sessionBookingRouter from "./routes/sessionBooking.routes.js";
 import friendRouter from "./routes/friend.routes.js";
 import websiteSettingsRouter from "./routes/websiteSettings.routes.js";
+import translationRouter from "./routes/translation.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
 import { ensureDefaultDeclaration } from "./controllers/declaration.controller.js";
 import initSocketIO from "./socket/socket.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import redis from './config/redis.config.js';
 
 const app = express();
 
@@ -75,9 +77,11 @@ app.use("/api/cart", cartRouter);
 app.use("/api/friends", friendRouter);
 app.use("/api/itemBooking", itemBookingRouter);
 app.use("/api/events", landingRouter);
-app.use("/api/hotelBooking", hotelBookingRouter);
-app.use("/api/sessionBooking", sessionBookingRouter);
 app.use("/api/website-settings", websiteSettingsRouter);
+app.use('/api/hotelBooking', hotelBookingRouter);
+app.use('/api/sessionBooking', sessionBookingRouter);
+app.use("/api/translation", translationRouter);
+
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {

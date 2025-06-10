@@ -6,6 +6,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import sendEmail from "../utils/sendOTP.js";
 import { Otp } from "../models/otp.model.js";
+import { translateObjectFields, translateObjectsFields } from "../utils/translation.js";
+import { getLanguage } from "../middlewares/language.middleware.js";
 
 export const verifyHotel = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -135,10 +137,37 @@ export const HotelRegistration = asyncHandler(async (req, res) => {
 
 export const getHotelById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const hotel = await Hotel.find({ owner: id });
-  if (!hotel) {
+  const language = getLanguage(req);
+  
+  // Fetch from database
+  const hotelData = await Hotel.find({ owner: id })
+    .populate("owner", "name email")
+    .populate("location", "name");
+  
+  if (!hotelData || hotelData.length === 0) {
     throw new ApiError(404, "Hotel not found");
   }
+  
+  let hotel;
+  // Translate hotel fields if language is not English
+  if (language !== 'en') {
+    const fieldsToTranslate = ['name', 'description', 'category', 'amenities'];
+    hotel = await translateObjectsFields(hotelData, fieldsToTranslate, language);
+    
+    // Also translate location names if populated
+    for (let i = 0; i < hotel.length; i++) {
+      if (hotel[i].location && hotel[i].location.name) {
+        hotel[i].location.name = await translateObjectFields(
+          hotel[i].location, 
+          ['name'], 
+          language
+        ).then(obj => obj.name);
+      }
+    }
+  } else {
+    hotel = hotelData;
+  }
+  
   res
     .status(200)
     .json(new ApiResponse(200, { hotel }, "Hotel retrieved successfully"));
@@ -157,6 +186,8 @@ export const getHotel = asyncHandler(async (req, res) => {
     sortBy = "createdAt", 
     sortOrder = "desc" 
   } = req.query;
+  
+  const language = getLanguage(req);
   
   let query = {};
   
@@ -205,20 +236,40 @@ export const getHotel = asyncHandler(async (req, res) => {
   const sortOptions = {};
   sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
 
-  const hotels = await Hotel.find(query)
+  let hotels = await Hotel.find(query)
     .sort(sortOptions)
     .skip(skip)
     .limit(parseInt(limit))
     .populate("owner", "name email")
     .populate("location", "name");
+    
   const total = await Hotel.countDocuments(query);
+  
+  // Translate hotel fields if language is not English
+  if (language !== 'en' && hotels.length > 0) {
+    const fieldsToTranslate = ['name', 'description', 'category', 'amenities'];
+    hotels = await translateObjectsFields(hotels, fieldsToTranslate, language);
+    
+    // Also translate location names if populated
+    for (let i = 0; i < hotels.length; i++) {
+      if (hotels[i].location && hotels[i].location.name) {
+        hotels[i].location.name = await translateObjectFields(
+          hotels[i].location, 
+          ['name'], 
+          language
+        ).then(obj => obj.name);
+      }
+    }
+  }
 
-  res.status(200).json({
+  const result = {
     hotels,
     total,
     page: parseInt(page),
     totalPages: Math.ceil(total / limit),
-  });
+  };
+
+  res.status(200).json(result);
 });
 
 export const approveHotel = asyncHandler(async (req, res) => {
@@ -231,6 +282,7 @@ export const approveHotel = asyncHandler(async (req, res) => {
   if (!hotel) {
     throw new ApiError(404, "Hotel not found");
   }
+  
   res
     .status(200)
     .json(new ApiResponse(200, { hotel }, "Hotel approved successfully"));
@@ -246,6 +298,7 @@ export const rejectHotel = asyncHandler(async (req, res) => {
   if (!hotel) {
     throw new ApiError(404, "Hotel not found");
   }
+  
   res
     .status(200)
     .json(new ApiResponse(200, { hotel }, "Hotel rejected successfully"));
