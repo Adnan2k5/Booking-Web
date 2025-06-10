@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../Pages/AuthProvider"
+import { useWebsiteSettings } from "../contexts/WebsiteSettingsContext"
 import { MapPin, Menu, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import UserProfileDropdown from "./UserProfileDropdown"
@@ -12,6 +13,7 @@ import { useTranslation } from "react-i18next"
 
 export const Navbar = () => {
   const { user, logout } = useAuth()
+  const { isShopEnabled, isHotelsEnabled } = useWebsiteSettings()
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -21,9 +23,10 @@ export const Navbar = () => {
     navigate("/login")
   }
 
+  // Filter menu items based on website settings
   const menuItems = [
     { label: t("explore"), path: "/browse" },
-    { label: t("shop"), path: "/shop" },
+    ...(isShopEnabled ? [{ label: t("shop"), path: "/shop" }] : []),
     { label: t("mission"), path: "#mission" },
   ]
 

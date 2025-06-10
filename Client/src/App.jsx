@@ -6,6 +6,7 @@ import { ResetPass } from "./Pages/ResetPass"
 import { Loader } from "./components/Loader"
 import { AuthProvider } from "./Pages/AuthProvider"
 import { AdminRoute, InstructorRoute } from "./Auth/ProtectedRoute"
+import { FeatureRoute } from "./Auth/FeatureRoute"
 import UserDashboardPage from "./Pages/User/UserDashboardPage"
 import UserBookingsPage from "./Pages/User/UserBookingsPage"
 import UserFriendsPage from "./Pages/User/UserFriendsPage"
@@ -47,13 +48,16 @@ import frTranslation from "./locales/fr.json"
 import deTranslation from "./locales/de.json"
 import esTranslation from "./locales/es.json"
 import itTranslation from "./locales/it.json"
+import { updateLanguageHeaders } from "./Api/language.api.js"
 import { InstructorRegister } from "./Pages/Instructor/InstructorLogin"
 import { InstructorBookings } from "./Pages/Instructor/Instructor.bookings"
 import { InstructorSession } from "./Pages/Instructor/InstructorSession"
 import { InstructorProfile } from "./Pages/Instructor/InstructorProfile"
 import InstructorSettings from "./Pages/Instructor/InstructorSettings"
+import InstructorTickets from "./Pages/Instructor/InstructorTickets"
 import { CartProvider } from "./Pages/Cart/CartContext"
 import InstructorPendingReview from "./Pages/Instructor/InstructorPendingReview"
+import { WebsiteSettingsProvider } from "./contexts/WebsiteSettingsContext"
 import InstructorsPage from "./Pages/Admin/SubPages/InstructorsVerification"
 import { HotelRegister } from "./Pages/Hotel/HotelRegister"
 import InstructorLayout from "./Pages/Instructor/InstructorLayout"
@@ -63,6 +67,7 @@ import Managers from "./Pages/Admin/SubPages/Managers"
 import { ItemPage } from "./Pages/Shop/ItemPage"
 import { Cart } from "./Pages/Shop/Cart"
 import EventsPage from "./Pages/Admin/SubPages/Events"
+import WebsiteSettings from "./Pages/Admin/SubPages/WebsiteSettings"
 
 // Initialize i18n
 i18n.use(initReactI18next).init({
@@ -80,132 +85,170 @@ i18n.use(initReactI18next).init({
   },
 })
 
+// Initialize language headers
+updateLanguageHeaders(i18n.language || 'en')
+
 const App = () => {
   return (
     <I18nextProvider i18n={i18n}>
       <AuthProvider>
-        <CartProvider>
-          <BrowserRouter>
-            <ChatWidget />
-            <Suspense fallback={<Loader />}>
-              <Toaster />
-              <Routes>
-                {/* Public routes */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/login-options" element={<LoginOptionsPage />} />
-                <Route path="/auth/signInWithLinkedin" element={<LinkedInCallback />} />
-                <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/browse" element={<BrowsingPage />} />
-                <Route path="/booking" element={<Booking />} />
-                <Route path="/confirmation" element={<ConfirmationPage />} />
-                <Route path="/shop" element={<Shop />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/product/:productId" element={<ItemPage />} />
-                <Route path="/reset" element={<ResetPass />} />
-                <Route path="/instructor/register" element={<InstructorRegister />} />
-                <Route path="/instructor/pending-review" element={<InstructorPendingReview />} />
-                <Route path="/dashboard" element={<UserDashboardPage />} />
-                <Route path="/dashboard/bookings" element={<UserBookingsPage />} />
-                <Route path="/dashboard/friends" element={<UserFriendsPage />} />
-                <Route path="/dashboard/tickets" element={<UserTicketsPage />} />
-                <Route path="/dashboard/profile" element={<UserProfilePage />} />
-                <Route path="/dashboard/settings" element={<UserSettingsPage />} />
-                <Route path="/hotel" element={<Hotel />} />
-                <Route path="/hotel/register" element={<HotelRegister />} />
-                <Route path="/hotel/pending" element={<HotelPendingReview />} />
-                <Route
-                  path="/instructor/"
-                  element={
-                    <InstructorRoute>
-                      <InstructorLayout />
-                    </InstructorRoute>
-                  }
-                />
-                <Route
-                  path="/instructor/dashboard"
-                  element={
-                    <InstructorRoute>
-                      <InstructorDashboard />
-                    </InstructorRoute>
-                  }
-                />
-                <Route
-                  path="/instructor/bookings"
-                  element={
-                    <InstructorRoute>
-                      <InstructorBookings />
-                    </InstructorRoute>
-                  }
-                />
-                <Route
-                  path="/instructor/sessions"
-                  element={
-                    <InstructorRoute>
-                      <InstructorSession />
-                    </InstructorRoute>
-                  }
-                />
-                <Route
-                  path="/instructor/sessions/new"
-                  element={
-                    <InstructorRoute>
-                      <SessionForm />
-                    </InstructorRoute>
-                  }
-                />
-                <Route
-                  path="/instructor/profile"
-                  element={
-                    <InstructorRoute>
-                      <InstructorProfile />
-                    </InstructorRoute>
-                  }
-                />
-                <Route
-                  path="/instructor/settings"
-                  element={
-                    <InstructorRoute>
-                      <InstructorSettings />
-                    </InstructorRoute>
-                  }
-                />
-
-                <Route
-                  path="/admin"
-                  element={
-                    <AdminRoute>
-                      <AdminLayout />
-                    </AdminRoute>
-                  }
-                >
+        <WebsiteSettingsProvider>
+          <CartProvider>
+            <BrowserRouter>
+              <ChatWidget />
+              <Suspense fallback={<Loader />}>
+                <Toaster />
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/login-options" element={<LoginOptionsPage />} />
+                  <Route path="/auth/signInWithLinkedin" element={<LinkedInCallback />} />
+                  <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/browse" element={<BrowsingPage />} />
+                  <Route path="/booking" element={<Booking />} />
+                  <Route path="/confirmation" element={<ConfirmationPage />} />
+                  <Route path="/shop" element={
+                    <FeatureRoute feature="shop">
+                      <Shop />
+                    </FeatureRoute>
+                  } />
+                  <Route path="/cart" element={
+                    <FeatureRoute feature="shop">
+                      <Cart />
+                    </FeatureRoute>
+                  } />
+                  <Route path="/product/:productId" element={
+                    <FeatureRoute feature="shop">
+                      <ItemPage />
+                    </FeatureRoute>
+                  } />
+                  <Route path="/reset" element={<ResetPass />} />
+                  <Route path="/instructor/register" element={<InstructorRegister />} />
+                  <Route path="/instructor/pending-review" element={<InstructorPendingReview />} />
+                  <Route path="/dashboard" element={<UserDashboardPage />} />
+                  <Route path="/dashboard/bookings" element={<UserBookingsPage />} />
+                  <Route path="/dashboard/friends" element={<UserFriendsPage />} />
+                  <Route path="/dashboard/tickets" element={<UserTicketsPage />} />
+                  <Route path="/dashboard/profile" element={<UserProfilePage />} />
+                  <Route path="/dashboard/settings" element={<UserSettingsPage />} />
+                  <Route path="/hotel" element={
+                    <FeatureRoute feature="hotels">
+                      <Hotel />
+                    </FeatureRoute>
+                  } />
+                  <Route path="/hotel/register" element={
+                    <FeatureRoute feature="hotels">
+                      <HotelRegister />
+                    </FeatureRoute>
+                  } />
+                  <Route path="/hotel/pending" element={
+                    <FeatureRoute feature="hotels">
+                      <HotelPendingReview />
+                    </FeatureRoute>
+                  } />
                   <Route
-                    index
+                    path="/instructor/"
                     element={
-                      <AdminRoute>
-                        <AdminDashboard />
-                      </AdminRoute>
+                      <InstructorRoute>
+                        <InstructorLayout />
+                      </InstructorRoute>
                     }
                   />
-                  <Route path="/admin/adventures" element={<AdventuresPage />} />
-                  <Route path="/admin/adventures/new" element={<AdventureFormPage />} />
-                  <Route path="/admin/adventures/edit/:id" element={<AdventureFormPage />} />
-                  <Route path="/admin/bookings" element={<Dash_Bookings />} />
-                  <Route path="/admin/users" element={<Dash_User />} />
-                  <Route path="/admin/instructors" element={<InstructorsPage />} />
-                  <Route path="/admin/store" element={<Dash_Store />} />
-                  <Route path="/admin/hotels" element={<Dash_Hotels />} />
-                  <Route path="/admin/tickets" element={<Dash_Tickets />} />
-                  <Route path="/admin/terms" element={<Dash_Terms />} />
-                  <Route path="/admin/declaration" element={<Dash_Declation />} />
-                  <Route path="/admin/locations" element={<LocationsPage />} />
-                  <Route path="/admin/manager" element={<Managers />} />
-                  <Route path="/admin/events" element={<EventsPage />} />
-                </Route>
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </CartProvider>
+                  <Route
+                    path="/instructor/dashboard"
+                    element={
+                      <InstructorRoute>
+                        <InstructorDashboard />
+                      </InstructorRoute>
+                    }
+                  />
+                  <Route
+                    path="/instructor/bookings"
+                    element={
+                      <InstructorRoute>
+                        <InstructorBookings />
+                      </InstructorRoute>
+                    }
+                  />
+                  <Route
+                    path="/instructor/sessions"
+                    element={
+                      <InstructorRoute>
+                        <InstructorSession />
+                      </InstructorRoute>
+                    }
+                  />
+                  <Route
+                    path="/instructor/sessions/new"
+                    element={
+                      <InstructorRoute>
+                        <SessionForm />
+                      </InstructorRoute>
+                    }
+                  />
+                  <Route
+                    path="/instructor/profile"
+                    element={
+                      <InstructorRoute>
+                        <InstructorProfile />
+                      </InstructorRoute>
+                    }
+                  />
+                  <Route
+                    path="/instructor/support"
+                    element={
+                      <InstructorRoute>
+                        <InstructorTickets />
+                      </InstructorRoute>
+                    }
+                  />
+                  <Route
+                    path="/instructor/settings"
+                    element={
+                      <InstructorRoute>
+                        <InstructorSettings />
+                      </InstructorRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/admin"
+                    element={
+                      <AdminRoute>
+                        <AdminLayout />
+                      </AdminRoute>
+                    }
+                  >
+                    <Route
+                      index
+                      element={
+                        <AdminRoute>
+                          <AdminDashboard />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route path="/admin/adventures" element={<AdventuresPage />} />
+                    <Route path="/admin/adventures/new" element={<AdventureFormPage />} />
+                    <Route path="/admin/adventures/edit/:id" element={<AdventureFormPage />} />
+                    <Route path="/admin/bookings" element={<Dash_Bookings />} />
+                    <Route path="/admin/users" element={<Dash_User />} />
+                    <Route path="/admin/instructors" element={<InstructorsPage />} />
+                    <Route path="/admin/store" element={<Dash_Store />} />
+                    <Route path="/admin/hotels" element={<Dash_Hotels />} />
+                    <Route path="/admin/tickets" element={<Dash_Tickets />} />
+                    <Route path="/admin/terms" element={<Dash_Terms />} />
+                    <Route path="/admin/declaration" element={<Dash_Declation />} />
+                    <Route path="/admin/locations" element={<LocationsPage />} />
+                    <Route path="/admin/manager" element={<Managers />} />
+                    <Route path="/admin/events" element={<EventsPage />} />
+                    <Route path="/admin/website-settings" element={<WebsiteSettings />} />
+                  </Route>
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </CartProvider>
+        </WebsiteSettingsProvider>
       </AuthProvider>
     </I18nextProvider>
   )

@@ -8,6 +8,7 @@ import { cn } from "../../lib/utils"
 import { Button } from "../../components/ui/button"
 import { Badge } from "../../components/ui/badge"
 import { useAuth } from "../AuthProvider"
+import { useWebsiteSettings } from "../../contexts/WebsiteSettingsContext"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import { Navbar } from "../../components/Navbar"
@@ -29,6 +30,7 @@ export default function BookingFlow() {
   const location = useLocation()
   const query = new URLSearchParams(location.search);
   const { user } = useAuth()
+  const { isShopEnabled, isHotelsEnabled } = useWebsiteSettings()
   const { t } = useTranslation()
   const [currentStep, setCurrentStep] = useState(1)
   const [cartItems, setCartItems] = useState([])
@@ -199,7 +201,7 @@ export default function BookingFlow() {
     setSelectedHotel(newSelection)
 
     // If a hotel is selected and we're on step 3, scroll to booking summary
-    if (newSelection && currentStep === 3) {
+    if (newSelection && currentStep === maxSteps) {
       // Use a longer timeout and multiple checks to ensure the ref is available
       const scrollToBookingSummary = () => {
         if (bookingSummaryRef.current) {
@@ -218,17 +220,18 @@ export default function BookingFlow() {
       setTimeout(scrollToBookingSummary, 500)
     }
   }
+
   const handleNext = () => {
-    if (currentStep < 3) {
+    if (currentStep < maxSteps) {
       setCurrentStep((prev) => prev + 1)
       // Scroll to top when changing steps
       window.scrollTo({ top: 0, behavior: "smooth" })
     }
-    // For step 3, let the BookingSummary component handle the booking
+    // For final step, let the BookingSummary component handle the booking
   }
 
   const handleSkip = () => {
-    if (currentStep < 3) {
+    if (currentStep < maxSteps) {
       setCurrentStep((prev) => prev + 1)
       // Scroll to top when changing steps
       window.scrollTo({ top: 0, behavior: "smooth" })
@@ -318,12 +321,29 @@ export default function BookingFlow() {
     )
   }
 
-  // Define step labels as simple strings to avoid translation issues
-  const stepLabels = [
-    { step: 1, icon: <Users size={18} />, label: "Instructor" },
-    { step: 2, icon: <ShoppingCart size={18} />, label: "Shop" },
-    { step: 3, icon: <Building size={18} />, label: "Hotel" },
-  ]
+  // Define step labels dynamically based on website settings
+  const getStepLabels = () => {
+    const steps = [
+      { step: 1, icon: <Users size={18} />, label: "Instructor" }
+    ];
+
+    let currentStepNumber = 2;
+
+    if (isShopEnabled) {
+      steps.push({ step: currentStepNumber, icon: <ShoppingCart size={18} />, label: "Shop" });
+      currentStepNumber++;
+    }
+
+    if (isHotelsEnabled) {
+      steps.push({ step: currentStepNumber, icon: <Building size={18} />, label: "Hotel" });
+      currentStepNumber++;
+    }
+
+    return steps;
+  };
+
+  const stepLabels = getStepLabels();
+  const maxSteps = stepLabels.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-100 to-indigo-100 relative overflow-hidden">
@@ -451,6 +471,7 @@ export default function BookingFlow() {
               </motion.div>
             )}
 
+            {/* Step 2: Shop (if enabled) or direct to final booking */}
             {currentStep === 2 && (
               <motion.div
                 key="step2"
@@ -461,16 +482,91 @@ export default function BookingFlow() {
                 exit="exit"
                 className="w-full"
               >
-                <ShopSelection
-                  mockItems={items}
-                  cartItems={cartItems}
-                  handleAddToCart={handleAddToCart}
-                  handleRemoveFromCart={handleRemoveFromCart}
-                />
+                {isShopEnabled ? (
+                  <div className="space-y-8">
+                    <ShopSelection
+                      mockItems={items}
+                      cartItems={cartItems}
+                      handleAddToCart={handleAddToCart}
+                      handleRemoveFromCart={handleRemoveFromCart}
+                    />
+
+                    {/* Show booking summary if this is the final step (shop enabled, hotels disabled) */}
+                    {!isHotelsEnabled && (
+                      <div ref={bookingSummaryRef}>
+                        <BookingSummary
+                          user={user}
+                          adventure={adventure}
+                          selectedInstructor={selectedInstructor}
+                          groupMembers={groupMembers}
+                          cartItems={cartItems}
+                          mockItems={items}
+                          selectedHotel={selectedHotel}
+                          mockHotels={hotels}
+                          calculateTotal={calculateTotal}
+                          checkInDate={checkInDate}
+                          checkOutDate={checkOutDate}
+                          calculateNights={calculateNights}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* If shop is disabled but hotels enabled, skip to hotels */
+                  isHotelsEnabled ? (
+                    <div className="space-y-8">
+                      <HotelSelection
+                        selectedHotel={selectedHotel}
+                        onSelectHotel={handleHotelSelect}
+                        hotels={hotels}
+                        checkInDate={checkInDate}
+                        checkOutDate={checkOutDate}
+                        onDateChange={handleDateChange}
+                        calculateNights={calculateNights}
+                      />
+
+                      <div ref={bookingSummaryRef}>
+                        <BookingSummary
+                          user={user}
+                          adventure={adventure}
+                          selectedInstructor={selectedInstructor}
+                          groupMembers={groupMembers}
+                          cartItems={cartItems}
+                          mockItems={items}
+                          selectedHotel={selectedHotel}
+                          mockHotels={hotels}
+                          calculateTotal={calculateTotal}
+                          checkInDate={checkInDate}
+                          checkOutDate={checkOutDate}
+                          calculateNights={calculateNights}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    /* If both shop and hotels are disabled, show final booking */
+                    <div ref={bookingSummaryRef}>
+                      <BookingSummary
+                        user={user}
+                        adventure={adventure}
+                        selectedInstructor={selectedInstructor}
+                        groupMembers={groupMembers}
+                        cartItems={cartItems}
+                        mockItems={items}
+                        selectedHotel={selectedHotel}
+                        mockHotels={hotels}
+                        calculateTotal={calculateTotal}
+                        checkInDate={checkInDate}
+                        checkOutDate={checkOutDate}
+                        calculateNights={calculateNights}
+                      />
+                    </div>
+                  )
+                )}
               </motion.div>
             )}
 
-            {currentStep === 3 && (
+            {/* Step 3: Hotels (only if both shop and hotels are enabled) */}
+            {currentStep === 3 && isShopEnabled && isHotelsEnabled && (
               <motion.div
                 key="step3"
                 custom={1}
@@ -479,7 +575,8 @@ export default function BookingFlow() {
                 animate="visible"
                 exit="exit"
                 className="w-full"
-              >                <div className="space-y-8">
+              >
+                <div className="space-y-8">
                   <HotelSelection
                     selectedHotel={selectedHotel}
                     onSelectHotel={handleHotelSelect}
@@ -521,7 +618,7 @@ export default function BookingFlow() {
           >
             Back
           </Button>          <div className="flex gap-3">
-            {currentStep < 3 && (
+            {currentStep < maxSteps && (
               <Button
                 variant="outline"
                 onClick={handleSkip}
@@ -531,7 +628,7 @@ export default function BookingFlow() {
               </Button>
             )}
 
-            {currentStep < 3 && (
+            {currentStep < maxSteps && (
               <Button
                 onClick={handleNext}
                 className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white gap-2"
