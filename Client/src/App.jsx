@@ -17,6 +17,7 @@ import InstructorDashboard from "./Pages/Instructor/InstructorDashboard"
 import SessionForm from "./Pages/Instructor/SessionForm"
 import ConfirmationPage from "./Pages/ConfirmationPage/Confirmation"
 import FacebookCallback from "./Auth/FacebookCallback"
+import { useLanguageInitializer } from "./hooks/useLanguageInitializer"
 import LinkedInCallback from "./Auth/LinkedinCallBack"
 import ChatWidget from "./components/ChatWidget"
 import AdminDashboard from "./Pages/Admin/AdminDashboard"
@@ -69,7 +70,17 @@ import { Cart } from "./Pages/Shop/Cart"
 import EventsPage from "./Pages/Admin/SubPages/Events"
 import WebsiteSettings from "./Pages/Admin/SubPages/WebsiteSettings"
 
-// Initialize i18n
+// Initialize i18n with stored language
+const getInitialLanguage = () => {
+  try {
+    const savedLanguage = localStorage.getItem('selectedLanguage');
+    return savedLanguage || 'en';
+  } catch (error) {
+    console.error('Error accessing localStorage:', error);
+    return 'en';
+  }
+};
+
 i18n.use(initReactI18next).init({
   resources: {
     en: { translation: enTranslation },
@@ -78,7 +89,7 @@ i18n.use(initReactI18next).init({
     es: { translation: esTranslation },
     it: { translation: itTranslation },
   },
-  lng: "en",
+  lng: getInitialLanguage(),
   fallbackLng: "en",
   interpolation: {
     escapeValue: false,
@@ -86,7 +97,13 @@ i18n.use(initReactI18next).init({
 })
 
 // Initialize language headers
-updateLanguageHeaders(i18n.language || 'en')
+updateLanguageHeaders(getInitialLanguage())
+
+// Language Initializer Component
+const LanguageInitializer = () => {
+  useLanguageInitializer();
+  return null;
+};
 
 const App = () => {
   return (
@@ -94,6 +111,7 @@ const App = () => {
       <AuthProvider>
         <WebsiteSettingsProvider>
           <CartProvider>
+            <LanguageInitializer />
             <BrowserRouter>
               <ChatWidget />
               <Suspense fallback={<Loader />}>

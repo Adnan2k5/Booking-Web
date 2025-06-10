@@ -9,6 +9,14 @@ export const updateLanguageHeaders = (languageCode) => {
 
 // Function to get current language
 export const getCurrentLanguage = () => {
+  // Try to get from localStorage first, then i18n, then default to 'en'
+  try {
+    const savedLanguage = localStorage.getItem('selectedLanguage');
+    if (savedLanguage) return savedLanguage;
+  } catch (error) {
+    console.error('Error accessing localStorage:', error);
+  }
+
   return i18n.language || 'en';
 };
 

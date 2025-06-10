@@ -62,8 +62,16 @@ export const Nav_Landing = () => {
 
     const changeLanguage = (code) => {
         i18n.changeLanguage(code)
-        // Update axios headers with the new language
         updateLanguageHeaders(code)
+        try {
+            localStorage.setItem('selectedLanguage', code)
+        } catch (error) {
+            console.error('Error saving language to localStorage:', error)
+        }
+        // Refresh page to ensure all API calls use new language
+        setTimeout(() => {
+            window.location.reload()
+        }, 100)
     }
 
     const navigateprofile = () => {
