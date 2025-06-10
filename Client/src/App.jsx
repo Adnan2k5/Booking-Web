@@ -52,6 +52,7 @@ import { InstructorBookings } from "./Pages/Instructor/Instructor.bookings"
 import { InstructorSession } from "./Pages/Instructor/InstructorSession"
 import { InstructorProfile } from "./Pages/Instructor/InstructorProfile"
 import InstructorSettings from "./Pages/Instructor/InstructorSettings"
+import InstructorTickets from "./Pages/Instructor/InstructorTickets"
 import { CartProvider } from "./Pages/Cart/CartContext"
 import InstructorPendingReview from "./Pages/Instructor/InstructorPendingReview"
 import InstructorsPage from "./Pages/Admin/SubPages/InstructorsVerification"
@@ -159,6 +160,14 @@ const App = () => {
                   element={
                     <InstructorRoute>
                       <InstructorProfile />
+                    </InstructorRoute>
+                  }
+                />
+                <Route
+                  path="/instructor/support"
+                  element={
+                    <InstructorRoute>
+                      <InstructorTickets />
                     </InstructorRoute>
                   }
                 />

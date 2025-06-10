@@ -5,7 +5,7 @@ export function useEvents({
     search = "",
     page = 1,
     limit = 12,
-}) {
+} = {}) {
     const [events, setEvents] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -23,9 +23,7 @@ export function useEvents({
                     limit,
                 });
 
-                // Handle different response structures
                 if (res) {
-                    // Check if response has data property
                     if (res.data) {
                         const eventsData = res.data.events || res.data || [];
                         setEvents(eventsData);

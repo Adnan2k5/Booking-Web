@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider"
 
-import { Users, Search, UserPlus, UserX, MapPin, Calendar, Compass } from "lucide-react"
+import { Users, Search, UserPlus, UserX, MapPin, Calendar, Compass, Clock } from "lucide-react"
 import { Button } from "../components/ui/button"
 import {
   Dialog,
@@ -25,6 +25,7 @@ import { fadeIn, staggerContainer } from "../assets/Animations"
 
 import { useFriend } from "../hooks/useFriend.jsx"
 import ReactPlayer from "react-player"
+import { useEvents } from "../hooks/useEvent"
 
 
 export default function LandingPage() {
@@ -39,17 +40,23 @@ export default function LandingPage() {
   const [adventure, setadventure] = useState("")
   const [searchEmail, setSearchEmail] = useState("")
   const [showFriendsList, setShowFriendsList] = useState(true)
+  const [eventsPage, setEventsPage] = useState(1)
+  const eventsLimit = 6 // Show 6 events per page
+  const { events, isLoading: eventsLoading, totalPages: eventsTotalPages } = useEvents({
+    page: eventsPage,
+    limit: eventsLimit
+  });
 
   const { adventures, loading: adventureLoading } = useAdventures()
-  const { 
-    friends, 
-    searchResult, 
-    loading: friendLoading, 
-    error, 
-    searchUser, 
-    sendRequest, 
+  const {
+    friends,
+    searchResult,
+    loading: friendLoading,
+    error,
+    searchUser,
+    sendRequest,
     clearSearchResult,
-    fetchFriends 
+    fetchFriends
   } = useFriend()
 
   // Fetch friends when component mounts or dialog opens
@@ -69,7 +76,7 @@ export default function LandingPage() {
 
   const handleSearchFriends = async (e) => {
     e.preventDefault()
-    
+
     if (!searchEmail.trim()) {
       toast(t("pleaseEnterEmail"), { type: "error", position: "top-right" })
       return
@@ -270,50 +277,214 @@ export default function LandingPage() {
             transition={{ duration: 0.5 }}
           >
             <h1 className="font-bold tracking-wider w-fit border-b-2 border-gray-500 pb-2">
-              {t("exploreFeaturedAdventures")}
+              {t("featuredEvents") || "Featured Events"}
             </h1>
           </motion.div>
-          <div className="adventures flex overflow-x-auto md:overflow-visible py-4">
-            <motion.div
-              className="cards flex flex-nowrap md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
-            >
-              {/* Placeholder cards */}
-              {[1, 2, 3].map((item) => (
+
+          {eventsLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            </div>
+          ) : events && events.length > 0 ? (
+            <>
+              <div className="adventures flex overflow-x-auto md:overflow-visible py-4">
                 <motion.div
-                  className="card p-0 min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all"
-                  key={item}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  className="cards flex flex-nowrap md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
-                  whileHover={{ y: -5 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
                 >
-                  <div className="img w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-t-lg overflow-hidden">
+                  {events.map((event) => (
                     <motion.div
-                      className="w-full h-full bg-gray-200"
-                      initial={{ scale: 1.2 }}
-                      whileHover={{ scale: 1 }}
-                      transition={{ duration: 0.5 }}
-                    ></motion.div>
-                  </div>
-                  <div className="content p-5">
-                    <div className="title">
-                      <h1 className="text-xl font-semibold text-gray-800">
-                        {t("adventure")} {item}
-                      </h1>
-                    </div>
-                    <div className="desp mt-2">
-                      <p className="text-gray-600">{t("adventureDescription")}</p>
-                    </div>
-                  </div>
+                      className="card p-0 min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all"
+                      key={event._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      whileHover={{ y: -5 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="img w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-t-lg overflow-hidden">
+                        <motion.div
+                          className="w-full h-full"
+                          initial={{ scale: 1.2 }}
+                          whileHover={{ scale: 1 }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          {event.medias && event.medias.length > 0 ? (
+                            <img
+                              src={event.medias[0]}
+                              alt={event.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.src = "/placeholder.svg"
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                              <Calendar className="h-12 w-12 text-gray-400" />
+                            </div>
+                          )}
+                        </motion.div>
+                      </div>
+                      <div className="content p-5">
+                        <div className="title">
+                          <h1 className="text-xl font-semibold text-gray-800 line-clamp-2">
+                            {event.title}
+                          </h1>
+                        </div>
+                        <div className="desp mt-2">
+                          <p className="text-gray-600 line-clamp-3">{event.description}</p>
+                        </div>
+                        <div className="event-details mt-4 space-y-2">
+                          <div className="flex items-center text-sm text-gray-500">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            <span>{new Date(event.date).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-500">
+                            <Clock className="h-4 w-4 mr-2" />
+                            <span>{event.time}</span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-500">
+                            <MapPin className="h-4 w-4 mr-2" />
+                            <span>{event.location}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
                 </motion.div>
-              ))}
-            </motion.div>
-          </div>
+              </div>
+
+              {/* Pagination */}
+              {eventsTotalPages > 1 && (
+                <div className="flex justify-center items-center mt-8 space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setEventsPage(prev => Math.max(1, prev - 1))}
+                    disabled={eventsPage === 1}
+                    className="flex items-center gap-2 px-4"
+                  >
+                    <span>Previous</span>
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    {eventsTotalPages <= 7 ? (
+                      // Show all pages if 7 or fewer
+                      Array.from({ length: eventsTotalPages }, (_, i) => i + 1).map((pageNum) => (
+                        <Button
+                          key={pageNum}
+                          variant={eventsPage === pageNum ? "default" : "outline"}
+                          onClick={() => setEventsPage(pageNum)}
+                          className="w-10 h-10 p-0"
+                          size="sm"
+                        >
+                          {pageNum}
+                        </Button>
+                      ))
+                    ) : (
+                      <>
+                        <Button
+                          variant={eventsPage === 1 ? "default" : "outline"}
+                          onClick={() => setEventsPage(1)}
+                          className="w-10 h-10 p-0"
+                          size="sm"
+                        >
+                          1
+                        </Button>
+                        {eventsPage > 3 && (
+                          <span className="px-2 text-gray-500">...</span>
+                        )}
+
+                        {Array.from({ length: 3 }, (_, i) => {
+                          const pageNum = eventsPage - 1 + i;
+                          if (pageNum > 1 && pageNum < eventsTotalPages) {
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={eventsPage === pageNum ? "default" : "outline"}
+                                onClick={() => setEventsPage(pageNum)}
+                                className="w-10 h-10 p-0"
+                                size="sm"
+                              >
+                                {pageNum}
+                              </Button>
+                            );
+                          }
+                          return null;
+                        })}
+
+                        {eventsPage < eventsTotalPages - 2 && (
+                          <span className="px-2 text-gray-500">...</span>
+                        )}
+                        {eventsTotalPages > 1 && (
+                          <Button
+                            variant={eventsPage === eventsTotalPages ? "default" : "outline"}
+                            onClick={() => setEventsPage(eventsTotalPages)}
+                            className="w-10 h-10 p-0"
+                            size="sm"
+                          >
+                            {eventsTotalPages}
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => setEventsPage(prev => Math.min(eventsTotalPages, prev + 1))}
+                    disabled={eventsPage === eventsTotalPages}
+                    className="flex items-center gap-2 px-4"
+                  >
+                    <span>Next</span>
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="adventures flex overflow-x-auto md:overflow-visible py-4">
+              <motion.div
+                className="cards flex flex-nowrap md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
+              >
+                {[1, 2, 3].map((item) => (
+                  <motion.div
+                    className="card p-0 min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all"
+                    key={item}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    whileHover={{ y: -5 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="img w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-t-lg overflow-hidden">
+                      <motion.div
+                        className="w-full h-full bg-gray-200"
+                        initial={{ scale: 1.2 }}
+                        whileHover={{ scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                      ></motion.div>
+                    </div>
+                    <div className="content p-5">
+                      <div className="title">
+                        <h1 className="text-xl font-semibold text-gray-800">
+                          {t("adventure")} {item}
+                        </h1>
+                      </div>
+                      <div className="desp mt-2">
+                        <p className="text-gray-600">{t("adventureDescription")}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+          )}
         </div>
       </div>
 

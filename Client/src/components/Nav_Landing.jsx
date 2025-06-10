@@ -39,11 +39,11 @@ export const Nav_Landing = () => {
 
     const handleLogout = async () => {
         try {
-            await axiosClient.post("/api/auth/logout", {},{
+            await axiosClient.post("/api/auth/logout", {}, {
                 withCredentials: true
             });
             dispatch(logout());
-            navigate("/"); 
+            navigate("/");
         } catch (error) {
             toast.error("Logout failed. Please try again.");
         }
@@ -145,7 +145,6 @@ export const Nav_Landing = () => {
                                             <DropdownMenuLabel className="font-normal">
                                                 <div className="flex flex-col space-y-1">
                                                     <p className="text-sm font-medium leading-none">{user?.user?.email}</p>
-                                                    <p className="text-xs leading-none text-muted-foreground">{t("level")}: Explorer</p>
                                                 </div>
                                             </DropdownMenuLabel>
                                             <DropdownMenuSeparator />
@@ -165,7 +164,7 @@ export const Nav_Landing = () => {
                                             </DropdownMenuGroup>
                                             <DropdownMenuSeparator />
                                             <DropdownMenuItem onClick={handleLogout}>
-                                                <LogOut className="mr-2 h-4 w-4"/>
+                                                <LogOut className="mr-2 h-4 w-4" />
                                                 <span>{t("logout")}</span>
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>

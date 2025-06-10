@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { LayoutDashboard, Users, Calendar, Settings, LogOut, Menu, Bell, User } from "lucide-react"
+import { LayoutDashboard, Users, Calendar, Settings, LogOut, Menu, Bell, User, LifeBuoy } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Button } from "../../components/ui/button"
 import { Separator } from "../../components/ui/separator"
@@ -53,6 +53,11 @@ const InstructorLayout = ({ children }) => {
             icon: <User className="h-5 w-5" />,
             label: t("instructor.profile"),
             path: "/instructor/profile",
+        },
+        {
+            icon: <LifeBuoy className="h-5 w-5" />,
+            label: t("instructor.support"),
+            path: "/instructor/support",
         },
         {
             icon: <Settings className="h-5 w-5" />,
@@ -156,43 +161,7 @@ const InstructorLayout = ({ children }) => {
                                 <LanguageSelector variant="minimal" />
                             </div>
 
-                            {/* Notifications */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9">
-                                        <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-                                        {notifications.some((n) => n.unread) && (
-                                            <span className="absolute -top-1 -right-1 h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-red-500"></span>
-                                        )}
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-[280px] sm:w-[320px] max-h-[400px] overflow-y-auto">
-                                    <DropdownMenuLabel className="text-sm sm:text-base">{t("instructor.notifications")}</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    {notifications.map((notification) => (
-                                        <DropdownMenuItem key={notification.id} className="cursor-pointer p-0">
-                                            <div className={`p-3 sm:p-4 w-full ${notification.unread ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}>
-                                                <div className="flex justify-between items-start gap-2">
-                                                    <div className="font-medium text-sm sm:text-base truncate">{notification.title}</div>
-                                                    {notification.unread && (
-                                                        <Badge variant="outline" className="ml-2 bg-blue-100 text-blue-800 border-blue-200 text-xs shrink-0">
-                                                            New
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                                <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{notification.message}</div>
-                                                <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">{notification.time}</div>
-                                            </div>
-                                        </DropdownMenuItem>
-                                    ))}
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="cursor-pointer">
-                                        <div className="text-center w-full py-2 text-blue-600 dark:text-blue-400 text-sm sm:text-base">
-                                            {t("instructor.viewAllNotifications")}
-                                        </div>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+
 
                             {/* User Menu */}
                             <DropdownMenu>
@@ -210,7 +179,6 @@ const InstructorLayout = ({ children }) => {
                                     <DropdownMenuLabel className="font-normal">
                                         <div className="flex flex-col space-y-1">
                                             <p className="text-sm font-medium leading-none truncate">{user?.user?.email || "Instructor"}</p>
-                                            <p className="text-xs leading-none text-muted-foreground">{t("level")}: Expert Instructor</p>
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />

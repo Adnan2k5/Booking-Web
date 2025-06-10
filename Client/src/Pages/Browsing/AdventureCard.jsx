@@ -21,50 +21,80 @@ export const AdventureCard = ({ adventure, formatDate, onBook }) => {
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-xl">
       <div className="relative h-48 sm:h-52 md:h-48 lg:h-52 xl:h-56 overflow-hidden">
-        {!isVideoPlaying ? (
-          <>
-            {adventure.medias[0] ? (
-              <img
-                src={adventure.medias[0] || "/placeholder.svg"}
-                alt={adventure.name}
-                className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-                <span className="text-white font-medium text-center px-4">{adventure.name}</span>
-              </div>
-            )}
-            {adventure.previewVideo && (
-              <motion.button
-                className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm p-1 sm:p-2 rounded-full shadow-md hover:bg-white transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleVideoClick}
-                aria-label="Play preview video"
-              >
-                <ChevronRight size={15} className="text-blue-600 ml-0.5" />
-              </motion.button>
-            )}
-          </>
-        ) : (
-          <div className="relative w-full h-full">
-            <video
-              src={adventure.previewVideo}
-              controls
-              autoPlay
-              className="w-full h-full object-cover"
-              onEnded={() => setIsVideoPlaying(false)}
+        {/* Thumbnail Image */}
+        <motion.div
+          className="absolute inset-0 w-full h-full"
+          initial={{ x: 0 }}
+          animate={{
+            x: isVideoPlaying ? "-100%" : "0%"
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+            duration: 0.5
+          }}
+        >
+          {adventure.medias[0] ? (
+            <img
+              src={adventure.medias[0] || "/placeholder.svg"}
+              alt={adventure.name}
+              className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
             />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+              <span className="text-white font-medium text-center px-4">{adventure.name}</span>
+            </div>
+          )}
+          {adventure.previewVideo && !isVideoPlaying && (
             <motion.button
-              className="absolute top-2 right-2 bg-black/70 text-white p-1.5 rounded-full hover:bg-black/90 transition-colors"
+              className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm p-1 sm:p-2 rounded-full shadow-md hover:bg-white transition-colors"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              onClick={handleCloseVideo}
-              aria-label="Close video"
+              onClick={handleVideoClick}
+              aria-label="Play preview video"
             >
-              <X size={16} />
+              <ChevronRight size={15} className="text-blue-600 ml-0.5" />
             </motion.button>
-          </div>
+          )}
+        </motion.div>
+
+        {/* Video Player */}
+        {adventure.previewVideo && (
+          <motion.div
+            className="absolute inset-0 w-full h-full"
+            initial={{ x: "100%" }}
+            animate={{
+              x: isVideoPlaying ? "0%" : "100%"
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+              duration: 0.5
+            }}
+          >
+            <div className="relative w-full h-full">
+              <video
+                src={adventure.previewVideo}
+                autoPlay
+                className="w-full h-full object-cover"
+                onEnded={() => setIsVideoPlaying(false)}
+                style={{ outline: 'none' }}
+                playsInline
+                muted={false}
+              />
+              <motion.button
+                className="absolute top-2 right-2 bg-black/70 text-white p-1.5 rounded-full hover:bg-black/90 transition-colors z-10"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleCloseVideo}
+                aria-label="Close video"
+              >
+                <X size={16} />
+              </motion.button>
+            </div>
+          </motion.div>
         )}
       </div>
 
