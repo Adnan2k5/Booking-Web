@@ -11,8 +11,12 @@ import {
   verifyHotel,
 } from "../controllers/hotel.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
+import { languageMiddleware } from "../middlewares/language.middleware.js";
 
 const router = express.Router();
+
+// Apply language middleware to all routes
+router.use(languageMiddleware);
 
 router.route("/").post(
   upload.fields([

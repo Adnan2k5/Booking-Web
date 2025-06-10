@@ -6,9 +6,12 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "../utils/cloudinary.js";
+import { translateObjectFields, translateObjectsFields } from "../utils/translation.js";
+import { getLanguage } from "../middlewares/language.middleware.js";
 
 export const getItemById = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const language = getLanguage(req); // Get language from middleware
 
   if (!id) {
     throw new ApiError(400, "Item ID is required");
@@ -20,11 +23,19 @@ export const getItemById = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Item not found");
   }
 
-  res.status(200).json(new ApiResponse(200, "Item fetched successfully", item));
+  // Translate item fields if language is not English
+  const translatedItem = await translateObjectFields(
+    item.toObject(),
+    ['name', 'description'],
+    language
+  );
+
+  res.status(200).json(new ApiResponse(200, "Item fetched successfully", translatedItem));
 });
 
 export const discoverItems = asyncHandler(async (req, res) => {
   const { category, search, limit = 10, page = 1, advenureId } = req.query;
+  const language = getLanguage(req); // Get language from middleware
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
   const queryObj = {};
@@ -50,9 +61,16 @@ export const discoverItems = asyncHandler(async (req, res) => {
 
   const total = await Item.countDocuments(queryObj);
 
+  // Translate items if language is not English
+  const translatedItems = await translateObjectsFields(
+    items.map(item => item.toObject()),
+    ['name', 'description'],
+    language
+  );
+
   res
     .status(200)
-    .json(new ApiResponse(200, { items, total }, "Items fetched successfully"));
+    .json(new ApiResponse(200, { items: translatedItems, total }, "Items fetched successfully"));
 });
 
 export const createItem = asyncHandler(async (req, res) => {
@@ -183,6 +201,7 @@ export const deleteItem = asyncHandler(async (req, res) => {
 
 export const getAllItems = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, search, category } = req.query;
+  const language = getLanguage(req); // Get language from middleware
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -202,5 +221,12 @@ export const getAllItems = asyncHandler(async (req, res) => {
 
   const total = await Item.countDocuments(queryObj);
 
-  res.json(new ApiResponse(200, "Items fetched successfully", items, total));
+  // Translate items if language is not English
+  const translatedItems = await translateObjectsFields(
+    items.map(item => item.toObject()),
+    ['name', 'description'],
+    language
+  );
+
+  res.json(new ApiResponse(200, "Items fetched successfully", translatedItems, total));
 });
