@@ -13,9 +13,10 @@ import { UpdateEmail, UpdatePassword, VerifyNewEmail, VerifyUser } from "../../A
 import { useAuth } from "../AuthProvider"
 import { Modal } from "antd"
 import { InputOTPSlot, InputOTP, InputOTPGroup } from "../../components/ui/input-otp"
+import { updateLanguageHeaders } from "../../Api/language.api.js"
 
 const InstructorSettings = () => {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
     const [loading, setLoading] = useState(false)
     const { user } = useAuth();
     const [newEmail, setNewEmail] = useState("");
@@ -28,7 +29,7 @@ const InstructorSettings = () => {
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
-        language: "en",
+        language: i18n.language || "en",
     })
 
     const handleSettingChange = (section, field, value) => {
@@ -45,6 +46,12 @@ const InstructorSettings = () => {
                 ...prev,
                 [field]: value,
             }))
+
+            // Handle language change specifically
+            if (field === "language") {
+                i18n.changeLanguage(value)
+                updateLanguageHeaders(value)
+            }
         }
     }
 
@@ -172,7 +179,7 @@ const InstructorSettings = () => {
                                     <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
                                         <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                                         <Select
-                                            value={settings.language}
+                                            value={i18n.language}
                                             onValueChange={(value) => handleSettingChange(null, "language", value)}
                                         >
                                             <SelectTrigger className="w-full sm:w-[180px]">

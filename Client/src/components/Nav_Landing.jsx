@@ -8,6 +8,7 @@ import { MdLanguage, MdMenu, MdClose } from "react-icons/md"
 import { IoIosLogIn } from "react-icons/io"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../Pages/AuthProvider"
+import { useWebsiteSettings } from "../contexts/WebsiteSettingsContext"
 import { useNavigate } from "react-router-dom"
 import {
     DropdownMenu,
@@ -24,7 +25,8 @@ import LanguageSelector from "./LanguageSelector"
 import { useDispatch } from "react-redux";
 import { logout } from "../Store/UserSlice";
 import { toast } from "sonner"
-import { axiosClient } from "../AxiosClient/axios"
+import { axiosClient } from "../AxiosClient/axios.js"
+import { updateLanguageHeaders } from "../Api/language.api.js"
 
 
 
@@ -33,6 +35,7 @@ export const Nav_Landing = () => {
     const { t, i18n } = useTranslation()
     const [loading, setLoading] = useState(false)
     const { user } = useAuth()
+    const { isShopEnabled, isHotelsEnabled } = useWebsiteSettings()
     const navigate = useNavigate()
 
     const dispatch = useDispatch();
@@ -59,6 +62,8 @@ export const Nav_Landing = () => {
 
     const changeLanguage = (code) => {
         i18n.changeLanguage(code)
+        // Update axios headers with the new language
+        updateLanguageHeaders(code)
     }
 
     const navigateprofile = () => {
@@ -109,13 +114,15 @@ export const Nav_Landing = () => {
                             >
                                 {t("explore")}
                             </motion.li>
-                            <motion.li
-                                className="cursor-pointer hover:text-emerald-400 transition-colors"
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                <a href="/shop">{t("shop")}</a>
-                            </motion.li>
+                            {isShopEnabled && (
+                                <motion.li
+                                    className="cursor-pointer hover:text-emerald-400 transition-colors"
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    <a href="/shop">{t("shop")}</a>
+                                </motion.li>
+                            )}
                             <motion.li
                                 className="cursor-pointer hover:text-emerald-400 transition-colors"
                                 whileHover={{ scale: 1.1 }}
@@ -196,9 +203,11 @@ export const Nav_Landing = () => {
                         >
                             <ul className="flex flex-col space-y-3">
                                 <li className="cursor-pointer hover:text-gray-300">{t("explore")}</li>
-                                <li className="cursor-pointer hover:text-gray-300">
-                                    <a href="/shop">{t("shop")}</a>
-                                </li>
+                                {isShopEnabled && (
+                                    <li className="cursor-pointer hover:text-gray-300">
+                                        <a href="/shop">{t("shop")}</a>
+                                    </li>
+                                )}
                                 <li className="cursor-pointer hover:text-gray-300">{t("mission")}</li>
                                 <li className="flex items-center">
                                     <MdLanguage className="text-white text-xl mr-2" />

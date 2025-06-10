@@ -185,6 +185,14 @@ function AdminSidebar({ pathname }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/website-settings"}>
+                  <Link to="/admin/website-settings">
+                    <Settings className="h-4 w-4" />
+                    <span>Website Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

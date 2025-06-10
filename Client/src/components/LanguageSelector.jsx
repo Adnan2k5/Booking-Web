@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { motion, AnimatePresence } from "framer-motion"
 import { Check, Globe } from "lucide-react"
 import { Button } from "./ui/button"
+import { updateLanguageHeaders } from "../Api/language.api.js"
 
 const languages = [
     {
@@ -51,13 +52,23 @@ const LanguageSelector = ({ variant = "default" }) => {
         const lang = languages.find((lang) => lang.code === i18n.language)
         if (lang) {
             setCurrentLanguage(lang)
+            // Update axios headers when language changes from other sources
+            updateLanguageHeaders(lang.code)
         }
     }, [i18n.language])
+
+    // Initialize headers on component mount
+    useEffect(() => {
+        const currentLang = i18n.language || 'en'
+        updateLanguageHeaders(currentLang)
+    }, [])
 
     const changeLanguage = (language) => {
         i18n.changeLanguage(language.code)
         setCurrentLanguage(language)
         setIsOpen(false)
+        // Update axios headers with the new language
+        updateLanguageHeaders(language.code)
     }
 
     // Variants for animations
