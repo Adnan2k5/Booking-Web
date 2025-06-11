@@ -64,7 +64,7 @@ export const discoverItems = asyncHandler(async (req, res) => {
   // Translate items if language is not English
   const translatedItems = await translateObjectsFields(
     items.map(item => item.toObject()),
-    ['name', 'description'],
+    ['name', 'description', 'category'],
     language
   );
 
@@ -224,7 +224,7 @@ export const getAllItems = asyncHandler(async (req, res) => {
   // Translate items if language is not English
   const translatedItems = await translateObjectsFields(
     items.map(item => item.toObject()),
-    ['name', 'description'],
+    ['name', 'description', 'category'],
     language
   );
 

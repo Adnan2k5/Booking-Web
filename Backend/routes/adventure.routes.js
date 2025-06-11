@@ -10,8 +10,12 @@ import {
 } from "../controllers/adventure.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { languageMiddleware } from "../middlewares/language.middleware.js";
 
 const adventureRoute = express.Router();
+
+// Apply language middleware to all routes
+adventureRoute.use(languageMiddleware);
 
 adventureRoute.get("/all", getAllAdventure);
 adventureRoute.post(

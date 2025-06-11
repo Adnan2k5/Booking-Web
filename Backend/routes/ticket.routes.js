@@ -11,11 +11,13 @@ import {
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyAdmin } from "../middlewares/admin.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
+import { languageMiddleware } from "../middlewares/language.middleware.js";
 
 const router = Router();
 
-// Apply JWT verification to all routes
+// Apply JWT verification and language middleware to all routes
 router.use(verifyJWT);
+router.use(languageMiddleware);
 
 // User routes
 router.post("/create", upload.array("attachments", 5), createTicket);

@@ -10,8 +10,12 @@ import {
 } from "../controllers/declaration.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyAdmin } from "../middlewares/admin.middleware.js";
+import { languageMiddleware } from "../middlewares/language.middleware.js";
 
 const router = express.Router();
+
+// Apply language middleware to all routes
+router.use(languageMiddleware);
 
 // Public routes - anyone can view declarations
 router.get("/", getAllDeclarations); // Get all declarations
