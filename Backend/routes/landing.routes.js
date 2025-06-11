@@ -12,7 +12,7 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 router.post("/", verifyJWT, upload.fields([{ name: "medias" }]), createEvents);
-router.get("/", verifyJWT, getAllEvents);
+router.get("/", getAllEvents);
 router.get("/:id", verifyJWT, getEventById);
 router.put("/:id", verifyJWT, upload.fields([{ name: "medias" }]), updateEvent);
 router.delete("/:id", verifyJWT, deleteEvent);

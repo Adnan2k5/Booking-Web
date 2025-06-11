@@ -18,7 +18,7 @@ export const Hotel = () => {
     const [activeImage, setActiveImage] = useState(null);
     const [updateModalOpen, setUpdateModalOpen] = useState(false);
     const [updateType, setUpdateType] = useState('price');
-    const Navigate = useNavigate();    const fetchHotel = async () => {
+    const Navigate = useNavigate(); const fetchHotel = async () => {
         setLoading(true);
         try {
             const res = await getHotelByOwnerId(user.user._id);
@@ -126,8 +126,8 @@ export const Hotel = () => {
                                                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                                                     <span>Base Price: ${hotel.price}</span>
                                                 </div>
-                                                <Button 
-                                                    size="sm" 
+                                                <Button
+                                                    size="sm"
                                                     variant="outline"
                                                     onClick={() => openUpdateModal('price')}
                                                 >
@@ -143,8 +143,8 @@ export const Hotel = () => {
                                                     <Star className="h-4 w-4 text-muted-foreground" />
                                                     <span>Rating: {hotel.rating || 0}/5</span>
                                                 </div>
-                                                <Button 
-                                                    size="sm" 
+                                                <Button
+                                                    size="sm"
                                                     variant="outline"
                                                     onClick={() => openUpdateModal('rating')}
                                                 >
@@ -299,7 +299,7 @@ export const Hotel = () => {
                         </Card>                    </div>
                 </div>
             </div>
-            
+
             {/* Update Modal */}
             <HotelUpdateModal
                 isOpen={updateModalOpen}

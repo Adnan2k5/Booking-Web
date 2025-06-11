@@ -6,7 +6,10 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import sendEmail from "../utils/sendOTP.js";
 import { Otp } from "../models/otp.model.js";
-import { translateObjectFields, translateObjectsFields } from "../utils/translation.js";
+import {
+  translateObjectFields,
+  translateObjectsFields,
+} from "../utils/translation.js";
 import { getLanguage } from "../middlewares/language.middleware.js";
 
 export const verifyHotel = asyncHandler(async (req, res) => {
@@ -138,74 +141,78 @@ export const HotelRegistration = asyncHandler(async (req, res) => {
 export const getHotelById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const language = getLanguage(req);
-  
+
   // Fetch from database
   const hotelData = await Hotel.find({ owner: id })
     .populate("owner", "name email")
     .populate("location", "name");
-  
+
   if (!hotelData || hotelData.length === 0) {
     throw new ApiError(404, "Hotel not found");
   }
-  
+
   let hotel;
   // Translate hotel fields if language is not English
-  if (language !== 'en') {
-    const fieldsToTranslate = ['name', 'description', 'category', 'amenities'];
-    hotel = await translateObjectsFields(hotelData, fieldsToTranslate, language);
-    
+  if (language !== "en") {
+    const fieldsToTranslate = ["name", "description", "category", "amenities"];
+    hotel = await translateObjectsFields(
+      hotelData,
+      fieldsToTranslate,
+      language
+    );
+
     // Also translate location names if populated
     for (let i = 0; i < hotel.length; i++) {
       if (hotel[i].location && hotel[i].location.name) {
         hotel[i].location.name = await translateObjectFields(
-          hotel[i].location, 
-          ['name'], 
+          hotel[i].location,
+          ["name"],
           language
-        ).then(obj => obj.name);
+        ).then((obj) => obj.name);
       }
     }
   } else {
     hotel = hotelData;
   }
-  
+
   res
     .status(200)
     .json(new ApiResponse(200, { hotel }, "Hotel retrieved successfully"));
 });
 
 export const getHotel = asyncHandler(async (req, res) => {
-  const { 
-    search = "", 
-    page = 1, 
-    limit = 10, 
-    verified, 
+  const {
+    search = "",
+    page = 1,
+    limit = 10,
+    verified,
     location,
-    minPrice, 
-    maxPrice, 
-    minRating, 
-    sortBy = "createdAt", 
-    sortOrder = "desc" 
+    minPrice,
+    maxPrice,
+    minRating,
+    sortBy = "createdAt",
+    sortOrder = "desc",
   } = req.query;
-  
+
   const language = getLanguage(req);
-  
+
   let query = {};
-  
+
   if (search) {
     query.$or = [
       { name: { $regex: search, $options: "i" } },
       { location: { $regex: search, $options: "i" } },
     ];
   }
-  
+
   // Location filtering - handle both location ID and location name
   if (location) {
     // First, try to find location by name to get the ID
     const { Location } = await import("../models/location.model.js");
-    const locationDoc = await Location.findOne({ 
-      name: { $regex: location, $options: "i" } 
+    const locationDoc = await Location.findOne({
+      name: { $regex: location, $options: "i" },
     });
-    
+
     if (locationDoc) {
       query.location = locationDoc._id;
     } else {
@@ -213,25 +220,25 @@ export const getHotel = asyncHandler(async (req, res) => {
       query.location = location;
     }
   }
-  
+
   if (verified) {
     query.verified = verified;
   }
-  
+
   // Price filtering
   if (minPrice || maxPrice) {
     query.pricePerNight = {};
     if (minPrice) query.pricePerNight.$gte = Number(minPrice);
     if (maxPrice) query.pricePerNight.$lte = Number(maxPrice);
   }
-  
+
   // Rating filtering
   if (minRating) {
     query.rating = { $gte: Number(minRating) };
   }
-  
+
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  
+
   // Sorting
   const sortOptions = {};
   sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
@@ -242,22 +249,22 @@ export const getHotel = asyncHandler(async (req, res) => {
     .limit(parseInt(limit))
     .populate("owner", "name email")
     .populate("location", "name");
-    
+
   const total = await Hotel.countDocuments(query);
-  
+
   // Translate hotel fields if language is not English
-  if (language !== 'en' && hotels.length > 0) {
-    const fieldsToTranslate = ['name', 'description', 'category', 'amenities'];
+  if (language !== "en" && hotels.length > 0) {
+    const fieldsToTranslate = ["name", "description", "category", "amenities"];
     hotels = await translateObjectsFields(hotels, fieldsToTranslate, language);
-    
+
     // Also translate location names if populated
     for (let i = 0; i < hotels.length; i++) {
       if (hotels[i].location && hotels[i].location.name) {
         hotels[i].location.name = await translateObjectFields(
-          hotels[i].location, 
-          ['name'], 
+          hotels[i].location,
+          ["name"],
           language
-        ).then(obj => obj.name);
+        ).then((obj) => obj.name);
       }
     }
   }
@@ -282,7 +289,7 @@ export const approveHotel = asyncHandler(async (req, res) => {
   if (!hotel) {
     throw new ApiError(404, "Hotel not found");
   }
-  
+
   res
     .status(200)
     .json(new ApiResponse(200, { hotel }, "Hotel approved successfully"));
@@ -298,7 +305,7 @@ export const rejectHotel = asyncHandler(async (req, res) => {
   if (!hotel) {
     throw new ApiError(404, "Hotel not found");
   }
-  
+
   res
     .status(200)
     .json(new ApiResponse(200, { hotel }, "Hotel rejected successfully"));
