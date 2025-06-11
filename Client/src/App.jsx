@@ -32,6 +32,7 @@ import Dash_Tickets from "./Pages/Admin/SubPages/Tickets"
 import Dash_Terms from "./Pages/Admin/SubPages/Terms"
 import Dash_Declation from "./Pages/Admin/SubPages/Declaration"
 import LocationsPage from "./Pages/Admin/SubPages/Location"
+import EventDetailPage from "./Pages/EventDetailPage"
 
 // Lazy loaded components
 const LoginPage = lazy(() => import("./Pages/LoginPage"))
@@ -124,6 +125,7 @@ const App = () => {
                   <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/browse" element={<BrowsingPage />} />
+                  <Route path="/event/:id" element={<EventDetailPage />} />
                   <Route path="/booking" element={<Booking />} />
                   <Route path="/confirmation" element={<ConfirmationPage />} />
                   <Route path="/shop" element={

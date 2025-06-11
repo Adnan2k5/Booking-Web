@@ -37,6 +37,12 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin", "instructor", "hotel", "superadmin"],
       default: "user",
     },
+    level: {
+      type: Number,
+      default: 1,
+      min: 1,
+      max: 10,
+    },
     instructor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Instructor",

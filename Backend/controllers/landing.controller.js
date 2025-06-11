@@ -2,7 +2,7 @@ import { Event } from "../models/events.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 export const createEvents = asyncHandler(async (req, res, next) => {
-  const { title, description, date, time, location } = req.body;
+  const { title, description, date, time, location, level } = req.body;
   if (!title || !description || !date || !time || !location) {
     return res.status(400).json({ message: "All fields are required" });
   }
@@ -27,6 +27,7 @@ export const createEvents = asyncHandler(async (req, res, next) => {
     date,
     time,
     location,
+    level: level || 1,
     medias,
   });
   await event.save();
@@ -76,7 +77,7 @@ export const getEventById = asyncHandler(async (req, res, next) => {
 
 export const updateEvent = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const { title, description, date, time, location } = req.body;
+  const { title, description, date, time, location, level } = req.body;
 
   let medias = [];
   if (req.files && req.files.medias) {
@@ -98,6 +99,7 @@ export const updateEvent = asyncHandler(async (req, res, next) => {
     date,
     time,
     location,
+    level: level || 1,
     medias,
   };
 

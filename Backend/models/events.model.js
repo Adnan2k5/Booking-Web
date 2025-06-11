@@ -22,6 +22,13 @@ const eventSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    level: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 10,
+      default: 1,
+    },
     medias: [
       {
         type: String,
