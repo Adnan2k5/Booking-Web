@@ -4,6 +4,8 @@ import ApiResponse from "../utils/ApiResponse.js";
 import { Ticket } from "../models/ticket.model.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { translateObjectsFields, translateObjectFields } from "../utils/translation.js";
+import { getLanguage } from "../middlewares/language.middleware.js";
 
 // Create a new support ticket
 const createTicket = asyncHandler(async (req, res) => {
@@ -40,9 +42,23 @@ const createTicket = asyncHandler(async (req, res) => {
 
 // Get all tickets for current user
 const getUserTickets = asyncHandler(async (req, res) => {
-  const tickets = await Ticket.find({ user: req.user._id })
+  const language = getLanguage(req);
+  
+  const ticketsData = await Ticket.find({ user: req.user._id })
     .sort({ createdAt: -1 })
     .select("-responses.responder");
+
+  // Convert to plain objects
+  const plainTickets = ticketsData.map(ticket => ticket.toJSON());
+  
+  let tickets;
+  // Translate ticket fields if language is not English
+  if (language !== 'en') {
+    const fieldsToTranslate = ['subject', 'description', 'category'];
+    tickets = await translateObjectsFields(plainTickets, fieldsToTranslate, language);
+  } else {
+    tickets = plainTickets;
+  }
 
   return res
     .status(200)
@@ -52,21 +68,44 @@ const getUserTickets = asyncHandler(async (req, res) => {
 // Get a specific ticket by ID
 const getTicketById = asyncHandler(async (req, res) => {
   const { ticketId } = req.params;
+  const language = getLanguage(req);
 
-  const ticket = await Ticket.findById(ticketId)
+  const ticketData = await Ticket.findById(ticketId)
     .populate("user", "name email")
     .populate("responses.responder", "name");
 
-  if (!ticket) {
+  if (!ticketData) {
     throw new ApiError(404, "Ticket not found");
   }
 
   // Check if user owns this ticket or is admin
   if (
-    ticket.user._id.toString() !== req.user._id.toString() &&
+    ticketData.user._id.toString() !== req.user._id.toString() &&
     req.user.role !== "admin"
   ) {
     throw new ApiError(403, "You don't have permission to view this ticket");
+  }
+
+  // Convert to plain object
+  const plainTicket = ticketData.toJSON();
+  
+  let ticket;
+  // Translate ticket fields if language is not English
+  if (language !== 'en') {
+    const fieldsToTranslate = ['subject', 'description', 'category'];
+    ticket = await translateObjectFields(plainTicket, fieldsToTranslate, language);
+    
+    // Also translate response messages
+    if (ticket.responses && ticket.responses.length > 0) {
+      const translatedResponses = await translateObjectsFields(
+        ticket.responses, 
+        ['message'], 
+        language
+      );
+      ticket.responses = translatedResponses;
+    }
+  } else {
+    ticket = plainTicket;
   }
 
   return res
@@ -159,6 +198,7 @@ const updateTicketStatus = asyncHandler(async (req, res) => {
 // Admin: Get all tickets (with filters)
 const getAllTickets = asyncHandler(async (req, res) => {
   const { status, priority, category, page = 1, limit = 10, search } = req.query;
+  const language = getLanguage(req);
 
   // Create the base filter
   const filter = {};
@@ -194,13 +234,25 @@ const getAllTickets = asyncHandler(async (req, res) => {
     filter.$or = searchConditions;
   }
 
-  const tickets = await Ticket.find(filter)
+  const ticketsData = await Ticket.find(filter)
     .sort({ updatedAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
     .populate("user", "name email");
 
   const totalTickets = await Ticket.countDocuments(filter);
+
+  // Convert to plain objects
+  const plainTickets = ticketsData.map(ticket => ticket.toJSON());
+  
+  let tickets;
+  // Translate ticket fields if language is not English
+  if (language !== 'en') {
+    const fieldsToTranslate = ['subject', 'description', 'category'];
+    tickets = await translateObjectsFields(plainTickets, fieldsToTranslate, language);
+  } else {
+    tickets = plainTickets;
+  }
 
   return res.status(200).json(
     new ApiResponse(

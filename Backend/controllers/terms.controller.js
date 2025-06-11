@@ -2,6 +2,8 @@ import { Terms } from "../models/terms.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { translateObjectsFields, translateObjectFields } from "../utils/translation.js";
+import { getLanguage } from "../middlewares/language.middleware.js";
 
 // Add default terms and condition if none exists
 export const ensureDefaultTerms = async () => {
@@ -35,13 +37,47 @@ export const ensureDefaultTerms = async () => {
 // Get current published terms, latest draft, and history for a specific title
 export const getTerms = asyncHandler(async (req, res) => {
     const { title } = req.query; // Expect title in query params
+    const language = getLanguage(req);
+    
     if (!title) {
         throw new ApiError(400, "Title is required to fetch terms");
     }
+    
     const current = await Terms.findOne({ title, status: "published" }).sort({ publishedAt: -1 });
     const draft = await Terms.findOne({ title, status: "draft" }).sort({ updatedAt: -1 });
     const history = await Terms.find({ title, status: "published" }).sort({ publishedAt: -1 });
-    res.status(200).json(new ApiResponse(200, { current, draft, history }, "Terms fetched successfully"));
+    
+    // Translate terms if language is not English
+    let translatedCurrent = null, translatedDraft = null, translatedHistory = [];
+    
+    if (language !== 'en') {
+        const fieldsToTranslate = ['title', 'content'];
+        
+        if (current) {
+            const plainCurrent = current.toJSON();
+            translatedCurrent = await translateObjectFields(plainCurrent, fieldsToTranslate, language);
+        }
+        
+        if (draft) {
+            const plainDraft = draft.toJSON();
+            translatedDraft = await translateObjectFields(plainDraft, fieldsToTranslate, language);
+        }
+        
+        if (history.length > 0) {
+            const plainHistory = history.map(term => term.toJSON());
+            translatedHistory = await translateObjectsFields(plainHistory, fieldsToTranslate, language);
+        }
+    } else {
+        translatedCurrent = current ? current.toJSON() : null;
+        translatedDraft = draft ? draft.toJSON() : null;
+        translatedHistory = history.map(term => term.toJSON());
+    }
+    
+    res.status(200).json(new ApiResponse(200, { 
+        current: translatedCurrent, 
+        draft: translatedDraft, 
+        history: translatedHistory 
+    }, "Terms fetched successfully"));
 });
 
 // Save or update draft for a specific title
@@ -151,7 +187,22 @@ export const deleteVersion = asyncHandler(async (req, res) => {
 
 // Get all term documents (irrespective of title or status)
 export const getAllTermDocuments = asyncHandler(async (req, res) => {
-    const allTerms = await Terms.find({}).sort({ title: 1, updatedAt: -1 });
+    const language = getLanguage(req);
+    
+    const allTermsData = await Terms.find({}).sort({ title: 1, updatedAt: -1 });
+    
+    // Convert to plain objects
+    const plainTerms = allTermsData.map(term => term.toJSON());
+    
+    let allTerms;
+    // Translate terms if language is not English
+    if (language !== 'en' && plainTerms.length > 0) {
+        const fieldsToTranslate = ['title', 'content'];
+        allTerms = await translateObjectsFields(plainTerms, fieldsToTranslate, language);
+    } else {
+        allTerms = plainTerms;
+    }
+    
     // Returns an empty array if no terms are found, which is appropriate for this type of query.
     res.status(200).json(new ApiResponse(200, allTerms, "All terms documents fetched successfully"));
 });
