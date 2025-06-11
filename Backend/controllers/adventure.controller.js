@@ -7,9 +7,25 @@ import {
 } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { translateObjectsFields, translateObjectFields } from "../utils/translation.js";
+import { getLanguage } from "../middlewares/language.middleware.js";
 
 export const getAllAdventure = asyncHandler(async (req, res) => {
-  const adventures = await Adventure.find().populate("location");
+  const language = getLanguage(req);
+  
+  const adventuresData = await Adventure.find().populate("location");
+  
+  // Convert to plain objects
+  const plainAdventures = adventuresData.map(adventure => adventure.toJSON());
+  
+  let adventures;
+  // Translate adventure names if language is not English
+  if (language !== 'en') {
+    const fieldsToTranslate = ['name'];
+    adventures = await translateObjectsFields(plainAdventures, fieldsToTranslate, language);
+  } else {
+    adventures = plainAdventures;
+  }
 
   return res.status(200).json({
     adventures,
@@ -167,27 +183,56 @@ export const deleteAdventure = asyncHandler(async (req, res) => {
 
 export const getAdventure = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const language = getLanguage(req);
 
   if (!id) {
     throw new ApiError(400, "Adventure id is required");
   }
 
-  const adventure = await Adventure.findById(id).populate("location");
+  const adventureData = await Adventure.findById(id).populate("location");
 
-  if (!adventure) {
+  if (!adventureData) {
     throw new ApiError(404, "Adventure not found");
+  }
+
+  // Convert to plain object
+  const plainAdventure = adventureData.toJSON();
+  
+  let adventure;
+  // Translate adventure name if language is not English
+  if (language !== 'en') {
+    const fieldsToTranslate = ['name'];
+    adventure = await translateObjectFields(plainAdventure, fieldsToTranslate, language);
+  } else {
+    adventure = plainAdventure;
   }
 
   return res.status(200).json(adventure);
 });
 
 export const getInstructorAdventures = asyncHandler(async (req, res) => {
-  const adventures = await Adventure.find({ instructor: req.user._id });
+  const language = getLanguage(req);
+  
+  const adventuresData = await Adventure.find({ instructor: req.user._id });
+  
+  // Convert to plain objects
+  const plainAdventures = adventuresData.map(adventure => adventure.toJSON());
+  
+  let adventures;
+  // Translate adventure names if language is not English
+  if (language !== 'en') {
+    const fieldsToTranslate = ['name'];
+    adventures = await translateObjectsFields(plainAdventures, fieldsToTranslate, language);
+  } else {
+    adventures = plainAdventures;
+  }
+  
   return res.status(200).json(adventures);
 });
 
 export const getFilteredAdventures = asyncHandler(async (req, res) => {
   const { adventure, location, session_date } = req.query;
+  const language = getLanguage(req);
 
   const date = new Date(session_date);
   const startOfDay = new Date(date.setHours(0, 0, 0, 0));
@@ -218,9 +263,21 @@ export const getFilteredAdventures = asyncHandler(async (req, res) => {
   ];
 
   // Step 4: Fetch adventures with populated location data
-  const adventures = await Adventure.find({
+  const adventuresData = await Adventure.find({
     _id: { $in: uniqueAdventureIds },
   }).populate("location");
+
+  // Convert to plain objects
+  const plainAdventures = adventuresData.map(adventure => adventure.toJSON());
+  
+  let adventures;
+  // Translate adventure names if language is not English
+  if (language !== 'en') {
+    const fieldsToTranslate = ['name'];
+    adventures = await translateObjectsFields(plainAdventures, fieldsToTranslate, language);
+  } else {
+    adventures = plainAdventures;
+  }
 
   // Response
   res.status(200).json({ data: adventures, total: adventures.length });
