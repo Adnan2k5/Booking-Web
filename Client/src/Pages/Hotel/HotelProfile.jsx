@@ -11,7 +11,7 @@ import { HotelUpdateModal } from '../../components/HotelUpdateModal';
 import { MapPin, Phone, Home, Users, PocketIcon as Pool, Award, FileText, Shield, Star, DollarSign, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export const Hotel = () => {
+export const HotelProfile = () => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [hotel, setHotel] = useState(null);
