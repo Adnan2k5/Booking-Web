@@ -1,6 +1,8 @@
 import { Event } from "../models/events.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { translateObjectsFields, translateObjectFields } from "../utils/translation.js";
+import { getLanguage } from "../middlewares/language.middleware.js";
 export const createEvents = asyncHandler(async (req, res, next) => {
   const { title, description, date, time, location } = req.body;
   if (!title || !description || !date || !time || !location) {
@@ -39,6 +41,8 @@ export const createEvents = asyncHandler(async (req, res, next) => {
 
 export const getAllEvents = asyncHandler(async (req, res, next) => {
   const { search = "", page = 1, limit = 10 } = req.query;
+  const language = getLanguage(req);
+  
   const query = {};
   if (search) {
     query.$or = [
@@ -46,14 +50,29 @@ export const getAllEvents = asyncHandler(async (req, res, next) => {
       { description: { $regex: search, $options: "i" } },
     ];
   }
+  
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  const events = await Event.find(query)
+  const eventsData = await Event.find(query)
     .sort({ date: 1 })
     .skip(skip)
     .limit(parseInt(limit));
-  if (!events || events.length === 0) {
+    
+  if (!eventsData || eventsData.length === 0) {
     return res.status(200).json({ message: "No events found" });
   }
+
+  // Convert to plain objects
+  const plainEvents = eventsData.map(event => event.toJSON());
+  
+  let events;
+  // Translate event fields if language is not English
+  if (language !== 'en') {
+    const fieldsToTranslate = ['title', 'description', 'location'];
+    events = await translateObjectsFields(plainEvents, fieldsToTranslate, language);
+  } else {
+    events = plainEvents;
+  }
+  
   res.status(200).json({
     success: true,
     data: events,
@@ -63,10 +82,25 @@ export const getAllEvents = asyncHandler(async (req, res, next) => {
 
 export const getEventById = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const event = await Event.findById(id);
-  if (!event) {
+  const language = getLanguage(req);
+  
+  const eventData = await Event.findById(id);
+  if (!eventData) {
     return res.status(404).json({ message: "Event not found" });
   }
+
+  // Convert to plain object
+  const plainEvent = eventData.toJSON();
+  
+  let event;
+  // Translate event fields if language is not English
+  if (language !== 'en') {
+    const fieldsToTranslate = ['title', 'description', 'location'];
+    event = await translateObjectFields(plainEvent, fieldsToTranslate, language);
+  } else {
+    event = plainEvent;
+  }
+  
   res.status(200).json({
     success: true,
     message: "Event retrieved successfully",
