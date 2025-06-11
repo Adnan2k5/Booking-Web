@@ -40,7 +40,6 @@ export const translateText = async (text, targetLanguage, sourceLanguage = 'en')
 
     // Cache the translation for 24 hours
     await redis.setEx(cacheKey, 86400, translation);
-
     return translation;
   } catch (error) {
     console.error('Translation error:', error);
@@ -141,28 +140,18 @@ export const translateObjectFields = async (obj, fieldsToTranslate, targetLangua
   if (targetLanguage === sourceLanguage) {
     return obj;
   }
-
-  const translatedObj = { ...obj };
+  
+  // Create a deep copy of the object to avoid mutating the original
+  const translatedObj = JSON.parse(JSON.stringify(obj));
 
   for (const field of fieldsToTranslate) {
     if (obj[field] && typeof obj[field] === 'string') {
       translatedObj[field] = await translateText(obj[field], targetLanguage, sourceLanguage);
     }
-  }
-
-  // Handle nested adventure names if they exist
-  if (translatedObj.adventures && Array.isArray(translatedObj.adventures)) {
-    translatedObj.adventures = await Promise.all(
-      translatedObj.adventures.map(async (adventure) => {
-        if (adventure && adventure.name) {
-          return {
-            ...adventure,
-            name: await translateText(adventure.name, targetLanguage, sourceLanguage)
-          };
-        }
-        return adventure;
-      })
-    );
+    else if (obj[field] && Array.isArray(obj[field])) {
+      // Handle arrays of strings
+      translatedObj[field] = await translateTexts(obj[field], targetLanguage, sourceLanguage);
+    }
   }
 
   return translatedObj;
@@ -187,21 +176,6 @@ export const translateObjectsFields = async (objects, fieldsToTranslate, targetL
 
   for (const obj of objects) {
     const translatedObj = await translateObjectFields(obj, fieldsToTranslate, targetLanguage, sourceLanguage);
-    
-    // Handle nested adventure names if they exist
-    if (translatedObj.adventures && Array.isArray(translatedObj.adventures)) {
-      translatedObj.adventures = await Promise.all(
-        translatedObj.adventures.map(async (adventure) => {
-          if (adventure && adventure.name) {
-            return {
-              ...adventure,
-              name: await translateText(adventure.name, targetLanguage, sourceLanguage)
-            };
-          }
-          return adventure;
-        })
-      );
-    }
     
     translatedObjects.push(translatedObj);
   }
