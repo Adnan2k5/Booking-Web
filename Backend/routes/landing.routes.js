@@ -8,8 +8,12 @@ import {
 } from "../controllers/landing.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { languageMiddleware } from "../middlewares/language.middleware.js";
 
 const router = Router();
+
+// Apply language middleware to all routes
+router.use(languageMiddleware);
 
 router.post("/", verifyJWT, upload.fields([{ name: "medias" }]), createEvents);
 router.get("/", getAllEvents);

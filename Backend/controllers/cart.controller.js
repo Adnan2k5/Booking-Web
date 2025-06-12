@@ -3,10 +3,38 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Item } from "../models/item.model.js";
 import { Cart } from "../models/cart.model.js";
+import { translateObjectsFields } from "../utils/translation.js";
+import { getLanguage } from "../middlewares/language.middleware.js";
+
+// Helper function to translate cart items
+const translateCartItems = async (cart, language) => {
+  if (language === 'en' || !cart || !cart.items || cart.items.length === 0) {
+    return cart;
+  }
+
+  // Convert to plain object if it's a Mongoose document
+  const plainCart = cart.toJSON ? cart.toJSON() : cart;
+  
+  // Extract items and translate them
+  const items = plainCart.items.map(cartItem => cartItem.item);
+  const fieldsToTranslate = ['name', 'description'];
+  const translatedItems = await translateObjectsFields(items, fieldsToTranslate, language);
+  
+  // Replace the items in the cart with translated versions
+  const translatedCart = { ...plainCart };
+  translatedCart.items = plainCart.items.map((cartItem, index) => ({
+    ...cartItem,
+    item: translatedItems[index]
+  }));
+  
+  return translatedCart;
+};
 
 // Get all items in the current user's cart
 export const getCartItems = asyncHandler(async (req, res) => {
   const userId = req.user._id;
+  const language = getLanguage(req);
+  
   const cart = await Cart.findOne({ user: userId }).populate("items.item");
   if (!cart) {
     return res
@@ -14,8 +42,13 @@ export const getCartItems = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(200, { items: [], totalPrice: 0 }, "Cart is empty")
       );
-  } // Calculate total price
-  const totalPrice = cart.items.reduce((total, cartItem) => {
+  }
+  
+  // Translate cart items if language is not English
+  const translatedCart = await translateCartItems(cart, language);
+  
+  // Calculate total price
+  const totalPrice = translatedCart.items.reduce((total, cartItem) => {
     const item = cartItem.item;
     if (item && cartItem.purchase) {
       const itemPrice = item.price * cartItem.quantity;
@@ -30,10 +63,11 @@ export const getCartItems = asyncHandler(async (req, res) => {
       return total + rentalPrice + (total + rentalPrice) * 0.12;
     }
   }, 0);
+  
   res
     .status(200)
     .json(
-      new ApiResponse(200, { cart, totalPrice }, "Cart fetched successfully")
+      new ApiResponse(200, { cart: translatedCart, totalPrice }, "Cart fetched successfully")
     );
 });
 

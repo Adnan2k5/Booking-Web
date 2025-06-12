@@ -150,29 +150,17 @@ export const getHotelById = asyncHandler(async (req, res) => {
   if (!hotelData || hotelData.length === 0) {
     throw new ApiError(404, "Hotel not found");
   }
-
+  
+  // Convert Mongoose documents to plain objects
+  const plainHotelData = hotelData.map(hotel => hotel.toJSON());
+  
   let hotel;
   // Translate hotel fields if language is not English
-  if (language !== "en") {
-    const fieldsToTranslate = ["name", "description", "category", "amenities"];
-    hotel = await translateObjectsFields(
-      hotelData,
-      fieldsToTranslate,
-      language
-    );
-
-    // Also translate location names if populated
-    for (let i = 0; i < hotel.length; i++) {
-      if (hotel[i].location && hotel[i].location.name) {
-        hotel[i].location.name = await translateObjectFields(
-          hotel[i].location,
-          ["name"],
-          language
-        ).then((obj) => obj.name);
-      }
-    }
+  if (language !== 'en') {
+    const fieldsToTranslate = ['description', 'category', 'amenities'];
+    hotel = await translateObjectsFields(plainHotelData, fieldsToTranslate, language);
   } else {
-    hotel = hotelData;
+    hotel = plainHotelData;
   }
 
   res
@@ -242,7 +230,6 @@ export const getHotel = asyncHandler(async (req, res) => {
   // Sorting
   const sortOptions = {};
   sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
-
   let hotels = await Hotel.find(query)
     .sort(sortOptions)
     .skip(skip)
@@ -250,23 +237,16 @@ export const getHotel = asyncHandler(async (req, res) => {
     .populate("owner", "name email")
     .populate("location", "name");
 
+  // Convert Mongoose documents to plain objects
+  const plainHotels = hotels.map(hotel => hotel.toJSON());
   const total = await Hotel.countDocuments(query);
 
   // Translate hotel fields if language is not English
-  if (language !== "en" && hotels.length > 0) {
-    const fieldsToTranslate = ["name", "description", "category", "amenities"];
-    hotels = await translateObjectsFields(hotels, fieldsToTranslate, language);
-
-    // Also translate location names if populated
-    for (let i = 0; i < hotels.length; i++) {
-      if (hotels[i].location && hotels[i].location.name) {
-        hotels[i].location.name = await translateObjectFields(
-          hotels[i].location,
-          ["name"],
-          language
-        ).then((obj) => obj.name);
-      }
-    }
+  if (language !== 'en' && plainHotels.length > 0) {
+    const fieldsToTranslate = ['description', 'category', 'amenities'];
+    hotels = await translateObjectsFields(plainHotels, fieldsToTranslate, language);
+  } else {
+    hotels = plainHotels;
   }
 
   const result = {

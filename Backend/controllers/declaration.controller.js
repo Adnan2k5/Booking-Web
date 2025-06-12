@@ -2,6 +2,8 @@ import { Declaration } from "../models/declaration.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { translateObjectsFields, translateObjectFields } from "../utils/translation.js";
+import { getLanguage } from "../middlewares/language.middleware.js";
 
 // Add default declaration if none exists
 export const ensureDefaultDeclaration = async () => {
@@ -30,17 +32,45 @@ export const ensureDefaultDeclaration = async () => {
 
 // Get all declarations
 export const getAllDeclarations = asyncHandler(async (req, res) => {
-    const declarations = await Declaration.find({}).sort({ createdAt: -1 });
+    const language = getLanguage(req);
+    
+    const declarationsData = await Declaration.find({}).sort({ createdAt: -1 });
+    
+    // Convert to plain objects
+    const plainDeclarations = declarationsData.map(declaration => declaration.toJSON());
+    
+    let declarations;
+    // Translate declaration fields if language is not English
+    if (language !== 'en' && plainDeclarations.length > 0) {
+        const fieldsToTranslate = ['title', 'content'];
+        declarations = await translateObjectsFields(plainDeclarations, fieldsToTranslate, language);
+    } else {
+        declarations = plainDeclarations;
+    }
+    
     res.status(200).json(new ApiResponse(200, declarations, "Declarations fetched successfully"));
 });
 
 // Get declaration by ID
 export const getDeclarationById = asyncHandler(async (req, res) => {
     const { id } = req.params;
+    const language = getLanguage(req);
     
-    const declaration = await Declaration.findById(id);
-    if (!declaration) {
+    const declarationData = await Declaration.findById(id);
+    if (!declarationData) {
         throw new ApiError(404, "Declaration not found");
+    }
+    
+    // Convert to plain object
+    const plainDeclaration = declarationData.toJSON();
+    
+    let declaration;
+    // Translate declaration fields if language is not English
+    if (language !== 'en') {
+        const fieldsToTranslate = ['title', 'content'];
+        declaration = await translateObjectFields(plainDeclaration, fieldsToTranslate, language);
+    } else {
+        declaration = plainDeclaration;
     }
     
     res.status(200).json(new ApiResponse(200, declaration, "Declaration fetched successfully"));
@@ -49,6 +79,7 @@ export const getDeclarationById = asyncHandler(async (req, res) => {
 // Get declarations by title and version
 export const getDeclarationByTitleAndVersion = asyncHandler(async (req, res) => {
     const { title, version } = req.query;
+    const language = getLanguage(req);
     
     if (!title) {
         throw new ApiError(400, "Title is required");
@@ -59,7 +90,20 @@ export const getDeclarationByTitleAndVersion = asyncHandler(async (req, res) => 
         query.version = version;
     }
     
-    const declarations = await Declaration.find(query).sort({ createdAt: -1 });
+    const declarationsData = await Declaration.find(query).sort({ createdAt: -1 });
+    
+    // Convert to plain objects
+    const plainDeclarations = declarationsData.map(declaration => declaration.toJSON());
+    
+    let declarations;
+    // Translate declaration fields if language is not English
+    if (language !== 'en' && plainDeclarations.length > 0) {
+        const fieldsToTranslate = ['title', 'content'];
+        declarations = await translateObjectsFields(plainDeclarations, fieldsToTranslate, language);
+    } else {
+        declarations = plainDeclarations;
+    }
+    
     res.status(200).json(new ApiResponse(200, declarations, "Declarations fetched successfully"));
 });
 
@@ -133,10 +177,23 @@ export const deleteDeclaration = asyncHandler(async (req, res) => {
 // Get latest declaration by title
 export const getLatestDeclarationByTitle = asyncHandler(async (req, res) => {
     const { title } = req.params;
+    const language = getLanguage(req);
     
-    const declaration = await Declaration.findOne({ title }).sort({ createdAt: -1 });
-    if (!declaration) {
+    const declarationData = await Declaration.findOne({ title }).sort({ createdAt: -1 });
+    if (!declarationData) {
         throw new ApiError(404, "No declaration found with this title");
+    }
+    
+    // Convert to plain object
+    const plainDeclaration = declarationData.toJSON();
+    
+    let declaration;
+    // Translate declaration fields if language is not English
+    if (language !== 'en') {
+        const fieldsToTranslate = ['title', 'content'];
+        declaration = await translateObjectFields(plainDeclaration, fieldsToTranslate, language);
+    } else {
+        declaration = plainDeclaration;
     }
     
     res.status(200).json(new ApiResponse(200, declaration, "Latest declaration fetched successfully"));
