@@ -8,6 +8,7 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { createSessionBooking, createHotelBooking, createBooking, createDirectItemBooking } from "../../Api/booking.api"
 import { format } from "date-fns"
+import { getDeclarationsByAdventureId } from "../../Api/declaration.api";
 
 export const BookingSummary = ({
     user,
@@ -23,20 +24,47 @@ export const BookingSummary = ({
     checkOutDate,
     calculateNights,
 }) => {
-    const { t } = useTranslation()
-    const navigate = useNavigate()
+    const { t } = useTranslation();
+    const navigate = useNavigate();
 
-    const [isBooking, setIsBooking] = useState(false)
+    const [isBooking, setIsBooking] = useState(false);
+    const [declaration, setDeclaration] = useState(null);
+    const [showDeclaration, setShowDeclaration] = useState(false);
 
-    const params = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams(window.location.search);
     const date = params.get("session_date");
 
     const sessionDate = date ? new Date(date).toLocaleDateString() : "Not specified";
 
+    const fetchDeclaration = async () => {
+        try {
+            const declarations = await getDeclarationsByAdventureId(adventure._id);
+            if (declarations.length > 0) {
+                setDeclaration(declarations[0]);
+                setShowDeclaration(true);
+            } else {
+                toast.error("No declaration found for this adventure.");
+            }
+        } catch (error) {
+            console.error("Error fetching declaration:", error);
+            toast.error("Failed to fetch declaration.");
+        }
+    };
 
+    const handleProceedToPayment = async () => {
+        if (!declaration) {
+            await fetchDeclaration();
+        } else {
+            setShowDeclaration(true);
+        }
+    };
 
+    const handleUserConsent = () => {
+        setShowDeclaration(false);
+        proceedToPayment();
+    };
 
-    const handleCompleteBooking = async () => {
+    const proceedToPayment = async () => {
         if (isBooking) return;
         setIsBooking(true);
 
@@ -179,8 +207,8 @@ export const BookingSummary = ({
             navigate("/confirmation", { state: serializableState });
 
         } catch (error) {
-            console.error("Booking error:", error);
-            toast.error(`Booking failed: ${error.message || error}`, { id: bookingId });
+            console.error("Error during booking:", error);
+            toast.error("Failed to create booking.", { id: bookingId });
         } finally {
             setIsBooking(false);
         }
@@ -456,7 +484,7 @@ export const BookingSummary = ({
                             <span>{t("total")}</span>
                             <span>${calculateTotal().toFixed(2)}</span>
                         </div>                        <Button
-                            onClick={handleCompleteBooking}
+                            onClick={handleProceedToPayment}
                             disabled={isBooking}
                             className="w-full mt-6 bg-white text-blue-600 hover:bg-blue-50 disabled:opacity-50"
                         >
@@ -465,6 +493,31 @@ export const BookingSummary = ({
                     </div>
                 </div>
             </div>
+
+            {showDeclaration && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 md:w-2/3 lg:w-1/2">
+                        <h2 className="text-xl font-bold text-gray-800 mb-4">{t("Declaration")}</h2>
+                        <div className="text-gray-600 mb-6 overflow-y-auto max-h-60">
+                            <p>{declaration.content}</p>
+                        </div>
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={handleUserConsent}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                {t("I Agree")}
+                            </button>
+                            <button
+                                onClick={() => setShowDeclaration(false)}
+                                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                            >
+                                {t("Cancel")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
