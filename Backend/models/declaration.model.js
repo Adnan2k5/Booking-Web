@@ -13,6 +13,10 @@ const declarationSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    adventures: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Adventure",
+    }],
 }, {
     timestamps: true,
 });

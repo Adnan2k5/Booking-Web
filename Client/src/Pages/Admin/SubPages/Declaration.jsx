@@ -2,49 +2,55 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Search, Edit, ClipboardCheck, Save, Plus, Trash2 } from "lucide-react"
+import { Search, Edit, ClipboardCheck, Save, Plus, Trash2, X } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
 import { Card, CardContent } from "../../../components/ui/card"
 import { Textarea } from "../../../components/ui/textarea"
-import { 
-  getAllDeclarations, 
-  getDeclarationById, 
-  createDeclaration, 
-  updateDeclaration, 
-  deleteDeclaration 
-} from "../../../Api/declaration.api.js"
+import { Badge } from "../../../components/ui/badge"
+import { fetchAllAdventures } from "../../../Api/adventure.api.js"
+import { useDeclaration } from "../../../hooks/useDeclaration.jsx"
 
 export default function Dash_Declation() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedDeclaration, setSelectedDeclaration] = useState(null)
   const [editMode, setEditMode] = useState(false)
   const [declarationContent, setDeclarationContent] = useState("")
-  const [declarations, setDeclarations] = useState([])
-  const [loading, setLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
+  const [adventures, setAdventures] = useState([])
+  const [selectedAdventures, setSelectedAdventures] = useState([])
   const [newDeclaration, setNewDeclaration] = useState({
     title: "",
     version: "",
-    content: ""
+    content: "",
+    adventures: []
   })
 
-  // Fetch declarations on component mount
+  // Use the custom hook for declarations
+  const {
+    declarations,
+    loading,
+    error,
+    refetch,
+    createDeclaration: handleCreateDeclaration,
+    updateDeclaration: handleUpdateDeclaration,
+    deleteDeclaration: handleDeleteDeclaration
+  } = useDeclaration()
+
+  // Fetch adventures on component mount
   useEffect(() => {
-    fetchDeclarations()
+    fetchAdventures()
   }, [])
 
-  const fetchDeclarations = async () => {
+  const fetchAdventures = async () => {
     try {
-      setLoading(true)
-      const data = await getAllDeclarations()
-      setDeclarations(data)
+      const response = await fetchAllAdventures()
+      setAdventures(response.data.adventures || [])
     } catch (error) {
-      console.error("Error fetching declarations:", error)
-    } finally {
-      setLoading(false)
-    }  }
+      console.error("Error fetching adventures:", error)
+    }
+  }
 
   // Filter declarations based on search term
   const filteredDeclarations = declarations.filter((declaration) => {
@@ -53,11 +59,11 @@ export default function Dash_Declation() {
       declaration.version.toLowerCase().includes(searchTerm.toLowerCase())
     )
   })
-
   const handleSelectDeclaration = async (declaration) => {
     try {
       setSelectedDeclaration(declaration)
       setDeclarationContent(declaration.content)
+      setSelectedAdventures(declaration.adventures || [])
       setEditMode(false)
     } catch (error) {
       console.error("Error selecting declaration:", error)
@@ -67,18 +73,12 @@ export default function Dash_Declation() {
   const handleSaveChanges = async () => {
     try {
       if (selectedDeclaration) {
-        await updateDeclaration(selectedDeclaration._id, {
+        await handleUpdateDeclaration(selectedDeclaration._id, {
           title: selectedDeclaration.title,
           version: selectedDeclaration.version,
-          content: declarationContent
+          content: declarationContent,
+          adventures: selectedAdventures.map(adv => adv._id || adv)
         })
-        
-        // Update the local state
-        setDeclarations(declarations.map(d => 
-          d._id === selectedDeclaration._id 
-            ? { ...d, content: declarationContent }
-            : d
-        ))
         
         setEditMode(false)
         alert("Declaration updated successfully!")
@@ -89,16 +89,19 @@ export default function Dash_Declation() {
     }
   }
 
-  const handleCreateDeclaration = async () => {
+  const handleCreateNewDeclaration = async () => {
     try {
       if (!newDeclaration.title || !newDeclaration.version || !newDeclaration.content) {
-        alert("Please fill all fields")
+        alert("Please fill all required fields")
         return
       }
 
-      const createdDeclaration = await createDeclaration(newDeclaration)
-      setDeclarations([createdDeclaration, ...declarations])
-      setNewDeclaration({ title: "", version: "", content: "" })
+      await handleCreateDeclaration({
+        ...newDeclaration,
+        adventures: newDeclaration.adventures.map(adv => adv._id || adv)
+      })
+      
+      setNewDeclaration({ title: "", version: "", content: "", adventures: [] })
       setIsCreating(false)
       alert("Declaration created successfully!")
     } catch (error) {
@@ -107,15 +110,15 @@ export default function Dash_Declation() {
     }
   }
 
-  const handleDeleteDeclaration = async (declarationId) => {
+  const handleDeleteDeclarationConfirm = async (declarationId) => {
     try {
       if (window.confirm("Are you sure you want to delete this declaration?")) {
-        await deleteDeclaration(declarationId)
-        setDeclarations(declarations.filter(d => d._id !== declarationId))
+        await handleDeleteDeclaration(declarationId)
         
         if (selectedDeclaration?._id === declarationId) {
           setSelectedDeclaration(null)
           setDeclarationContent("")
+          setSelectedAdventures([])
         }
         
         alert("Declaration deleted successfully!")
@@ -123,6 +126,32 @@ export default function Dash_Declation() {
     } catch (error) {
       console.error("Error deleting declaration:", error)
       alert("Failed to delete declaration")
+    }
+  }
+
+  const addAdventureToSelection = (adventure, isForNewDeclaration = false) => {
+    if (isForNewDeclaration) {
+      if (!newDeclaration.adventures.find(adv => (adv._id || adv) === adventure._id)) {
+        setNewDeclaration({
+          ...newDeclaration,
+          adventures: [...newDeclaration.adventures, adventure]
+        })
+      }
+    } else {
+      if (!selectedAdventures.find(adv => (adv._id || adv) === adventure._id)) {
+        setSelectedAdventures([...selectedAdventures, adventure])
+      }
+    }
+  }
+
+  const removeAdventureFromSelection = (adventureId, isForNewDeclaration = false) => {
+    if (isForNewDeclaration) {
+      setNewDeclaration({
+        ...newDeclaration,
+        adventures: newDeclaration.adventures.filter(adv => (adv._id || adv) !== adventureId)
+      })
+    } else {
+      setSelectedAdventures(selectedAdventures.filter(adv => (adv._id || adv) !== adventureId))
     }
   }
 
@@ -140,9 +169,7 @@ export default function Dash_Declation() {
               {isCreating ? "Cancel" : "Add New Declaration"}
             </Button>
           </div>
-        </div>
-
-        {/* Create New Declaration Form */}
+        </div>        {/* Create New Declaration Form */}
         {isCreating && (
           <Card>
             <CardContent className="p-4">
@@ -173,8 +200,51 @@ export default function Dash_Declation() {
                     onChange={(e) => setNewDeclaration({...newDeclaration, content: e.target.value})}
                   />
                 </div>
+                
+                {/* Adventure Selection */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Associated Adventures (Optional)</label>
+                  <div className="space-y-2">
+                    <select 
+                      className="w-full p-2 border rounded-md"
+                      onChange={(e) => {
+                        const selectedAdventure = adventures.find(adv => adv._id === e.target.value)
+                        if (selectedAdventure) {
+                          addAdventureToSelection(selectedAdventure, true)
+                        }
+                        e.target.value = ""
+                      }}
+                      value=""
+                    >
+                      <option value="">Select an adventure to add...</option>
+                      {adventures
+                        .filter(adv => !newDeclaration.adventures.find(selected => (selected._id || selected) === adv._id))
+                        .map(adventure => (
+                          <option key={adventure._id} value={adventure._id}>
+                            {adventure.name}
+                          </option>
+                        ))
+                      }
+                    </select>
+                    
+                    {newDeclaration.adventures.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {newDeclaration.adventures.map((adventure) => (
+                          <Badge key={adventure._id || adventure} variant="secondary" className="flex items-center gap-1">
+                            {adventure.name || 'Unknown Adventure'}
+                            <X 
+                              className="h-3 w-3 cursor-pointer" 
+                              onClick={() => removeAdventureFromSelection(adventure._id || adventure, true)}
+                            />
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
                 <div className="flex gap-2">
-                  <Button onClick={handleCreateDeclaration}>Create Declaration</Button>
+                  <Button onClick={handleCreateNewDeclaration}>Create Declaration</Button>
                   <Button variant="outline" onClick={() => setIsCreating(false)}>Cancel</Button>
                 </div>
               </div>
@@ -197,19 +267,19 @@ export default function Dash_Declation() {
               <CardContent className="p-0">
                 {loading ? (
                   <div className="p-4 text-center">Loading declarations...</div>
-                ) : (
-                  <Table>
+                ) : (                  <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Title</TableHead>
                         <TableHead>Version</TableHead>
+                        <TableHead>Adventures</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredDeclarations.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={3} className="text-center text-muted-foreground">
+                          <TableCell colSpan={4} className="text-center text-muted-foreground">
                             No declarations found
                           </TableCell>
                         </TableRow>
@@ -223,12 +293,30 @@ export default function Dash_Declation() {
                             <TableCell className="font-medium">{declaration.title}</TableCell>
                             <TableCell>{declaration.version}</TableCell>
                             <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {declaration.adventures && declaration.adventures.length > 0 ? (
+                                  declaration.adventures.slice(0, 2).map((adventure) => (
+                                    <Badge key={adventure._id || adventure} variant="outline" className="text-xs">
+                                      {adventure.name || 'Unknown'}
+                                    </Badge>
+                                  ))
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">No adventures</span>
+                                )}
+                                {declaration.adventures && declaration.adventures.length > 2 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{declaration.adventures.length - 2} more
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleDeleteDeclaration(declaration._id)
+                                  handleDeleteDeclarationConfirm(declaration._id)
                                 }}
                               >
                                 <Trash2 className="h-4 w-4" />
