@@ -10,14 +10,14 @@ import { useTranslation } from "react-i18next"
 import DateRangePicker from "../../components/ui/DateRangePicker"
 
 
-export const HotelSelection = ({ 
-    hotels, 
-    selectedHotel, 
-    onSelectHotel, 
-    checkInDate, 
-    checkOutDate, 
-    onDateChange, 
-    calculateNights 
+export const HotelSelection = ({
+    hotels,
+    selectedHotel,
+    onSelectHotel,
+    checkInDate,
+    checkOutDate,
+    onDateChange,
+    calculateNights
 }) => {
     const { t } = useTranslation()
 
@@ -80,40 +80,40 @@ export const HotelSelection = ({
                 initial="hidden"
                 animate="visible"
             >
-                {hotels.map((hotel) => (
-                    <motion.div key={hotel._id} variants={itemVariants}>
+                {hotels?.map((hotel) => (
+                    <motion.div key={hotel?._id} variants={itemVariants}>
                         <Card
                             className={cn(
                                 "overflow-hidden h-full transition-all duration-300 cursor-pointer border-2",
-                                selectedHotel === hotel._id
+                                selectedHotel === hotel?._id
                                     ? "border-blue-500 shadow-md shadow-blue-200"
                                     : "border-transparent hover:border-blue-200",
                             )}
-                            onClick={() => onSelectHotel(hotel._id === selectedHotel ? null : hotel._id)}
+                            onClick={() => onSelectHotel(hotel?._id === selectedHotel ? null : hotel?._id)}
                         >
                             <div className="flex flex-col md:flex-row">
                                 <div className="md:w-2/5 h-full">
                                     <img
-                                        src={hotel.medias[0] || "/placeholder.svg"}
-                                        alt={hotel.name}
+                                        src={hotel?.medias || "/placeholder.svg"}
+                                        alt={hotel?.name}
                                         className="w-full h-full object-cover md:h-48"
                                     />
                                 </div>
                                 <div className="md:w-3/5 p-4">
                                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
                                         <MapPin size={14} />
-                                        <span>{hotel.location?.name || hotel.location}</span>
+                                        <span>{hotel?.location?.name || hotel?.location}</span>
                                     </div>
-                                    <h3 className="text-lg font-bold text-gray-800 mb-2">{hotel.name}</h3>
+                                    <h3 className="text-lg font-bold text-gray-800 mb-2">{hotel?.name}</h3>
                                     <div className="flex items-center gap-1 mb-3">
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                                         ))}
-                                        <span className="text-xs ml-1 text-gray-500">{hotel.rating}</span>
+                                        <span className="text-xs ml-1 text-gray-500">{hotel?.rating}</span>
                                     </div>                                    <div className="flex justify-between items-center">
                                         <div className="flex flex-col">
                                             <span className="font-bold text-blue-600">
-                                                ${(hotel.pricePerNight || hotel.price) * calculateNights()}
+                                                ${(hotel.pricePerNight || hotel?.price) * calculateNights()}
                                                 {calculateNights() > 1 && (
                                                     <span className="text-sm font-normal text-gray-500">
                                                         {" "}total
@@ -121,14 +121,14 @@ export const HotelSelection = ({
                                                 )}
                                             </span>
                                             <span className="text-xs text-gray-500">
-                                                ${hotel.pricePerNight || hotel.price}/night × {calculateNights()} {calculateNights() === 1 ? "night" : "nights"}
+                                                ${hotel?.pricePerNight || hotel?.price}/night × {calculateNights()} {calculateNights() === 1 ? "night" : "nights"}
                                             </span>
                                         </div>
                                         <Badge
-                                            variant={selectedHotel === hotel._id ? "default" : "outline"}
-                                            className={selectedHotel === hotel._id ? "bg-blue-600" : ""}
+                                            variant={selectedHotel === hotel?._id ? "default" : "outline"}
+                                            className={selectedHotel === hotel?._id ? "bg-blue-600" : ""}
                                         >
-                                            {selectedHotel === hotel._id ? t("selected") : t("select")}
+                                            {selectedHotel === hotel?._id ? t("selected") : t("select")}
                                         </Badge>
                                     </div>
                                 </div>

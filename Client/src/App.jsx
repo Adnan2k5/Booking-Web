@@ -32,12 +32,14 @@ import Dash_Tickets from "./Pages/Admin/SubPages/Tickets"
 import Dash_Terms from "./Pages/Admin/SubPages/Terms"
 import Dash_Declation from "./Pages/Admin/SubPages/Declaration"
 import LocationsPage from "./Pages/Admin/SubPages/Location"
+import EventDetailPage from "./Pages/EventDetailPage"
 
 // Lazy loaded components
 const LoginPage = lazy(() => import("./Pages/LoginPage"))
 const LandingPage = lazy(() => import("./Pages/LandingPage"))
 const BrowsingPage = lazy(() => import("./Pages/Browsing/BrowsingPage"))
 const Shop = lazy(() => import("./Pages/Shop/Shop"))
+const Hotel = lazy(() => import("./Pages/Hotel/Hotel"))
 const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
 
 // i18n
@@ -62,7 +64,7 @@ import { WebsiteSettingsProvider } from "./contexts/WebsiteSettingsContext"
 import InstructorsPage from "./Pages/Admin/SubPages/InstructorsVerification"
 import { HotelRegister } from "./Pages/Hotel/HotelRegister"
 import InstructorLayout from "./Pages/Instructor/InstructorLayout"
-import { Hotel } from "./Pages/Hotel/Hotel"
+import { HotelProfile } from "./Pages/Hotel/HotelProfile"
 import HotelPendingReview from "./Pages/Hotel/HotelPending"
 import Managers from "./Pages/Admin/SubPages/Managers"
 import { ItemPage } from "./Pages/Shop/ItemPage"
@@ -124,11 +126,17 @@ const App = () => {
                   <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/browse" element={<BrowsingPage />} />
+                  <Route path="/event/:id" element={<EventDetailPage />} />
                   <Route path="/booking" element={<Booking />} />
                   <Route path="/confirmation" element={<ConfirmationPage />} />
                   <Route path="/shop" element={
                     <FeatureRoute feature="shop">
                       <Shop />
+                    </FeatureRoute>
+                  } />
+                  <Route path="/book-hotel" element={
+                    <FeatureRoute feature="hotels">
+                      <Hotel />
                     </FeatureRoute>
                   } />
                   <Route path="/cart" element={
@@ -152,7 +160,7 @@ const App = () => {
                   <Route path="/dashboard/settings" element={<UserSettingsPage />} />
                   <Route path="/hotel" element={
                     <FeatureRoute feature="hotels">
-                      <Hotel />
+                      <HotelProfile />
                     </FeatureRoute>
                   } />
                   <Route path="/hotel/register" element={

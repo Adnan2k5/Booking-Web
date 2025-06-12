@@ -322,6 +322,18 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user.user !== null && !loading) {
+      // Check if there's a redirect URL stored in localStorage
+      const redirectAfterLogin = localStorage.getItem("redirectAfterLogin");
+
+      if (redirectAfterLogin) {
+        // Clear the stored redirect URL
+        localStorage.removeItem("redirectAfterLogin");
+        // Navigate to the stored URL
+        Navigate(redirectAfterLogin);
+        return;
+      }
+
+      // Default role-based navigation
       if (user.user.role === "hotel") {
         Navigate("/hotel");
       }
@@ -336,7 +348,7 @@ export default function LoginPage() {
       }
     }
   }
-    , [user, loading])
+    , [user, loading, Navigate])
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-5 relative">

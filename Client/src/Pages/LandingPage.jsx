@@ -297,13 +297,14 @@ export default function LandingPage() {
                 >
                   {events.map((event) => (
                     <motion.div
-                      className="card p-0 min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all"
+                      className="card p-0 min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all cursor-pointer"
                       key={event._id}
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       whileHover={{ y: -5 }}
                       transition={{ duration: 0.3 }}
+                      onClick={() => Navigate(`/event/${event._id}`)}
                     >
                       <div className="img w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-t-lg overflow-hidden">
                         <motion.div
