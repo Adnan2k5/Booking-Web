@@ -48,14 +48,26 @@ export const getLatestDeclarationByTitle = async (title) => {
   }
 };
 
+// Get declarations by adventure ID
+export const getDeclarationsByAdventureId = async (adventureId) => {
+  try {
+    const response = await axiosClient.get(`/api/declaration/adventure/${adventureId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching declarations by adventure ID:', error);
+    throw error;
+  }
+};
+
 // Create new declaration
 export const createDeclaration = async (declarationData) => {
   try {
-    const { title, version, content } = declarationData;
+    const { title, version, content, adventures } = declarationData;
     const response = await axiosClient.post('/api/declaration', {
       title,
       version,
       content,
+      adventures,
     });
     return response.data.data;
   } catch (error) {

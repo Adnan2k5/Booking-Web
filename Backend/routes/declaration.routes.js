@@ -3,6 +3,7 @@ import {
     getAllDeclarations, 
     getDeclarationById, 
     getDeclarationByTitleAndVersion,
+    getDeclarationsByAdventureId,
     createDeclaration, 
     updateDeclaration, 
     deleteDeclaration,
@@ -20,6 +21,7 @@ router.use(languageMiddleware);
 // Public routes - anyone can view declarations
 router.get("/", getAllDeclarations); // Get all declarations
 router.get("/search", getDeclarationByTitleAndVersion); // Get declarations by title and/or version (?title=...&version=...)
+router.get("/adventure/:adventureId", getDeclarationsByAdventureId); // Get declarations by adventure ID
 router.get("/latest/:title", getLatestDeclarationByTitle); // Get latest declaration by title
 router.get("/:id", getDeclarationById); // Get declaration by ID
 

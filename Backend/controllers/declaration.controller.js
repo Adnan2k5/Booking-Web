@@ -1,4 +1,5 @@
 import { Declaration } from "../models/declaration.model.js";
+import { Adventure } from "../models/adventure.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -34,7 +35,7 @@ export const ensureDefaultDeclaration = async () => {
 export const getAllDeclarations = asyncHandler(async (req, res) => {
     const language = getLanguage(req);
     
-    const declarationsData = await Declaration.find({}).sort({ createdAt: -1 });
+    const declarationsData = await Declaration.find({}).sort({ createdAt: -1 }).populate('adventures');
     
     // Convert to plain objects
     const plainDeclarations = declarationsData.map(declaration => declaration.toJSON());
@@ -56,7 +57,7 @@ export const getDeclarationById = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const language = getLanguage(req);
     
-    const declarationData = await Declaration.findById(id);
+    const declarationData = await Declaration.findById(id).populate('adventures');
     if (!declarationData) {
         throw new ApiError(404, "Declaration not found");
     }
@@ -90,7 +91,34 @@ export const getDeclarationByTitleAndVersion = asyncHandler(async (req, res) => 
         query.version = version;
     }
     
-    const declarationsData = await Declaration.find(query).sort({ createdAt: -1 });
+    const declarationsData = await Declaration.find(query).sort({ createdAt: -1 }).populate('adventures');
+    
+    // Convert to plain objects
+    const plainDeclarations = declarationsData.map(declaration => declaration.toJSON());
+    
+    let declarations;
+    // Translate declaration fields if language is not English
+    if (language !== 'en' && plainDeclarations.length > 0) {
+        const fieldsToTranslate = ['title', 'content'];
+        declarations = await translateObjectsFields(plainDeclarations, fieldsToTranslate, language);
+    } else {
+        declarations = plainDeclarations;
+    }
+    
+    res.status(200).json(new ApiResponse(200, declarations, "Declarations fetched successfully"));
+});
+
+// Get declarations by adventure ID
+export const getDeclarationsByAdventureId = asyncHandler(async (req, res) => {
+    const { adventureId } = req.params;
+    const language = getLanguage(req);
+    
+    if (!adventureId) {
+        throw new ApiError(400, "Adventure ID is required");
+    }
+      const declarationsData = await Declaration.find({ 
+        adventures: adventureId 
+    }).sort({ createdAt: -1 }).populate('adventures');
     
     // Convert to plain objects
     const plainDeclarations = declarationsData.map(declaration => declaration.toJSON());
@@ -109,10 +137,23 @@ export const getDeclarationByTitleAndVersion = asyncHandler(async (req, res) => 
 
 // Create new declaration
 export const createDeclaration = asyncHandler(async (req, res) => {
-    const { title, version, content } = req.body;
+    const { title, version, content, adventures } = req.body;
     
     if (!title || !version || !content) {
         throw new ApiError(400, "Title, version, and content are required");
+    }
+    
+    // Validate adventures array if provided
+    if (adventures && (!Array.isArray(adventures) || adventures.some(id => !id))) {
+        throw new ApiError(400, "Adventures must be an array of valid adventure IDs");
+    }
+    
+    // Validate that all adventure IDs exist
+    if (adventures && adventures.length > 0) {
+        const existingAdventures = await Adventure.find({ _id: { $in: adventures } });
+        if (existingAdventures.length !== adventures.length) {
+            throw new ApiError(400, "One or more adventure IDs are invalid");
+        }
     }
     
     // Check if declaration with same title and version already exists
@@ -120,12 +161,15 @@ export const createDeclaration = asyncHandler(async (req, res) => {
     if (existingDeclaration) {
         throw new ApiError(409, "Declaration with this title and version already exists");
     }
-    
-    const declaration = await Declaration.create({
+      const declaration = await Declaration.create({
         title,
         version,
-        content
+        content,
+        adventures: adventures || []
     });
+    
+    // Populate adventures for the response
+    await declaration.populate('adventures');
     
     res.status(201).json(new ApiResponse(201, declaration, "Declaration created successfully"));
 });
@@ -133,11 +177,24 @@ export const createDeclaration = asyncHandler(async (req, res) => {
 // Update declaration
 export const updateDeclaration = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { title, version, content } = req.body;
+    const { title, version, content, adventures } = req.body;
     
     const declaration = await Declaration.findById(id);
     if (!declaration) {
         throw new ApiError(404, "Declaration not found");
+    }
+    
+    // Validate adventures array if provided
+    if (adventures && (!Array.isArray(adventures) || adventures.some(id => !id))) {
+        throw new ApiError(400, "Adventures must be an array of valid adventure IDs");
+    }
+    
+    // Validate that all adventure IDs exist
+    if (adventures && adventures.length > 0) {
+        const existingAdventures = await Adventure.find({ _id: { $in: adventures } });
+        if (existingAdventures.length !== adventures.length) {
+            throw new ApiError(400, "One or more adventure IDs are invalid");
+        }
     }
     
     // Check if another declaration with same title and version exists (excluding current one)
@@ -151,13 +208,16 @@ export const updateDeclaration = asyncHandler(async (req, res) => {
             throw new ApiError(409, "Another declaration with this title and version already exists");
         }
     }
-    
-    // Update fields if provided
+      // Update fields if provided
     if (title) declaration.title = title;
     if (version) declaration.version = version;
     if (content) declaration.content = content;
+    if (adventures !== undefined) declaration.adventures = adventures;
     
     await declaration.save();
+    
+    // Populate adventures for the response
+    await declaration.populate('adventures');
     
     res.status(200).json(new ApiResponse(200, declaration, "Declaration updated successfully"));
 });
@@ -179,7 +239,7 @@ export const getLatestDeclarationByTitle = asyncHandler(async (req, res) => {
     const { title } = req.params;
     const language = getLanguage(req);
     
-    const declarationData = await Declaration.findOne({ title }).sort({ createdAt: -1 });
+    const declarationData = await Declaration.findOne({ title }).sort({ createdAt: -1 }).populate('adventures');
     if (!declarationData) {
         throw new ApiError(404, "No declaration found with this title");
     }
