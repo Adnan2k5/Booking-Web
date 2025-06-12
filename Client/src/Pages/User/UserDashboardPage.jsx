@@ -58,9 +58,9 @@ export default function UserDashboardPage() {
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
                                         <Avatar className="h-16 w-16 border-2 border-black">
-                                            <AvatarFallback className="bg-black text-white">{userProfile.level.charAt(0)}</AvatarFallback>
+                                            <AvatarFallback className="bg-black text-white">{userProfile.level}</AvatarFallback>
                                         </Avatar>
-                                        <Badge className="absolute -bottom-2 -right-2 bg-black text-white rounded-full">Lv.2</Badge>
+
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex justify-between items-center mb-1">

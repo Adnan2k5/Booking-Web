@@ -20,8 +20,37 @@ export const getAllTerms = async (title) => {
   }
 };
 
+// Create new terms document
+export const createTerms = async (title, content) => {
+  try {
+    const response = await axiosClient.post('/api/terms/create', {
+      title,
+      content,
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating terms:', error);
+    throw error;
+  }
+};
+
+// Update existing terms document (creates new draft version)
+export const updateTerms = async (title, content, baseVersion) => {
+  try {
+    const response = await axiosClient.put('/api/terms/update', {
+      title,
+      content,
+      baseVersion,
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error updating terms:', error);
+    throw error;
+  }
+};
+
+// Save draft terms (legacy function, keeping for backward compatibility)
 export const saveDraftTerms = async (title, content, version) => {
-  console.log('Saving draft terms:', { title, content, version });
   try {
     const response = await axiosClient.post('/api/terms/draft', {
       title,
