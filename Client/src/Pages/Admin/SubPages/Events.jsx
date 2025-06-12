@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Search, Plus, Calendar, MapPin, Clock, Eye, Edit, Trash2 } from "lucide-react"
+import { Search, Plus, Calendar, MapPin, Clock, Eye, Edit, Trash2, Star } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../components/ui/card"
@@ -33,6 +33,7 @@ export default function EventsPage() {
         date: "",
         time: "",
         location: "",
+        level: 1,
         images: [],
     })
     const [mediaPreviews, setMediaPreviews] = useState([])
@@ -64,6 +65,7 @@ export default function EventsPage() {
             date: "",
             time: "",
             location: "",
+            level: 1,
             images: [],
         })
         setMediaPreviews([])
@@ -196,6 +198,7 @@ export default function EventsPage() {
             date: event.date.split("T")[0], // Format date for input
             time: event.time,
             location: event.location,
+            level: event.level || 1,
             images: [], // Reset images array for new uploads
         })
 
@@ -359,6 +362,10 @@ export default function EventsPage() {
                                             <MapPin className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                                             <span className="truncate">{event.location}</span>
                                         </div>
+                                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                                            <Star className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                            <span className="truncate">Level {event.level || 1}</span>
+                                        </div>
                                     </div>
                                 </CardContent>
 
@@ -519,6 +526,26 @@ export default function EventsPage() {
                         </div>
 
                         <div>
+                            <Label htmlFor="level" className="text-sm font-medium">
+                                Required Level (1-10) *
+                            </Label>
+                            <Input
+                                id="level"
+                                type="number"
+                                min="1"
+                                max="10"
+                                value={formData.level}
+                                onChange={(e) => setFormData({ ...formData, level: parseInt(e.target.value) })}
+                                required
+                                placeholder="Enter required level"
+                                className="mt-1"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Users must have this level or higher to book this event
+                            </p>
+                        </div>
+
+                        <div>
                             <Label htmlFor="images" className="text-sm font-medium">
                                 Event Images
                             </Label>
@@ -643,6 +670,26 @@ export default function EventsPage() {
                         </div>
 
                         <div>
+                            <Label htmlFor="edit-level" className="text-sm font-medium">
+                                Required Level (1-10) *
+                            </Label>
+                            <Input
+                                id="edit-level"
+                                type="number"
+                                min="1"
+                                max="10"
+                                value={formData.level}
+                                onChange={(e) => setFormData({ ...formData, level: parseInt(e.target.value) })}
+                                required
+                                placeholder="Enter required level"
+                                className="mt-1"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Users must have this level or higher to book this event
+                            </p>
+                        </div>
+
+                        <div>
                             <Label htmlFor="edit-images" className="text-sm font-medium">
                                 Event Images
                             </Label>
@@ -743,6 +790,11 @@ export default function EventsPage() {
                             <div>
                                 <h4 className="font-medium text-sm text-muted-foreground mb-1">Location</h4>
                                 <p className="text-sm">{selectedEvent.location}</p>
+                            </div>
+
+                            <div>
+                                <h4 className="font-medium text-sm text-muted-foreground mb-1">Required Level</h4>
+                                <p className="text-sm">Level {selectedEvent.level || 1}</p>
                             </div>
                         </div>
                     )}

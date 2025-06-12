@@ -131,6 +131,15 @@ export const Nav_Landing = () => {
                                     <a href="/shop">{t("shop")}</a>
                                 </motion.li>
                             )}
+                            {isHotelsEnabled && (
+                                <motion.li
+                                    className="cursor-pointer hover:text-emerald-400 transition-colors"
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    <a href="/book-hotel">{t("hotels")}</a>
+                                </motion.li>
+                            )}
                             <motion.li
                                 className="cursor-pointer hover:text-emerald-400 transition-colors"
                                 whileHover={{ scale: 1.1 }}
@@ -214,6 +223,11 @@ export const Nav_Landing = () => {
                                 {isShopEnabled && (
                                     <li className="cursor-pointer hover:text-gray-300">
                                         <a href="/shop">{t("shop")}</a>
+                                    </li>
+                                )}
+                                {isHotelsEnabled && (
+                                    <li className="cursor-pointer hover:text-gray-300">
+                                        <a href="/book-hotel">{t("hotels")}</a>
                                     </li>
                                 )}
                                 <li className="cursor-pointer hover:text-gray-300">{t("mission")}</li>
