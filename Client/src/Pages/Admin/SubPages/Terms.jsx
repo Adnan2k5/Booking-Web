@@ -9,13 +9,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Card, CardContent } from "../../../components/ui/card"
 import { Badge } from "../../../components/ui/badge"
 import { Textarea } from "../../../components/ui/textarea"
-import { getAllTermDocuments, getLiveTerms, saveDraftTerms, publishTerms, deleteTermsVersion } from "../../../Api/terms.api.js" // Import additional API functions
+import { getAllTermDocuments, getLiveTerms, createTerms, updateTerms, publishTerms, deleteTermsVersion } from "../../../Api/terms.api.js" // Import new API functions
 
 export default function Dash_Terms() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTerm, setSelectedTerm] = useState(null)
   const [editMode, setEditMode] = useState(false)
+  const [createMode, setCreateMode] = useState(false) // New state for creating terms
   const [termContent, setTermContent] = useState("")
+  const [originalContent, setOriginalContent] = useState("") // Store original content for comparison
   const [terms, setTerms] = useState([]) // State for API fetched terms
   const [isLoading, setIsLoading] = useState(true) // Loading state for the terms list
   const [error, setError] = useState(null) // Error state for the terms list
@@ -27,6 +29,7 @@ export default function Dash_Terms() {
   const [successMessage, setSuccessMessage] = useState("") // Success message state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false) // State for delete confirmation dialog
   const [isDeleting, setIsDeleting] = useState(false) // Deleting state
+  const [isEditingPublished, setIsEditingPublished] = useState(false) // Track if editing a published term
 
   useEffect(() => {
     const fetchTermsList = async () => {
@@ -50,146 +53,194 @@ export default function Dash_Terms() {
   // Filter terms based on search term
   const filteredTerms = terms.filter((term) => {
     return term.title?.toLowerCase().includes(searchTerm.toLowerCase())
-  })
+  });
+
   const handleSelectTerm = async (term) => {
-    setSelectedTerm(term)
-    setEditMode(false)
+    setSelectedTerm(term);
+    setEditMode(false);
+    setCreateMode(false); // Exit create mode when selecting a term
+    setIsEditingPublished(false);
+    setContentError(null); // Clear any previous errors
+
     if (term) {
-      setIsContentLoading(true)
-      setContentError(null)
+      setIsContentLoading(true);
       try {
-        const termDetails = await getLiveTerms(term.title)
-        console.log("Fetched term details:", termDetails)
-        // Handle both current published content and draft content
-        const content = termDetails?.current?.content || termDetails?.draft?.content || "No content available."
-        setTermContent(content)
+        const termDetails = await getLiveTerms(term.title);
+        console.log("Fetched term details:", termDetails);
+
+        // Determine which content to show based on term status
+        let content = "";
+        if (term.status === "draft") {
+          // For draft terms, show the draft content
+          content = termDetails?.draft?.content || "";
+        } else {
+          // For published terms, show the published content
+          content = termDetails?.current?.content || "";
+        }
+
+        // If no content was found, show a message
+        if (content === "") {
+          setContentError("No content available for this term.");
+        }
+
+        setTermContent(content);
+        setOriginalContent(content); // Store original content
       } catch (err) {
-        console.error(`Failed to fetch content for ${term.title}:`, err)
-        setContentError("Failed to load term content.")
-        setTermContent("")
+        console.error(`Failed to fetch content for ${term.title}:`, err);
+        setContentError(err?.response?.data?.message || "Failed to load term content. Please try again.");
+        setTermContent("");
+        setOriginalContent("");
       } finally {
-        setIsContentLoading(false)
+        setIsContentLoading(false);
       }
     } else {
-      setTermContent("")
+      setTermContent("");
+      setOriginalContent("");
     }
   }
+  // Edit button handler
+  const handleEdit = async () => {
+    if (!selectedTerm) return;
+    setEditMode(true);
+    setIsEditingPublished(selectedTerm.status === "published");
+  };
+
+  // Save changes handler
   const handleSaveChanges = async () => {
-    if (!selectedTerm) return
-
-    setIsSaving(true)
-    setContentError(null) // Clear previous content errors
+    if (!selectedTerm) return;
+    setIsSaving(true);
+    setContentError(null);
     try {
-      // Extract version number and increment it
-      const currentVersion = selectedTerm.version.replace(/^v/, '') // Remove 'v' prefix
-      const versionNumber = parseFloat(currentVersion) || 1.0
-      const newVersion = `v${(versionNumber + 0.1).toFixed(1)}`
-      await saveDraftTerms(selectedTerm.title, termContent, newVersion)
-      setEditMode(false)
+      // Use updateTerms for both published and draft terms
+      const result = await updateTerms(selectedTerm.title, termContent, selectedTerm.version);
 
-      // Show success message
-      setSuccessMessage("Changes saved successfully!")
-      setTimeout(() => setSuccessMessage(""), 3000)
-
-      // Refresh the terms list to show updated data
-      const data = await getAllTermDocuments()
-      setTerms(data || [])
-
-      // Update selected term version to reflect the new draft
-      setSelectedTerm({ ...selectedTerm, version: newVersion })
-    } catch (err) {
-      console.error("Failed to save changes:", err)
-      setContentError("Failed to save changes. Please try again.") // Show error near content area    } finally {
-      setIsSaving(false)
-    }
-  }
-  const handleCreateNewTerm = async () => {
-    if (!newTermTitle.trim()) {
-      setContentError("Please enter a title for the new term")
-      return
-    }
-
-    try {
-      setIsSaving(true)
-      await saveDraftTerms(newTermTitle, "New terms content...", "v1.0")
-
-      // Refresh the terms list
-      const data = await getAllTermDocuments()
-      setTerms(data || [])
-
-      // Clear form and hide it
-      setNewTermTitle("")
-      setShowNewTermForm(false)
-
-      // Show success message
-      setSuccessMessage("New term created successfully!")
-      setTimeout(() => setSuccessMessage(""), 3000)
-
-      // Select the newly created term
-      const newTerm = data.find(term => term.title === newTermTitle)
-      if (newTerm) {
-        handleSelectTerm(newTerm)
+      setEditMode(false);
+      setSuccessMessage("Changes saved successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      // Refresh terms list and reselect
+      const data = await getAllTermDocuments();
+      setTerms(data || []);
+      const updated = data.find(term => term.title === selectedTerm.title);
+      if (updated) {
+        setSelectedTerm(updated);
+        setTermContent(termContent); // Keep the current content
+        setOriginalContent(termContent); // Update original content for comparison
       }
     } catch (err) {
-      console.error("Failed to create new term:", err)
-      setContentError("Failed to create new term. Please try again.")
+      console.error("Failed to save changes:", err);
+      setContentError(err?.response?.data?.message || "Failed to save changes. Please try again.");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
+    }
+  };
+  const handleCreateNewTerm = async () => {
+    if (!newTermTitle.trim()) {
+      setContentError("Please enter a title for the new term");
+      return;
+    }
+
+    if (!termContent.trim()) {
+      setContentError("Please enter content for the new term");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await createTerms(newTermTitle.trim(), termContent.trim());
+
+      // Refresh the terms list
+      const data = await getAllTermDocuments();
+      setTerms(data || []);
+
+      // Reset form state
+      setSuccessMessage("New term created successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+
+      // Find and select the newly created term
+      const newTerm = data.find(term => term.title.toLowerCase() === newTermTitle.trim().toLowerCase());
+      if (newTerm) {
+        setCreateMode(false);
+        await handleSelectTerm(newTerm); // Use await to ensure content is loaded
+      }
+    } catch (err) {
+      console.error("Failed to create new term:", err);
+      setContentError(err?.response?.data?.message || "Failed to create new term. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   }
   const handlePublishTerm = async () => {
-    if (!selectedTerm || !termContent) return
-
+    if (!selectedTerm || !termContent) return;
     try {
-      setIsSaving(true)
-      await publishTerms(selectedTerm.title, termContent, selectedTerm.version, "Admin")
+      setIsSaving(true);
+      await publishTerms(selectedTerm.title, termContent, selectedTerm.version, "Admin");
+      // Get updated term list
+      const data = await getAllTermDocuments();
+      setTerms(data || []);
 
-      // Show success message
-      setSuccessMessage("Term published successfully!")
-      setTimeout(() => setSuccessMessage(""), 3000)
+      // Find the newly published term in the updated list
+      const publishedTerm = data.find(term =>
+        term.title === selectedTerm.title &&
+        term.status === "published"
+      );
 
-      // Refresh the terms list
-      const data = await getAllTermDocuments()
-      setTerms(data || [])
+      if (publishedTerm) {
+        setSelectedTerm(publishedTerm);
+      } else {
+        // If can't find the exact published term, just update status locally
+        setSelectedTerm({ ...selectedTerm, status: "published" });
+      }
 
-      // Update selected term status
-      setSelectedTerm({ ...selectedTerm, status: "published" })
-      setEditMode(false)
+      setEditMode(false);
+      setSuccessMessage("Term published successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
-      console.error("Failed to publish term:", err)
-      setContentError("Failed to publish term. Please try again.")
+      console.error("Failed to publish term:", err);
+      setContentError(err?.response?.data?.message || "Failed to publish term. Please try again.");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const handleDeleteTerm = async () => {
-    if (!selectedTerm) return
-
+    if (!selectedTerm) return;
     try {
-      setIsDeleting(true)
-      await deleteTermsVersion(selectedTerm.title, selectedTerm.version)
+      setIsDeleting(true);
+      setContentError(null); // Clear any existing errors
 
-      // Show success message
-      setSuccessMessage("Term deleted successfully!")
-      setTimeout(() => setSuccessMessage(""), 3000)
+      await deleteTermsVersion(selectedTerm.title, selectedTerm.version);
+
+      setSuccessMessage("Term deleted successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
 
       // Refresh the terms list
-      const data = await getAllTermDocuments()
-      setTerms(data || [])
+      const data = await getAllTermDocuments();
+      setTerms(data || []);
 
-      // Clear selected term
-      setSelectedTerm(null)
-      setTermContent("")
-      setEditMode(false)
-      setShowDeleteConfirm(false)    } catch (err) {
-      console.error("Failed to delete term:", err)
-      setContentError("Failed to delete term. Please try again.")
-      setShowDeleteConfirm(false) // Close the confirmation dialog on error
+      // Reset selection state
+      setSelectedTerm(null);
+      setTermContent("");
+      setOriginalContent("");
+      setEditMode(false);
+      setShowDeleteConfirm(false);
+    } catch (err) {
+      console.error("Failed to delete term:", err);
+      setContentError(err?.response?.data?.message || "Failed to delete term. Please try again.");
+      setShowDeleteConfirm(false);
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
   }
+
+  // Function to enter create mode
+  const handleEnterCreateMode = () => {
+    setSelectedTerm(null);
+    setCreateMode(true);
+    setEditMode(false);
+    setNewTermTitle("");
+    setTermContent("");
+    setContentError(null);
+  };
 
   return (
     <motion.div
@@ -206,51 +257,11 @@ export default function Dash_Terms() {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
         <h2 className="text-2xl font-bold tracking-tight">Terms & Conditions</h2>        <div className="flex items-center space-x-2">
-          <Button onClick={() => setShowNewTermForm(true)}>
+          <Button onClick={handleEnterCreateMode}>
             <FileText className="mr-2 h-4 w-4" />
             Add New Terms
           </Button>
         </div>      </div>
-
-      {/* New Term Form Modal */}
-      {showNewTermForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Create New Terms</h3>            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Title</label>                <Input
-                  value={newTermTitle}
-                  onChange={(e) => {
-                    setNewTermTitle(e.target.value)
-                    if (contentError && !selectedTerm) {
-                      setContentError(null)
-                    }
-                  }}
-                  placeholder="Enter terms title..."
-                  disabled={isSaving}
-                />
-                {contentError && !selectedTerm && (
-                  <p className="text-red-500 text-sm mt-1">{contentError}</p>
-                )}
-              </div>
-              <div className="flex justify-end space-x-2">                <Button
-                variant="outline"
-                onClick={() => {
-                  setShowNewTermForm(false)
-                  setNewTermTitle("")
-                  setContentError(null)
-                }}
-                disabled={isSaving}
-              >
-                Cancel
-              </Button>
-                <Button onClick={handleCreateNewTerm} disabled={isSaving || !newTermTitle.trim()}>
-                  {isSaving ? "Creating..." : "Create"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
@@ -360,7 +371,91 @@ export default function Dash_Terms() {
         </div>
 
         <div className="md:col-span-2">
-          {selectedTerm ? (
+          {createMode ? (
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">Create New Terms</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Enter the title and content for the new terms document
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleCreateNewTerm}
+                      disabled={isSaving || !newTermTitle.trim() || !termContent.trim()}
+                    >
+                      {isSaving ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4" />
+                          Create Terms
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setCreateMode(false);
+                        setNewTermTitle("");
+                        setTermContent("");
+                        setContentError(null);
+                      }}
+                      disabled={isSaving}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Title</label>
+                    <Input
+                      value={newTermTitle}
+                      onChange={(e) => {
+                        setNewTermTitle(e.target.value)
+                        if (contentError) {
+                          setContentError(null)
+                        }
+                      }}
+                      placeholder="Enter terms title..."
+                      disabled={isSaving}
+                      className="mb-4"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Content</label>
+                    <Textarea
+                      className="min-h-[400px] font-mono text-sm"
+                      value={termContent}
+                      onChange={(e) => {
+                        setTermContent(e.target.value)
+                        if (contentError) {
+                          setContentError(null)
+                        }
+                      }}
+                      placeholder="Enter terms content here..."
+                      disabled={isSaving}
+                    />
+                  </div>
+                </div>
+
+                {contentError && (
+                  <p className="text-red-500 text-sm mt-4">{contentError}</p>
+                )}
+              </CardContent>
+            </Card>
+          ) : selectedTerm ? (
             <Card>
               <CardContent className="p-4">
                 <div className="flex justify-between items-center mb-4">
@@ -395,9 +490,9 @@ export default function Dash_Terms() {
                         >
                           Cancel
                         </Button>
-                      </>                    ) : (
+                      </>) : (
                       <>
-                        <Button variant="outline" onClick={() => setEditMode(true)} disabled={isContentLoading}>
+                        <Button variant="outline" onClick={handleEdit} disabled={isContentLoading}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </Button>
@@ -468,7 +563,7 @@ export default function Dash_Terms() {
               <div className="text-center">
                 <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-2 text-lg font-semibold">No Terms Selected</h3>
-                <p className="text-sm text-muted-foreground">Select a terms document from the list to view or edit</p>
+                <p className="text-sm text-muted-foreground">Select a terms document from the list or click "Add New Terms"</p>
               </div>
             </div>
           )}
