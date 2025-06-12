@@ -40,7 +40,7 @@ export const BookingSummary = ({
         try {
             const declarations = await getDeclarationsByAdventureId(adventure._id);
             if (declarations.length > 0) {
-                setDeclaration(declarations[0]);
+                setDeclaration(declarations);
                 setShowDeclaration(true);
             } else {
                 toast.error("No declaration found for this adventure.");
@@ -59,7 +59,10 @@ export const BookingSummary = ({
         }
     };
 
-    const handleUserConsent = () => {
+    const handleUserConsent = (declId) => {
+        // Here you can handle the user consent for the specific declaration
+        // For example, you might want to send the declId to your backend to record the user's consent
+        console.log("User consented to declaration ID:", declId);
         setShowDeclaration(false);
         proceedToPayment();
     };
@@ -494,16 +497,16 @@ export const BookingSummary = ({
                 </div>
             </div>
 
-            {showDeclaration && (
+            {showDeclaration && declaration && declaration.length > 0 && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 md:w-2/3 lg:w-1/2">
                         <h2 className="text-xl font-bold text-gray-800 mb-4">{t("Declaration")}</h2>
                         <div className="text-gray-600 mb-6 overflow-y-auto max-h-60">
-                            <p>{declaration.content}</p>
+                            <p>{declaration[0].content}</p>
                         </div>
                         <div className="flex justify-end gap-4">
                             <button
-                                onClick={handleUserConsent}
+                                onClick={() => handleUserConsent(declaration[0]._id)}
                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 {t("I Agree")}
