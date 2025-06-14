@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider"
 
 import { Users, Search, UserPlus, UserX, MapPin, Calendar, Compass, Clock } from "lucide-react"
-import { Button } from "../components/ui/button"
+import { Button } from "../components/ui/button"  
 import {
   Dialog,
   DialogContent,
@@ -42,6 +42,7 @@ export default function LandingPage() {
   const [showFriendsList, setShowFriendsList] = useState(true)
   const [eventsPage, setEventsPage] = useState(1)
   const eventsLimit = 6 // Show 6 events per page
+  const playerRef = useRef(null)
   const { events, isLoading: eventsLoading, totalPages: eventsTotalPages } = useEvents({
     page: eventsPage,
     limit: eventsLimit
@@ -162,7 +163,17 @@ export default function LandingPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 1.5 }}
         />
-        <ReactPlayer url={"https://youtu.be/FfPVvtNo92s"} onReady={onReady} controls={false} loop={true} playing={true} muted={true} width="100%" height="100%" />
+        <ReactPlayer 
+          ref={playerRef}
+          url={"https://youtu.be/FfPVvtNo92s"} 
+          onReady={onReady} 
+          controls={false} 
+          loop={true} 
+          playing={true} 
+          muted={true} 
+          width="100%" 
+          height="100%" 
+        />
       </div>
 
       <Nav_Landing />
