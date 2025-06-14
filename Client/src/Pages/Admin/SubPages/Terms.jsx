@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Card, CardContent } from "../../../components/ui/card"
 import { Badge } from "../../../components/ui/badge"
 import { Textarea } from "../../../components/ui/textarea"
-import { getAllTermDocuments, getLiveTerms, createTerms, updateTerms, publishTerms, deleteTermsVersion } from "../../../Api/terms.api.js" // Import new API functions
+import { getAllTermDocuments, getAllTerms, createTerms, updateTerms, publishTerms, deleteTermsVersion } from "../../../Api/terms.api.js" // Import new API functions
 
 export default function Dash_Terms() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -65,9 +65,8 @@ export default function Dash_Terms() {
     if (term) {
       setIsContentLoading(true);
       try {
-        const termDetails = await getLiveTerms(term.title);
-        console.log("Fetched term details:", termDetails);
-
+        const termDetails = await getAllTerms(term.title);
+        
         // Determine which content to show based on term status
         let content = "";
         if (term.status === "draft") {

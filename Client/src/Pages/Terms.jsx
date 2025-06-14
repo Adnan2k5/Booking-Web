@@ -10,7 +10,7 @@ import { getLiveTerms } from '../Api/terms.api'
 import { toast } from 'sonner'
 
 export const Terms = () => {
-  const [termsData, setTermsData] = useState(null)
+  const [termsData, setTermsData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   useEffect(() => {
@@ -18,9 +18,10 @@ export const Terms = () => {
       try {
         setLoading(true)
         setError(null)
-        // Fetch the latest published terms (no title required for public endpoint)
+        // Fetch all published terms
         const data = await getLiveTerms()
-        setTermsData(data)
+        // Ensure data is an array
+        setTermsData(Array.isArray(data) ? data : [data].filter(Boolean))
       } catch (err) {
         console.error('Error fetching terms:', err)
         setError(err.message || 'Failed to load terms')
@@ -75,9 +76,7 @@ export const Terms = () => {
               Back to Home
             </Button>
           </Link>
-        </div>
-
-        {error ? (
+        </div>        {error ? (
           <Card className="border-red-200 bg-red-50">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3 text-red-700">
@@ -96,47 +95,69 @@ export const Terms = () => {
               </Button>
             </CardContent>
           </Card>
-        ) : (
+        ) : termsData.length === 0 ? (
           <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <FileText className="h-6 w-6 text-blue-600" />
-                <div>
-                  <CardTitle className="text-2xl">
-                    {termsData?.title || 'Terms and Conditions'}
-                  </CardTitle>
-                  {termsData?.publishedAt && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      Last updated: {formatDate(termsData.publishedAt)}
-                    </p>
-                  )}
-                  {termsData?.version && (
-                    <p className="text-xs text-gray-500">
-                      Version: {termsData.version}
-                    </p>
-                  )}
-                </div>
+            <CardContent className="pt-6">
+              <div className="text-center py-12">
+                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                  No Terms Available
+                </h3>
+                <p className="text-gray-600">
+                  Terms and conditions are currently being updated. Please check back later.
+                </p>
               </div>
-            </CardHeader>
-            <CardContent>
-              {termsData?.content ? (
-                <div 
-                  className="prose prose-gray max-w-none"
-                  dangerouslySetInnerHTML={{ __html: termsData.content }}
-                />
-              ) : (
-                <div className="text-center py-12">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                    No Terms Available
-                  </h3>
-                  <p className="text-gray-600">
-                    Terms and conditions are currently being updated. Please check back later.
-                  </p>
-                </div>
-              )}
             </CardContent>
           </Card>
+        ) : (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Terms and Conditions</h1>
+              <p className="text-gray-600">All published terms and conditions</p>
+            </div>
+            
+            {termsData.map((term, index) => (
+              <motion.div
+                key={term._id || index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <Card className="shadow-sm hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-6 w-6 text-blue-600" />
+                      <div className="flex-1">
+                        <CardTitle className="text-xl">
+                          {term.title || 'Terms and Conditions'}
+                        </CardTitle>
+                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                          {term.publishedAt && (
+                            <span>Last updated: {formatDate(term.publishedAt)}</span>
+                          )}
+                          {term.version && (
+                            <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                              Version: {term.version}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {term.content ? (
+                      <div 
+                        className="prose prose-gray max-w-none prose-sm"
+                        dangerouslySetInnerHTML={{ __html: term.content }}
+                      />
+                    ) : (
+                      <p className="text-gray-500 italic">No content available</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         )}
 
         {/* Additional Information */}
