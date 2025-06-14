@@ -1,9 +1,11 @@
 import { motion } from "framer-motion"
-import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, CreditCard, Package, MapPin, Star, Calendar } from "lucide-react"
+import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, CreditCard, Package, MapPin, Star, Calendar, User } from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
 import { Separator } from "../../components/ui/separator"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog"
+import { Input } from "../../components/ui/input"
 import DateRangePicker from "../../components/ui/DateRangePicker"
 import { useCart } from "../../hooks/useCart"
 import { Link, useNavigate } from "react-router-dom"
@@ -16,7 +18,9 @@ export const Cart = () => {
     const navigate = useNavigate()
     const { cart, totalPrice, loading, error, updateCartItem, removeCartItem, clearCart } = useCart()
     const [loadingItems, setLoadingItems] = useState({})
-    const [name, setName] = useState("");
+    const [name, setName] = useState("")
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [isBookingLoading, setIsBookingLoading] = useState(false)
 
     const handleQuantityUpdate = async (itemId, newQuantity, purchase) => {
         if (newQuantity < 1) return
@@ -102,8 +106,7 @@ export const Cart = () => {
     const formatDate = (dateString) => {
         try {
             return new Date(dateString).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
+                month: "short",                day: "numeric",
                 year: "numeric"
             })
         } catch (error) {
@@ -112,14 +115,39 @@ export const Cart = () => {
     }
 
     const handleBooking = async () => {
-        const id = toast.loading("Creating Booking....");
-        try {
-            await createBooking(name);
-            toast.success("Booking created successfully", {id});
-        }   
-        catch(e) {
-            toast.error(`Booking Failed ${e}`, {id});
+        if (!name.trim()) {
+            toast.error("Please enter your name")
+            return
         }
+
+        setIsBookingLoading(true)
+        const id = toast.loading("Creating Booking....")
+        try {
+            await createBooking(name)
+            toast.success("Booking created successfully", { id })
+            setIsDialogOpen(false)
+            setName("")
+            // Optionally clear cart after successful booking
+            await clearCart()
+            navigate("/") // Navigate to success page or home
+        } catch (e) {
+            // Check if it's a 401 error (unauthorized)
+            if (e.response?.status === 401) {
+                toast.error("Please enter the registered name", { id })
+            } else {
+                toast.error(`Booking Failed: ${e.response?.data?.message || e.message || e}`, { id })
+            }
+        } finally {
+            setIsBookingLoading(false)
+        }
+    }
+
+    const handleCheckoutClick = () => {
+        if (!cart?.items || cart.items.length === 0) {
+            toast.error("Your cart is empty")
+            return
+        }
+        setIsDialogOpen(true)
     }
 
     if (loading) {
@@ -391,16 +419,73 @@ export const Cart = () => {
                                         <div className="flex justify-between text-lg font-bold">
                                             <span>Total</span>
                                             <span>€{totalPrice.toFixed(2)}</span>
-                                        </div>
-
-                                        {/* Checkout Button */}
-                                        <Button
-                                            className="w-full bg-black hover:bg-gray-800 text-white"
-                                            size="lg"
-                                            onClick={handleBooking}
-                                        >
-                                            Proceed to Checkout
-                                        </Button>
+                                        </div>                                        {/* Checkout Button */}
+                                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button
+                                                    className="w-full bg-black hover:bg-gray-800 text-white"
+                                                    size="lg"
+                                                    onClick={handleCheckoutClick}
+                                                >
+                                                    Proceed to Checkout
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="sm:max-w-[425px]">
+                                                <DialogHeader>
+                                                    <DialogTitle className="flex items-center gap-2">
+                                                        <User className="h-5 w-5" />
+                                                        Complete Your Booking
+                                                    </DialogTitle>
+                                                    <DialogDescription>
+                                                        Please enter your name to proceed with the booking.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="grid gap-4 py-4">
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <label htmlFor="name" className="text-right font-medium">
+                                                            Name
+                                                        </label>
+                                                        <Input
+                                                            id="name"
+                                                            value={name}
+                                                            onChange={(e) => setName(e.target.value)}
+                                                            placeholder="Enter your full name"
+                                                            className="col-span-3"
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <span className="text-right text-sm text-gray-600">Total:</span>
+                                                        <span className="col-span-3 font-bold text-lg">€{totalPrice.toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        onClick={() => setIsDialogOpen(false)}
+                                                        disabled={isBookingLoading}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        onClick={handleBooking}
+                                                        disabled={isBookingLoading || !name.trim()}
+                                                        className="bg-black hover:bg-gray-800 text-white"
+                                                    >
+                                                        {isBookingLoading ? (
+                                                            <>
+                                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                                Processing...
+                                                            </>
+                                                        ) : (
+                                                            "Confirm Booking"
+                                                        )}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
 
                                         <p className="text-xs text-gray-500 text-center">
                                             Secure checkout powered by Paypal & Revoult
