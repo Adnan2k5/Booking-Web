@@ -206,3 +206,23 @@ export const getAllTermDocuments = asyncHandler(async (req, res) => {
     // Returns an empty array if no terms are found, which is appropriate for this type of query.
     res.status(200).json(new ApiResponse(200, allTerms, "All terms documents fetched successfully"));
 });
+
+export const getLiveTerms = asyncHandler(async (req, res) => {
+    const liveTerms = await Terms.findOne({ status: "published" }).sort({ publishedAt: -1 });
+    
+    if (!liveTerms) {
+        throw new ApiError(404, "No live terms found for the given title");
+    }
+
+    const language = getLanguage(req);
+    let translatedLiveTerms;
+
+    if (language !== 'en') {
+        const fieldsToTranslate = ['title', 'content'];
+        translatedLiveTerms = await translateObjectFields(liveTerms.toJSON(), fieldsToTranslate, language);
+    } else {
+        translatedLiveTerms = liveTerms.toJSON();
+    }
+
+    res.status(200).json(new ApiResponse(200, translatedLiveTerms, "Live terms fetched successfully"));
+});

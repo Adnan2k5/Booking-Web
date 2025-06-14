@@ -21,6 +21,7 @@ import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import { useAdventures } from "../hooks/useAdventure"
 import { Nav_Landing } from "../components/Nav_Landing"
+import { Footer } from "../components/Footer"
 import { fadeIn, staggerContainer } from "../assets/Animations"
 
 import { useFriend } from "../hooks/useFriend.jsx"
@@ -713,10 +714,11 @@ export default function LandingPage() {
           <DialogFooter className="mt-4">
             <Button onClick={() => setShowGroupDialog(false)} className="bg-black hover:bg-gray-800 text-white">
               {t("done")}
-            </Button>
-          </DialogFooter>
+            </Button>          </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Footer />
     </div>
   )
 }

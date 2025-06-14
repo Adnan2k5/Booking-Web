@@ -41,6 +41,7 @@ const BrowsingPage = lazy(() => import("./Pages/Browsing/BrowsingPage"))
 const Shop = lazy(() => import("./Pages/Shop/Shop"))
 const Hotel = lazy(() => import("./Pages/Hotel/Hotel"))
 const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
+const Terms = lazy(() => import("./Pages/Terms"))
 
 // i18n
 import { I18nextProvider } from "react-i18next"
@@ -123,8 +124,8 @@ const App = () => {
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/login-options" element={<LoginOptionsPage />} />
                   <Route path="/auth/signInWithLinkedin" element={<LinkedInCallback />} />
-                  <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
-                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/terms" element={<Terms />} />
                   <Route path="/browse" element={<BrowsingPage />} />
                   <Route path="/event/:id" element={<EventDetailPage />} />
                   <Route path="/booking" element={<Booking />} />
