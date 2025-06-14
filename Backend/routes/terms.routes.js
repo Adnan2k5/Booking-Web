@@ -1,6 +1,6 @@
 import express from "express";
 
-import { getTerms, saveDraft, publishTerms, restoreVersion, deleteVersion, getAllTermDocuments, getLiveTerms } from "../controllers/terms.controller.js";
+import { getTerms, createTerms, updateTerms, saveDraft, publishTerms, restoreVersion, deleteVersion, getAllTermDocuments, getLiveTerms } from "../controllers/terms.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyAdmin } from "../middlewares/admin.middleware.js";
 import { languageMiddleware } from "../middlewares/language.middleware.js";
