@@ -68,7 +68,6 @@ export const Nav_Landing = () => {
         } catch (error) {
             console.error('Error saving language to localStorage:', error)
         }
-        // Refresh page to ensure all API calls use new language
         setTimeout(() => {
             window.location.reload()
         }, 100)
@@ -87,16 +86,16 @@ export const Nav_Landing = () => {
     }
 
     return (
-        <nav className="w-full fixed h-fit z-50">
+        <nav className="w-full fixed h-fit z-50 px-2 sm:px-4">
             <motion.div
-                className="bg-black/80 backdrop-blur-md w-[90%] m-auto mt-5 text-white px-3 py-3 rounded-xl border border-white/10"
+                className="bg-black/70 backdrop-blur-md w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] m-auto mt-2 sm:mt-3 md:mt-5 text-white px-2 sm:px-3 py-2 sm:py-3 rounded-xl border border-white/10"
                 initial={{ y: -50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
             >
                 <div className="container mx-auto flex justify-between items-center">
                     <motion.h1
-                        className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent"
+                        className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent"
                         whileHover={{ scale: 1.05 }}
                         transition={{ type: "spring", stiffness: 400, damping: 10 }}
                         onClick={() => navigate("/")}
@@ -105,16 +104,13 @@ export const Nav_Landing = () => {
                         Adventure
                     </motion.h1>
 
-                    {/* Mobile Menu Button */}
-                    <div className="md:hidden">
-                        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white p-2">
-                            {mobileMenuOpen ? <MdClose className="text-2xl" /> : <MdMenu className="text-2xl" />}
+                    <div className="lg:hidden">
+                        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white p-1 sm:p-2">
+                            {mobileMenuOpen ? <MdClose className="text-xl sm:text-2xl" /> : <MdMenu className="text-xl sm:text-2xl" />}
                         </button>
                     </div>
-
-                    {/* Desktop Navigation */}
-                    <div className="hidden md:flex links gap-10 items-center">
-                        <ul className="flex space-x-5 items-center text-lg">
+                    <div className="hidden lg:flex links gap-5 xl:gap-10 items-center">
+                        <ul className="flex space-x-3 xl:space-x-5 items-center text-base xl:text-lg">
                             <motion.li
                                 className="cursor-pointer hover:text-emerald-400 transition-colors"
                                 whileHover={{ scale: 1.1 }}
@@ -158,9 +154,9 @@ export const Nav_Landing = () => {
                                         <DropdownMenuTrigger asChild>
                                             <Button
                                                 variant="ghost"
-                                                className="relative h-10 w-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 p-0"
+                                                className="relative h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 p-0"
                                             >
-                                                <Avatar className="h-10 w-10 text-black">
+                                                <Avatar className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 text-black">
                                                     <AvatarFallback>{user?.user?.email.charAt(0).toUpperCase()}</AvatarFallback>
                                                 </Avatar>
                                             </Button>
@@ -200,7 +196,7 @@ export const Nav_Landing = () => {
                                         onClick={() => navigate("/login-options")}
                                         style={{ cursor: "pointer" }}
                                     >
-                                        <IoIosLogIn className="text-3xl" />
+                                        <IoIosLogIn className="text-2xl md:text-3xl" />
                                     </motion.div>
                                 )}
                             </li>
@@ -212,52 +208,76 @@ export const Nav_Landing = () => {
                 <AnimatePresence>
                     {mobileMenuOpen && (
                         <motion.div
-                            className="md:hidden mt-4 pb-2"
+                            className="lg:hidden mt-3 pb-2"
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <ul className="flex flex-col space-y-3">
-                                <li className="cursor-pointer hover:text-gray-300">{t("explore")}</li>
+                            <ul className="flex flex-col space-y-3 px-2">
+                                <motion.li
+                                    className="cursor-pointer hover:text-emerald-400 transition-colors text-sm sm:text-base"
+                                    whileTap={{ scale: 0.97 }}
+                                >{t("explore")}</motion.li>
+
                                 {isShopEnabled && (
-                                    <li className="cursor-pointer hover:text-gray-300">
+                                    <motion.li
+                                        className="cursor-pointer hover:text-emerald-400 transition-colors text-sm sm:text-base"
+                                        whileTap={{ scale: 0.97 }}
+                                    >
                                         <a href="/shop">{t("shop")}</a>
-                                    </li>
+                                    </motion.li>
                                 )}
+
                                 {isHotelsEnabled && (
-                                    <li className="cursor-pointer hover:text-gray-300">
+                                    <motion.li
+                                        className="cursor-pointer hover:text-emerald-400 transition-colors text-sm sm:text-base"
+                                        whileTap={{ scale: 0.97 }}
+                                    >
                                         <a href="/book-hotel">{t("hotels")}</a>
-                                    </li>
+                                    </motion.li>
                                 )}
-                                <li className="cursor-pointer hover:text-gray-300">{t("mission")}</li>
+
+                                <motion.li
+                                    className="cursor-pointer hover:text-emerald-400 transition-colors text-sm sm:text-base"
+                                    whileTap={{ scale: 0.97 }}
+                                >{t("mission")}</motion.li>
+
                                 <li className="flex items-center">
-                                    <MdLanguage className="text-white text-xl mr-2" />
+                                    <MdLanguage className="text-white text-lg sm:text-xl mr-2" />
                                     <select
-                                        className="bg-black text-white"
+                                        className="bg-transparent text-white text-sm sm:text-base border border-white/20 rounded px-1 py-1"
                                         value={i18n.language}
                                         onChange={(e) => changeLanguage(e.target.value)}
                                     >
                                         {languages.map((language) => (
-                                            <option key={language.code} value={language.code}>
+                                            <option key={language.code} value={language.code} className="bg-black">
                                                 {language.name}
                                             </option>
                                         ))}
                                     </select>
                                 </li>
-                                <li>
+
+                                <li className="flex justify-start">
                                     {loading ? (
                                         <Loader />
                                     ) : user.user ? (
                                         <div
-                                            className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex items-center justify-center rounded-full"
-                                            onClick={() => navigate("/dashboard")}
+                                            className="flex items-center space-x-2 bg-black/40 hover:bg-black/60 px-3 py-2 rounded-lg cursor-pointer transition-colors"
+                                            onClick={() => navigateprofile()}
                                         >
-                                            {user?.user?.email.charAt(0).toUpperCase()}
+                                            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex items-center justify-center rounded-full">
+                                                {user?.user?.email.charAt(0).toUpperCase()}
+                                            </div>
+                                            <span className="text-sm sm:text-base">{t("profile")}</span>
                                         </div>
                                     ) : (
-                                        <div onClick={() => navigate("/login-options")}>
-                                            <IoIosLogIn className="text-3xl" />
+                                        <div
+                                            className="flex items-center space-x-2 bg-black/40 hover:bg-black/60 px-3 py-2 rounded-lg cursor-pointer transition-colors"
+                                            onClick={() => navigate("/login-options")}
+                                        >
+                                            <IoIosLogIn className="text-xl sm:text-2xl" />
+                                            <span className="text-sm sm:text-base">{t("login")}</span>
                                         </div>
                                     )}
                                 </li>
