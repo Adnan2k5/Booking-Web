@@ -176,13 +176,12 @@ export default function BrowsingPage() {
           >
             {loading ? (
               <Loader />
-            ) : (
-              <motion.div
+            ) : (              <motion.div
                 className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center rounded-full text-white font-medium shadow-md"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {user?.user?.email.charAt(0).toUpperCase()}
+                {user?.user?.email?.charAt(0).toUpperCase() || "U"}
               </motion.div>
             )}
           </motion.div>

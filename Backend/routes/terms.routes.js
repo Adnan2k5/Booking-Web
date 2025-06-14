@@ -1,26 +1,22 @@
 import express from "express";
-import {
-  getTerms,
-  saveDraft,
-  publishTerms,
-  restoreVersion,
-  deleteVersion,
-  getAllTermDocuments,
-  createTerms,
-  updateTerms,
-} from "../controllers/terms.controller.js";
+
+import { getTerms, saveDraft, publishTerms, restoreVersion, deleteVersion, getAllTermDocuments, getLiveTerms } from "../controllers/terms.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyAdmin } from "../middlewares/admin.middleware.js";
 import { languageMiddleware } from "../middlewares/language.middleware.js";
 
 const router = express.Router();
 
-// All routes require admin authentication and language detection
+// Public route for live terms (no authentication required)
+router.get('/public/live', languageMiddleware, getLiveTerms);
+
+// All other routes require admin authentication and language detection
 router.use(verifyJWT);
 router.use(verifyAdmin); // Ensure verifyAdmin is used if all are admin-only
 router.use(languageMiddleware);
 
 router.get("/all", getAllTermDocuments); // Get all term documents (irrespective of title or status)
+router.get('/latest', getLiveTerms); // Get latest published terms (expects ?title=queryParam)
 router.get("/", getTerms); // Get current, draft, and history (expects ?title=queryParam)
 router.post("/create", createTerms); // Create new terms document
 router.put("/update", updateTerms); // Update existing terms document (creates new draft)
