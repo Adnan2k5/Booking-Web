@@ -2,7 +2,7 @@ import { axiosClient } from '../AxiosClient/axios';
 
 export const getLiveTerms = async (title) => {
   try {
-    const response = await axiosClient.get('/api/terms', { params: { title } });
+    const response = await axiosClient.get('/api/terms/public/live', { params: { title } });
     return response.data.data;
   } catch (error) {
     console.error('Error fetching live terms:', error);

@@ -154,3 +154,4 @@ export const createDirectBooking = asyncHandler(async (req, res) => {
 
     res.status(201).json(new ApiResponse(201, populatedBooking, "Direct Booking Created Successfully"));
 });
+
