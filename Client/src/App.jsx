@@ -71,6 +71,7 @@ import { ItemPage } from "./Pages/Shop/ItemPage"
 import { Cart } from "./Pages/Shop/Cart"
 import EventsPage from "./Pages/Admin/SubPages/Events"
 import WebsiteSettings from "./Pages/Admin/SubPages/WebsiteSettings"
+import { ChatLayout } from "./Pages/Chat/ChatLayout"
 
 // Initialize i18n with stored language
 const getInitialLanguage = () => {
@@ -129,6 +130,9 @@ const App = () => {
                   <Route path="/event/:id" element={<EventDetailPage />} />
                   <Route path="/booking" element={<Booking />} />
                   <Route path="/confirmation" element={<ConfirmationPage />} />
+                  <Route path="/chat" element={<ChatLayout />} />
+
+
                   <Route path="/shop" element={
                     <FeatureRoute feature="shop">
                       <Shop />

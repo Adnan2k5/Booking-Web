@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { MessageCircle, X, Minimize2, Maximize2, RotateCcw } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { useAuth } from "../Pages/AuthProvider"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 
 // Mock data for chat messages
 const initialMessages = [
@@ -54,6 +54,13 @@ export default function ChatWidget() {
     const [showPredefinedQuestions, setShowPredefinedQuestions] = useState(true)
     const messagesEndRef = useRef(null)
     const navigate = useNavigate()
+    const location = useLocation()
+
+    // Check if current page is the chat page
+    const isChatPage = location.pathname === '/chat'
+
+    // If we're on the chat page, don't render the widget
+    if (isChatPage) return null
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
@@ -142,8 +149,8 @@ export default function ChatWidget() {
                         <div className="bg-blue-600 text-white p-3 flex justify-between items-center">
                             <h3 className="font-medium">Adventure Support</h3>
                             <div className="flex items-center gap-2">
-                                <button 
-                                    onClick={resetChat} 
+                                <button
+                                    onClick={resetChat}
                                     className="text-white hover:text-blue-100"
                                     title="Reset chat"
                                 >
@@ -172,10 +179,10 @@ export default function ChatWidget() {
                                         )}
                                         <div
                                             className={`max-w-[80%] rounded-lg px-3 py-2 ${message.sender === "user"
-                                                    ? "bg-blue-600 text-white"
-                                                    : message.sender === "agent"
-                                                        ? "bg-gray-200 text-gray-800"
-                                                        : "bg-blue-100 text-gray-800"
+                                                ? "bg-blue-600 text-white"
+                                                : message.sender === "agent"
+                                                    ? "bg-gray-200 text-gray-800"
+                                                    : "bg-blue-100 text-gray-800"
                                                 }`}
                                         >
                                             <p className="text-sm">{message.content}</p>

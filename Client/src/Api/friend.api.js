@@ -7,7 +7,9 @@ import { axiosClient } from '../AxiosClient/axios';
  */
 export const searchUserByEmail = async (email) => {
   try {
-    const response = await axiosClient.get(`/api/friends/search?email=${email}`);
+    const response = await axiosClient.get(
+      `/api/friends/search?email=${email}`
+    );
     return response.data;
   } catch (error) {
     throw error;
@@ -34,7 +36,9 @@ export const getFriends = async () => {
  */
 export const getFriendRequests = async (type = 'received') => {
   try {
-    const response = await axiosClient.get(`/api/friends/requests?type=${type}`);
+    const response = await axiosClient.get(
+      `/api/friends/requests?type=${type}`
+    );
     return response.data;
   } catch (error) {
     throw error;
@@ -48,7 +52,9 @@ export const getFriendRequests = async (type = 'received') => {
  */
 export const sendFriendRequest = async (receiverId) => {
   try {
-    const response = await axiosClient.post('/api/friends/request', { receiverId });
+    const response = await axiosClient.post('/api/friends/request', {
+      receiverId,
+    });
     return response.data;
   } catch (error) {
     throw error;
@@ -62,7 +68,9 @@ export const sendFriendRequest = async (receiverId) => {
  */
 export const acceptFriendRequest = async (requestId) => {
   try {
-    const response = await axiosClient.patch(`/api/friends/request/${requestId}/accept`);
+    const response = await axiosClient.patch(
+      `/api/friends/request/${requestId}/accept`
+    );
     return response.data;
   } catch (error) {
     throw error;
@@ -76,7 +84,9 @@ export const acceptFriendRequest = async (requestId) => {
  */
 export const rejectFriendRequest = async (requestId) => {
   try {
-    const response = await axiosClient.patch(`/api/friends/request/${requestId}/reject`);
+    const response = await axiosClient.patch(
+      `/api/friends/request/${requestId}/reject`
+    );
     return response.data;
   } catch (error) {
     throw error;
