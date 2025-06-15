@@ -3,20 +3,16 @@
 import { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { format } from "date-fns"
-import { Link, useLocation, useNavigate } from "react-router-dom"
-import { ArrowLeft, ChevronRight, MapPin } from "lucide-react"
+import { useLocation, useNavigate } from "react-router-dom"
 import { Badge } from "../../components/ui/badge"
 import { useAuth } from "../AuthProvider.jsx"
-import { Loader } from "../../components/Loader.jsx"
 import { SearchFilterBar } from "./SearchFilterBar"
-import CategorySelector from "./CategorySelector"
 import { AdventureCard } from "./AdventureCard"
 import { AdventureCardSkeleton } from "./AdventureCardSkeleton"
 import { NoResults } from "./NoResults"
-import { useAdventures } from "../../hooks/useAdventure"
 import { useBrowse } from "../../hooks/useBrowse"
 import { containerVariants, itemVariants } from "../../assets/Animations"
-import { Bubble } from "../../components/Bubble"
+import { Nav_Landing } from "../../components/Nav_Landing"
 
 export default function BrowsingPage() {
   const location = useLocation()
@@ -37,12 +33,7 @@ export default function BrowsingPage() {
     border: `1px solid #e2e8f0`,
     borderRadius: "0.375rem",
   }
-
-  const { user, loading } = useAuth()
   const { adventures, isLoading, filters, setFilters } = useBrowse()
-
-  console.log(adventures)
-
   const updateParams = (params, options = {}) => {
     const queryParams = new URLSearchParams(location.search)
     Object.entries(params).forEach(([key, value]) => {
@@ -152,40 +143,8 @@ export default function BrowsingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white p-4 sm:p-6 relative overflow-hidden">
-      <Bubble />
-
-      <div className="relative z-10 mx-auto max-w-7xl">
-        <div className="flex justify-between items-center mb-6">
-          <Link to={-1} className="flex items-center gap-2">
-            <motion.button
-              className="flex items-center gap-2 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              aria-label="Go back"
-            >
-              <ArrowLeft size={18} />
-              <span className="text-sm font-medium">Back</span>
-            </motion.button>
-          </Link>
-
-          <motion.div
-            className="flex items-center gap-3"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            {loading ? (
-              <Loader />
-            ) : (              <motion.div
-                className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center rounded-full text-white font-medium shadow-md"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {user?.user?.email?.charAt(0).toUpperCase() || "U"}
-              </motion.div>
-            )}
-          </motion.div>
-        </div>
+      <Nav_Landing />
+      <div className="relative z-10 mx-auto max-w-7xl mt-32">
         <motion.div
           className="mb-8 text-center"
           initial={{ opacity: 0, y: -20 }}

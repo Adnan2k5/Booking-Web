@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
-import { 
-  searchUserByEmail, 
-  getFriends, 
-  getFriendRequests, 
-  sendFriendRequest, 
-  acceptFriendRequest, 
-  rejectFriendRequest, 
-  removeFriend 
+import {
+  searchUserByEmail,
+  getFriends,
+  getFriendRequests,
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  removeFriend
 } from '../Api/friend.api';
 
 /**
@@ -35,14 +35,14 @@ export const useFriend = () => {
   const fetchFriends = useCallback(async () => {
     setLoading(prev => ({ ...prev, friends: true }));
     setError(prev => ({ ...prev, friends: null }));
-    
+
     try {
       const response = await getFriends();
       setFriends(response.data || []);
     } catch (err) {
-      setError(prev => ({ 
-        ...prev, 
-        friends: err.response?.data?.message || 'Failed to fetch friends' 
+      setError(prev => ({
+        ...prev,
+        friends: err.response?.data?.message || 'Failed to fetch friends'
       }));
     } finally {
       setLoading(prev => ({ ...prev, friends: false }));
@@ -53,17 +53,17 @@ export const useFriend = () => {
   const fetchFriendRequests = useCallback(async () => {
     setLoading(prev => ({ ...prev, requests: true }));
     setError(prev => ({ ...prev, requests: null }));
-    
+
     try {
       const receivedResponse = await getFriendRequests('received');
       setReceivedRequests(receivedResponse.data || []);
-      
+
       const sentResponse = await getFriendRequests('sent');
       setSentRequests(sentResponse.data || []);
     } catch (err) {
-      setError(prev => ({ 
-        ...prev, 
-        requests: err.response?.data?.message || 'Failed to fetch friend requests' 
+      setError(prev => ({
+        ...prev,
+        requests: err.response?.data?.message || 'Failed to fetch friend requests'
       }));
     } finally {
       setLoading(prev => ({ ...prev, requests: false }));
@@ -81,9 +81,9 @@ export const useFriend = () => {
       setSearchResult(response.data || null);
       return response.data;
     } catch (err) {
-      setError(prev => ({ 
-        ...prev, 
-        search: err.response?.data?.message || 'User not found' 
+      setError(prev => ({
+        ...prev,
+        search: err.response?.data?.message || 'User not found'
       }));
       return null;
     } finally {
@@ -95,16 +95,16 @@ export const useFriend = () => {
   const sendRequest = useCallback(async (receiverId) => {
     setLoading(prev => ({ ...prev, action: true }));
     setError(prev => ({ ...prev, action: null }));
-    
+
     try {
       const response = await sendFriendRequest(receiverId);
       // Update sent requests
       setSentRequests(prev => [...prev, response.data]);
       return response;
     } catch (err) {
-      setError(prev => ({ 
-        ...prev, 
-        action: err.response?.data?.message || 'Failed to send friend request' 
+      setError(prev => ({
+        ...prev,
+        action: err.response?.data?.message || 'Failed to send friend request'
       }));
       throw err;
     } finally {
@@ -116,19 +116,19 @@ export const useFriend = () => {
   const acceptRequest = useCallback(async (requestId) => {
     setLoading(prev => ({ ...prev, action: true }));
     setError(prev => ({ ...prev, action: null }));
-    
+
     try {
       const response = await acceptFriendRequest(requestId);
-      
+
       // Update friends list and remove from received requests
       setFriends(prev => [...prev, response.data.sender]);
       setReceivedRequests(prev => prev.filter(req => req._id !== requestId));
-      
+
       return response;
     } catch (err) {
-      setError(prev => ({ 
-        ...prev, 
-        action: err.response?.data?.message || 'Failed to accept friend request' 
+      setError(prev => ({
+        ...prev,
+        action: err.response?.data?.message || 'Failed to accept friend request'
       }));
       throw err;
     } finally {
@@ -140,18 +140,18 @@ export const useFriend = () => {
   const rejectRequest = useCallback(async (requestId) => {
     setLoading(prev => ({ ...prev, action: true }));
     setError(prev => ({ ...prev, action: null }));
-    
+
     try {
       const response = await rejectFriendRequest(requestId);
-      
+
       // Remove from received requests
       setReceivedRequests(prev => prev.filter(req => req._id !== requestId));
-      
+
       return response;
     } catch (err) {
-      setError(prev => ({ 
-        ...prev, 
-        action: err.response?.data?.message || 'Failed to reject friend request' 
+      setError(prev => ({
+        ...prev,
+        action: err.response?.data?.message || 'Failed to reject friend request'
       }));
       throw err;
     } finally {
@@ -163,18 +163,18 @@ export const useFriend = () => {
   const removeFriendship = useCallback(async (friendId) => {
     setLoading(prev => ({ ...prev, action: true }));
     setError(prev => ({ ...prev, action: null }));
-    
+
     try {
       const response = await removeFriend(friendId);
-      
+
       // Update friends list
       setFriends(prev => prev.filter(friend => friend._id !== friendId));
-      
+
       return response;
     } catch (err) {
-      setError(prev => ({ 
-        ...prev, 
-        action: err.response?.data?.message || 'Failed to remove friend' 
+      setError(prev => ({
+        ...prev,
+        action: err.response?.data?.message || 'Failed to remove friend'
       }));
       throw err;
     } finally {
@@ -195,7 +195,7 @@ export const useFriend = () => {
     searchResult,
     loading,
     error,
-    
+
     // Actions
     fetchFriends,
     fetchFriendRequests,
