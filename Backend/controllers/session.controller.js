@@ -297,3 +297,93 @@ export const getInstructorSessions = asyncHandler(async (req, res, next) => {
 
   return res.status(200).json(sessions);
 });
+
+// Get instructor's sessions with booking details
+export const getInstructorSessionsWithBookings = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    status,
+    sortBy = "startTime",
+    sortOrder = "asc"
+  } = req.query;
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  // Build query object
+  let query = { instructorId: req.user._id };
+
+  if (status) {
+    query.status = status;
+  }
+
+  // Sorting
+  const sortOptions = {};
+  sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+  const sessions = await Session.find(query)
+    .sort(sortOptions)
+    .skip(skip)
+    .limit(parseInt(limit))
+    .populate({
+      path: "adventureId",
+      select: "title description category difficulty thumbnail medias price"
+    })
+    .populate({
+      path: "location",
+      select: "name address city state country"
+    })
+    .populate({
+      path: "booking",
+      populate: {
+        path: "user groupMember",
+        select: "name email phoneNumber"
+      }
+    });
+
+  // Add computed status and available seats for each session
+  const processedSessions = sessions.map(session => {
+    const now = new Date();
+    const startTime = new Date(session.startTime);
+    const expiresAt = new Date(session.expiresAt);
+    
+    let computedStatus = 'upcoming';
+    if (now > expiresAt) {
+      computedStatus = 'expired';
+    } else if (now >= startTime) {
+      computedStatus = 'completed';
+    }
+    
+    // Calculate available seats
+    let bookedSeats = 0;
+    if (session.booking) {
+      bookedSeats = 1; // Main booker
+      if (session.booking.groupMember) {
+        bookedSeats += session.booking.groupMember.length;
+      }
+    }
+    
+    const availableSeats = Math.max(0, session.capacity - bookedSeats);
+    
+    return {
+      ...session.toObject(),
+      computedStatus,
+      bookedSeats,
+      availableSeats,
+      isBookable: computedStatus === 'upcoming' && availableSeats > 0 && session.status === 'active'
+    };
+  });
+
+  const total = await Session.countDocuments(query);
+
+  return res.status(200).json({
+    statusCode: 200,
+    data: {
+      sessions: processedSessions,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+    },
+    message: "Instructor sessions retrieved successfully"
+  });
+});

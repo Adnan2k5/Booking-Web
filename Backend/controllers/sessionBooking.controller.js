@@ -455,3 +455,65 @@ export const deleteSessionBooking = asyncHandler(async (req, res) => {
     new ApiResponse(200, null, "Session booking deleted successfully")
   );
 });
+
+// Get session bookings by session ID
+export const getSessionBookingsBySessionId = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params;
+  const {
+    page = 1,
+    limit = 10,
+    status,
+    sortBy = "createdAt",
+    sortOrder = "desc"
+  } = req.query;
+
+  // Validate session ID
+  if (!sessionId) {
+    throw new ApiError(400, "Session ID is required");
+  }
+
+  // Check if session exists
+  const sessionExists = await Session.findById(sessionId);
+  if (!sessionExists) {
+    throw new ApiError(404, "Session not found");
+  }
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  // Build query object
+  let query = { session: sessionId };
+
+  if (status) {
+    query.status = status;
+  }
+
+  // Sorting
+  const sortOptions = {};
+  sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+  const bookings = await Booking.find(query)
+    .sort(sortOptions)
+    .skip(skip)
+    .limit(parseInt(limit))
+    .populate("user", "name email phoneNumber")
+    .populate("groupMember", "name email phoneNumber")
+    .populate({
+      path: "session",
+      populate: [
+        { path: "adventureId", select: "title description category difficulty" },
+        { path: "instructorId", select: "name email phoneNumber" },
+        { path: "location", select: "name address city state country" }
+      ]
+    });
+
+  const total = await Booking.countDocuments(query);
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      bookings,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+    }, "Session bookings retrieved successfully")
+  );
+});

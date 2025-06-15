@@ -93,3 +93,13 @@ export const deleteSessionBooking = async (bookingId) => {
   });
   return res;
 }
+
+// Get session bookings by session ID
+export const getSessionBookingsBySessionId = async (sessionId, queryParams = {}) => {
+  if (!sessionId) throw new Error('Session ID is required');
+  const params = new URLSearchParams(queryParams).toString();
+  const res = await axiosClient.get(`/api/sessionBooking/session/${sessionId}${params ? `?${params}` : ''}`, {
+    withCredentials: true,
+  });
+  return res;
+}
