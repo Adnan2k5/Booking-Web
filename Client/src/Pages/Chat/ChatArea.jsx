@@ -1,24 +1,31 @@
 import { useMessage } from '../../hooks/useMessage';
-import { Input } from '../../components/ui/input';
-import { Send } from 'lucide-react';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { io } from "socket.io-client";
 import { useAuth } from '../AuthProvider';
+import { AnimatePresence, motion } from 'framer-motion';
+import { format } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
+import { formatMessage, isMessageFromUser } from '../../utils/chatHelpers';
+import { SOCKET_URL, SOCKET_CONFIG, EMPTY_STATES } from '../../constants/chatConstants';
+import { uploadFile, isImageFile, debugFileUpload } from '../../utils/fileUploadUtils';
+import MessageBubble from './components/MessageBubble';
+import AttachmentPanel from './components/AttachmentPanel';
+import EmptyState from './components/EmptyState';
+import MessageInput from './components/MessageInput';
+import BackgroundEffects from './components/BackgroundEffects';
+import ChatHeader from './components/ChatHeader';
+import MessageContainer from './components/MessageContainer';
 
 // Create socket outside component to prevent multiple connections
-const socket = io('http://localhost:8080', {
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000,
-    autoConnect: false, // Don't connect automatically, we'll do it in useEffect
-});
+const socket = io(SOCKET_URL, SOCKET_CONFIG);
 
-export const ChatArea = ({ selectedFriend }) => {
+export const ChatArea = ({ selectedFriend, toggleSidebar, onClose }) => {
     const friend = selectedFriend || { name: 'No Friend Selected' };
     const { user } = useAuth();
     const { messageHistory, loading, error, fetchMessageHistory } = useMessage();
     const [messages, setMessages] = useState([]);
-    const [messageInput, setMessageInput] = useState('');
     const [isConnected, setIsConnected] = useState(false);
+    const messageEndRef = useRef(null);
 
     const userId = user?.user?._id;
 
@@ -42,11 +49,12 @@ export const ChatArea = ({ selectedFriend }) => {
 
             socket.on('receiveMessage', (message) => {
                 console.log('Received message:', message);
-                setMessages((prevMessages) => [...prevMessages, message]);
-                // Refresh message history to ensure DB consistency
-                if (friend._id) {
-                    fetchMessageHistory(friend._id);
-                }
+
+                // Format the received message to match our local format
+                const formattedMessage = formatMessage(message);
+
+                console.log('Formatted received message:', formattedMessage);
+                setMessages((prevMessages) => [...prevMessages, formattedMessage]);
             });
 
             // Clean up event listeners when component unmounts
@@ -65,86 +73,108 @@ export const ChatArea = ({ selectedFriend }) => {
         }
     }, [friend._id]);
 
-    const sendMessage = () => {
-        if (!messageInput.trim() || !friend._id || !userId) return;
+    // Scroll to bottom when messages change
+    useEffect(() => {
+        // Use requestAnimationFrame to ensure DOM is updated before scrolling
+        requestAnimationFrame(() => {
+            messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        });
+    }, [messageHistory, messages]);
 
+    // Update messages state when messageHistory changes
+    useEffect(() => {
+        if (messageHistory.length > 0) {
+            // Map the messages to a consistent format
+            const formattedMessages = messageHistory.map(msg => formatMessage(msg));
+
+            setMessages(formattedMessages);
+            console.log('Formatted messages:', formattedMessages);
+        }
+    }, [messageHistory]);
+
+    const handleSendMessage = async (text, attachments = []) => {
+        if ((!text.trim() && attachments.length === 0) || !friend._id || !userId) return;
+
+        // Create base message using the properties expected by the backend (from/to)
         const message = {
             from: userId,
             to: friend._id,
-            content: messageInput,
+            content: text,
             timestamp: new Date(),
         };
 
+        // Create a local copy for display with the sender/receiver pattern
+        const localMessage = {
+            sender: userId,
+            receiver: friend._id,
+            content: text,
+            timestamp: new Date(),
+        };
+
+        // If there are attachments, add them to the message
+        if (attachments && attachments.length > 0) {
+            localMessage.attachments = attachments;
+            message.attachments = attachments;
+        }
+
         // Add message to local state immediately for UI responsiveness
-        setMessages((prevMessages) => [...prevMessages, message]);
+        setMessages((prevMessages) => [...prevMessages, localMessage]);
 
-        // Send message through socket
-        socket.emit('sendMessage', { userId: friend._id, message });
-
-        // Clear input
-        setMessageInput('');
-
-        // Refresh message history to ensure DB consistency
-        fetchMessageHistory(friend._id);
+        // Send message through socket (without waiting for response)
+        try {
+            socket.emit('sendMessage', { userId: friend._id, message });
+        } catch (error) {
+            console.error('Error sending message:', error);
+        }
     };
 
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter') {
-            sendMessage();
+    const handleCloseChat = () => {
+        if (onClose) {
+            onClose();
         }
     };
 
     return (
-        <div className="chat-room flex flex-col w-[100vw] h-[100vh] justify-between">
-            <div className="chat-header p-4 border-b border-gray-800">
-                <h2 className='text-xl'>{friend ? friend.name : 'No Friend Selected'}</h2>
-            </div>
-            {friend ? (
-                <div className="chat-messages flex-1 overflow-y-auto p-4">
-                    {loading ? (
-                        <p className='text-gray-500'>Loading messages...</p>
-                    ) : error === 'No message found' ? (
-                        <div className="flex items-center justify-center h-full">
-                            <div className="text-center">
-                                <h3 className="text-2xl font-semibold mb-2">Say Hi 👋</h3>
-                                <p className="text-gray-500">Start a conversation with {friend.name}</p>
-                            </div>
-                        </div>
-                    ) : (
-                        messageHistory.length > 0 ? (
-                            messageHistory.map((message, index) => (
-                                <div key={index} className={`message ${message.sender === friend._id ? 'text-right' : 'text-left'}`}>
-                                    <p className='text-gray-700'>{message.content}</p>
-                                </div>
-                            ))
-                        ) : (
-                            <p className='text-gray-500'>No messages yet</p>
-                        )
-                    )}
-                </div>
-            ) : (
-                <div className="chat-messages flex-1 flex items-center justify-center">
-                    <p className='text-gray-500'>Select a friend to start chatting</p>
-                </div>
-            )}
-            <div className="chat-input flex p-4 items-center border-t border-gray-800">
-                <div className="msg-area w-full flex items-center px-3">
-                    <Input
-                        type="text"
-                        placeholder="Type a message..."
-                        className="w-full px-3 py-2"
-                        value={messageInput}
-                        onChange={(e) => setMessageInput(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        disabled={!friend._id || !isConnected}
-                    />
-                    <Send
-                        className="text-gray-500 cursor-pointer ml-2"
-                        size={24}
-                        onClick={sendMessage}
-                    />
-                </div>
-            </div>
-        </div>
+        <BackgroundEffects>
+            <motion.div
+                className="chat-room flex flex-col w-full h-[100vh] justify-between relative"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+            >
+                <ChatHeader
+                    friend={friend}
+                    toggleSidebar={toggleSidebar}
+                    onClose={handleCloseChat}
+                />
+
+                {friend?._id ? (
+                    <div className="chat-messages w-full flex-1 overflow-y-auto flex flex-col-reverse scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                        <MessageContainer
+                            messages={messages}
+                            loading={loading}
+                            error={error}
+                            userId={userId}
+                            user={user}
+                            friend={friend}
+                            messageEndRef={messageEndRef}
+                        />
+                    </div>
+                ) : (
+                    <div className="chat-messages flex-1 flex items-center justify-center">
+                        <EmptyState
+                            title={EMPTY_STATES.NO_FRIEND_SELECTED.title}
+                        />
+                    </div>
+                )}
+
+                {/* Message input component */}
+                {friend?._id && (
+                    <div className="p-3 backdrop-blur-sm bg-white/70 border-t border-gray-200 rounded-b-xl">
+                        <MessageInput onSendMessage={handleSendMessage} />
+                    </div>
+                )}
+            </motion.div>
+        </BackgroundEffects>
     )
 }
