@@ -1,5 +1,5 @@
 import { Message } from "../models/message.model.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+
 /**
  * Socket.IO initialization and event handlers
  */

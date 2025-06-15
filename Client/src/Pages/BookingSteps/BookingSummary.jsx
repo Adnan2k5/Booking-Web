@@ -62,7 +62,6 @@ export const BookingSummary = ({
     const handleUserConsent = (declId) => {
         // Here you can handle the user consent for the specific declaration
         // For example, you might want to send the declId to your backend to record the user's consent
-        console.log("User consented to declaration ID:", declId);
         setShowDeclaration(false);
         proceedToPayment();
     };
@@ -80,17 +79,18 @@ export const BookingSummary = ({
             if (selectedInstructor) {
                 const sessionBookingData = {
                     session: selectedInstructor._id,
+                    groupMembers: groupMembers.map(member => member._id),
                     amount: (selectedInstructor.price || 0) + (groupMembers.length * 30),
                     transactionId: `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     modeOfPayment: "card"
                 };
 
-                console.log("Creating session booking:", sessionBookingData);
+                console.log(groupMembers);
+
                 const sessionResult = await createSessionBooking(sessionBookingData);
                 bookingResults.push({ type: 'session', result: sessionResult });
             }            // 2. Create Item Booking (for cart items) - Direct approach without cart
             if (cartItems.length > 0) {
-                console.log("Creating direct item booking with items:", cartItems);
 
                 // Calculate total amount for items
                 const itemsTotal = cartItems.reduce((total, item) => {
@@ -106,7 +106,9 @@ export const BookingSummary = ({
                             : 1;
                         return total + (itemPrice * quantity * days);
                     }
-                }, 0);                // Format items for direct booking API
+                }, 0);
+
+                // Format items for direct booking API
                 const formattedItems = cartItems.map(item => ({
                     item: item._id || item.id,
                     quantity: item.quantity || 1,
@@ -120,7 +122,6 @@ export const BookingSummary = ({
                 };
 
 
-                console.log("Direct item booking data:", itemBookingData);
                 const itemResult = await createDirectItemBooking(itemBookingData);
                 bookingResults.push({ type: 'items', result: itemResult });
             }
@@ -200,7 +201,7 @@ export const BookingSummary = ({
                     endDate: item.endDate
                 })),
                 groupMembers: groupMembers.map(member => ({
-                    id: member.id,
+                    id: member._id,
                     name: member.name,
                     email: member.email,
                     avatar: member.avatar

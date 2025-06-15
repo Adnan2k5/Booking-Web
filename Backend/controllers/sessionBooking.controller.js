@@ -11,6 +11,7 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
     session,
     amount,
     transactionId,
+    groupMembers = [], // Array of user IDs for group bookings
     modeOfPayment = "card",
   } = req.body;
 
@@ -24,7 +25,7 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
   }
 
   // Check if session exists
-  const sessionExists = await Session.findById(session);
+  const sessionExists = await Session.findById(session).populate("adventureId", "exp");
   if (!sessionExists) {
     throw new ApiError(404, "Session not found");
   }
@@ -41,6 +42,12 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
   // Check if session start time is in the future
   if (new Date() >= new Date(sessionExists.startTime)) {
     throw new ApiError(400, "Cannot book a session that has already started");
+  }
+
+  // Check Capacity
+  const totalMembers = groupMembers.length + 1; // +1 for the user making the booking
+  if (totalMembers > sessionExists.capacity) {
+    throw new ApiError(400, `Cannot book more than ${sessionExists.capacity} members for this session`);
   }
 
   // Check if session already has a booking (assuming one booking per session)
@@ -62,14 +69,25 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
   // Create the booking
   const booking = await Booking.create({
     user: req.user._id,
+    groupMember: groupMembers,
     session,
     amount,
     transactionId,
     modeOfPayment,
   });
 
+  groupMembers.push(req.user._id); // Include the user making the booking
+
+  await User.updateMany(
+    { _id: { $in: groupMembers } },
+    { $inc: { level: sessionExists.adventureId.exp } }
+  );
+
   // Update session with booking reference
-  await Session.findByIdAndUpdate(session, { booking: booking._id });
+  await Session.findByIdAndUpdate(session, {
+    booking: booking._id, $inc: { capacity: -totalMembers }
+  });
+
 
   // Populate the booking with session and user details
   const populatedBooking = await Booking.findById(booking._id)
@@ -101,7 +119,7 @@ export const getAllSessionBookings = asyncHandler(async (req, res) => {
   } = req.query;
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  
+
   // Build query object
   let query = {};
 
@@ -179,7 +197,7 @@ export const getSessionBookingsByUserId = asyncHandler(async (req, res) => {
   }
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  
+
   // Build query object
   let query = { user: userId };
 
@@ -228,13 +246,13 @@ export const getCurrentUserSessionBookings = asyncHandler(async (req, res) => {
   } = req.query;
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  
-  // Build query object
-  let query = { user: req.user._id };
 
-  if (status) {
-    query.status = status;
-  }
+  // Build query object
+  let query = { user: req.user._id, groupMember: { $ne: req.user._id } };
+
+  // if (status) {
+  //   query.status = status;
+  // }
 
   // Sorting
   const sortOptions = {};
@@ -248,13 +266,14 @@ export const getCurrentUserSessionBookings = asyncHandler(async (req, res) => {
     .populate({
       path: "session",
       populate: [
-        { path: "adventureId", select: "title description category difficulty" },
+        { path: "adventureId", select: "title description category thumbnail medias" },
         { path: "instructorId", select: "name email phoneNumber" },
         { path: "location", select: "name address city state country" }
       ]
     });
 
   const total = await Booking.countDocuments(query);
+
 
   return res.status(200).json(
     new ApiResponse(200, {
@@ -347,14 +366,14 @@ export const updateSessionBookingStatus = asyncHandler(async (req, res) => {
     { status },
     { new: true }
   ).populate("user", "name email phoneNumber")
-   .populate({
-     path: "session",
-     populate: [
-       { path: "adventureId", select: "title description category difficulty" },
-       { path: "instructorId", select: "name email phoneNumber" },
-       { path: "location", select: "name address city state country" }
-     ]
-   });
+    .populate({
+      path: "session",
+      populate: [
+        { path: "adventureId", select: "title description category difficulty" },
+        { path: "instructorId", select: "name email phoneNumber" },
+        { path: "location", select: "name address city state country" }
+      ]
+    });
 
   return res.status(200).json(
     new ApiResponse(200, updatedBooking, "Session booking status updated successfully")
@@ -396,14 +415,14 @@ export const cancelSessionBooking = asyncHandler(async (req, res) => {
     { status: "cancelled" },
     { new: true }
   ).populate("user", "name email phoneNumber")
-   .populate({
-     path: "session",
-     populate: [
-       { path: "adventureId", select: "title description category difficulty" },
-       { path: "instructorId", select: "name email phoneNumber" },
-       { path: "location", select: "name address city state country" }
-     ]
-   });
+    .populate({
+      path: "session",
+      populate: [
+        { path: "adventureId", select: "title description category difficulty" },
+        { path: "instructorId", select: "name email phoneNumber" },
+        { path: "location", select: "name address city state country" }
+      ]
+    });
 
   // Remove booking reference from session
   await Session.findByIdAndUpdate(booking.session, { $unset: { booking: 1 } });

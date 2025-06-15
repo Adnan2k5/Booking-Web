@@ -20,11 +20,11 @@ export default function UserDashboardPage() {
         level: user.user.level || "Beginner",
         joinDate: user.user.joinDate || "2023-01-01",
         completedAdventures: user.user.completedAdventures || 3,
-        experience: user.user.experience || 400,
-        nextLevel: user.user.nextLevel || 1000,
+        experience: user.user.level || 400,
+        nextLevel: Math.floor(user.user.level / 100) * 100 + 100 || 1000,
         upcomingAdventures: user.user.upcomingAdventures || 2,
     }
-    const progressPercentage = (userProfile.experience / userProfile.nextLevel) * 100
+    const progressPercentage = Math.floor(userProfile.level / userProfile.nextLevel) * 100
 
     return (
         <UserLayout>
