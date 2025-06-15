@@ -248,11 +248,11 @@ export const getCurrentUserSessionBookings = asyncHandler(async (req, res) => {
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   // Build query object
-  let query = { user: req.user._id };
+  let query = { user: req.user._id, groupMember: { $ne: req.user._id } };
 
-  if (status) {
-    query.status = status;
-  }
+  // if (status) {
+  //   query.status = status;
+  // }
 
   // Sorting
   const sortOptions = {};
@@ -266,13 +266,14 @@ export const getCurrentUserSessionBookings = asyncHandler(async (req, res) => {
     .populate({
       path: "session",
       populate: [
-        { path: "adventureId", select: "title description category difficulty" },
+        { path: "adventureId", select: "title description category thumbnail medias" },
         { path: "instructorId", select: "name email phoneNumber" },
         { path: "location", select: "name address city state country" }
       ]
     });
 
   const total = await Booking.countDocuments(query);
+
 
   return res.status(200).json(
     new ApiResponse(200, {
