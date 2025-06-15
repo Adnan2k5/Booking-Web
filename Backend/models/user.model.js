@@ -39,9 +39,7 @@ const userSchema = new mongoose.Schema(
     },
     level: {
       type: Number,
-      default: 1,
-      min: 1,
-      max: 10,
+      default: 0,
     },
     instructor: {
       type: mongoose.Schema.Types.ObjectId,
@@ -51,12 +49,6 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",
     },
-    bookings: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Booking",
-      },
-    ],
     reviews: [
       {
         type: mongoose.Schema.Types.ObjectId,

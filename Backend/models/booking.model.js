@@ -7,6 +7,13 @@ const bookingSchema = new mongoose.Schema(
       ref: "User",
       index: true,
     },
+    groupMember: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        index: true,
+      }
+    ],
     session: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Session",
