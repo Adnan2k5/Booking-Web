@@ -5,7 +5,6 @@ import { Separator } from '../../components/ui/separator'
 import { Award } from "lucide-react"
 import { Avatar, AvatarFallback } from "../../components/ui/avatar"
 import { Badge } from "../../components/ui/badge"
-import { Button } from "../../components/ui/button"
 import { useAuth } from '../AuthProvider'
 
 export default function UserProfilePage() {
@@ -14,10 +13,10 @@ export default function UserProfilePage() {
         name: user.user.name || "John Doe",
         email: user.user.email || "",
         level: user.user.level || "Beginner",
-        joinDate: user.user.joinDate || "2023-01-01",
+        joinDate: new Date(user.user.createdAt).toLocaleDateString() || "2023-01-01",
         completedAdventures: user.user.completedAdventures || 0,
-        experience: user.user.experience || 400,
-        nextLevel: user.user.nextLevel || 1000,
+        experience: user.user.level || 400,
+        nextLevel: user.user.nextLevel || Math.floor(user.user.level/100) * 100 + 100, // Example calculation for next level
     }
     const progressPercentage = (userProfile.experience / userProfile.nextLevel) * 100
     return (
@@ -48,7 +47,7 @@ export default function UserProfilePage() {
                                         </Avatar>
                                         <h3 className="text-xl font-bold">{userProfile.name}</h3>
                                         <p className="text-gray-500">{userProfile.email}</p>
-                                        <Badge className="mt-2 bg-black text-white rounded-full">{userProfile.level}</Badge>
+                                        <Badge className="mt-2 bg-black text-white rounded-full">{Math.floor(userProfile.level / 100)}</Badge>
                                     </div>
 
                                     <Separator />
