@@ -35,7 +35,7 @@ import { ensureDefaultDeclaration } from "./controllers/declaration.controller.j
 import initSocketIO from "./socket/socket.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import redis from './config/redis.config.js';
+import redis from "./config/redis.config.js";
 
 const app = express();
 
@@ -44,7 +44,7 @@ const server = createServer(app);
 // Initialize Socket.IO with the HTTP server
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
@@ -78,13 +78,12 @@ app.use("/api/friends", friendRouter);
 app.use("/api/itemBooking", itemBookingRouter);
 app.use("/api/events", landingRouter);
 app.use("/api/website-settings", websiteSettingsRouter);
-app.use('/api/hotelBooking', hotelBookingRouter);
-app.use('/api/sessionBooking', sessionBookingRouter);
+app.use("/api/hotelBooking", hotelBookingRouter);
+app.use("/api/sessionBooking", sessionBookingRouter);
 app.use("/api/translation", translationRouter);
 
-
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   connectDB();
   initCloudinary();
