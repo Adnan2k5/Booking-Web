@@ -61,3 +61,22 @@ export const changeDocumentStatusById = async (id, status) => {
     throw error;
   }
 };
+
+// Get instructor's own sessions with booking details
+export const getInstructorSessionsWithBookings = async (queryParams = {}) => {
+  try {
+    const params = new URLSearchParams(queryParams).toString();
+    const res = await axiosClient.get(
+      `/api/session/instructor/my-sessions${
+        params ? `?${params}` : ''
+      }`,
+      {
+        withCredentials: true,
+      }
+    );
+    return res;
+  } catch (error) {
+    console.error('Error fetching instructor sessions:', error);
+    throw error;
+  }
+};

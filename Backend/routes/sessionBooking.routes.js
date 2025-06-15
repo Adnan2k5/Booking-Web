@@ -8,6 +8,7 @@ import {
   updateSessionBookingStatus,
   cancelSessionBooking,
   deleteSessionBooking,
+  getSessionBookingsBySessionId,
 } from "../controllers/sessionBooking.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyAdmin } from "../middlewares/admin.middleware.js";
@@ -22,6 +23,7 @@ router.use(verifyJWT); // Apply authentication middleware to all routes below
 // User routes
 router.route("/create").post(createSessionBooking);
 router.route("/my-bookings").get(getCurrentUserSessionBookings);
+router.route("/session/:sessionId").get(getSessionBookingsBySessionId);
 router.route("/:bookingId").get(getSessionBookingById);
 router.route("/:bookingId/status").patch(updateSessionBookingStatus);
 router.route("/:bookingId/cancel").patch(cancelSessionBooking);

@@ -6,12 +6,14 @@ import {
   getAllSessions,
   createPreset,
   getInstructorSessions,
+  getInstructorSessionsWithBookings,
 } from "../controllers/session.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
 router.get("/instructors", getInstructorSessions);
+router.get("/instructor/my-sessions", verifyJWT, getInstructorSessionsWithBookings);
 // Create a session
 router.post("/preset", verifyJWT, createPreset);
 router.post("/", verifyJWT, createSession);
