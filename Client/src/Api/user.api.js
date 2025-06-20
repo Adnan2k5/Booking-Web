@@ -11,8 +11,14 @@ export const fetchUsers = async ({
   return data;
 };
 
-
 export const deleteUser = async (userId) => {
   const { data } = await axiosClient.delete(`/api/user/${userId}`);
   return data;
-}
+};
+
+export const getUserAdventureExperiences = async () => {
+  const response = await axiosClient.get('/api/user/adventure-experiences', {
+    withCredentials: true,
+  });
+  return response.data;
+};
