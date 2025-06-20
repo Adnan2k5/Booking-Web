@@ -2,16 +2,20 @@ import express from "express";
 import { 
     createBooking, 
     createDirectBooking, 
-    capturePaymentOrder, 
-    handlePaymentRedirect, 
-    getOrderDetails 
+    handlePaymentCompletion,
+    getPaymentStatus,
+    getOrderDetails,
+    setupWebhook
 } from "../controllers/itemBooking.controller.js";
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-// Public route for handling payment redirect (no auth needed)
-router.get('/payment/redirect', handlePaymentRedirect);
+// Webhook endpoint (no auth required)
+router.post('/webhook/payment-completed', handlePaymentCompletion);
+
+// Setup webhook endpoint (admin only)
+router.post('/setup-webhook', verifyJWT, setupWebhook);
 
 // Middleware to verify JWT token for authenticated routes
 router.use(verifyJWT);
@@ -22,8 +26,8 @@ router.get('/create', createBooking);
 // New direct booking without cart
 router.post('/create-direct', createDirectBooking);
 
-// Capture payment order
-router.post('/capture/:orderId', capturePaymentOrder);
+// Get payment status
+router.get('/payment-status/:bookingId', getPaymentStatus);
 
 // Get order details
 router.get('/order/:orderId', getOrderDetails);
