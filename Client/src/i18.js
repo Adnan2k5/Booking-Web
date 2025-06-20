@@ -1,10 +1,10 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import enTranslation from './locales/en.json';
-import frTranslation from './locales/fr.json';
-import deTranslation from './locales/de.json';
-import esTranslation from './locales/es.json';
-import itTranslation from './locales/it.json';
+import enTranslation from './Locales/en.json';
+import frTranslation from './Locales/fr.json';
+import deTranslation from './Locales/de.json';
+import esTranslation from './Locales/es.json';
+import itTranslation from './Locales/it.json';
 
 // Get initial language from localStorage
 const getInitialLanguage = () => {
