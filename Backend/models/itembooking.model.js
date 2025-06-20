@@ -43,12 +43,6 @@ const itemBookingSchema = new mongoose.Schema(
       enum: ["pending", "confirmed", "cancelled"],
       default: "pending",
     },
-
-    transactionId: {
-      type: String,
-      trim: true,
-    },
-
     amount: {
       type: Number,
       min: 0,
@@ -57,12 +51,25 @@ const itemBookingSchema = new mongoose.Schema(
     bookingDate: {
       type: Date,
       default: Date.now,
+    }, modeOfPayment: {
+      type: String,
+      enum: ["card", "cash", "revolut"],
+      default: "revolut",
     },
 
-    modeOfPayment: {
+    paymentOrderId: {
       type: String,
-      enum: ["card", "cash"],
-      default: "card",
+      trim: true,
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "completed", "failed", "cancelled"],
+      default: "pending",
+    },
+
+    paymentCompletedAt: {
+      type: Date,
     },
   },
   {

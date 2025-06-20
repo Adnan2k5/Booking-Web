@@ -70,6 +70,7 @@ import HotelPendingReview from "./Pages/Hotel/HotelPending"
 import Managers from "./Pages/Admin/SubPages/Managers"
 import { ItemPage } from "./Pages/Shop/ItemPage"
 import { Cart } from "./Pages/Shop/Cart"
+import CartSuccess from "./Pages/Shop/CartSuccess"
 import EventsPage from "./Pages/Admin/SubPages/Events"
 import WebsiteSettings from "./Pages/Admin/SubPages/WebsiteSettings"
 import { ChatLayout } from "./Pages/Chat/ChatLayout"
@@ -143,10 +144,14 @@ const App = () => {
                     <FeatureRoute feature="hotels">
                       <Hotel />
                     </FeatureRoute>
-                  } />
-                  <Route path="/cart" element={
+                  } />                  <Route path="/cart" element={
                     <FeatureRoute feature="shop">
                       <Cart />
+                    </FeatureRoute>
+                  } />
+                  <Route path="/cart/success" element={
+                    <FeatureRoute feature="shop">
+                      <CartSuccess />
                     </FeatureRoute>
                   } />
                   <Route path="/product/:productId" element={
