@@ -8,13 +8,29 @@ import axios from 'axios';
 // Helper function to create Revolut payment order
 const createRevolutOrder = async (amount, currency = 'GBP', description = 'Item Booking Payment') => {
     try {
-        const data = JSON.stringify({
+        // Validate inputs
+        if (!amount || amount <= 0) {
+            throw new Error('Invalid amount provided');
+        }
+
+        if (!process.env.REVOLUT_SECRET_API_KEY) {
+            throw new Error('Revolut API key not configured');
+        }
+
+        const redirectUrl = process.env.NODE_ENV === 'production' 
+            ? 'https://yourdomain.com/cart/success'
+            : 'https://4f93-2405-201-a423-5801-702b-aa6e-bdc3-2a08.ngrok-free.app/cart/success';
+
+        const requestPayload = {
             amount: Math.round(amount * 100), // Convert to pence/cents as Revolut expects smallest currency unit
-            currency: currency,
-            description: description,
-            capture_mode: 'manual',
-            redirect_url: 'http://localhost:5173/cart/success'
-        });
+            currency: currency.toUpperCase(),
+            description: description.substring(0, 255), // Limit description length
+            capture_mode: 'automatic', // Changed to automatic capture
+            redirect_url: redirectUrl
+        };
+
+        // Log the request data for debugging
+        console.log('Revolut API Request Data:', JSON.stringify(requestPayload, null, 2));
 
         const config = {
             method: 'post',
@@ -23,17 +39,28 @@ const createRevolutOrder = async (amount, currency = 'GBP', description = 'Item 
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'Authorization': `Bearer ${process.env.REVOLUT_SECRET_API_KEY}`, // Store API key in environment variables
-                'Revolut-Api-Version': '2024-09-01' // Add this required header
+                'Authorization': `Bearer ${process.env.REVOLUT_SECRET_API_KEY}`,
+                'Revolut-Api-Version': '2024-09-01'
             },
-            data: data
+            data: JSON.stringify(requestPayload)
         };
 
+        console.log('Making request to Revolut API...');
         const response = await axios(config);
+        console.log('Revolut API Response:', response.data);
         return response.data;
     } catch (error) {
-        console.error('Revolut order creation error:', error.response?.data || error.message);
-        throw new ApiError(500, 'Failed to create payment order');
+        // Enhanced error logging
+        console.error('Revolut order creation error:');
+        console.error('Error message:', error.message);
+        console.error('Response status:', error.response?.status);
+        console.error('Response data:', error.response?.data);
+        
+        if (error.response?.data) {
+            throw new ApiError(500, `Revolut API Error: ${error.response.data.message || 'Failed to create payment order'}`);
+        } else {
+            throw new ApiError(500, `Payment service error: ${error.message}`);
+        }
     }
 };
 
@@ -69,7 +96,6 @@ export const createBooking = asyncHandler(async (req, res) => {
 
     // Create Revolut payment order
     const revolutOrder = await createRevolutOrder(totalPrice, 'GBP', `Item Booking - User: ${req.user.name}`);
-    console.log('Revolut Order Created:', revolutOrder);
     const booking = await ItemBooking.create({
         amount: totalPrice,
         user: userId,
@@ -205,29 +231,62 @@ export const createDirectBooking = asyncHandler(async (req, res) => {
 
 // Function to handle payment completion/webhook
 export const handlePaymentCompletion = asyncHandler(async (req, res) => {
-    const { orderId, status } = req.body;
+    try {
+        console.log('Webhook received:', JSON.stringify(req.body, null, 2));
+        
+        const { event, order_id } = req.body;
 
-    if (!orderId) {
-        throw new ApiError(400, "Order ID is required");
+        if (!event || !order_id) {
+            throw new ApiError(400, "Invalid webhook payload");
+        }
+
+        // Check if this is an order completion event
+        if (event === 'ORDER_COMPLETED' || event === 'ORDER_AUTHORISED') {
+
+            // Find booking by payment order ID
+            const booking = await ItemBooking.findOne({ paymentOrderId: orderId })
+                .populate('user', 'name email');
+
+            if (!booking) {
+                console.log(`Booking not found for order ID: ${orderId}`);
+                // Return 200 to acknowledge webhook receipt even if booking not found
+                return res.status(200).json({ message: "Webhook received" });
+            }
+
+            // Update payment status based on event type
+            if (event === 'ORDER_COMPLETED') {
+                booking.paymentStatus = 'completed';
+                booking.paymentCompletedAt = new Date();
+                
+                // Clear user's cart after successful payment
+                await Cart.findOneAndUpdate(
+                    { user: booking.user._id },
+                    { $set: { items: [] } }
+                );
+                
+                console.log(`Payment completed for booking ${booking._id}`);
+            } else if (event === 'ORDER_AUTHORISED') {
+                booking.paymentStatus = 'authorized';
+                console.log(`Payment authorized for booking ${booking._id}`);
+            }
+
+            await booking.save();
+
+            // Return 200 to acknowledge successful webhook processing
+            res.status(200).json({ 
+                message: "Webhook processed successfully",
+                bookingId: booking._id,
+                status: booking.paymentStatus
+            });
+        } else {
+            // For other events, just acknowledge receipt
+            res.status(200).json({ message: "Webhook received but not processed" });
+        }
+    } catch (error) {
+        console.error('Webhook processing error:', error);
+        // Return 200 to prevent webhook retries for application errors
+        res.status(200).json({ message: "Webhook received with errors" });
     }
-
-    // Find booking by payment order ID
-    const booking = await ItemBooking.findOne({ paymentOrderId: orderId });
-
-    if (!booking) {
-        throw new ApiError(404, "Booking not found for this payment order");
-    }
-
-    // Update payment status based on Revolut webhook
-    booking.paymentStatus = status; // e.g., 'completed', 'failed', 'cancelled'
-
-    if (status === 'completed') {
-        booking.paymentCompletedAt = new Date();
-    }
-
-    await booking.save();
-
-    res.status(200).json(new ApiResponse(200, booking, "Payment status updated successfully"));
 });
 
 // Function to check payment status
@@ -254,98 +313,6 @@ export const getPaymentStatus = asyncHandler(async (req, res) => {
         amount: booking.amount,
         paymentCompletedAt: booking.paymentCompletedAt
     }, "Payment status retrieved successfully"));
-});
-
-// Function to capture payment order
-export const capturePaymentOrder = asyncHandler(async (req, res) => {
-    const { orderId } = req.params;
-
-    if (!orderId) {
-        throw new ApiError(400, "Order ID is required");
-    }
-
-    try {
-        // Call Revolut API to capture the payment
-        const config = {
-            method: 'post',
-            maxBodyLength: Infinity,
-            url: `https://sandbox-merchant.revolut.com/api/orders/${orderId}/capture`,
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${process.env.REVOLUT_SECRET_API_KEY}`,
-                'Revolut-Api-Version': '2024-09-01'
-            }
-        };
-
-        const response = await axios(config);
-        
-        // Update booking status in database
-        const booking = await ItemBooking.findOne({ paymentOrderId: orderId });
-        
-        if (booking) {
-            booking.paymentStatus = 'captured';
-            booking.paymentCompletedAt = new Date();
-            await booking.save();
-        }
-
-        res.status(200).json(new ApiResponse(200, {
-            orderId: orderId,
-            captureResponse: response.data,
-            booking: booking
-        }, "Payment captured successfully"));
-
-    } catch (error) {
-        console.error('Payment capture error:', error.response?.data || error.message);
-        throw new ApiError(500, 'Failed to capture payment');
-    }
-});
-
-// Function to handle redirect from payment success
-export const handlePaymentRedirect = asyncHandler(async (req, res) => {
-    const { order_id, status } = req.query;
-
-    if (!order_id) {
-        throw new ApiError(400, "Order ID is required");
-    }
-
-    try {
-        // Find the booking by payment order ID
-        const booking = await ItemBooking.findOne({ paymentOrderId: order_id })
-            .populate({
-                path: 'items.item',
-                select: 'name price rentalPrice images category'
-            })
-            .populate('user', 'name email');
-
-        if (!booking) {
-            throw new ApiError(404, "Booking not found for this payment order");
-        }
-
-        // Update booking status based on redirect status
-        if (status === 'completed' || status === 'success') {
-            booking.paymentStatus = 'completed';
-            booking.paymentCompletedAt = new Date();
-            await booking.save();
-
-            // Clear user's cart after successful payment
-            await Cart.findOneAndUpdate(
-                { user: booking.user._id },
-                { $set: { items: [] } }
-            );
-        }
-
-        // Return booking details for the frontend to display
-        res.status(200).json(new ApiResponse(200, {
-            booking: booking,
-            paymentStatus: booking.paymentStatus,
-            redirectStatus: status
-        }, "Payment redirect handled successfully"));
-
-    } catch (error) {
-        console.error('Payment redirect handling error:', error);
-        throw new ApiError(500, 'Failed to handle payment redirect');
-    }
 });
 
 // Function to get order details from Revolut
@@ -386,6 +353,42 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
     } catch (error) {
         console.error('Get order details error:', error.response?.data || error.message);
         throw new ApiError(500, 'Failed to get order details');
+    }
+});
+
+// Function to setup Revolut webhook
+export const setupWebhook = asyncHandler(async (req, res) => {
+    try {
+        const webhookUrl = process.env.NODE_ENV === 'production' 
+            ? 'https://yourdomain.com/api/item-booking/webhook/payment-completed'
+            : 'https://4f93-2405-201-a423-5801-702b-aa6e-bdc3-2a08.ngrok-free.app/api/item-booking/webhook/payment-completed';
+
+        const data = JSON.stringify({
+            "url": webhookUrl,
+            "events": [
+                "ORDER_COMPLETED",
+                "ORDER_AUTHORISED"
+            ]
+        });
+
+        const config = {
+            method: 'post',
+            maxBodyLength: Infinity,
+            url: 'https://sandbox-merchant.revolut.com/api/1.0/webhooks',
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Accept': 'application/json', 
+                'Authorization': `Bearer ${process.env.REVOLUT_SECRET_API_KEY}`
+            },
+            data: data
+        };
+
+        const response = await axios(config);
+        
+        res.status(200).json(new ApiResponse(200, response.data, "Webhook setup successfully"));
+    } catch (error) {
+        console.error('Webhook setup error:', error.response?.data || error.message);
+        throw new ApiError(500, 'Failed to setup webhook');
     }
 });
 
