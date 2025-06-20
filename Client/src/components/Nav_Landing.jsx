@@ -28,8 +28,6 @@ import { toast } from "sonner"
 import { axiosClient } from "../AxiosClient/axios.js"
 import { updateLanguageHeaders } from "../Api/language.api.js"
 
-
-
 export const Nav_Landing = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const { t, i18n } = useTranslation()
@@ -155,9 +153,8 @@ export const Nav_Landing = () => {
                                             <Button
                                                 variant="ghost"
                                                 className="relative h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 p-0"
-                                            >
-                                                <Avatar className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 text-black">
-                                                    <AvatarFallback>{user?.user?.email.charAt(0).toUpperCase()}</AvatarFallback>
+                                            >                                                <Avatar className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 text-black">
+                                                    <AvatarFallback>{user?.user?.email?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
                                                 </Avatar>
                                             </Button>
                                         </DropdownMenuTrigger>
