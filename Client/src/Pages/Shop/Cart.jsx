@@ -123,13 +123,13 @@ export const Cart = () => {
         setIsBookingLoading(true)
         const id = toast.loading("Creating Booking....")
         try {
-            await createBooking(name)
+            const res = await createBooking(name)
             toast.success("Booking created successfully", { id })
             setIsDialogOpen(false)
             setName("")
-            // Optionally clear cart after successful booking
-            await clearCart()
-            navigate("/") // Navigate to success page or home
+            
+ 
+            window.location.href = res.data.data.paymentOrder.checkout_url; // Navigate to success page or home
         } catch (e) {
             // Check if it's a 401 error (unauthorized)
             if (e.response?.status === 401) {
