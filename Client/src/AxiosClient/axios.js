@@ -2,7 +2,7 @@ import axios from 'axios';
 import { setLanguageHeaders, getCurrentLanguage } from '../Api/language.api.js';
 
 export const axiosClient = axios.create({
-  baseURL: 'http://localhost:8080/',
+  baseURL: import.meta.env.VITE_SERVER_URL,
   headers: {
     'Content-Type': 'application/json',
   },
