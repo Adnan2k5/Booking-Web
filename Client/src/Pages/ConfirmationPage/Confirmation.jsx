@@ -14,7 +14,7 @@ export default function Confirmation() {
 
   useEffect(() => {
     window.scrollTo(0, 0)
-    
+
     // Get booking data from navigation state
     if (location.state) {
       setBookingData(location.state)
@@ -59,7 +59,7 @@ export default function Confirmation() {
             <CheckCircle size={80} className="mx-auto" />
           </motion.div>          <h2 className="text-2xl font-bold text-gray-800 mb-4">Booking Successful!</h2>
           <p className="text-gray-600 mb-8">
-            {bookingData ? 
+            {bookingData ?
               `Your ${bookingData.adventure?.name || 'adventure'} has been booked successfully. We've sent a confirmation email with all the details.` :
               'Your adventure has been booked successfully. We\'ve sent a confirmation email with all the details.'
             }
@@ -73,13 +73,13 @@ export default function Confirmation() {
                   <div>
                     <p className="font-medium text-gray-800">{bookingData.adventure.name}</p>
                     <p className="text-sm text-gray-500">
-                      {bookingData.adventure.date ? new Date(bookingData.adventure.date).toLocaleDateString() : 'Date TBD'} 
+                      {bookingData.adventure.date ? new Date(bookingData.adventure.date).toLocaleDateString() : 'Date TBD'}
                       {bookingData.adventure.time && ` at ${bookingData.adventure.time}`}
                     </p>
                   </div>
                 </div>
               )}
-              
+
               {/* Location Details */}
               {bookingData?.adventure?.location && (
                 <div className="flex items-start gap-3">
@@ -87,7 +87,7 @@ export default function Confirmation() {
                   <div>
                     <p className="font-medium text-gray-800">Location</p>
                     <p className="text-sm text-gray-500">
-                      {Array.isArray(bookingData.adventure.location) 
+                      {Array.isArray(bookingData.adventure.location)
                         ? bookingData.adventure.location[0]?.name || 'Location TBD'
                         : bookingData.adventure.location}
                     </p>

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { getHotel } from "../Api/hotel.api";
 
-export function useHotels({ 
-    search = "", 
-    page = 1, 
-    limit = 10, 
-    status = "all",
+export function useHotels({
+    search = "",
+    page = 1,
+    limit = 10,
+    verified,
     location = null,
     minPrice = null,
     maxPrice = null,
@@ -18,16 +18,16 @@ export function useHotels({
     const [error, setError] = useState(null);
     const [total, setTotal] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
-    
+
     useEffect(() => {
         const fetchHotels = async () => {
             setIsLoading(true);
             try {
-                const res = await getHotel({ 
-                    search, 
-                    page, 
-                    limit, 
-                    status,
+                const res = await getHotel({
+                    search,
+                    page,
+                    limit,
+                    verified,  // Changed back to 'verified'
                     location,
                     minPrice,
                     maxPrice,
@@ -53,9 +53,10 @@ export function useHotels({
                 setTotalPages(1);
             } finally {
                 setIsLoading(false);
-            }        };
+            }
+        };
         fetchHotels();
-    }, [search, page, limit, status, location, minPrice, maxPrice, minRating, sortBy, sortOrder]);
+    }, [search, page, limit, verified, location, minPrice, maxPrice, minRating, sortBy, sortOrder]);
 
     return { hotels, isLoading, error, total, totalPages };
 }
