@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider"
 
-import { Users, Search, UserPlus, UserX, MapPin, Calendar, Compass, Clock } from "lucide-react"
-import { Button } from "../components/ui/button"  
+import { Users, Search, UserPlus, UserX, MapPin, Calendar, Compass, Clock, ChevronLeft, ChevronRight } from "lucide-react"
+import { Button } from "../components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ import {
   DialogFooter,
 } from "../components/ui/dialog"
 import { Input } from "../components/ui/input"
+import { Label } from "../components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
@@ -36,18 +37,156 @@ export default function LandingPage() {
   const [location, setLocation] = useState("")
   const [date, setDate] = useState("")
 
+  // Define mockCountries before using it in state
+  const mockCountries = [
+    {
+      id: 1,
+      name: "Lithuania",
+      cities: [
+        {
+          name: "Kaunas",
+          events: [
+            {
+              id: 1,
+              title: "Marathon Run",
+              image: "/placeholder.svg?height=200&width=300",
+              startTime: "02:15:48",
+              endTime: "06:30:00",
+              description: "A scenic 10K run through city center.",
+              mapEmbedUrl:
+                "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d23.9!3d54.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTTCsDU0JzAwLjAiTiAyM8KwNTQnMDAuMCJF!5e0!3m2!1sen!2slt!4v1234567890",
+            },
+          ],
+        },
+        {
+          name: "Klaipėda",
+          events: [
+            {
+              id: 2,
+              title: "Catamaran Race",
+              image: "/placeholder.svg?height=200&width=300",
+              startTime: "05:32:17",
+              endTime: "08:45:30",
+              description: "Exciting speed race by the coast.",
+              mapEmbedUrl:
+                "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d21.1!3d55.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTXCsDQyJzAwLjAiTiAyMcKwMDYnMDAuMCJF!5e0!3m2!1sen!2slt!4v1234567890",
+            },
+          ],
+        },
+        {
+          name: "Vilnius",
+          events: [
+            {
+              id: 3,
+              title: "Paintball Cup",
+              image: "/placeholder.svg?height=200&width=300",
+              startTime: "01:21:07",
+              endTime: "04:15:22",
+              description: "Team-based tactical game in a forest arena.",
+              mapEmbedUrl:
+                "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d25.3!3d54.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTTCsDQyJzAwLjAiTiAyNcKwMTgnMDAuMCJF!5e0!3m2!1sen!2slt!4v1234567890",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 2,
+      name: "Latvia",
+      cities: [
+        {
+          name: "Riga",
+          events: [
+            {
+              id: 4,
+              title: "Urban Cycling Tour",
+              image: "/placeholder.svg?height=200&width=300",
+              startTime: "09:00:00",
+              endTime: "12:30:00",
+              description: "Explore the historic old town on two wheels.",
+              mapEmbedUrl:
+                "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d24.1!3d56.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTbCsDU0JzAwLjAiTiAyNMKwMDYnMDAuMCJF!5e0!3m2!1sen!2slv!4v1234567890",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 3,
+      name: "Estonia",
+      cities: [
+        {
+          name: "Tallinn",
+          events: [
+            {
+              id: 5,
+              title: "Medieval Festival",
+              image: "/placeholder.svg?height=200&width=300",
+              startTime: "10:00:00",
+              endTime: "18:00:00",
+              description: "Step back in time with authentic medieval experiences.",
+              mapEmbedUrl:
+                "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d24.7!3d59.4!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTnCsDI0JzAwLjAiTiAyNMKwNDInMDAuMCJF!5e0!3m2!1sen!2see!4v1234567890",
+            },
+          ],
+        },
+      ],
+    },
+  ]
+
   const [showGroupDialog, setShowGroupDialog] = useState(false)
   const [groupMembers, setGroupMembers] = useState([])
   const [adventure, setadventure] = useState("")
   const [searchEmail, setSearchEmail] = useState("")
   const [showFriendsList, setShowFriendsList] = useState(true)
-  const [eventsPage, setEventsPage] = useState(1)
+  const [eventsPage, setEventsPage] = useState(1);
+  const [countries, setCountries] = useState(mockCountries)
+  const [currentCountryIndex, setCurrentCountryIndex] = useState(0)
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const [bookingDialog, setBookingDialog] = useState(false)
+  const [bookingForm, setBookingForm] = useState({
+    participants: 1,
+    email: "",
+    phone: "",
+    specialRequests: "",
+  })
   const eventsLimit = 6 // Show 6 events per page
   const playerRef = useRef(null)
   const { events, isLoading: eventsLoading, totalPages: eventsTotalPages } = useEvents({
     page: eventsPage,
     limit: eventsLimit
   });
+  const sliderRef = useRef(null)
+  const currentCountry = countries[currentCountryIndex]
+
+  // Auto-slide functionality
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentCountryIndex((prev) => (prev + 1) % countries.length)
+    }, 8000) // Change country every 8 seconds
+
+    return () => clearInterval(interval)
+  }, [countries.length])
+
+  const nextCountry = () => {
+    setCurrentCountryIndex((prev) => (prev + 1) % countries.length)
+  }
+
+  const prevCountry = () => {
+    setCurrentCountryIndex((prev) => (prev - 1 + countries.length) % countries.length)
+  }
+
+  const handleBooking = (event) => {
+    setSelectedEvent(event)
+    setBookingDialog(true)
+  }
+
+  const submitBooking = () => {
+    // Handle booking submission here
+    console.log("Booking submitted:", { event: selectedEvent, form: bookingForm })
+    setBookingDialog(false)
+    setBookingForm({ participants: 1, email: "", phone: "", specialRequests: "" })
+  }
 
   const { adventures, loading: adventureLoading } = useAdventures()
   const {
@@ -164,37 +303,28 @@ export default function LandingPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 1.5 }}
         />
-        <ReactPlayer 
+        <ReactPlayer
           ref={playerRef}
-          url={"https://youtu.be/FfPVvtNo92s"} 
-          onReady={onReady} 
-          controls={false} 
-          loop={true} 
-          playing={true} 
-          muted={true} 
-          width="100%" 
-          height="100%" 
+          url={"https://youtu.be/FfPVvtNo92s"}
+          onReady={onReady}
+          controls={false}
+          loop={true}
+          playing={true}
+          muted={true}
+          width="100%"
+          height="100%"
         />
       </div>
 
       <Nav_Landing />
       {/* Main Content - First Section */}
-      <section className="flex-1 flex items-center justify-center pt-36 lg:mt-[10rem]">
+      <section className="flex items-center h-screen justify-center">
         <motion.div
           className="bg-white/80 backdrop-blur-3xl mx-auto px-4 sm:px-6 md:px-8 py-8 flex-col w-[90%] rounded-lg shadow-lg border border-white/50"
           variants={fadeIn}
           initial="hidden"
           animate="visible"
         >
-          <motion.h1
-            className="text-3xl md:text-4xl font-bold text-center mb-6 bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-          >
-            {t("discoverAdventures")}
-          </motion.h1>
-
           <motion.div
             className="search-bar w-full max-w-5xl mx-auto"
             variants={staggerContainer}
@@ -278,228 +408,385 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Explore Section - Positioned after 100vh */}
-      <div className="explore w-full bg-white px-4 sm:px-6 md:px-8 py-16 mt-[calc(100vh-16rem)]">
-        <div className="content max-w-7xl mx-auto">
+
+
+
+
+      {/* Featured Events Content */}
+      <div className="w-full bg-gradient-to-br from-gray-50 to-white px-4 sm:px-6 md:px-8 py-20">
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
           <motion.div
-            className="title text-2xl md:text-3xl mb-10"
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: -30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.6 }}
           >
-            <h1 className="font-bold tracking-wider w-fit border-b-2 border-gray-500 pb-2">
-              {t("featuredEvents") || "Featured Events"}
-            </h1>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Featured Events</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Discover amazing adventures across different countries
+            </p>
           </motion.div>
 
-          {eventsLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-            </div>
-          ) : events && events.length > 0 ? (
-            <>
-              <div className="adventures flex overflow-x-auto md:overflow-visible py-4">
+          {/* Country Slider */}
+          <div className="relative mb-12">
+            <motion.div
+              className="flex justify-center items-center mb-8"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={prevCountry}
+                className="p-3 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+
+              <div className="flex items-center space-x-8 mx-8">
+                {countries.map((country, index) => (
+                  <motion.div
+                    key={country.id}
+                    className={`cursor-pointer transition-all duration-500 ${index === currentCountryIndex
+                      ? "scale-125 text-2xl font-bold text-gray-900"
+                      : "scale-100 text-lg text-gray-400 hover:text-gray-600"
+                      }`}
+                    onClick={() => setCurrentCountryIndex(index)}
+                    whileHover={{ scale: index === currentCountryIndex ? 1.25 : 1.1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    {country.name}
+                  </motion.div>
+                ))}
+              </div>
+
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={nextCountry}
+                className="p-3 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </Button>
+            </motion.div>
+
+            {/* Country Indicator Dots */}
+            <div className="flex justify-center space-x-2 mb-8">
+              {countries.map((_, index) => (
                 <motion.div
-                  className="cards flex flex-nowrap md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
+                  key={index}
+                  className={`h-2 rounded-full cursor-pointer transition-all duration-300 ${index === currentCountryIndex ? "w-8 bg-gray-900" : "w-2 bg-gray-300"
+                    }`}
+                  onClick={() => setCurrentCountryIndex(index)}
+                  whileHover={{ scale: 1.2 }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Events Grid */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentCountryIndex}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -50 }}
+              transition={{ duration: 0.6, staggerChildren: 0.1 }}
+            >
+              {currentCountry?.cities.map((city, cityIndex) => (
+                <motion.div
+                  key={`${city.name}-${cityIndex}`}
+                  className="space-y-6"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: cityIndex * 0.1 }}
                 >
-                  {events.map((event) => (
+                  {/* City Header */}
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">CITY: {city.name}</h3>
+                  </div>
+
+                  {/* Event Cards */}
+                  {city.events.map((event) => (
                     <motion.div
-                      className="card p-0 min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all cursor-pointer"
-                      key={event._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      whileHover={{ y: -5 }}
-                      transition={{ duration: 0.3 }}
-                      onClick={() => Navigate(`/event/${event._id}`)}
+                      key={event.id}
+                      className="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group"
+                      whileHover={{ y: -8, scale: 1.02 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     >
-                      <div className="img w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-t-lg overflow-hidden">
-                        <motion.div
-                          className="w-full h-full"
-                          initial={{ scale: 1.2 }}
-                          whileHover={{ scale: 1 }}
-                          transition={{ duration: 0.5 }}
-                        >
-                          {event.medias && event.medias.length > 0 ? (
-                            <img
-                              src={event.medias[0]}
-                              alt={event.title}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.src = "/placeholder.svg"
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                              <Calendar className="h-12 w-12 text-gray-400" />
-                            </div>
-                          )}
-                        </motion.div>
+                      {/* Event Image */}
+                      <div className="relative h-48 overflow-hidden">
+                        <motion.img
+                          src={event.image}
+                          alt={event.title}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                        <div className="absolute bottom-4 left-4">
+                          <h4 className="text-xl font-bold text-white">{event.title}</h4>
+                        </div>
                       </div>
-                      <div className="content p-5">
-                        <div className="title">
-                          <h1 className="text-xl font-semibold text-gray-800 line-clamp-2">
-                            {event.title}
-                          </h1>
-                        </div>
-                        <div className="desp mt-2">
-                          <p className="text-gray-600 line-clamp-3">{event.description}</p>
-                        </div>
-                        <div className="event-details mt-4 space-y-2">
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Calendar className="h-4 w-4 mr-2" />
-                            <span>{new Date(event.date).toLocaleDateString()}</span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Clock className="h-4 w-4 mr-2" />
-                            <span>{event.time}</span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <MapPin className="h-4 w-4 mr-2" />
-                            <span>{event.location}</span>
+
+                      {/* Event Details */}
+                      <div className="p-6 space-y-4">
+                        {/* Embedded Map */}
+                        <div className="relative h-32 rounded-xl overflow-hidden">
+                          <iframe
+                            src={event.mapEmbedUrl}
+                            className="w-full h-full border-0"
+                            allowFullScreen=""
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
+                          <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1">
+                            <MapPin className="h-4 w-4 text-gray-600 inline mr-1" />
+                            <span className="text-sm font-medium text-gray-700">{city.name}</span>
                           </div>
                         </div>
+
+                        {/* Time Info */}
+                        <div className="flex items-center space-x-2 text-gray-600">
+                          <Clock className="h-5 w-5" />
+                          <span className="font-medium">
+                            Start & End time: {event.startTime} - {event.endTime}
+                          </span>
+                        </div>
+
+                        {/* Description */}
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2 text-gray-700">
+                            <Calendar className="h-5 w-5" />
+                            <span className="font-semibold">Short Description:</span>
+                          </div>
+                          <p className="text-gray-600 leading-relaxed pl-7">{event.description}</p>
+                        </div>
+
+                        {/* Book Button */}
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <Button
+                            onClick={() => handleBooking(event)}
+                            className="w-full bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                          >
+                            <Users className="h-5 w-5 mr-2" />
+                            BOOK YOUR SPOT
+                          </Button>
+                        </motion.div>
                       </div>
                     </motion.div>
                   ))}
                 </motion.div>
-              </div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
 
-              {/* Pagination */}
-              {eventsTotalPages > 1 && (
-                <div className="flex justify-center items-center mt-8 space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setEventsPage(prev => Math.max(1, prev - 1))}
-                    disabled={eventsPage === 1}
-                    className="flex items-center gap-2 px-4"
-                  >
-                    <span>Previous</span>
-                  </Button>
+          {/* Booking Dialog */}
+          <Dialog open={bookingDialog} onOpenChange={setBookingDialog}>
+            <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-gray-900">Book Your Adventure</DialogTitle>
+                <DialogDescription className="text-gray-600">
+                  {selectedEvent?.title} in{" "}
+                  {
+                    currentCountry?.cities.find((city) => city.events.some((event) => event.id === selectedEvent?.id))
+                      ?.name
+                  }
+                </DialogDescription>
+              </DialogHeader>
 
-                  <div className="flex items-center gap-1">
-                    {eventsTotalPages <= 7 ? (
-                      // Show all pages if 7 or fewer
-                      Array.from({ length: eventsTotalPages }, (_, i) => i + 1).map((pageNum) => (
-                        <Button
-                          key={pageNum}
-                          variant={eventsPage === pageNum ? "default" : "outline"}
-                          onClick={() => setEventsPage(pageNum)}
-                          className="w-10 h-10 p-0"
-                          size="sm"
-                        >
-                          {pageNum}
-                        </Button>
-                      ))
-                    ) : (
-                      <>
-                        <Button
-                          variant={eventsPage === 1 ? "default" : "outline"}
-                          onClick={() => setEventsPage(1)}
-                          className="w-10 h-10 p-0"
-                          size="sm"
-                        >
-                          1
-                        </Button>
-                        {eventsPage > 3 && (
-                          <span className="px-2 text-gray-500">...</span>
-                        )}
+              <div className="space-y-6 py-4">
+                {/* Event Summary */}
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <img
+                      src={selectedEvent?.image || "/placeholder.svg"}
+                      alt={selectedEvent?.title}
+                      className="w-16 h-16 rounded-lg object-cover"
+                    />
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{selectedEvent?.title}</h4>
+                      <p className="text-sm text-gray-600">{selectedEvent?.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <div className="flex items-center space-x-1">
+                      <Clock className="h-4 w-4" />
+                      <span>
+                        {selectedEvent?.startTime} - {selectedEvent?.endTime}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-                        {Array.from({ length: 3 }, (_, i) => {
-                          const pageNum = eventsPage - 1 + i;
-                          if (pageNum > 1 && pageNum < eventsTotalPages) {
-                            return (
-                              <Button
-                                key={pageNum}
-                                variant={eventsPage === pageNum ? "default" : "outline"}
-                                onClick={() => setEventsPage(pageNum)}
-                                className="w-10 h-10 p-0"
-                                size="sm"
-                              >
-                                {pageNum}
-                              </Button>
-                            );
-                          }
-                          return null;
-                        })}
-
-                        {eventsPage < eventsTotalPages - 2 && (
-                          <span className="px-2 text-gray-500">...</span>
-                        )}
-                        {eventsTotalPages > 1 && (
-                          <Button
-                            variant={eventsPage === eventsTotalPages ? "default" : "outline"}
-                            onClick={() => setEventsPage(eventsTotalPages)}
-                            className="w-10 h-10 p-0"
-                            size="sm"
-                          >
-                            {eventsTotalPages}
-                          </Button>
-                        )}
-                      </>
-                    )}
+                {/* Booking Form */}
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="participants" className="text-sm font-medium text-gray-700">
+                      Number of Participants
+                    </Label>
+                    <Input
+                      id="participants"
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={bookingForm.participants}
+                      onChange={(e) =>
+                        setBookingForm((prev) => ({ ...prev, participants: Number.parseInt(e.target.value) }))
+                      }
+                      className="mt-1"
+                    />
                   </div>
 
-                  <Button
-                    variant="outline"
-                    onClick={() => setEventsPage(prev => Math.min(eventsTotalPages, prev + 1))}
-                    disabled={eventsPage === eventsTotalPages}
-                    className="flex items-center gap-2 px-4"
-                  >
-                    <span>Next</span>
-                  </Button>
+                  <div>
+                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                      Email Address
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={bookingForm.email}
+                      onChange={(e) => setBookingForm((prev) => ({ ...prev, email: e.target.value }))}
+                      className="mt-1"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                      Phone Number
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={bookingForm.phone}
+                      onChange={(e) => setBookingForm((prev) => ({ ...prev, phone: e.target.value }))}
+                      className="mt-1"
+                      placeholder="+1 (555) 123-4567"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="requests" className="text-sm font-medium text-gray-700">
+                      Special Requests (Optional)
+                    </Label>
+                    <textarea
+                      id="requests"
+                      value={bookingForm.specialRequests}
+                      onChange={(e) => setBookingForm((prev) => ({ ...prev, specialRequests: e.target.value }))}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent resize-none"
+                      rows="3"
+                      placeholder="Any special requirements or requests..."
+                    />
+                  </div>
                 </div>
-              )}
-            </>
-          ) : (
-            <div className="adventures flex overflow-x-auto md:overflow-visible py-4">
-              <motion.div
-                className="cards flex flex-nowrap md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6"
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
-              >
-                {[1, 2, 3].map((item) => (
-                  <motion.div
-                    className="card p-0 min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all"
-                    key={item}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    whileHover={{ y: -5 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="img w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-t-lg overflow-hidden">
-                      <motion.div
-                        className="w-full h-full bg-gray-200"
-                        initial={{ scale: 1.2 }}
-                        whileHover={{ scale: 1 }}
-                        transition={{ duration: 0.5 }}
-                      ></motion.div>
-                    </div>
-                    <div className="content p-5">
-                      <div className="title">
-                        <h1 className="text-xl font-semibold text-gray-800">
-                          {t("adventure")} {item}
-                        </h1>
-                      </div>
-                      <div className="desp mt-2">
-                        <p className="text-gray-600">{t("adventureDescription")}</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-          )}
+              </div>
+
+              <DialogFooter className="space-x-3">
+                <Button variant="outline" onClick={() => setBookingDialog(false)} className="px-6">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={submitBooking}
+                  className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-6"
+                  disabled={!bookingForm.email || !bookingForm.phone}
+                >
+                  Confirm Booking
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
+
+      {/* Pagination */}
+      {eventsTotalPages > 1 && (
+        <div className="flex justify-center items-center mt-8 space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => setEventsPage(prev => Math.max(1, prev - 1))}
+            disabled={eventsPage === 1}
+            className="flex items-center gap-2 px-4"
+          >
+            <span>Previous</span>
+          </Button>
+
+          <div className="flex items-center gap-1">
+            {eventsTotalPages <= 7 ? (
+              // Show all pages if 7 or fewer
+              Array.from({ length: eventsTotalPages }, (_, i) => i + 1).map((pageNum) => (
+                <Button
+                  key={pageNum}
+                  variant={eventsPage === pageNum ? "default" : "outline"}
+                  onClick={() => setEventsPage(pageNum)}
+                  className="w-10 h-10 p-0"
+                  size="sm"
+                >
+                  {pageNum}
+                </Button>
+              ))
+            ) : (
+              <>
+                <Button
+                  variant={eventsPage === 1 ? "default" : "outline"}
+                  onClick={() => setEventsPage(1)}
+                  className="w-10 h-10 p-0"
+                  size="sm"
+                >
+                  1
+                </Button>
+                {eventsPage > 3 && (
+                  <span className="px-2 text-gray-500">...</span>
+                )}
+
+                {Array.from({ length: 3 }, (_, i) => {
+                  const pageNum = eventsPage - 1 + i;
+                  if (pageNum > 1 && pageNum < eventsTotalPages) {
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={eventsPage === pageNum ? "default" : "outline"}
+                        onClick={() => setEventsPage(pageNum)}
+                        className="w-10 h-10 p-0"
+                        size="sm"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  }
+                  return null;
+                })}
+
+                {eventsPage < eventsTotalPages - 2 && (
+                  <span className="px-2 text-gray-500">...</span>
+                )}
+                {eventsTotalPages > 1 && (
+                  <Button
+                    variant={eventsPage === eventsTotalPages ? "default" : "outline"}
+                    onClick={() => setEventsPage(eventsTotalPages)}
+                    className="w-10 h-10 p-0"
+                    size="sm"
+                  >
+                    {eventsTotalPages}
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={() => setEventsPage(prev => Math.min(eventsTotalPages, prev + 1))}
+            disabled={eventsPage === eventsTotalPages}
+            className="flex items-center gap-2 px-4"
+          >
+            <span>Next</span>
+          </Button>
+        </div>
+      )}
 
       {/* Group Dialog */}
       <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
