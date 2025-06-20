@@ -16,6 +16,7 @@ import { Card, CardContent } from "../../../components/ui/card"
 import { Badge } from "../../../components/ui/badge"
 import { fetchUsers, deleteUser } from "../../../Api/user.api"
 import { toast } from "sonner"
+import { format } from "date-fns"
 
 export default function Dash_User() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -132,7 +133,7 @@ export default function Dash_User() {
                     <TableCell>
                       <Badge variant="outline">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
                     </TableCell>
-                    <TableCell>{user.createdAt}</TableCell>
+                    <TableCell>{format(user.createdAt, "dd-MM-yyyy")}</TableCell>
                     <TableCell>{user.bookings?.length || 0}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
