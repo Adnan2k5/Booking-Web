@@ -184,7 +184,15 @@ export const ItemPage = () => {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
                 {/* Breadcrumb */}
-                <div className="mb-6">
+                <div className="mb-6 flex gap-4">
+                    <Button
+                        variant="ghost"
+                        onClick={() => navigate('/')}
+                        className="text-gray-600 hover:text-gray-900"
+                    >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Home
+                    </Button>
                     <Button
                         variant="ghost"
                         onClick={() => navigate('/shop')}
