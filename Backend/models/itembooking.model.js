@@ -51,7 +51,8 @@ const itemBookingSchema = new mongoose.Schema(
     bookingDate: {
       type: Date,
       default: Date.now,
-    }, modeOfPayment: {
+    },
+    modeOfPayment: {
       type: String,
       enum: ["card", "cash", "revolut"],
       default: "revolut",
