@@ -150,15 +150,19 @@ export const getHotelById = asyncHandler(async (req, res) => {
   if (!hotelData || hotelData.length === 0) {
     throw new ApiError(404, "Hotel not found");
   }
-  
+
   // Convert Mongoose documents to plain objects
-  const plainHotelData = hotelData.map(hotel => hotel.toJSON());
-  
+  const plainHotelData = hotelData.map((hotel) => hotel.toJSON());
+
   let hotel;
   // Translate hotel fields if language is not English
-  if (language !== 'en') {
-    const fieldsToTranslate = ['description', 'category', 'amenities'];
-    hotel = await translateObjectsFields(plainHotelData, fieldsToTranslate, language);
+  if (language !== "en") {
+    const fieldsToTranslate = ["description", "category", "amenities"];
+    hotel = await translateObjectsFields(
+      plainHotelData,
+      fieldsToTranslate,
+      language
+    );
   } else {
     hotel = plainHotelData;
   }
@@ -238,13 +242,17 @@ export const getHotel = asyncHandler(async (req, res) => {
     .populate("location", "name");
 
   // Convert Mongoose documents to plain objects
-  const plainHotels = hotels.map(hotel => hotel.toJSON());
+  const plainHotels = hotels.map((hotel) => hotel.toJSON());
   const total = await Hotel.countDocuments(query);
 
   // Translate hotel fields if language is not English
-  if (language !== 'en' && plainHotels.length > 0) {
-    const fieldsToTranslate = ['description', 'category', 'amenities'];
-    hotels = await translateObjectsFields(plainHotels, fieldsToTranslate, language);
+  if (language !== "en" && plainHotels.length > 0) {
+    const fieldsToTranslate = ["description", "category", "amenities"];
+    hotels = await translateObjectsFields(
+      plainHotels,
+      fieldsToTranslate,
+      language
+    );
   } else {
     hotels = plainHotels;
   }

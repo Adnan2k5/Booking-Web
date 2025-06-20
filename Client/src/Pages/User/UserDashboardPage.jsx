@@ -6,23 +6,79 @@ import {
     Award,
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "../../components/ui/avatar"
-import { Badge } from "../../components/ui/badge"
-import { Button } from "../../components/ui/button"
 import { useAuth } from "../AuthProvider"
 import { Separator } from "../../components/ui/separator"
 import { Link } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { getCurrentUserSessionBookings } from "../../Api/booking.api"
 
 export default function UserDashboardPage() {
     const { user } = useAuth();
+    const [bookings, setBookings] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch bookings on component mount
+    useEffect(() => {
+        const fetchBookings = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await getCurrentUserSessionBookings({
+                    page: 1,
+                    limit: 100, // Get all bookings for stats calculation
+                    sortBy: 'createdAt',
+                    sortOrder: 'desc'
+                });
+                const responseData = response.data.data || response.data;
+                setBookings(responseData.bookings || []);
+            } catch (error) {
+                console.error("Error fetching bookings:", error);
+                setError("Failed to load adventure statistics");
+                setBookings([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBookings();
+    }, []);
+
+    // Process bookings to get adventure statistics
+    const processBookingStats = () => {
+        const currentDate = new Date();
+        let completedAdventures = 0;
+        let upcomingAdventures = 0;
+
+        bookings.forEach(booking => {
+            // Only count non-cancelled bookings
+            if (booking.status !== 'cancelled' && booking.session?.startTime) {
+                const sessionStartTime = new Date(booking.session.startTime);
+
+                if (sessionStartTime < currentDate) {
+                    // Adventure has already happened
+                    completedAdventures++;
+                } else {
+                    // Adventure is upcoming
+                    upcomingAdventures++;
+                }
+            }
+        });
+
+        return { completedAdventures, upcomingAdventures };
+    };
+
+    const { completedAdventures, upcomingAdventures } = processBookingStats();
+
     const userProfile = {
         name: user.user.name || "John Doe",
         email: user.user.email || "",
         level: user.user.level || "Beginner",
         joinDate: user.user.joinDate || "2023-01-01",
-        completedAdventures: user.user.completedAdventures || 3,
+        completedAdventures,
         experience: user.user.level || 400,
         nextLevel: Math.floor(user.user.level / 100) * 100 + 100 || 1000,
-        upcomingAdventures: user.user.upcomingAdventures || 2,
+        upcomingAdventures,
     }
     const progressPercentage = Math.floor(userProfile.level / userProfile.nextLevel) * 100
 
@@ -91,8 +147,13 @@ export default function UserDashboardPage() {
                                         <Award className="h-8 w-8 text-black" />
                                     </div>
                                     <div>
-                                        <p className="text-3xl font-bold">{userProfile.completedAdventures}</p>
+                                        <p className="text-3xl font-bold">
+                                            {loading ? "..." : error ? "0" : userProfile.completedAdventures}
+                                        </p>
                                         <p className="text-sm text-gray-500">Adventures completed</p>
+                                        {error && (
+                                            <p className="text-xs text-red-500 mt-1">{error}</p>
+                                        )}
                                     </div>
                                 </div>
                             </CardContent>
@@ -109,8 +170,13 @@ export default function UserDashboardPage() {
                                         <Calendar className="h-8 w-8 text-black" />
                                     </div>
                                     <div>
-                                        <p className="text-3xl font-bold">{userProfile.upcomingAdventures}</p>
+                                        <p className="text-3xl font-bold">
+                                            {loading ? "..." : error ? "0" : userProfile.upcomingAdventures}
+                                        </p>
                                         <p className="text-sm text-gray-500">Adventures scheduled</p>
+                                        {error && (
+                                            <p className="text-xs text-red-500 mt-1">{error}</p>
+                                        )}
                                     </div>
                                 </div>
                             </CardContent>

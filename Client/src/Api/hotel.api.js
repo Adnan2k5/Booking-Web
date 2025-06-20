@@ -39,7 +39,7 @@ export const getHotel = async ({
   search = '',
   page = 1,
   limit = 10,
-  status = 'all',
+  verified = 'all',
   location = null,
   minPrice = null,
   maxPrice = null,
@@ -49,8 +49,8 @@ export const getHotel = async ({
 } = {}) => {
   try {
     const params = { search, page, limit, sortBy, sortOrder };
-    if (status && status !== 'all') {
-      params.verified = status;
+    if (verified && verified !== 'all') {
+      params.verified = verified;
     }
     if (location !== null) {
       params.location = location;
@@ -111,11 +111,9 @@ export const updateHotelRating = async (id, rating) => {
 
 export const updateHotelPrice = async (id, priceData) => {
   try {
-    const res = await axiosClient.put(
-      `/api/hotel/price/${id}`,
-      priceData,
-      { withCredentials: true }
-    );
+    const res = await axiosClient.put(`/api/hotel/price/${id}`, priceData, {
+      withCredentials: true,
+    });
     return res;
   } catch (err) {
     return err;

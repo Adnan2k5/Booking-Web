@@ -2,7 +2,8 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
 import { Button } from "../../components/ui/button"
-import { Calendar, MapPin, Star, User, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog"
+import { Calendar, MapPin, Star, User, Loader2, ChevronLeft, ChevronRight, CreditCard, Clock, Users, FileText } from "lucide-react"
 import UserLayout from "./UserLayout"
 import { getCurrentUserSessionBookings } from "../../Api/booking.api"
 
@@ -11,6 +12,8 @@ const UserBookings = () => {
     const [bookings, setBookings] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [selectedBooking, setSelectedBooking] = useState(null)
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [pagination, setPagination] = useState({
         page: 1,
         limit: 6, // Show 6 bookings per page
@@ -90,6 +93,220 @@ const UserBookings = () => {
         if (newPage >= 1 && newPage <= pagination.totalPages) {
             fetchBookings(newPage)
         }
+    }
+
+    const handleViewDetails = (booking) => {
+        setSelectedBooking(booking)
+        setIsDialogOpen(true)
+    }
+
+    const BookingDetailsDialog = () => {
+        if (!selectedBooking) return null
+
+        return (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold">
+                            {selectedBooking.session?.adventureId?.name || "Adventure Session"}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Booking ID: {selectedBooking._id}
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-6">
+                        {/* Adventure Image */}
+                        <div className="relative h-48 rounded-lg overflow-hidden">
+                            <img
+                                src={selectedBooking.session?.adventureId?.medias[0] || 
+                                     selectedBooking.session?.adventureId?.thumbnail || 
+                                     "/placeholder.svg?height=200&width=400"}
+                                alt={selectedBooking.session?.adventureId?.name || "Adventure"}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    e.target.src = "/placeholder.svg?height=200&width=400"
+                                }}
+                            />
+                            <Badge className={`absolute top-4 right-4 ${getStatusBadgeClass(selectedBooking.status)}`}>
+                                {selectedBooking.status?.charAt(0).toUpperCase() + selectedBooking.status?.slice(1) || "Pending"}
+                            </Badge>
+                        </div>
+
+                        {/* Adventure Description */}
+                        {selectedBooking.session?.adventureId?.description && (
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2">About this Adventure</h3>
+                                <p className="text-gray-600">{selectedBooking.session.adventureId.description}</p>
+                            </div>
+                        )}
+
+                        {/* Session Details */}
+                        <div>
+                            <h3 className="font-semibold text-lg mb-4">Session Details</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="flex items-center gap-3">
+                                    <Calendar className="h-5 w-5 text-gray-500" />
+                                    <div>
+                                        <p className="font-medium">Date & Time</p>
+                                        <p className="text-sm text-gray-600">
+                                            {formatDate(selectedBooking.session?.startTime)} at {formatTime(selectedBooking.session?.startTime)}
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex items-center gap-3">
+                                    <MapPin className="h-5 w-5 text-gray-500" />
+                                    <div>
+                                        <p className="font-medium">Location</p>
+                                        <p className="text-sm text-gray-600">
+                                            {selectedBooking.session?.location?.name}
+                                        </p>
+                                        {selectedBooking.session?.location?.address && (
+                                            <p className="text-xs text-gray-500">
+                                                {selectedBooking.session.location.address}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <User className="h-5 w-5 text-gray-500" />
+                                    <div>
+                                        <p className="font-medium">Instructor</p>
+                                        <p className="text-sm text-gray-600">
+                                            {selectedBooking.session?.instructorId?.name || "TBD"}
+                                        </p>
+                                        {selectedBooking.session?.instructorId?.email && (
+                                            <p className="text-xs text-gray-500">
+                                                {selectedBooking.session.instructorId.email}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <Users className="h-5 w-5 text-gray-500" />
+                                    <div>
+                                        <p className="font-medium">Capacity</p>
+                                        <p className="text-sm text-gray-600">
+                                            {selectedBooking.session?.capacity || "N/A"} people max
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <Clock className="h-5 w-5 text-gray-500" />
+                                    <div>
+                                        <p className="font-medium">Day</p>
+                                        <p className="text-sm text-gray-600">
+                                            {selectedBooking.session?.days || "TBD"}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <CreditCard className="h-5 w-5 text-gray-500" />
+                                    <div>
+                                        <p className="font-medium">Price Type</p>
+                                        <p className="text-sm text-gray-600">
+                                            {selectedBooking.session?.priceType || "N/A"}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Booking Information */}
+                        <div>
+                            <h3 className="font-semibold text-lg mb-4">Booking Information</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p className="font-medium">Booking Date</p>
+                                    <p className="text-sm text-gray-600">
+                                        {formatDate(selectedBooking.bookingDate)} at {formatTime(selectedBooking.bookingDate)}
+                                    </p>
+                                </div>
+                                
+                                <div>
+                                    <p className="font-medium">Amount Paid</p>
+                                    <p className="text-sm font-semibold text-green-600">
+                                        ${selectedBooking.amount}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="font-medium">Payment Method</p>
+                                    <p className="text-sm text-gray-600 capitalize">
+                                        {selectedBooking.modeOfPayment}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="font-medium">Transaction ID</p>
+                                    <p className="text-sm text-gray-600 font-mono">
+                                        {selectedBooking.transactionId}
+                                    </p>
+                                </div>
+
+                                {selectedBooking.groupMember?.length > 0 && (
+                                    <div>
+                                        <p className="font-medium">Group Size</p>
+                                        <p className="text-sm text-gray-600">
+                                            {selectedBooking.groupMember.length + 1} people
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* User Information */}
+                        <div>
+                            <h3 className="font-semibold text-lg mb-4">Customer Information</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p className="font-medium">Name</p>
+                                    <p className="text-sm text-gray-600">
+                                        {selectedBooking.user?.name}
+                                    </p>
+                                </div>
+                                
+                                <div>
+                                    <p className="font-medium">Email</p>
+                                    <p className="text-sm text-gray-600">
+                                        {selectedBooking.user?.email}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Notes */}
+                        {selectedBooking.session?.notes && (
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                                    <FileText className="h-5 w-5" />
+                                    Session Notes
+                                </h3>
+                                <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                                    {selectedBooking.session.notes}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Rating if available */}
+                        {selectedBooking.rating && (
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2">Your Rating</h3>
+                                <div className="flex items-center gap-2">
+                                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                                    <span className="font-medium">{selectedBooking.rating}/5</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+        )
     }
 
     if (loading) {
@@ -189,10 +406,7 @@ const UserBookings = () => {
                             <Button 
                                 variant="outline" 
                                 className="w-full rounded-xl border-gray-300 hover:bg-gray-50"
-                                onClick={() => {
-                                    // Handle view details - you can navigate to a detailed view
-                                    console.log('View booking details:', booking._id)
-                                }}
+                                onClick={() => handleViewDetails(booking)}
                             >
                                 View Details
                             </Button>
@@ -280,6 +494,9 @@ const UserBookings = () => {
                     </div>
                 </div>
             )}
+
+            {/* Booking Details Dialog */}
+            <BookingDetailsDialog />
         </div>
     )
 }

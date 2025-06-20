@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo, memo, lazy, Suspense } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider"
@@ -26,9 +26,366 @@ import { Footer } from "../components/Footer"
 import { fadeIn, staggerContainer } from "../assets/Animations"
 
 import { useFriend } from "../hooks/useFriend.jsx"
-import ReactPlayer from "react-player"
 import { useEvents } from "../hooks/useEvent"
 
+// Lazy load heavy components
+const ReactPlayer = lazy(() => import("react-player"))
+
+const EventCard = memo(({ event, city, handleBooking }) => (
+  <motion.div
+    key={event.id}
+    className="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group"
+    whileHover={{ y: -8, scale: 1.02 }}
+    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+  >
+    {/* Event Image */}
+    <div className="relative h-48 overflow-hidden">
+      <motion.img
+        src={event.image}
+        alt={event.title}
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+      <div className="absolute bottom-4 left-4">
+        <h4 className="text-xl font-bold text-white">{event.title}</h4>
+      </div>
+    </div>
+
+    {/* Event Details */}
+    <div className="p-6 space-y-4">
+      {/* Embedded Map - Lazy loaded */}
+      <div className="relative h-32 rounded-xl overflow-hidden">
+        <iframe
+          src={event.mapEmbedUrl}
+          className="w-full h-full border-0"
+          allowFullScreen=""
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+        <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1">
+          <MapPin className="h-4 w-4 text-gray-600 inline mr-1" />
+          <span className="text-sm font-medium text-gray-700">{city.name}</span>
+        </div>
+      </div>
+
+      {/* Time Info */}
+      <div className="flex items-center space-x-2 text-gray-600">
+        <Clock className="h-5 w-5" />
+        <span className="font-medium">
+          Start & End time: {event.startTime} - {event.endTime}
+        </span>
+      </div>
+
+      {/* Description */}
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2 text-gray-700">
+          <Calendar className="h-5 w-5" />
+          <span className="font-semibold">Short Description:</span>
+        </div>
+        <p className="text-gray-600 leading-relaxed pl-7">{event.description}</p>
+      </div>
+
+      {/* Book Button */}
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <Button
+          onClick={() => handleBooking(event)}
+          className="w-full bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+        >
+          <Users className="h-5 w-5 mr-2" />
+          BOOK YOUR SPOT
+        </Button>
+      </motion.div>
+    </div>
+  </motion.div>
+))
+
+const SearchBar = memo(({
+  adventures,
+  adventure,
+  setadventure,
+  location,
+  setLocation,
+  date,
+  setDate,
+  groupMembers,
+  setShowGroupDialog,
+  handleNavigate,
+  t
+}) => (
+  <motion.div
+    className="search-bar w-full max-w-5xl mx-auto"
+    variants={staggerContainer}
+    initial="hidden"
+    animate="visible"
+  >
+    <div className="flex flex-wrap md:flex-nowrap items-center gap-2">
+      {/* Unified search container */}
+      <div className="relative flex-1 flex flex-col md:flex-row gap-2">
+        {/* Adventure selection */}
+        <div className="flex-1 flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+          <div className="flex items-center pl-3">
+            <Compass className="h-5 w-5 text-gray-400" />
+          </div>
+          <select
+            onChange={(e) => setadventure(e.target.value)}
+            className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1 bg-transparent"
+            value={adventure}
+          >
+            <option value="all">{t("selectAdventure")}</option>
+            {adventures.map((adventure, index) => (
+              <option key={index} value={adventure.name}>
+                {adventure.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Location input */}
+        <div className="flex-1 flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+          <div className="flex items-center pl-3">
+            <MapPin className="h-5 w-5 text-gray-400" />
+          </div>
+          <Input
+            onChange={(e) => setLocation(e.target.value)}
+            className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1"
+            type="text"
+            placeholder={t("searchLocation")}
+            value={location}
+            required
+          />
+        </div>
+
+        {/* Date input */}
+        <div className="flex-1 flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+          <div className="flex items-center pl-3">
+            <Calendar className="h-5 w-5 text-gray-400" />
+          </div>
+          <Input
+            onChange={(e) => setDate(e.target.value)}
+            type="date"
+            placeholder={t("selectDate")}
+            className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1"
+            value={date}
+            required
+          />
+        </div>
+
+        {/* Group button */}
+        <div className="flex-1 md:flex-initial flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+          <Button
+            onClick={() => setShowGroupDialog(true)}
+            className="w-full h-full px-4 py-6 bg-white hover:bg-gray-50 text-black"
+          >
+            <Users className="h-5 w-5 mr-2" />
+            <span className="hidden sm:inline">
+              {groupMembers.length > 0 ? `${t("group")} (${groupMembers.length + 1})` : t("addGroup")}
+            </span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Search button - separated and bigger */}
+      <Button
+        onClick={handleNavigate}
+        className="w-full md:w-auto mt-2 md:mt-0 py-6 px-8 bg-black hover:bg-gray-800 text-white text-lg font-medium rounded-lg shadow-md"
+        disabled={!location || !date}
+      >
+        <Search className="h-6 w-6 mr-2" />
+        <span>{t("search")}</span>
+      </Button>
+    </div>
+  </motion.div>
+))
+
+// Move mock data outside component to prevent recreating on every render
+const mockCountries = [
+  {
+    id: 1,
+    name: "Lithuania",
+    cities: [
+      {
+        name: "Kaunas",
+        events: [
+          {
+            id: 1,
+            title: "Marathon Run",
+            image: "/placeholder.svg?height=200&width=300",
+            startTime: "02:15:48",
+            endTime: "06:30:00",
+            description: "A scenic 10K run through city center.",
+            mapEmbedUrl:
+              "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d23.9!3d54.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTTCsDU0JzAwLjAiTiAyM8KwNTQnMDAuMCJF!5e0!3m2!1sen!2slt!4v1234567890",
+          },
+        ],
+      },
+      {
+        name: "Klaipėda",
+        events: [
+          {
+            id: 2,
+            title: "Catamaran Race",
+            image: "/placeholder.svg?height=200&width=300",
+            startTime: "05:32:17",
+            endTime: "08:45:30",
+            description: "Exciting speed race by the coast.",
+            mapEmbedUrl:
+              "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d21.1!3d55.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTXCsDQyJzAwLjAiTiAyMcKwMDYnMDAuMCJF!5e0!3m2!1sen!2slt!4v1234567890",
+          },
+        ],
+      },
+      {
+        name: "Vilnius",
+        events: [
+          {
+            id: 3,
+            title: "Paintball Cup",
+            image: "/placeholder.svg?height=200&width=300",
+            startTime: "01:21:07",
+            endTime: "04:15:22",
+            description: "Team-based tactical game in a forest arena.",
+            mapEmbedUrl:
+              "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d25.3!3d54.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTTCsDQyJzAwLjAiTiAyNcKwMTgnMDAuMCJF!5e0!3m2!1sen!2slt!4v1234567890",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 2,
+    name: "Latvia",
+    cities: [
+      {
+        name: "Riga",
+        events: [
+          {
+            id: 4,
+            title: "Urban Cycling Tour",
+            image: "/placeholder.svg?height=200&width=300",
+            startTime: "09:00:00",
+            endTime: "12:30:00",
+            description: "Explore the historic old town on two wheels.",
+            mapEmbedUrl:
+              "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d24.1!3d56.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTbCsDU0JzAwLjAiTiAyNMKwMDYnMDAuMCJF!5e0!3m2!1sen!2slv!4v1234567890",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 3,
+    name: "Estonia",
+    cities: [
+      {
+        name: "Tallinn",
+        events: [
+          {
+            id: 5,
+            title: "Medieval Festival",
+            image: "/placeholder.svg?height=200&width=300",
+            startTime: "10:00:00",
+            endTime: "18:00:00",
+            description: "Step back in time with authentic medieval experiences.",
+            mapEmbedUrl:
+              "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d24.7!3d59.4!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTnCsDI0JzAwLjAiTiAyNMKwNDInMDAuMCJF!5e0!3m2!1sen!2see!4v1234567890",
+          },
+        ],
+      },
+    ],
+  },
+]
+
+const PaginationComponent = memo(({
+  eventsPage,
+  eventsTotalPages,
+  setEventsPage
+}) => {
+  if (eventsTotalPages <= 1) return null
+
+  return (
+    <div className="flex justify-center items-center mt-8 space-x-2">
+      <Button
+        variant="outline"
+        onClick={() => setEventsPage(prev => Math.max(1, prev - 1))}
+        disabled={eventsPage === 1}
+        className="flex items-center gap-2 px-4"
+      >
+        <span>Previous</span>
+      </Button>
+
+      <div className="flex items-center gap-1">
+        {eventsTotalPages <= 7 ? (
+          // Show all pages if 7 or fewer
+          Array.from({ length: eventsTotalPages }, (_, i) => i + 1).map((pageNum) => (
+            <Button
+              key={pageNum}
+              variant={eventsPage === pageNum ? "default" : "outline"}
+              onClick={() => setEventsPage(pageNum)}
+              className="w-10 h-10 p-0"
+              size="sm"
+            >
+              {pageNum}
+            </Button>
+          ))
+        ) : (
+          <>
+            <Button
+              variant={eventsPage === 1 ? "default" : "outline"}
+              onClick={() => setEventsPage(1)}
+              className="w-10 h-10 p-0"
+              size="sm"
+            >
+              1
+            </Button>
+            {eventsPage > 3 && (
+              <span className="px-2 text-gray-500">...</span>
+            )}
+
+            {Array.from({ length: 3 }, (_, i) => {
+              const pageNum = eventsPage - 1 + i;
+              if (pageNum > 1 && pageNum < eventsTotalPages) {
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={eventsPage === pageNum ? "default" : "outline"}
+                    onClick={() => setEventsPage(pageNum)}
+                    className="w-10 h-10 p-0"
+                    size="sm"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              }
+              return null;
+            })}
+
+            {eventsPage < eventsTotalPages - 2 && (
+              <span className="px-2 text-gray-500">...</span>
+            )}
+            {eventsTotalPages > 1 && (
+              <Button
+                variant={eventsPage === eventsTotalPages ? "default" : "outline"}
+                onClick={() => setEventsPage(eventsTotalPages)}
+                className="w-10 h-10 p-0"
+                size="sm"
+              >
+                {eventsTotalPages}
+              </Button>
+            )}
+          </>
+        )}
+      </div>
+
+      <Button
+        variant="outline"
+        onClick={() => setEventsPage(prev => Math.min(eventsTotalPages, prev + 1))}
+        disabled={eventsPage === eventsTotalPages}
+        className="flex items-center gap-2 px-4"
+      >
+        <span>Next</span>
+      </Button>
+    </div>
+  )
+})
 
 export default function LandingPage() {
   const Navigate = useNavigate()
@@ -37,110 +394,13 @@ export default function LandingPage() {
   const [location, setLocation] = useState("")
   const [date, setDate] = useState("")
 
-  // Define mockCountries before using it in state
-  const mockCountries = [
-    {
-      id: 1,
-      name: "Lithuania",
-      cities: [
-        {
-          name: "Kaunas",
-          events: [
-            {
-              id: 1,
-              title: "Marathon Run",
-              image: "/placeholder.svg?height=200&width=300",
-              startTime: "02:15:48",
-              endTime: "06:30:00",
-              description: "A scenic 10K run through city center.",
-              mapEmbedUrl:
-                "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d23.9!3d54.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTTCsDU0JzAwLjAiTiAyM8KwNTQnMDAuMCJF!5e0!3m2!1sen!2slt!4v1234567890",
-            },
-          ],
-        },
-        {
-          name: "Klaipėda",
-          events: [
-            {
-              id: 2,
-              title: "Catamaran Race",
-              image: "/placeholder.svg?height=200&width=300",
-              startTime: "05:32:17",
-              endTime: "08:45:30",
-              description: "Exciting speed race by the coast.",
-              mapEmbedUrl:
-                "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d21.1!3d55.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTXCsDQyJzAwLjAiTiAyMcKwMDYnMDAuMCJF!5e0!3m2!1sen!2slt!4v1234567890",
-            },
-          ],
-        },
-        {
-          name: "Vilnius",
-          events: [
-            {
-              id: 3,
-              title: "Paintball Cup",
-              image: "/placeholder.svg?height=200&width=300",
-              startTime: "01:21:07",
-              endTime: "04:15:22",
-              description: "Team-based tactical game in a forest arena.",
-              mapEmbedUrl:
-                "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d25.3!3d54.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTTCsDQyJzAwLjAiTiAyNcKwMTgnMDAuMCJF!5e0!3m2!1sen!2slt!4v1234567890",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Latvia",
-      cities: [
-        {
-          name: "Riga",
-          events: [
-            {
-              id: 4,
-              title: "Urban Cycling Tour",
-              image: "/placeholder.svg?height=200&width=300",
-              startTime: "09:00:00",
-              endTime: "12:30:00",
-              description: "Explore the historic old town on two wheels.",
-              mapEmbedUrl:
-                "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d24.1!3d56.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTbCsDU0JzAwLjAiTiAyNMKwMDYnMDAuMCJF!5e0!3m2!1sen!2slv!4v1234567890",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: "Estonia",
-      cities: [
-        {
-          name: "Tallinn",
-          events: [
-            {
-              id: 5,
-              title: "Medieval Festival",
-              image: "/placeholder.svg?height=200&width=300",
-              startTime: "10:00:00",
-              endTime: "18:00:00",
-              description: "Step back in time with authentic medieval experiences.",
-              mapEmbedUrl:
-                "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d24.7!3d59.4!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTnCsDI0JzAwLjAiTiAyNMKwNDInMDAuMCJF!5e0!3m2!1sen!2see!4v1234567890",
-            },
-          ],
-        },
-      ],
-    },
-  ]
-
   const [showGroupDialog, setShowGroupDialog] = useState(false)
   const [groupMembers, setGroupMembers] = useState([])
   const [adventure, setadventure] = useState("")
   const [searchEmail, setSearchEmail] = useState("")
   const [showFriendsList, setShowFriendsList] = useState(true)
   const [eventsPage, setEventsPage] = useState(1);
-  const [countries, setCountries] = useState(mockCountries)
+  const [countries] = useState(mockCountries)
   const [currentCountryIndex, setCurrentCountryIndex] = useState(0)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [bookingDialog, setBookingDialog] = useState(false)
@@ -150,43 +410,45 @@ export default function LandingPage() {
     phone: "",
     specialRequests: "",
   })
-  const eventsLimit = 6 // Show 6 events per page
+  const [playerReady, setPlayerReady] = useState(false)
+
+  const eventsLimit = 6
   const playerRef = useRef(null)
+
   const { events, isLoading: eventsLoading, totalPages: eventsTotalPages } = useEvents({
     page: eventsPage,
     limit: eventsLimit
   });
-  const sliderRef = useRef(null)
-  const currentCountry = countries[currentCountryIndex]
 
-  // Auto-slide functionality
+  const sliderRef = useRef(null)
+  const currentCountry = useMemo(() => countries[currentCountryIndex], [countries, currentCountryIndex])
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentCountryIndex((prev) => (prev + 1) % countries.length)
-    }, 8000) // Change country every 8 seconds
+    }, 8000)
 
     return () => clearInterval(interval)
   }, [countries.length])
 
-  const nextCountry = () => {
+  const nextCountry = useCallback(() => {
     setCurrentCountryIndex((prev) => (prev + 1) % countries.length)
-  }
+  }, [countries.length])
 
-  const prevCountry = () => {
+  const prevCountry = useCallback(() => {
     setCurrentCountryIndex((prev) => (prev - 1 + countries.length) % countries.length)
-  }
+  }, [countries.length])
 
-  const handleBooking = (event) => {
+  const handleBooking = useCallback((event) => {
     setSelectedEvent(event)
     setBookingDialog(true)
-  }
+  }, [])
 
-  const submitBooking = () => {
+  const submitBooking = useCallback(() => {
     // Handle booking submission here
-    console.log("Booking submitted:", { event: selectedEvent, form: bookingForm })
     setBookingDialog(false)
     setBookingForm({ participants: 1, email: "", phone: "", specialRequests: "" })
-  }
+  }, [selectedEvent, bookingForm])
 
   const { adventures, loading: adventureLoading } = useAdventures()
   const {
@@ -215,7 +477,7 @@ export default function LandingPage() {
     }
   }, [showGroupDialog, clearSearchResult])
 
-  const handleSearchFriends = async (e) => {
+  const handleSearchFriends = useCallback(async (e) => {
     e.preventDefault()
 
     if (!searchEmail.trim()) {
@@ -224,7 +486,6 @@ export default function LandingPage() {
     }
 
     try {
-      console.log("Searching for user:", searchEmail)
       const result = await searchUser(searchEmail)
       if (!result) {
         toast(t("noUsersFound"), { type: "error", position: "top-right" })
@@ -232,8 +493,9 @@ export default function LandingPage() {
     } catch (err) {
       toast(t("searchFailed"), { type: "error", position: "top-right" })
     }
-  }
-  const addGroupMember = (user) => {
+  }, [searchEmail, searchUser, t])
+
+  const addGroupMember = useCallback((user) => {
     // Check if user is already in group
     if (groupMembers.some((member) => member._id === user._id)) {
       toast(t("userAlreadyInGroup"), { type: "warning", position: "top-right" })
@@ -244,18 +506,18 @@ export default function LandingPage() {
     clearSearchResult()
     setSearchEmail("")
     toast(t("friendAdded"), { type: "success", position: "top-right" })
-  }
+  }, [groupMembers, clearSearchResult, t])
 
-  const handleSendFriendRequest = async (userId) => {
+  const handleSendFriendRequest = useCallback(async (userId) => {
     try {
       await sendRequest(userId)
       toast(t("friendRequestSent"), { type: "success", position: "top-right" })
     } catch (err) {
       toast(t("failedToSendRequest"), { type: "error", position: "top-right" })
     }
-  }
+  }, [sendRequest, t])
 
-  const removeGroupMember = (userId) => {
+  const removeGroupMember = useCallback((userId) => {
     // Remove from local state
     setGroupMembers((prev) => prev.filter((member) => member._id !== userId))
 
@@ -270,9 +532,9 @@ export default function LandingPage() {
     } catch { }
 
     toast(t("friendRemoved"), { type: "success", position: "top-right" })
-  }
+  }, [t])
 
-  const handleNavigate = () => {
+  const handleNavigate = useCallback(() => {
     // Check if required fields are filled
     if (!location || !date) {
       toast.error(t("pleaseSelectLocationAndDate") || "Please select location and date")
@@ -284,18 +546,19 @@ export default function LandingPage() {
       sessionStorage.setItem("groupMembers", JSON.stringify(groupMembers))
     }
     Navigate(`/browse?adventure=${adventure}&location=${location}&date=${date}`)
-  }
-  const onReady = () => {
-    const internalPlayer = playerRef.current.getInternalPlayer();
-    // Tries to set quality — doesn't always work depending on YouTube
-    if (internalPlayer.setPlaybackQuality) {
-      internalPlayer.setPlaybackQuality('hd1080'); // 'small', 'medium', 'large', 'hd720', 'hd1080', 'highres'
+  }, [location, date, groupMembers, adventure, Navigate, t])
+
+  const onReady = useCallback(() => {
+    const internalPlayer = playerRef.current?.getInternalPlayer();
+    if (internalPlayer?.setPlaybackQuality) {
+      internalPlayer.setPlaybackQuality('hd1080');
     }
-  };
+    setPlayerReady(true)
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col relative">
-      {/* Background Video - Fixed at 100vh */}
+      {/* Background Video */}
       <div className="bg absolute top-0 left-0 w-full h-screen overflow-hidden -z-50">
         <motion.div
           className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 z-10"
@@ -303,17 +566,30 @@ export default function LandingPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 1.5 }}
         />
-        <ReactPlayer
-          ref={playerRef}
-          url={"https://youtu.be/FfPVvtNo92s"}
-          onReady={onReady}
-          controls={false}
-          loop={true}
-          playing={true}
-          muted={true}
-          width="100%"
-          height="100%"
-        />
+        <Suspense fallback={<div className="w-full h-full bg-gray-900" />}>
+          <ReactPlayer
+            ref={playerRef}
+            url={"https://youtu.be/FfPVvtNo92s"}
+            onReady={onReady}
+            controls={false}
+            loop={true}
+            playing={playerReady}
+            muted={true}
+            width="100%"
+            height="100%"
+            config={{
+              youtube: {
+                playerVars: {
+                  showinfo: 0,
+                  modestbranding: 1,
+                  autoplay: 1,
+                  rel: 0,
+                  iv_load_policy: 3
+                }
+              }
+            }}
+          />
+        </Suspense>
       </div>
 
       <Nav_Landing />
@@ -325,86 +601,19 @@ export default function LandingPage() {
           initial="hidden"
           animate="visible"
         >
-          <motion.div
-            className="search-bar w-full max-w-5xl mx-auto"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
-            <div className="flex flex-wrap md:flex-nowrap items-center gap-2">
-              {/* Unified search container */}
-              <div className="relative flex-1 flex flex-col md:flex-row gap-2">
-                {/* Adventure selection */}
-                <div className="flex-1 flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-                  <div className="flex items-center pl-3">
-                    <Compass className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <select
-                    onChange={(e) => setadventure(e.target.value)}
-                    className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1 bg-transparent"
-                  >
-                    <option value="all">{t("selectAdventure")}</option>
-                    {adventures.map((adventure, index) => (
-                      <option key={index} value={adventure.name}>
-                        {adventure.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Location input */}
-                <div className="flex-1 flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-                  <div className="flex items-center pl-3">
-                    <MapPin className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <Input
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1"
-                    type="text"
-                    placeholder={t("searchLocation")}
-                    required
-                  />
-                </div>
-
-                {/* Date input */}
-                <div className="flex-1 flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-                  <div className="flex items-center pl-3">
-                    <Calendar className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <Input
-                    onChange={(e) => setDate(e.target.value)}
-                    type="date"
-                    placeholder={t("selectDate")}
-                    className="pl-2 py-6 text-base border-0 focus:ring-0 flex-1"
-                    required
-                  />
-                </div>
-
-                {/* Group button */}
-                <div className="flex-1 md:flex-initial flex items-center bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-                  <Button
-                    onClick={() => setShowGroupDialog(true)}
-                    className="w-full h-full px-4 py-6 bg-white hover:bg-gray-50 text-black"
-                  >
-                    <Users className="h-5 w-5 mr-2" />
-                    <span className="hidden sm:inline">
-                      {groupMembers.length > 0 ? `${t("group")} (${groupMembers.length + 1})` : t("addGroup")}
-                    </span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Search button - separated and bigger */}
-              <Button
-                onClick={handleNavigate}
-                className="w-full md:w-auto mt-2 md:mt-0 py-6 px-8 bg-black hover:bg-gray-800 text-white text-lg font-medium rounded-lg shadow-md"
-                disabled={!location || !date}
-              >
-                <Search className="h-6 w-6 mr-2" />
-                <span>{t("search")}</span>
-              </Button>
-            </div>
-          </motion.div>
+          <SearchBar
+            adventures={adventures}
+            adventure={adventure}
+            setadventure={setadventure}
+            location={location}
+            setLocation={setLocation}
+            date={date}
+            setDate={setDate}
+            groupMembers={groupMembers}
+            setShowGroupDialog={setShowGroupDialog}
+            handleNavigate={handleNavigate}
+            t={t}
+          />
         </motion.div>
       </section>
 
@@ -513,71 +722,12 @@ export default function LandingPage() {
 
                   {/* Event Cards */}
                   {city.events.map((event) => (
-                    <motion.div
+                    <EventCard
                       key={event.id}
-                      className="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group"
-                      whileHover={{ y: -8, scale: 1.02 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    >
-                      {/* Event Image */}
-                      <div className="relative h-48 overflow-hidden">
-                        <motion.img
-                          src={event.image}
-                          alt={event.title}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                        <div className="absolute bottom-4 left-4">
-                          <h4 className="text-xl font-bold text-white">{event.title}</h4>
-                        </div>
-                      </div>
-
-                      {/* Event Details */}
-                      <div className="p-6 space-y-4">
-                        {/* Embedded Map */}
-                        <div className="relative h-32 rounded-xl overflow-hidden">
-                          <iframe
-                            src={event.mapEmbedUrl}
-                            className="w-full h-full border-0"
-                            allowFullScreen=""
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                          />
-                          <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1">
-                            <MapPin className="h-4 w-4 text-gray-600 inline mr-1" />
-                            <span className="text-sm font-medium text-gray-700">{city.name}</span>
-                          </div>
-                        </div>
-
-                        {/* Time Info */}
-                        <div className="flex items-center space-x-2 text-gray-600">
-                          <Clock className="h-5 w-5" />
-                          <span className="font-medium">
-                            Start & End time: {event.startTime} - {event.endTime}
-                          </span>
-                        </div>
-
-                        {/* Description */}
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2 text-gray-700">
-                            <Calendar className="h-5 w-5" />
-                            <span className="font-semibold">Short Description:</span>
-                          </div>
-                          <p className="text-gray-600 leading-relaxed pl-7">{event.description}</p>
-                        </div>
-
-                        {/* Book Button */}
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button
-                            onClick={() => handleBooking(event)}
-                            className="w-full bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                          >
-                            <Users className="h-5 w-5 mr-2" />
-                            BOOK YOUR SPOT
-                          </Button>
-                        </motion.div>
-                      </div>
-                    </motion.div>
+                      event={event}
+                      city={city}
+                      handleBooking={handleBooking}
+                    />
                   ))}
                 </motion.div>
               ))}
@@ -702,91 +852,11 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Pagination */}
-      {eventsTotalPages > 1 && (
-        <div className="flex justify-center items-center mt-8 space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => setEventsPage(prev => Math.max(1, prev - 1))}
-            disabled={eventsPage === 1}
-            className="flex items-center gap-2 px-4"
-          >
-            <span>Previous</span>
-          </Button>
-
-          <div className="flex items-center gap-1">
-            {eventsTotalPages <= 7 ? (
-              // Show all pages if 7 or fewer
-              Array.from({ length: eventsTotalPages }, (_, i) => i + 1).map((pageNum) => (
-                <Button
-                  key={pageNum}
-                  variant={eventsPage === pageNum ? "default" : "outline"}
-                  onClick={() => setEventsPage(pageNum)}
-                  className="w-10 h-10 p-0"
-                  size="sm"
-                >
-                  {pageNum}
-                </Button>
-              ))
-            ) : (
-              <>
-                <Button
-                  variant={eventsPage === 1 ? "default" : "outline"}
-                  onClick={() => setEventsPage(1)}
-                  className="w-10 h-10 p-0"
-                  size="sm"
-                >
-                  1
-                </Button>
-                {eventsPage > 3 && (
-                  <span className="px-2 text-gray-500">...</span>
-                )}
-
-                {Array.from({ length: 3 }, (_, i) => {
-                  const pageNum = eventsPage - 1 + i;
-                  if (pageNum > 1 && pageNum < eventsTotalPages) {
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={eventsPage === pageNum ? "default" : "outline"}
-                        onClick={() => setEventsPage(pageNum)}
-                        className="w-10 h-10 p-0"
-                        size="sm"
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  }
-                  return null;
-                })}
-
-                {eventsPage < eventsTotalPages - 2 && (
-                  <span className="px-2 text-gray-500">...</span>
-                )}
-                {eventsTotalPages > 1 && (
-                  <Button
-                    variant={eventsPage === eventsTotalPages ? "default" : "outline"}
-                    onClick={() => setEventsPage(eventsTotalPages)}
-                    className="w-10 h-10 p-0"
-                    size="sm"
-                  >
-                    {eventsTotalPages}
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
-
-          <Button
-            variant="outline"
-            onClick={() => setEventsPage(prev => Math.min(eventsTotalPages, prev + 1))}
-            disabled={eventsPage === eventsTotalPages}
-            className="flex items-center gap-2 px-4"
-          >
-            <span>Next</span>
-          </Button>
-        </div>
-      )}
+      <PaginationComponent
+        eventsPage={eventsPage}
+        eventsTotalPages={eventsTotalPages}
+        setEventsPage={setEventsPage}
+      />
 
       {/* Group Dialog */}
       <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
