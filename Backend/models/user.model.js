@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin", "instructor", "hotel", "superadmin"],
       default: "user",
     },
+    // Legacy level field - now calculated from UserAdventureExperience
     level: {
       type: Number,
       default: 0,
@@ -103,6 +104,24 @@ userSchema.methods.generateRefreshToken = function () {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
     }
   );
+};
+
+// Method to get overall level from adventure experiences
+userSchema.methods.getOverallLevel = async function () {
+  const { UserAdventureExperience } = await import(
+    "./userAdventureExperience.model.js"
+  );
+  return await UserAdventureExperience.calculateOverallLevel(this._id);
+};
+
+// Method to get adventure-specific experiences
+userSchema.methods.getAdventureExperiences = async function () {
+  const { UserAdventureExperience } = await import(
+    "./userAdventureExperience.model.js"
+  );
+  return await UserAdventureExperience.find({ user: this._id })
+    .populate("adventure", "name description medias thumbnail")
+    .sort({ experience: -1 });
 };
 
 export const User = mongoose.model("User", userSchema);

@@ -95,23 +95,48 @@ export const ItemPage = () => {
         }
     }
 
-    const handleBuyNow = () => {
-        // Validate rental dates if rent option is selected
-        if (selectedOption === 'rent' && (!rentalStartDate || !rentalEndDate)) {
-            toast.error('Please select rental period dates');
-            return;
+    const handleBuyNow = async () => {
+        try {
+            // Validate rental dates if rent option is selected
+            if (selectedOption === 'rent' && (!rentalStartDate || !rentalEndDate)) {
+                toast.error('Please select rental period dates');
+                return;
+            }
+
+            const cartData = {
+                item: item._id,
+                quantity: quantity,
+                action: selectedOption, // 'rent' or 'purchase'
+                purchase: selectedOption === 'purchase', // true for purchase, false for rent
+            };
+
+            // Add rental period if rent option is selected
+            if (selectedOption === 'rent' && rentalStartDate && rentalEndDate) {
+                cartData.rentalPeriod = {
+                    startDate: rentalStartDate,
+                    endDate: rentalEndDate,
+                    days: Math.ceil((rentalEndDate - rentalStartDate) / (1000 * 60 * 60 * 24))
+                };
+            }
+
+            // Add item to cart
+            await addToCart(cartData);
+
+            const action = selectedOption === 'rent' ? 'rent' : 'purchase';
+            let message = `Added ${quantity} ${item.name} to cart (${action})`;
+
+            if (selectedOption === 'rent' && cartData.rentalPeriod) {
+                message += ` for ${cartData.rentalPeriod.days} days`;
+            }
+
+            toast.success(message);
+
+            // Navigate to cart page
+            navigate('/cart');
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            toast.error('Failed to add item to cart. Please try again.');
         }
-
-        const action = selectedOption === 'rent' ? 'rent' : 'purchase';
-        let message = `Proceeding to checkout for ${quantity} ${item.name} (${action})`;
-
-        if (selectedOption === 'rent' && rentalStartDate && rentalEndDate) {
-            const days = Math.ceil((rentalEndDate - rentalStartDate) / (1000 * 60 * 60 * 24));
-            message += ` for ${days} days`;
-        }
-
-        toast.success(message);
-        // TODO: Navigate to checkout
     }
 
     if (loading) {
@@ -159,7 +184,15 @@ export const ItemPage = () => {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
                 {/* Breadcrumb */}
-                <div className="mb-6">
+                <div className="mb-6 flex gap-4">
+                    <Button
+                        variant="ghost"
+                        onClick={() => navigate('/')}
+                        className="text-gray-600 hover:text-gray-900"
+                    >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Home
+                    </Button>
                     <Button
                         variant="ghost"
                         onClick={() => navigate('/shop')}
@@ -275,12 +308,6 @@ export const ItemPage = () => {
                                     )}
                                 </div>
 
-                                {/* Stock Status */}
-                                <div className="mb-4">
-                                    <p className="text-sm text-gray-600">
-                                        Stock: <span className="font-semibold">{item.stock} available</span>
-                                    </p>
-                                </div>
 
                                 {/* Rental Period Calendar - Only show when rent option is selected */}
                                 {selectedOption === 'rent' && (
@@ -372,17 +399,6 @@ export const ItemPage = () => {
                                         {item.rent && <Badge variant="outline">Rent</Badge>}
                                     </div>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Stock:</span>
-                                    <span className="font-medium">{item.purchaseStock} units</span>
-                                    <span className="font-medium">{item.rentalStock} units</span>
-                                </div>
-                                {item.adventures && item.adventures.length > 0 && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Related Adventures:</span>
-                                        <span className="font-medium">{item.adventures.length}</span>
-                                    </div>
-                                )}
                             </CardContent>
                         </Card>
                     </div>

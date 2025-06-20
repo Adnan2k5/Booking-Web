@@ -1,14 +1,28 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
+import { UserAdventureExperience } from "../models/userAdventureExperience.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import ApiResponse from "../utils/ApiResponse.js";
 
 export const getUser = asyncHandler(async (req, res) => {
+  let user;
   if (req.user.role === "instructor") {
-    const user = await User.findById(req.user._id)
+    user = await User.findById(req.user._id)
       .populate("instructor")
       .select("-password -refreshToken");
-    return res.status(200).json(user);
+  } else {
+    user = req.user;
   }
-  return res.status(200).json(req.user);
+
+  // Get overall level and adventure experiences
+  const overallLevelData = await user.getOverallLevel();
+  const adventureExperiences = await user.getAdventureExperiences();
+
+  return res.status(200).json({
+    ...user.toJSON(),
+    levelData: overallLevelData,
+    adventureExperiences: adventureExperiences,
+  });
 });
 
 // GET /users?search=&role=&page=&limit=
@@ -63,4 +77,29 @@ export const updateUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, updatedUser, "User updated successfully"));
+});
+
+export const getUserAdventureExperiences = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  const adventureExperiences = await UserAdventureExperience.find({
+    user: userId,
+  })
+    .populate("adventure", "name description medias thumbnail exp")
+    .sort({ experience: -1 });
+
+  const overallLevelData = await UserAdventureExperience.calculateOverallLevel(
+    userId
+  );
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        adventureExperiences,
+        levelData: overallLevelData,
+      },
+      "Adventure experiences fetched successfully"
+    )
+  );
 });

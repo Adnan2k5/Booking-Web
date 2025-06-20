@@ -6,7 +6,10 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "../utils/cloudinary.js";
-import { translateObjectFields, translateObjectsFields } from "../utils/translation.js";
+import {
+  translateObjectFields,
+  translateObjectsFields,
+} from "../utils/translation.js";
 import { getLanguage } from "../middlewares/language.middleware.js";
 
 export const getItemById = asyncHandler(async (req, res) => {
@@ -26,11 +29,13 @@ export const getItemById = asyncHandler(async (req, res) => {
   // Translate item fields if language is not English
   const translatedItem = await translateObjectFields(
     item.toObject(),
-    ['name', 'description'],
+    ["name", "description"],
     language
   );
 
-  res.status(200).json(new ApiResponse(200, "Item fetched successfully", translatedItem));
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Item fetched successfully", translatedItem));
 });
 
 export const discoverItems = asyncHandler(async (req, res) => {
@@ -63,14 +68,20 @@ export const discoverItems = asyncHandler(async (req, res) => {
 
   // Translate items if language is not English
   const translatedItems = await translateObjectsFields(
-    items.map(item => item.toObject()),
-    ['name', 'description', 'category'],
+    items.map((item) => item.toObject()),
+    ["name", "description", "category"],
     language
   );
 
   res
     .status(200)
-    .json(new ApiResponse(200, { items: translatedItems, total }, "Items fetched successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        { items: translatedItems, total },
+        "Items fetched successfully"
+      )
+    );
 });
 
 export const createItem = asyncHandler(async (req, res) => {
@@ -223,10 +234,12 @@ export const getAllItems = asyncHandler(async (req, res) => {
 
   // Translate items if language is not English
   const translatedItems = await translateObjectsFields(
-    items.map(item => item.toObject()),
-    ['name', 'description', 'category'],
+    items.map((item) => item.toObject()),
+    ["name", "description", "category"],
     language
   );
 
-  res.json(new ApiResponse(200, "Items fetched successfully", translatedItems, total));
+  res.json(
+    new ApiResponse(200, "Items fetched successfully", translatedItems, total)
+  );
 });
