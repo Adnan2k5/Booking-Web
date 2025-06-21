@@ -242,7 +242,7 @@ export const handlePaymentCompletion = asyncHandler(async (req, res) => {
 
         // Check if this is an order completion event
         if (event === 'ORDER_COMPLETED' || event === 'ORDER_AUTHORISED') {
-
+            const orderId = order_id; // Use the order ID from the webhook payload
             // Find booking by payment order ID
             const booking = await ItemBooking.findOne({ paymentOrderId: orderId })
                 .populate('user', 'name email');
@@ -266,7 +266,7 @@ export const handlePaymentCompletion = asyncHandler(async (req, res) => {
                 
                 console.log(`Payment completed for booking ${booking._id}`);
             } else if (event === 'ORDER_AUTHORISED') {
-                booking.paymentStatus = 'authorized';
+                booking.paymentStatus = 'completed';
                 console.log(`Payment authorized for booking ${booking._id}`);
             }
 
