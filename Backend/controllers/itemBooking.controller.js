@@ -244,7 +244,7 @@ export const handlePaymentCompletion = asyncHandler(async (req, res) => {
         if (event === 'ORDER_COMPLETED' || event === 'ORDER_AUTHORISED') {
             const orderId = order_id; // Use the order ID from the webhook payload
             // Find booking by payment order ID
-            const booking = await ItemBooking.findOneAndUpdate({ paymentOrderId: orderId, status: 'pending' }, { status: 'completed' }, { new: true })
+            const booking = await ItemBooking.findOne({ paymentOrderId: orderId })
                 .populate('user', 'name email');
 
             if (!booking) {
@@ -256,6 +256,7 @@ export const handlePaymentCompletion = asyncHandler(async (req, res) => {
             // Update payment status based on event type
             if (event === 'ORDER_COMPLETED') {
                 booking.paymentStatus = 'completed';
+                booking.status = 'confirmed'; // Update booking status to confirmed
                 booking.paymentCompletedAt = new Date();
                 
                 // Clear user's cart after successful payment

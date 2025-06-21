@@ -103,3 +103,21 @@ export const getSessionBookingsBySessionId = async (sessionId, queryParams = {})
   });
   return res;
 }
+
+// Get current user's hotel bookings
+export const getCurrentUserHotelBookings = async (queryParams = {}) => {
+  const params = new URLSearchParams(queryParams).toString();
+  const res = await axiosClient.get(`/api/hotelBooking/my-bookings${params ? `?${params}` : ''}`, {
+    withCredentials: true,
+  });
+  return res;
+}
+
+// Get current user's item bookings (assuming similar endpoint exists)
+export const getCurrentUserItemBookings = async (queryParams = {}) => {
+  const params = new URLSearchParams(queryParams).toString();
+  const res = await axiosClient.get(`/api/itemBooking/my-bookings${params ? `?${params}` : ''}`, {
+    withCredentials: true,
+  });
+  return res;
+}
