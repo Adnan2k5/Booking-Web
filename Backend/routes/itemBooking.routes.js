@@ -5,7 +5,8 @@ import {
     handlePaymentCompletion,
     getPaymentStatus,
     getOrderDetails,
-    setupWebhook
+    setupWebhook,
+    getMyItemBookings
 } from "../controllers/itemBooking.controller.js";
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
@@ -28,6 +29,9 @@ router.post('/create-direct', createDirectBooking);
 
 // Get payment status
 router.get('/payment-status/:bookingId', getPaymentStatus);
+
+// Get current user's item bookings
+router.get('/my-bookings', getMyItemBookings);
 
 // Get order details
 router.get('/order/:orderId', getOrderDetails);
