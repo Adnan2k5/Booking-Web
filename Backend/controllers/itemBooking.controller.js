@@ -244,7 +244,7 @@ export const handlePaymentCompletion = asyncHandler(async (req, res) => {
         if (event === 'ORDER_COMPLETED' || event === 'ORDER_AUTHORISED') {
             const orderId = order_id; // Use the order ID from the webhook payload
             // Find booking by payment order ID
-            const booking = await ItemBooking.findOne({ paymentOrderId: orderId })
+            const booking = await ItemBooking.findOneAndUpdate({ paymentOrderId: orderId, status: 'pending' }, { status: 'completed' }, { new: true })
                 .populate('user', 'name email');
 
             if (!booking) {
@@ -390,5 +390,49 @@ export const setupWebhook = asyncHandler(async (req, res) => {
         console.error('Webhook setup error:', error.response?.data || error.message);
         throw new ApiError(500, 'Failed to setup webhook');
     }
+});
+
+// Get current user's item bookings
+export const getMyItemBookings = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    status,
+    sortBy = "createdAt",
+    sortOrder = "desc"
+  } = req.query;
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  
+  // Build query object
+  let query = { user: req.user._id };
+
+  if (status) {
+    query.status = status;
+  }
+
+  // Sorting
+  const sortOptions = {};
+  sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
+  const bookings = await ItemBooking.find(query)
+    .sort(sortOptions)
+    .skip(skip)
+    .limit(parseInt(limit))
+    .populate("user", "name email phoneNumber")
+    .populate({
+      path: "items.item",
+      select: "name price rentalPrice images category"
+    });
+
+  const total = await ItemBooking.countDocuments(query);
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      bookings,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+    }, "Item bookings retrieved successfully")
+  );
 });
 
