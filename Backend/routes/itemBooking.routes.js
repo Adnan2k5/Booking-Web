@@ -6,7 +6,8 @@ import {
     getPaymentStatus,
     getOrderDetails,
     setupWebhook,
-    getMyItemBookings
+    getMyItemBookings,
+    getAllItemBookings
 } from "../controllers/itemBooking.controller.js";
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
@@ -32,6 +33,7 @@ router.get('/payment-status/:bookingId', getPaymentStatus);
 
 // Get current user's item bookings
 router.get('/my-bookings', getMyItemBookings);
+router.get('/all-bookings', getAllItemBookings); // Alias for backward compatibility
 
 // Get order details
 router.get('/order/:orderId', getOrderDetails);

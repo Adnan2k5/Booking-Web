@@ -14,7 +14,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu"
-import { Link, useSearchParams } from "react-router-dom"
+import { Link, useSearchParams, useNavigate } from "react-router-dom"
 import { useHotels } from "../../hooks/useHotel"
 import { Navbar } from "../../components/Navbar"
 import { fetchLocations } from "../../Api/location.api"
@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next"
 export default function HotelBrowsingPage() {
     const { t } = useTranslation()
     const [searchParams, setSearchParams] = useSearchParams()
+    const navigate = useNavigate()
 
     // Extract filters from URL params or set defaults
     const [filters, setFilters] = useState({
@@ -312,14 +313,19 @@ export default function HotelBrowsingPage() {
                                                         {hotel.noRoom} rooms available
                                                     </span>
                                                 )}
-                                            </div>
-
-                                            <Button
+                                            </div>                                            <Button
                                                 size="sm"
                                                 className="bg-blue-600 hover:bg-blue-700"
                                                 onClick={() => {
-                                                    // For now, just show alert. Later can navigate to hotel details
-                                                    alert(`Booking for ${hotel.name} - Feature coming soon!`)
+                                                    navigate("/hotel/checkout", {
+                                                        state: {
+                                                            hotel,
+                                                            checkInDate: new Date().toISOString().split("T")[0],
+                                                            checkOutDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+                                                            rooms: 1,
+                                                            guests: { adults: 1, children: 0 }
+                                                        }
+                                                    });
                                                 }}
                                             >
                                                 Book Now
