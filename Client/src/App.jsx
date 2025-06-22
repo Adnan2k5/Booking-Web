@@ -40,6 +40,8 @@ const LandingPage = lazy(() => import("./Pages/LandingPage"))
 const BrowsingPage = lazy(() => import("./Pages/Browsing/BrowsingPage"))
 const Shop = lazy(() => import("./Pages/Shop/Shop"))
 const Hotel = lazy(() => import("./Pages/Hotel/Hotel"))
+const HotelCheckout = lazy(() => import("./Pages/Hotel/HotelCheckout"))
+const HotelBookingSuccess = lazy(() => import("./Pages/Hotel/HotelBookingSuccess"))
 const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
 const Terms = lazy(() => import("./Pages/Terms"))
 
@@ -144,7 +146,7 @@ const App = () => {
                     <FeatureRoute feature="hotels">
                       <Hotel />
                     </FeatureRoute>
-                  } />                  <Route path="/cart" element={
+                  }/>                  <Route path="/cart" element={
                     <FeatureRoute feature="shop">
                       <Cart />
                     </FeatureRoute>
@@ -177,12 +179,20 @@ const App = () => {
                     <FeatureRoute feature="hotels">
                       <HotelRegister />
                     </FeatureRoute>
-                  } />
-                  <Route path="/hotel/pending" element={
+                  } />                  <Route path="/hotel/pending" element={
                     <FeatureRoute feature="hotels">
                       <HotelPendingReview />
                     </FeatureRoute>
+                  } />                  <Route path="/hotel/checkout" element={
+                    <FeatureRoute feature="hotels">
+                      <HotelCheckout />
+                    </FeatureRoute>
                   } />
+                  <Route path="/hotel/booking-success" element={
+                    <FeatureRoute feature="hotels">
+                      <HotelBookingSuccess />
+                    </FeatureRoute>
+                  }/>
                   <Route
                     path="/instructor/"
                     element={
