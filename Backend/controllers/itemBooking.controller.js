@@ -437,3 +437,46 @@ export const getMyItemBookings = asyncHandler(async (req, res) => {
   );
 });
 
+export const getAllItemBookings = asyncHandler(async (req, res) => {
+    const {
+        page = 1,
+        limit = 10,
+        status,
+        sortBy = "createdAt",
+        sortOrder = "desc"
+    } = req.query;
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Build query object
+    let query = {};
+    
+    if (status) {
+        query.status = status;
+    }
+    
+    // Sorting
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
+    
+    const bookings = await ItemBooking.find(query)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate("user", "name email phoneNumber")
+        .populate({
+            path: "items.item", 
+            select: "name price rentalPrice images category"
+        });
+        
+    const total = await ItemBooking.countDocuments(query);
+
+    return res.status(200).json(
+        new ApiResponse(200, {
+            data: bookings,
+            total,
+            page: parseInt(page),
+            totalPages: Math.ceil(total / limit),
+        }, "All item bookings retrieved successfully")
+    );
+});
