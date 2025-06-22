@@ -4,6 +4,8 @@ import { User } from "../models/user.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { createRevolutOrder } from "../utils/revolut.js";
+
 
 // Create a new hotel booking
 export const createHotelBooking = asyncHandler(async (req, res) => {
@@ -43,7 +45,6 @@ export const createHotelBooking = asyncHandler(async (req, res) => {
       }
       
       numQuantity = Number(quantity);
-      console.log('Converted quantity:', numQuantity, 'Is NaN:', isNaN(numQuantity), 'Is Integer:', Number.isInteger(numQuantity));
       
       if (isNaN(numQuantity) || numQuantity < 1 || !Number.isInteger(numQuantity)) {
         throw new ApiError(400, "Quantity must be at least 1");
@@ -55,7 +56,6 @@ export const createHotelBooking = asyncHandler(async (req, res) => {
       // New structure (checkInDate, checkOutDate, no quantity field)
       bookingStartDate = checkInDate;
       bookingEndDate = checkOutDate;
-      console.log('Using new hotel booking structure - checkInDate:', checkInDate, 'checkOutDate:', checkOutDate);
     }
 
     if (!bookingStartDate || !bookingEndDate) {
@@ -93,13 +93,15 @@ export const createHotelBooking = asyncHandler(async (req, res) => {
     modeOfPayment,
   });
 
-  // Populate the booking with hotel and user details
-  const populatedBooking = await HotelBooking.findById(booking._id)
-    .populate("user", "name email phoneNumber")
-    .populate("hotels.hotel", "name location pricePerNight rating");
+  // If mode of payment is card, create a Revolut order
+  const response = await createRevolutOrder(
+    booking.amount,
+    "GBP", // Assuming GBP as the default currency
+    `Hotel Booking Payment for ${booking._id}`
+  );
 
   return res.status(201).json(
-    new ApiResponse(201, populatedBooking, "Hotel booking created successfully")
+    new ApiResponse(201, response, "Hotel booking created successfully")
   );
 });
 
