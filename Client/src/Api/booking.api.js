@@ -134,7 +134,7 @@ export const getAllHotelBookings = async (queryParams = {}) => {
 // Get all item bookings (admin only)
 export const getAllItemBookings = async (queryParams = {}) => {
   const params = new URLSearchParams(queryParams).toString();
-  const res = await axiosClient.get(`/api/itemBooking/all-bookings`, {
+  const res = await axiosClient.get(`/api/itemBooking/all-bookings${params ? `?${params}` : ''}`, {
     withCredentials: true,
   });
   return res;

@@ -32,77 +32,172 @@ export default function Dash_Bookings() {
     hotels: 1
   })
   const [itemsPerPage] = useState(10)
-  
-  // State for different booking types
+    // State for different booking types
   const [itemBookings, setItemBookings] = useState([])
   const [sessionBookings, setSessionBookings] = useState([])
   const [hotelBookings, setHotelBookings] = useState([])
+  
+  // Pagination metadata from backend
+  const [paginationMeta, setPaginationMeta] = useState({
+    items: { total: 0, totalPages: 0, currentPage: 1 },
+    sessions: { total: 0, totalPages: 0, currentPage: 1 },
+    hotels: { total: 0, totalPages: 0, currentPage: 1 }
+  })
   
   const [loading, setLoading] = useState({
     items: false,
     sessions: false,
     hotels: false
-  })
-
-  // Fetch bookings data
-  useEffect(() => {    const fetchItemBookings = async () => {
-      setLoading(prev => ({ ...prev, items: true }))
-      try {
-        const response = await getAllItemBookings()
-     
-        // Ensure we're storing an array
-        const bookingsData = response?.data?.data?.data || []
-        setItemBookings(Array.isArray(bookingsData) ? bookingsData : [])
-        console.log('All Item Bookings:', bookingsData)
-      } catch (error) { 
-        console.error("Error fetching item bookings:", error)
-        setItemBookings([])
-      } finally {
-        setLoading(prev => ({ ...prev, items: false }))
+  })  // Fetch bookings data with pagination
+  const fetchItemBookings = async (page = 1) => {
+    setLoading(prev => ({ ...prev, items: true }))
+    try {
+      const params = {
+        page: page.toString(),
+        limit: itemsPerPage.toString(),
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
       }
-    }
-
-    const fetchSessionBookings = async () => {
-      setLoading(prev => ({ ...prev, sessions: true }))
-      try {
-        const response = await getAllSessionBookings()
-        // Ensure we're storing an array
-        const bookingsData = response?.data?.data || []
-        setSessionBookings(Array.isArray(bookingsData) ? bookingsData : [])
-        console.log('All Session Bookings:', bookingsData)
-      } catch (error) {
-        console.error("Error fetching session bookings:", error)
-        setSessionBookings([])
-      } finally {
-        setLoading(prev => ({ ...prev, sessions: false }))
+      
+      if (statusFilter !== 'all') {
+        params.status = statusFilter
       }
-    }
-
-    const fetchHotelBookings = async () => {
-      setLoading(prev => ({ ...prev, hotels: true }))
-      try {
-        const response = await getAllHotelBookings()
-        // Ensure we're storing an array
-        const bookingsData = response?.data?.data || []
-        setHotelBookings(Array.isArray(bookingsData) ? bookingsData : [])
-        console.log('All Hotel Bookings:', bookingsData)
-      } catch (error) {
-        console.error("Error fetching hotel bookings:", error)
-        setHotelBookings([])
-      } finally {
-        setLoading(prev => ({ ...prev, hotels: false }))
+      
+      const response = await getAllItemBookings(params)
+      
+      const bookingsData = response?.data?.data?.data || []
+      const meta = {
+        total: response?.data?.data?.total || 0,
+        totalPages: response?.data?.data?.totalPages || 0,
+        currentPage: response?.data?.data?.page || 1
       }
+      
+      setItemBookings(Array.isArray(bookingsData) ? bookingsData : [])
+      setPaginationMeta(prev => ({ ...prev, items: meta }))
+    } catch (error) { 
+      console.error("Error fetching item bookings:", error)
+      setItemBookings([])
+      setPaginationMeta(prev => ({ ...prev, items: { total: 0, totalPages: 0, currentPage: 1 } }))
+    } finally {
+      setLoading(prev => ({ ...prev, items: false }))
     }
+  }
 
-    fetchItemBookings()
-    fetchSessionBookings()
-    fetchHotelBookings()
-  }, [])
-  // Filter bookings based on search term and status
+  const fetchSessionBookings = async (page = 1) => {
+    setLoading(prev => ({ ...prev, sessions: true }))
+    try {
+      const params = {
+        page: page.toString(),
+        limit: itemsPerPage.toString(),
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      }
+      
+      if (statusFilter !== 'all') {
+        params.status = statusFilter
+      }
+      
+      const response = await getAllSessionBookings(params)
+      
+      const bookingsData = response?.data?.data || []
+      const meta = {
+        total: response?.data?.total || 0,
+        totalPages: response?.data?.totalPages || 0,
+        currentPage: response?.data?.page || 1
+      }
+      
+      setSessionBookings(Array.isArray(bookingsData) ? bookingsData : [])
+      setPaginationMeta(prev => ({ ...prev, sessions: meta }))
+    } catch (error) {
+      console.error("Error fetching session bookings:", error)
+      setSessionBookings([])
+      setPaginationMeta(prev => ({ ...prev, sessions: { total: 0, totalPages: 0, currentPage: 1 } }))
+    } finally {
+      setLoading(prev => ({ ...prev, sessions: false }))
+    }
+  }
+
+  const fetchHotelBookings = async (page = 1) => {
+    setLoading(prev => ({ ...prev, hotels: true }))
+    try {
+      const params = {
+        page: page.toString(),
+        limit: itemsPerPage.toString(),
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      }
+      
+      if (statusFilter !== 'all') {
+        params.status = statusFilter
+      }
+      
+      const response = await getAllHotelBookings(params)
+      
+      const bookingsData = response?.data?.data || []
+      const meta = {
+        total: response?.data?.total || 0,
+        totalPages: response?.data?.totalPages || 0,
+        currentPage: response?.data?.page || 1
+      }
+      
+      setHotelBookings(Array.isArray(bookingsData) ? bookingsData : [])
+      setPaginationMeta(prev => ({ ...prev, hotels: meta }))
+    } catch (error) {
+      console.error("Error fetching hotel bookings:", error)
+      setHotelBookings([])
+      setPaginationMeta(prev => ({ ...prev, hotels: { total: 0, totalPages: 0, currentPage: 1 } }))
+    } finally {
+      setLoading(prev => ({ ...prev, hotels: false }))
+    }
+  }
+
+  // Initial fetch
+  useEffect(() => {
+    fetchItemBookings(currentPage.items)
+    fetchSessionBookings(currentPage.sessions)
+    fetchHotelBookings(currentPage.hotels)
+  }, [])  // Refetch data when filters change
+  useEffect(() => {
+    fetchItemBookings(1)
+    fetchSessionBookings(1)
+    fetchHotelBookings(1)
+    setCurrentPage({ items: 1, sessions: 1, hotels: 1 })
+  }, [statusFilter])
+
+  // Handle search with debouncing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchItemBookings(1)
+      fetchSessionBookings(1)
+      fetchHotelBookings(1)
+      setCurrentPage({ items: 1, sessions: 1, hotels: 1 })
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [searchTerm])
+
+  // Handle page changes
+  const handlePageChange = (type, page) => {
+    setCurrentPage(prev => ({
+      ...prev,
+      [type]: page
+    }))
+    
+    // Fetch new data for the specific type
+    if (type === 'items') {
+      fetchItemBookings(page)
+    } else if (type === 'sessions') {
+      fetchSessionBookings(page)
+    } else if (type === 'hotels') {
+      fetchHotelBookings(page)
+    }
+  }
+
+  // Filter bookings based on search term (now done on backend, but keeping for client-side if needed)
   const getFilteredBookings = (bookings) => {
-    // Ensure bookings is an array before filtering
+    if (!searchTerm) return bookings
+    
     if (!Array.isArray(bookings)) {
-      console.warn('Expected bookings to be an array but got:', typeof bookings)
       return []
     }
     
@@ -116,46 +211,14 @@ export default function Dash_Bookings() {
         bookingData.toLowerCase().includes(searchTerm.toLowerCase()) ||
         activityName.toLowerCase().includes(searchTerm.toLowerCase())
       
-      const bookingStatus = booking.status || 'pending'
-      const matchesStatus = statusFilter === "all" || bookingStatus === statusFilter
-      
-      return matchesSearch && matchesStatus
+      return matchesSearch
     })
   }
 
-  // Pagination logic
-  const getPaginatedBookings = (bookings, type) => {
-    const page = currentPage[type] || 1
-    const startIndex = (page - 1) * itemsPerPage
-    const endIndex = startIndex + itemsPerPage
-    return bookings.slice(startIndex, endIndex)
-  }
-
-  const getTotalPages = (bookings) => {
-    return Math.ceil(bookings.length / itemsPerPage)
-  }
-
-  const handlePageChange = (type, page) => {
-    setCurrentPage(prev => ({
-      ...prev,
-      [type]: page
-    }))
-  }
-
-  // Reset pagination when filters change
-  useEffect(() => {
-    setCurrentPage({ items: 1, sessions: 1, hotels: 1 })
-  }, [searchTerm, statusFilter])
-
-  // Safely get filtered bookings
+  // Get filtered bookings (search is now handled on backend, but keeping for additional client filtering if needed)
   const filteredItemBookings = getFilteredBookings(itemBookings)
   const filteredSessionBookings = getFilteredBookings(sessionBookings)
   const filteredHotelBookings = getFilteredBookings(hotelBookings)
-
-  // Get paginated bookings
-  const paginatedItemBookings = getPaginatedBookings(filteredItemBookings, 'items')
-  const paginatedSessionBookings = getPaginatedBookings(filteredSessionBookings, 'sessions')
-  const paginatedHotelBookings = getPaginatedBookings(filteredHotelBookings, 'hotels')
 
   // Format date function
   const formatDate = (dateString) => {
@@ -226,48 +289,47 @@ export default function Dash_Bookings() {
           <TabsTrigger value="items">Item Bookings</TabsTrigger>
           <TabsTrigger value="sessions">Session Bookings</TabsTrigger>
           <TabsTrigger value="hotels">Hotel Bookings</TabsTrigger>
-        </TabsList>
-          <TabsContent value="items">
+        </TabsList>        <TabsContent value="items">
           <BookingsTable 
-            bookings={paginatedItemBookings} 
+            bookings={filteredItemBookings} 
             loading={loading.items} 
             type="item" 
           />
           <PaginationControls
-            currentPage={currentPage.items}
-            totalPages={getTotalPages(filteredItemBookings)}
+            currentPage={paginationMeta.items.currentPage}
+            totalPages={paginationMeta.items.totalPages}
             onPageChange={(page) => handlePageChange('items', page)}
-            totalItems={filteredItemBookings.length}
+            totalItems={paginationMeta.items.total}
             itemsPerPage={itemsPerPage}
           />
         </TabsContent>
         
         <TabsContent value="sessions">
           <BookingsTable 
-            bookings={paginatedSessionBookings} 
+            bookings={filteredSessionBookings} 
             loading={loading.sessions} 
             type="session" 
           />
           <PaginationControls
-            currentPage={currentPage.sessions}
-            totalPages={getTotalPages(filteredSessionBookings)}
+            currentPage={paginationMeta.sessions.currentPage}
+            totalPages={paginationMeta.sessions.totalPages}
             onPageChange={(page) => handlePageChange('sessions', page)}
-            totalItems={filteredSessionBookings.length}
+            totalItems={paginationMeta.sessions.total}
             itemsPerPage={itemsPerPage}
           />
         </TabsContent>
         
         <TabsContent value="hotels">
           <BookingsTable 
-            bookings={paginatedHotelBookings} 
+            bookings={filteredHotelBookings} 
             loading={loading.hotels} 
             type="hotel" 
           />
           <PaginationControls
-            currentPage={currentPage.hotels}
-            totalPages={getTotalPages(filteredHotelBookings)}
+            currentPage={paginationMeta.hotels.currentPage}
+            totalPages={paginationMeta.hotels.totalPages}
             onPageChange={(page) => handlePageChange('hotels', page)}
-            totalItems={filteredHotelBookings.length}
+            totalItems={paginationMeta.hotels.total}
             itemsPerPage={itemsPerPage}
           />
         </TabsContent>
@@ -472,49 +534,64 @@ function PaginationControls({ currentPage, totalPages, onPageChange, totalItems,
   }
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-t">
-      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-        <span>
-          Showing {startItem} to {endItem} of {totalItems} results
-        </span>
+    <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
+      {/* Left side - Results info */}
+      <div className="flex items-center space-x-4">
+        <div className="text-sm text-muted-foreground">
+          Showing <span className="font-medium">{startItem}</span> to{' '}
+          <span className="font-medium">{endItem}</span> of{' '}
+          <span className="font-medium">{totalItems}</span> results
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Page <span className="font-medium">{currentPage}</span> of{' '}
+          <span className="font-medium">{totalPages}</span>
+        </div>
       </div>
       
+      {/* Right side - Navigation controls */}
       <div className="flex items-center space-x-2">
+        {/* Previous button */}
         <Button
           variant="outline"
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="h-8 w-8 p-0"
+          className="flex items-center space-x-1"
         >
           <ChevronLeft className="h-4 w-4" />
+          <span>Previous</span>
         </Button>
         
-        {getPageNumbers().map((page, index) => (
-          page === '...' ? (
-            <span key={index} className="px-2 text-muted-foreground">
-              ...
-            </span>
-          ) : (
-            <Button
-              key={page}
-              variant={currentPage === page ? "default" : "outline"}
-              size="sm"
-              onClick={() => onPageChange(page)}
-              className="h-8 w-8 p-0"
-            >
-              {page}
-            </Button>
-          )
-        ))}
+        {/* Page numbers */}
+        <div className="flex items-center space-x-1">
+          {getPageNumbers().map((page, index) => (
+            page === '...' ? (
+              <span key={index} className="px-2 text-muted-foreground">
+                ...
+              </span>
+            ) : (
+              <Button
+                key={page}
+                variant={currentPage === page ? "default" : "outline"}
+                size="sm"
+                onClick={() => onPageChange(page)}
+                className="h-8 w-8 p-0"
+              >
+                {page}
+              </Button>
+            )
+          ))}
+        </div>
         
+        {/* Next button */}
         <Button
           variant="outline"
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="h-8 w-8 p-0"
+          className="flex items-center space-x-1"
         >
+          <span>Next</span>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
