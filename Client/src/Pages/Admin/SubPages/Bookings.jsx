@@ -75,7 +75,6 @@ export default function Dash_Bookings() {
       setItemBookings(Array.isArray(bookingsData) ? bookingsData : [])
       setPaginationMeta(prev => ({ ...prev, items: meta }))
     } catch (error) { 
-      console.error("Error fetching item bookings:", error)
       setItemBookings([])
       setPaginationMeta(prev => ({ ...prev, items: { total: 0, totalPages: 0, currentPage: 1 } }))
     } finally {
@@ -109,7 +108,6 @@ export default function Dash_Bookings() {
       setSessionBookings(Array.isArray(bookingsData) ? bookingsData : [])
       setPaginationMeta(prev => ({ ...prev, sessions: meta }))
     } catch (error) {
-      console.error("Error fetching session bookings:", error)
       setSessionBookings([])
       setPaginationMeta(prev => ({ ...prev, sessions: { total: 0, totalPages: 0, currentPage: 1 } }))
     } finally {
@@ -132,18 +130,18 @@ export default function Dash_Bookings() {
       }
       
       const response = await getAllHotelBookings(params)
+
       
-      const bookingsData = response?.data?.data || []
+      const bookingsData = response?.data?.data?.bookings || []
       const meta = {
-        total: response?.data?.total || 0,
-        totalPages: response?.data?.totalPages || 0,
-        currentPage: response?.data?.page || 1
+        total: response?.data?.data?.total || 0,
+        totalPages: response?.data?.data?.totalPages || 0,
+        currentPage: response?.data?.data?.page || 1
       }
       
       setHotelBookings(Array.isArray(bookingsData) ? bookingsData : [])
       setPaginationMeta(prev => ({ ...prev, hotels: meta }))
     } catch (error) {
-      console.error("Error fetching hotel bookings:", error)
       setHotelBookings([])
       setPaginationMeta(prev => ({ ...prev, hotels: { total: 0, totalPages: 0, currentPage: 1 } }))
     } finally {
@@ -157,6 +155,8 @@ export default function Dash_Bookings() {
     fetchSessionBookings(currentPage.sessions)
     fetchHotelBookings(currentPage.hotels)
   }, [])  // Refetch data when filters change
+
+
   useEffect(() => {
     fetchItemBookings(1)
     fetchSessionBookings(1)
@@ -225,13 +225,6 @@ export default function Dash_Bookings() {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleDateString()
   }
-
-  // Add debugging to see data structure
-  useEffect(() => {
-    console.log('Item Bookings Data Structure:', itemBookings)
-    console.log('Session Bookings Data Structure:', sessionBookings)
-    console.log('Hotel Bookings Data Structure:', hotelBookings)
-  }, [itemBookings, sessionBookings, hotelBookings])
 
   return (
     <motion.div
