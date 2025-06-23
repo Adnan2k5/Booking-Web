@@ -42,6 +42,10 @@ export const createEvent = async (eventData) => {
         eventData[key].forEach((file, index) => {
           formData.append('medias', file);
         });
+      } else if (key === 'coordinates' && eventData[key]) {
+        // Handle coordinates separately
+        formData.append('latitude', eventData[key].latitude);
+        formData.append('longitude', eventData[key].longitude);
       } else if (eventData[key] !== undefined && eventData[key] !== null) {
         formData.append(key, eventData[key]);
       }
@@ -71,6 +75,10 @@ export const updateEvent = async (id, eventData) => {
         eventData[key].forEach((file, index) => {
           formData.append('medias', file);
         });
+      } else if (key === 'coordinates' && eventData[key]) {
+        // Handle coordinates separately
+        formData.append('latitude', eventData[key].latitude);
+        formData.append('longitude', eventData[key].longitude);
       } else if (eventData[key] !== undefined && eventData[key] !== null) {
         formData.append(key, eventData[key]);
       }

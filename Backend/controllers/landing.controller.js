@@ -1,15 +1,47 @@
 import { Event } from "../models/events.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
-import { translateObjectsFields, translateObjectFields } from "../utils/translation.js";
+import {
+  translateObjectsFields,
+  translateObjectFields,
+} from "../utils/translation.js";
 import { getLanguage } from "../middlewares/language.middleware.js";
+import { reverseGeocode } from "../utils/geocoding.js";
 export const createEvents = asyncHandler(async (req, res, next) => {
-  const { title, description, date, time, location, level } = req.body;
-  if (!title || !description || !date || !time || !location) {
-    return res.status(400).json({ message: "All fields are required" });
+  const {
+    title,
+    description,
+    date,
+    startTime,
+    endTime,
+    location,
+    mapEmbedUrl,
+    level,
+    latitude,
+    longitude,
+  } = req.body;
+
+  if (
+    !title ||
+    !description ||
+    !date ||
+    !startTime ||
+    !endTime ||
+    !location ||
+    !latitude ||
+    !longitude
+  ) {
+    return res.status(400).json({
+      message: "All required fields including coordinates must be provided",
+    });
   }
 
+  // Extract city and country from coordinates
+  const { city, country } = await reverseGeocode(latitude, longitude);
+
   let medias = [];
+  let image = null;
+
   if (req.files && req.files.medias) {
     const mediaFiles = Array.isArray(req.files.medias)
       ? req.files.medias
@@ -19,6 +51,7 @@ export const createEvents = asyncHandler(async (req, res, next) => {
       const uploaded = await uploadOnCloudinary(file.path);
       if (uploaded && uploaded.url) {
         medias.push(uploaded.url);
+        if (!image) image = uploaded.url;
       }
     }
   }
@@ -27,11 +60,21 @@ export const createEvents = asyncHandler(async (req, res, next) => {
     title,
     description,
     date,
-    time,
+    startTime,
+    endTime,
     location,
+    coordinates: {
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+    },
+    mapEmbedUrl: mapEmbedUrl || "",
     level: level || 1,
+    image,
     medias,
+    city,
+    country,
   });
+
   await event.save();
   res.status(201).json({
     success: true,
@@ -43,37 +86,37 @@ export const createEvents = asyncHandler(async (req, res, next) => {
 export const getAllEvents = asyncHandler(async (req, res, next) => {
   const { search = "", page = 1, limit = 10 } = req.query;
   const language = getLanguage(req);
-  
-  const query = {};
-  if (search) {
-    query.$or = [
-      { title: { $regex: search, $options: "i" } },
-      { description: { $regex: search, $options: "i" } },
-    ];
-  }
-  
+
+  const query = search
+    ? {
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+        ],
+      }
+    : {};
+
   const skip = (parseInt(page) - 1) * parseInt(limit);
   const eventsData = await Event.find(query)
     .sort({ date: 1 })
     .skip(skip)
     .limit(parseInt(limit));
-    
+
   if (!eventsData || eventsData.length === 0) {
     return res.status(200).json({ message: "No events found" });
   }
 
-  // Convert to plain objects
-  const plainEvents = eventsData.map(event => event.toJSON());
-  
-  let events;
-  // Translate event fields if language is not English
-  if (language !== 'en') {
-    const fieldsToTranslate = ['title', 'description', 'location'];
-    events = await translateObjectsFields(plainEvents, fieldsToTranslate, language);
-  } else {
-    events = plainEvents;
-  }
-  
+  const plainEvents = eventsData.map((event) => event.toJSON());
+
+  const events =
+    language !== "en"
+      ? await translateObjectsFields(
+          plainEvents,
+          ["title", "description", "location"],
+          language
+        )
+      : plainEvents;
+
   res.status(200).json({
     success: true,
     data: events,
@@ -84,24 +127,23 @@ export const getAllEvents = asyncHandler(async (req, res, next) => {
 export const getEventById = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const language = getLanguage(req);
-  
+
   const eventData = await Event.findById(id);
   if (!eventData) {
     return res.status(404).json({ message: "Event not found" });
   }
 
-  // Convert to plain object
   const plainEvent = eventData.toJSON();
-  
-  let event;
-  // Translate event fields if language is not English
-  if (language !== 'en') {
-    const fieldsToTranslate = ['title', 'description', 'location'];
-    event = await translateObjectFields(plainEvent, fieldsToTranslate, language);
-  } else {
-    event = plainEvent;
-  }
-  
+
+  const event =
+    language !== "en"
+      ? await translateObjectFields(
+          plainEvent,
+          ["title", "description", "location"],
+          language
+        )
+      : plainEvent;
+
   res.status(200).json({
     success: true,
     message: "Event retrieved successfully",
@@ -111,36 +153,68 @@ export const getEventById = asyncHandler(async (req, res, next) => {
 
 export const updateEvent = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const { title, description, date, time, location, level } = req.body;
-
-  let medias = [];
-  if (req.files && req.files.medias) {
-    const mediaFiles = Array.isArray(req.files.medias)
-      ? req.files.medias
-      : [req.files.medias];
-
-    for (const file of mediaFiles) {
-      const uploaded = await uploadOnCloudinary(file.path);
-      if (uploaded && uploaded.url) {
-        medias.push(uploaded.url);
-      }
-    }
-  }
+  const {
+    title,
+    description,
+    date,
+    startTime,
+    endTime,
+    location,
+    mapEmbedUrl,
+    level,
+    latitude,
+    longitude,
+  } = req.body;
 
   const updateData = {
     title,
     description,
     date,
-    time,
+    startTime,
+    endTime,
     location,
+    mapEmbedUrl: mapEmbedUrl || "",
     level: level || 1,
-    medias,
   };
+
+  // Update coordinates and extract city/country if provided
+  if (latitude && longitude) {
+    const { city, country } = await reverseGeocode(latitude, longitude);
+    updateData.coordinates = {
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+    };
+    updateData.city = city;
+    updateData.country = country;
+  }
+
+  // Handle media uploads
+  if (req.files && req.files.medias) {
+    const mediaFiles = Array.isArray(req.files.medias)
+      ? req.files.medias
+      : [req.files.medias];
+    const medias = [];
+    let image = null;
+
+    for (const file of mediaFiles) {
+      const uploaded = await uploadOnCloudinary(file.path);
+      if (uploaded && uploaded.url) {
+        medias.push(uploaded.url);
+        if (!image) image = uploaded.url;
+      }
+    }
+
+    if (medias.length > 0) {
+      updateData.medias = medias;
+      updateData.image = image;
+    }
+  }
 
   const event = await Event.findByIdAndUpdate(id, updateData, { new: true });
   if (!event) {
     return res.status(404).json({ message: "Event not found" });
   }
+
   res.status(200).json({
     success: true,
     message: "Event updated successfully",

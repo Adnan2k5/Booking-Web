@@ -31,9 +31,9 @@ import { useEvents } from "../hooks/useEvent"
 // Lazy load heavy components
 const ReactPlayer = lazy(() => import("react-player"))
 
-const EventCard = memo(({ event, city, handleBooking }) => (
+const EventCard = memo(({ event, handleBooking }) => (
   <motion.div
-    key={event.id}
+    key={event._id}
     className="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group"
     whileHover={{ y: -8, scale: 1.02 }}
     transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -41,7 +41,7 @@ const EventCard = memo(({ event, city, handleBooking }) => (
     {/* Event Image */}
     <div className="relative h-48 overflow-hidden">
       <motion.img
-        src={event.image}
+        src={event.image || "/placeholder.svg?height=200&width=300"}
         alt={event.title}
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
       />
@@ -53,36 +53,46 @@ const EventCard = memo(({ event, city, handleBooking }) => (
 
     {/* Event Details */}
     <div className="p-6 space-y-4">
-      {/* Embedded Map - Lazy loaded */}
-      <div className="relative h-32 rounded-xl overflow-hidden">
-        <iframe
-          src={event.mapEmbedUrl}
-          className="w-full h-full border-0"
-          allowFullScreen=""
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
-        <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1">
-          <MapPin className="h-4 w-4 text-gray-600 inline mr-1" />
-          <span className="text-sm font-medium text-gray-700">{city.name}</span>
+      {/* Location Info */}
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2 text-gray-700">
+          <MapPin className="h-5 w-5" />
+          <span className="font-semibold">Location:</span>
         </div>
+        <p className="text-gray-600 text-sm leading-relaxed pl-7">{event.city}, {event.country}</p>
+        {event.location && (
+          <p className="text-gray-500 text-xs leading-relaxed pl-7">{event.location}</p>
+        )}
       </div>
 
       {/* Time Info */}
       <div className="flex items-center space-x-2 text-gray-600">
         <Clock className="h-5 w-5" />
         <span className="font-medium">
-          Start & End time: {event.startTime} - {event.endTime}
+          Time: {event.startTime} - {event.endTime}
+        </span>
+      </div>
+
+      {/* Date Info */}
+      <div className="flex items-center space-x-2 text-gray-600">
+        <Calendar className="h-5 w-5" />
+        <span className="font-medium">
+          Date: {new Date(event.date).toLocaleDateString()}
         </span>
       </div>
 
       {/* Description */}
       <div className="space-y-2">
         <div className="flex items-center space-x-2 text-gray-700">
-          <Calendar className="h-5 w-5" />
-          <span className="font-semibold">Short Description:</span>
+          <Compass className="h-5 w-5" />
+          <span className="font-semibold">Description:</span>
         </div>
         <p className="text-gray-600 leading-relaxed pl-7">{event.description}</p>
+      </div>
+
+      {/* Level */}
+      <div className="flex items-center space-x-2 text-gray-600">
+        <span className="font-medium">Level: {event.level}</span>
       </div>
 
       {/* Book Button */}
@@ -197,102 +207,7 @@ const SearchBar = memo(({
   </motion.div>
 ))
 
-// Move mock data outside component to prevent recreating on every render
-const mockCountries = [
-  {
-    id: 1,
-    name: "Lithuania",
-    cities: [
-      {
-        name: "Kaunas",
-        events: [
-          {
-            id: 1,
-            title: "Marathon Run",
-            image: "/placeholder.svg?height=200&width=300",
-            startTime: "02:15:48",
-            endTime: "06:30:00",
-            description: "A scenic 10K run through city center.",
-            mapEmbedUrl:
-              "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d23.9!3d54.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTTCsDU0JzAwLjAiTiAyM8KwNTQnMDAuMCJF!5e0!3m2!1sen!2slt!4v1234567890",
-          },
-        ],
-      },
-      {
-        name: "Klaipėda",
-        events: [
-          {
-            id: 2,
-            title: "Catamaran Race",
-            image: "/placeholder.svg?height=200&width=300",
-            startTime: "05:32:17",
-            endTime: "08:45:30",
-            description: "Exciting speed race by the coast.",
-            mapEmbedUrl:
-              "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d21.1!3d55.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTXCsDQyJzAwLjAiTiAyMcKwMDYnMDAuMCJF!5e0!3m2!1sen!2slt!4v1234567890",
-          },
-        ],
-      },
-      {
-        name: "Vilnius",
-        events: [
-          {
-            id: 3,
-            title: "Paintball Cup",
-            image: "/placeholder.svg?height=200&width=300",
-            startTime: "01:21:07",
-            endTime: "04:15:22",
-            description: "Team-based tactical game in a forest arena.",
-            mapEmbedUrl:
-              "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d25.3!3d54.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTTCsDQyJzAwLjAiTiAyNcKwMTgnMDAuMCJF!5e0!3m2!1sen!2slt!4v1234567890",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Latvia",
-    cities: [
-      {
-        name: "Riga",
-        events: [
-          {
-            id: 4,
-            title: "Urban Cycling Tour",
-            image: "/placeholder.svg?height=200&width=300",
-            startTime: "09:00:00",
-            endTime: "12:30:00",
-            description: "Explore the historic old town on two wheels.",
-            mapEmbedUrl:
-              "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d24.1!3d56.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTbCsDU0JzAwLjAiTiAyNMKwMDYnMDAuMCJF!5e0!3m2!1sen!2slv!4v1234567890",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Estonia",
-    cities: [
-      {
-        name: "Tallinn",
-        events: [
-          {
-            id: 5,
-            title: "Medieval Festival",
-            image: "/placeholder.svg?height=200&width=300",
-            startTime: "10:00:00",
-            endTime: "18:00:00",
-            description: "Step back in time with authentic medieval experiences.",
-            mapEmbedUrl:
-              "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2305.5!2d24.7!3d59.4!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTnCsDI0JzAwLjAiTiAyNMKwNDInMDAuMCJF!5e0!3m2!1sen!2see!4v1234567890",
-          },
-        ],
-      },
-    ],
-  },
-]
+
 
 const PaginationComponent = memo(({
   eventsPage,
@@ -400,7 +315,6 @@ export default function LandingPage() {
   const [searchEmail, setSearchEmail] = useState("")
   const [showFriendsList, setShowFriendsList] = useState(true)
   const [eventsPage, setEventsPage] = useState(1);
-  const [countries] = useState(mockCountries)
   const [currentCountryIndex, setCurrentCountryIndex] = useState(0)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [bookingDialog, setBookingDialog] = useState(false)
@@ -420,24 +334,56 @@ export default function LandingPage() {
     limit: eventsLimit
   });
 
-  const sliderRef = useRef(null)
-  const currentCountry = useMemo(() => countries[currentCountryIndex], [countries, currentCountryIndex])
+  console.log(events)
 
+  // Group events by country
+  const countriesFromEvents = useMemo(() => {
+    if (!events || events.length === 0) return []
+
+    const countryMap = {}
+    events.forEach(event => {
+      if (!countryMap[event.country]) {
+        countryMap[event.country] = {
+          name: event.country,
+          events: []
+        }
+      }
+      countryMap[event.country].events.push(event)
+    })
+
+    return Object.values(countryMap)
+  }, [events])
+
+  const currentCountry = useMemo(() =>
+    countriesFromEvents[currentCountryIndex] || null,
+    [countriesFromEvents, currentCountryIndex]
+  )
+
+  // Auto-slide effect
   useEffect(() => {
+    if (countriesFromEvents.length <= 1) return
+
     const interval = setInterval(() => {
-      setCurrentCountryIndex((prev) => (prev + 1) % countries.length)
+      setCurrentCountryIndex((prev) => (prev + 1) % countriesFromEvents.length)
     }, 8000)
 
     return () => clearInterval(interval)
-  }, [countries.length])
+  }, [countriesFromEvents.length])
+
+  // Reset currentCountryIndex when countries change
+  useEffect(() => {
+    if (currentCountryIndex >= countriesFromEvents.length) {
+      setCurrentCountryIndex(0)
+    }
+  }, [countriesFromEvents.length, currentCountryIndex])
 
   const nextCountry = useCallback(() => {
-    setCurrentCountryIndex((prev) => (prev + 1) % countries.length)
-  }, [countries.length])
+    setCurrentCountryIndex((prev) => (prev + 1) % countriesFromEvents.length)
+  }, [countriesFromEvents.length])
 
   const prevCountry = useCallback(() => {
-    setCurrentCountryIndex((prev) => (prev - 1 + countries.length) % countries.length)
-  }, [countries.length])
+    setCurrentCountryIndex((prev) => (prev - 1 + countriesFromEvents.length) % countriesFromEvents.length)
+  }, [countriesFromEvents.length])
 
   const handleBooking = useCallback((event) => {
     setSelectedEvent(event)
@@ -461,6 +407,8 @@ export default function LandingPage() {
     clearSearchResult,
     fetchFriends
   } = useFriend()
+
+  console.log(user.user);
 
   // Fetch friends when component mounts or dialog opens
   useEffect(() => {
@@ -638,113 +586,112 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          {/* Country Slider */}
-          <div className="relative mb-12">
-            <motion.div
-              className="flex justify-center items-center mb-8"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={prevCountry}
-                className="p-3 rounded-full hover:bg-gray-100 transition-colors"
+          {/* Country Slider - Always show if we have events */}
+          {countriesFromEvents.length > 0 && (
+            <div className="relative mb-12">
+              <motion.div
+                className="flex justify-center items-center mb-8"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
               >
-                <ChevronLeft className="h-6 w-6" />
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={prevCountry}
+                  className="p-3 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </Button>
 
-              <div className="flex items-center space-x-8 mx-8">
-                {countries.map((country, index) => (
+                <div className="flex items-center space-x-8 mx-8">
+                  {countriesFromEvents.map((country, index) => (
+                    <motion.div
+                      key={country.name}
+                      className={`cursor-pointer transition-all duration-500 ${index === currentCountryIndex
+                        ? "scale-125 text-2xl font-bold text-gray-900"
+                        : "scale-100 text-lg text-gray-400 hover:text-gray-600"
+                        }`}
+                      onClick={() => setCurrentCountryIndex(index)}
+                      whileHover={{ scale: index === currentCountryIndex ? 1.25 : 1.1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    >
+                      {country.name}
+                    </motion.div>
+                  ))}
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={nextCountry}
+                  className="p-3 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </Button>
+              </motion.div>
+
+              {/* Country Indicator Dots */}
+              <div className="flex justify-center space-x-2 mb-8">
+                {countriesFromEvents.map((_, index) => (
                   <motion.div
-                    key={country.id}
-                    className={`cursor-pointer transition-all duration-500 ${index === currentCountryIndex
-                      ? "scale-125 text-2xl font-bold text-gray-900"
-                      : "scale-100 text-lg text-gray-400 hover:text-gray-600"
+                    key={index}
+                    className={`h-2 rounded-full cursor-pointer transition-all duration-300 ${index === currentCountryIndex ? "w-8 bg-gray-900" : "w-2 bg-gray-300"
                       }`}
                     onClick={() => setCurrentCountryIndex(index)}
-                    whileHover={{ scale: index === currentCountryIndex ? 1.25 : 1.1 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  >
-                    {country.name}
-                  </motion.div>
+                    whileHover={{ scale: 1.2 }}
+                  />
                 ))}
               </div>
-
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={nextCountry}
-                className="p-3 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                <ChevronRight className="h-6 w-6" />
-              </Button>
-            </motion.div>
-
-            {/* Country Indicator Dots */}
-            <div className="flex justify-center space-x-2 mb-8">
-              {countries.map((_, index) => (
-                <motion.div
-                  key={index}
-                  className={`h-2 rounded-full cursor-pointer transition-all duration-300 ${index === currentCountryIndex ? "w-8 bg-gray-900" : "w-2 bg-gray-300"
-                    }`}
-                  onClick={() => setCurrentCountryIndex(index)}
-                  whileHover={{ scale: 1.2 }}
-                />
-              ))}
             </div>
-          </div>
+          )}
 
           {/* Events Grid */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentCountryIndex}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -50 }}
-              transition={{ duration: 0.6, staggerChildren: 0.1 }}
-            >
-              {currentCountry?.cities.map((city, cityIndex) => (
-                <motion.div
-                  key={`${city.name}-${cityIndex}`}
-                  className="space-y-6"
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: cityIndex * 0.1 }}
-                >
-                  {/* City Header */}
-                  <div className="text-center">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">CITY: {city.name}</h3>
-                  </div>
-
-                  {/* Event Cards */}
-                  {city.events.map((event) => (
+          {eventsLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            </div>
+          ) : countriesFromEvents.length > 0 ? (
+            /* Show country-specific events */
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentCountryIndex}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -50 }}
+                transition={{ duration: 0.6, staggerChildren: 0.1 }}
+              >
+                {currentCountry?.events.map((event, index) => (
+                  <motion.div
+                    key={event._id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
                     <EventCard
-                      key={event.id}
                       event={event}
-                      city={city}
                       handleBooking={handleBooking}
                     />
-                  ))}
-                </motion.div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          ) : (
+            /* Show empty state when no events */
+            <div className="col-span-full text-center py-20">
+              <p className="text-gray-500 text-lg">No events available at the moment.</p>
+            </div>
+          )}
 
           {/* Booking Dialog */}
           <Dialog open={bookingDialog} onOpenChange={setBookingDialog}>
             <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-gray-900">Book Your Adventure</DialogTitle>
+                <DialogTitle className="text-2xl font-bold text-gray-900">Book Your Event</DialogTitle>
                 <DialogDescription className="text-gray-600">
-                  {selectedEvent?.title} in{" "}
-                  {
-                    currentCountry?.cities.find((city) => city.events.some((event) => event.id === selectedEvent?.id))
-                      ?.name
-                  }
+                  {selectedEvent?.title} in {selectedEvent?.city}, {selectedEvent?.country}
                 </DialogDescription>
               </DialogHeader>
 
@@ -769,28 +716,17 @@ export default function LandingPage() {
                         {selectedEvent?.startTime} - {selectedEvent?.endTime}
                       </span>
                     </div>
+                    <div className="flex items-center space-x-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        {selectedEvent?.date && new Date(selectedEvent.date).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Booking Form */}
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="participants" className="text-sm font-medium text-gray-700">
-                      Number of Participants
-                    </Label>
-                    <Input
-                      id="participants"
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={bookingForm.participants}
-                      onChange={(e) =>
-                        setBookingForm((prev) => ({ ...prev, participants: Number.parseInt(e.target.value) }))
-                      }
-                      className="mt-1"
-                    />
-                  </div>
-
                   <div>
                     <Label htmlFor="email" className="text-sm font-medium text-gray-700">
                       Email Address
@@ -798,7 +734,7 @@ export default function LandingPage() {
                     <Input
                       id="email"
                       type="email"
-                      value={bookingForm.email}
+                      value={bookingForm.email || user?.user?.email || ""}
                       onChange={(e) => setBookingForm((prev) => ({ ...prev, email: e.target.value }))}
                       className="mt-1"
                       placeholder="your@email.com"
@@ -812,24 +748,10 @@ export default function LandingPage() {
                     <Input
                       id="phone"
                       type="tel"
-                      value={bookingForm.phone}
+                      value={bookingForm.phone || user?.user?.phone || ""}
                       onChange={(e) => setBookingForm((prev) => ({ ...prev, phone: e.target.value }))}
                       className="mt-1"
                       placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="requests" className="text-sm font-medium text-gray-700">
-                      Special Requests (Optional)
-                    </Label>
-                    <textarea
-                      id="requests"
-                      value={bookingForm.specialRequests}
-                      onChange={(e) => setBookingForm((prev) => ({ ...prev, specialRequests: e.target.value }))}
-                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent resize-none"
-                      rows="3"
-                      placeholder="Any special requirements or requests..."
                     />
                   </div>
                 </div>
