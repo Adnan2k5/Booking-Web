@@ -181,13 +181,15 @@ export const handlePaymentCompletion = asyncHandler(async (req, res) => {
         if (!event || !order_id) {
             throw new ApiError(400, "Invalid webhook payload");
         }
-        const booking = await ItemBooking.findOne({ paymentOrderId: orderId })
+        const booking = await ItemBooking.findOne({ paymentOrderId: order_id })
             .populate('user', 'name email');
 
         const paymentService = new PaymentService();
         if (booking) {
            const result = await paymentService.itemBooking(order_id, event, booking);
+           console.log("Payment result:", result);
             res.status(result.status).json(new ApiResponse(result.status, result.booking, result.message));
+            return
         }
 
         const hotelBooking = await HotelBooking.findOne({ transactionId: order_id });
