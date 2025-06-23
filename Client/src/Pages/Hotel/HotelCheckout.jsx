@@ -24,6 +24,7 @@ import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Separator } from "../../components/ui/separator"
 import { Badge } from "../../components/ui/badge"
+import { Slider } from "../../components/ui/slider"
 import { Navbar } from "../../components/Navbar"
 import { useTranslation } from "react-i18next"
 import { createHotelBooking } from "../../Api/hotelBooking.api"
@@ -44,20 +45,11 @@ export default function HotelCheckout() {
     }, [])
     return null
   }
-  
-  const [bookingDetails, setBookingDetails] = useState({
+    const [bookingDetails, setBookingDetails] = useState({
     checkInDate: location.state?.checkInDate || new Date().toISOString().split("T")[0],
     checkOutDate: location.state?.checkOutDate || new Date(Date.now() + 86400000).toISOString().split("T")[0],
     rooms: location.state?.rooms || 1,
-    guests: {
-      adults: location.state?.guests?.adults || 1,
-      children: location.state?.guests?.children || 0
-    },
-    guestInfo: {
-      fullName: "",
-      email: "",
-      phone: ""
-    },
+    guests: location.state?.guests || 2,
     specialRequests: ""
   })
 
@@ -69,37 +61,16 @@ export default function HotelCheckout() {
   const subtotal = roomRate * bookingDetails.rooms * nights
   const tax = subtotal * 0.08 // 8% tax
   const totalPrice = subtotal + tax
-
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    
-    if (name.startsWith("guestInfo.")) {
-      const field = name.split(".")[1]
-      setBookingDetails(prev => ({
-        ...prev,
-        guestInfo: {
-          ...prev.guestInfo,
-          [field]: value
-        }
-      }))
-    } else {
-      setBookingDetails(prev => ({
-        ...prev,
-        [name]: value
-      }))
-    }
+    setBookingDetails(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
-    
-    // Validate booking information
-    if (!bookingDetails.guestInfo.fullName || !bookingDetails.guestInfo.email || !bookingDetails.guestInfo.phone) {
-      toast.error("Please fill in all required guest information")
-      setIsLoading(false)
-      return
-    }
 
     try {
       // Prepare booking data
@@ -115,7 +86,7 @@ export default function HotelCheckout() {
           }
         ],
         amount: totalPrice,
-        guestInfo: bookingDetails.guestInfo,
+        guests: bookingDetails.guests,
         specialRequests: bookingDetails.specialRequests
       }
         // Make API request to create hotel booking
@@ -244,8 +215,13 @@ export default function HotelCheckout() {
                         <p className="text-sm text-gray-500">Rooms</p>
                         <p className="font-medium">{bookingDetails.rooms}</p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                    </div>                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                      <User className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-500">Guests</p>
+                        <p className="font-medium">{bookingDetails.guests}</p>
+                      </div>
+                    </div>                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
                       <Clock className="h-5 w-5 text-blue-600" />
                       <div>
                         <p className="text-sm text-gray-500">Duration</p>
@@ -256,48 +232,53 @@ export default function HotelCheckout() {
                 </CardContent>
               </Card>
 
-              {/* Guest Information */}
+              {/* Booking Configuration */}
               <Card className="mb-6">
                 <CardHeader className="pb-3">
-                  <CardTitle>Guest Information</CardTitle>
+                  <CardTitle>Booking Configuration</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                      <Label htmlFor="fullName">Full Name*</Label>
-                      <Input
-                        id="fullName"
-                        name="guestInfo.fullName"
-                        placeholder="Enter your full name"
-                        value={bookingDetails.guestInfo.fullName}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
+                  <div className="space-y-6">
+                    {/* Number of Rooms Slider */}
                     <div>
-                      <Label htmlFor="email">Email*</Label>
-                      <Input
-                        id="email"
-                        name="guestInfo.email"
-                        type="email"
-                        placeholder="your.email@example.com"
-                        value={bookingDetails.guestInfo.email}
-                        onChange={handleInputChange}
-                        required
-                      />
+                      <Label className="text-base font-medium">Number of Rooms: {bookingDetails.rooms}</Label>
+                      <div className="mt-3">
+                        <Slider
+                          value={[bookingDetails.rooms]}
+                          onValueChange={(value) => setBookingDetails(prev => ({ ...prev, rooms: value[0] }))}
+                          max={10}
+                          min={1}
+                          step={1}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-sm text-gray-500 mt-1">
+                          <span>1 room</span>
+                          <span>10 rooms</span>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Number of Guests Slider */}
                     <div>
-                      <Label htmlFor="phone">Phone*</Label>
-                      <Input
-                        id="phone"
-                        name="guestInfo.phone"
-                        placeholder="Your contact number"
-                        value={bookingDetails.guestInfo.phone}
-                        onChange={handleInputChange}
-                        required
-                      />
+                      <Label className="text-base font-medium">Number of Guests: {bookingDetails.guests}</Label>
+                      <div className="mt-3">
+                        <Slider
+                          value={[bookingDetails.guests]}
+                          onValueChange={(value) => setBookingDetails(prev => ({ ...prev, guests: value[0] }))}
+                          max={20}
+                          min={1}
+                          step={1}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-sm text-gray-500 mt-1">
+                          <span>1 guest</span>
+                          <span>20 guests</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="md:col-span-2">
+
+                    {/* Special Requests */}
+                    <div>
                       <Label htmlFor="specialRequests">Special Requests</Label>
                       <Input
                         id="specialRequests"
@@ -305,6 +286,7 @@ export default function HotelCheckout() {
                         placeholder="Any special requests or preferences"
                         value={bookingDetails.specialRequests}
                         onChange={handleInputChange}
+                        className="mt-2"
                       />
                     </div>
                   </div>

@@ -16,6 +16,13 @@ export const createHotelBooking = asyncHandler(async (req, res) => {
     modeOfPayment = "card",
   } = req.body;
 
+  console.log('Creating hotel booking with data:', {
+    hotels,
+    amount,
+    transactionId,
+    modeOfPayment,
+  });
+
   // Validate required fields
   if (!hotels || !Array.isArray(hotels) || hotels.length === 0) {
     throw new ApiError(400, "Hotels array is required and cannot be empty");
@@ -32,8 +39,7 @@ export const createHotelBooking = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Hotel ID is required for each hotel");
     }
 
-    // Handle different frontend data structures
-    let numQuantity = 1; // Default quantity for hotel bookings is 1 room
+    let numQuantity = 1; 
     let bookingStartDate, bookingEndDate;
 
     // Check if using the old structure (quantity, startDate, endDate)
