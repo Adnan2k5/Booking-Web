@@ -7,7 +7,7 @@ dotenv.config();
 async function setupWebhook() {
     try {
         // Replace with your actual webhook URL
-        const webhookUrl = 'https://fc38-2405-201-a423-5801-acc3-3bb0-258e-2230.ngrok-free.app/api/itemBooking/webhook/payment-completed';
+        const webhookUrl = 'https://d925-2405-201-a423-5801-40bc-a53e-2e11-a6c8.ngrok-free.app/api/itemBooking/webhook/payment-completed';
 
         const data = JSON.stringify({
             "url": webhookUrl,
