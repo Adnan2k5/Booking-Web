@@ -4,16 +4,16 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { toast } from "sonner"
-import { 
-  ArrowLeft, 
-  Calendar, 
-  CreditCard, 
-  Hotel as HotelIcon, 
-  MapPin, 
-  User, 
-  Clock, 
-  Bed, 
-  Phone, 
+import {
+  ArrowLeft,
+  Calendar,
+  CreditCard,
+  Hotel as HotelIcon,
+  MapPin,
+  User,
+  Clock,
+  Bed,
+  Phone,
   Mail,
   Shield,
   CalendarCheck
@@ -34,33 +34,33 @@ export default function HotelCheckout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [isLoading, setIsLoading] = useState(false)
-  
+
   // Get hotel data from location state or redirect back
   const hotelData = location.state?.hotel
-  
+
   if (!hotelData) {
     useEffect(() => {
       toast.error("No hotel selected for booking")
       navigate("/hotels")
     }, [])
     return null
-  }
-    const [bookingDetails, setBookingDetails] = useState({
+  } const [bookingDetails, setBookingDetails] = useState({
     checkInDate: location.state?.checkInDate || new Date().toISOString().split("T")[0],
     checkOutDate: location.state?.checkOutDate || new Date(Date.now() + 86400000).toISOString().split("T")[0],
     rooms: location.state?.rooms || 1,
-    guests: location.state?.guests || 2,
+    guests: typeof location.state?.guests === 'object'
+      ? (location.state.guests.adults || 1) + (location.state.guests.children || 0)
+      : location.state?.guests || 2,
     specialRequests: ""
   })
 
   // Calculate stay duration in nights
   const nights = Math.ceil((new Date(bookingDetails.checkOutDate) - new Date(bookingDetails.checkInDate)) / (1000 * 60 * 60 * 24))
-  
+
   // Calculate total price
   const roomRate = hotelData.pricePerNight || hotelData.price || 0
-  const subtotal = roomRate * bookingDetails.rooms * nights
-  const tax = subtotal * 0.08 // 8% tax
-  const totalPrice = subtotal + tax
+  const totalPrice = roomRate * bookingDetails.rooms * nights
+
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setBookingDetails(prev => ({
@@ -75,34 +75,19 @@ export default function HotelCheckout() {
     try {
       // Prepare booking data
       const bookingData = {
-        hotels: [
-          {
-            hotel: hotelData._id,
-            checkInDate: bookingDetails.checkInDate,
-            checkOutDate: bookingDetails.checkOutDate,
-            quantity: bookingDetails.rooms,
-            nights: nights,
-            pricePerNight: roomRate
-          }
-        ],
-        amount: totalPrice,
         guests: bookingDetails.guests,
+        numberOfRooms: bookingDetails.rooms,
+        hotel: hotelData._id,
+        checkInDate: bookingDetails.checkInDate,
+        checkOutDate: bookingDetails.checkOutDate,
         specialRequests: bookingDetails.specialRequests
       }
-        // Make API request to create hotel booking
+      // Make API request to create hotel booking
       const response = await createHotelBooking(bookingData)
-      
+
       // Check for successful booking
-      if (response.data && response.data.success) {
-        toast.success("Hotel booked successfully!")
-        
-        // Redirect to success page or booking details
-        navigate("/hotel/booking-success", { 
-          state: { 
-            bookingId: response.data.data._id,
-            bookingDetails: response.data.data
-          } 
-        })
+      if (response.data && response.data.data) {
+        window.location.href = response.data.data.checkout_url;
       } else {
         throw new Error(response.data?.message || "Booking failed")
       }
@@ -117,7 +102,7 @@ export default function HotelCheckout() {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -126,9 +111,9 @@ export default function HotelCheckout() {
       >
         {/* Back navigation */}
         <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            className="flex items-center text-gray-600 hover:text-gray-900 p-0" 
+          <Button
+            variant="ghost"
+            className="flex items-center text-gray-600 hover:text-gray-900 p-0"
             onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
@@ -189,7 +174,7 @@ export default function HotelCheckout() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
                       <Calendar className="h-5 w-5 text-blue-600" />
@@ -314,7 +299,7 @@ export default function HotelCheckout() {
                       <Badge variant="outline" className="bg-white">PayPal</Badge>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 text-sm mt-4">
                     <Shield className="h-4 w-4 text-green-600" />
                     <span className="text-gray-600">Your payment info is secure and encrypted</span>
@@ -338,7 +323,7 @@ export default function HotelCheckout() {
                     </span>
                     <span>${roomRate.toFixed(2)}</span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-gray-600">Duration</span>
                     <span>{nights} {nights === 1 ? 'night' : 'nights'}</span>
@@ -348,38 +333,28 @@ export default function HotelCheckout() {
                     <span className="text-gray-600">Rooms</span>
                     <span>{bookingDetails.rooms}</span>
                   </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tax (8%)</span>
-                    <span>${tax.toFixed(2)}</span>
-                  </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
                     <span>${totalPrice.toFixed(2)}</span>
                   </div>
-                  
+
                   <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
                     <p>You'll be charged the total amount after confirming this booking.</p>
                   </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-blue-600 hover:bg-blue-700" 
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                     size="lg"
                     disabled={isLoading}
                     onClick={handleSubmit}
                   >
                     {isLoading ? "Processing..." : "Confirm and Pay"}
                   </Button>
-                  
+
                   <p className="text-xs text-gray-500 text-center mt-2">
                     By confirming, you agree to our{" "}
                     <Link className="text-blue-600 underline" to="/terms">Terms & Conditions</Link> and{" "}

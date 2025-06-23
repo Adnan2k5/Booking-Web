@@ -1,5 +1,6 @@
-
 import axios from 'axios';
+import { ApiError } from "../utils/ApiError.js";
+
 
 // Helper function to create Revolut payment order
 export const createRevolutOrder = async (amount, currency = 'GBP', description = 'Item Booking Payment') => {
@@ -46,9 +47,7 @@ export const createRevolutOrder = async (amount, currency = 'GBP', description =
         // Enhanced error logging
         console.error('Revolut order creation error:');
         console.error('Error message:', error.message);
-        console.error('Response status:', error.response?.status);
-        console.error('Response data:', error.response?.data);
-        
+    
         if (error.response?.data) {
             throw new ApiError(500, `Revolut API Error: ${error.response.data.message || 'Failed to create payment order'}`);
         } else {

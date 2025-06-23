@@ -31,10 +31,6 @@ const hotelBookingSchema = new mongoose.Schema(
       type: Number,
       min: 0,
     },
-    bookingDate: {
-      type: Date,
-      default: Date.now,
-    },
     hotel: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Hotel",
@@ -51,8 +47,13 @@ const hotelBookingSchema = new mongoose.Schema(
     },
     modeOfPayment: {
       type: String,
-      enum: ["card", "cash"],
+      enum: ["card", "cash", "revolut"],
       default: "card",
+    },
+    specialRequests: {
+      type: String,
+      trim: true,
+      default: "",
     },
   },
   {
