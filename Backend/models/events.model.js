@@ -14,13 +14,31 @@ const eventSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    time: {
+    startTime: {
+      type: String,
+      required: true,
+    },
+    endTime: {
       type: String,
       required: true,
     },
     location: {
       type: String,
       required: true,
+    },
+    coordinates: {
+      latitude: {
+        type: Number,
+        required: true,
+      },
+      longitude: {
+        type: Number,
+        required: true,
+      },
+    },
+    mapEmbedUrl: {
+      type: String,
+      required: false,
     },
     level: {
       type: Number,
@@ -29,12 +47,24 @@ const eventSchema = new mongoose.Schema(
       max: 10,
       default: 1,
     },
+    image: {
+      type: String,
+      required: false,
+    },
     medias: [
       {
         type: String,
         required: false,
       },
     ],
+    city: {
+      type: String,
+      required: true,
+    },
+    country: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );

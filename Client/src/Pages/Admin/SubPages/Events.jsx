@@ -19,6 +19,7 @@ import { toast } from "sonner"
 import { useEvents } from "../../../hooks/useEvent"
 import { createEvent, updateEvent, deleteEvent } from "../../../Api/event.api"
 import MediaPreview from "../../../components/MediaPreview"
+import MapLocationPicker from "../../../components/MapLocationPicker"
 
 export default function EventsPage() {
     const [searchTerm, setSearchTerm] = useState("")
@@ -31,8 +32,14 @@ export default function EventsPage() {
         title: "",
         description: "",
         date: "",
-        time: "",
+        startTime: "",
+        endTime: "",
         location: "",
+        coordinates: {
+            latitude: null,
+            longitude: null,
+        },
+        mapEmbedUrl: "",
         level: 1,
         images: [],
     })
@@ -63,8 +70,14 @@ export default function EventsPage() {
             title: "",
             description: "",
             date: "",
-            time: "",
+            startTime: "",
+            endTime: "",
             location: "",
+            coordinates: {
+                latitude: null,
+                longitude: null,
+            },
+            mapEmbedUrl: "",
             level: 1,
             images: [],
         })
@@ -196,8 +209,14 @@ export default function EventsPage() {
             title: event.title,
             description: event.description,
             date: event.date.split("T")[0], // Format date for input
-            time: event.time,
+            startTime: event.startTime || "",
+            endTime: event.endTime || "",
             location: event.location,
+            coordinates: {
+                latitude: event.coordinates?.latitude || null,
+                longitude: event.coordinates?.longitude || null,
+            },
+            mapEmbedUrl: event.mapEmbedUrl || "",
             level: event.level || 1,
             images: [], // Reset images array for new uploads
         })
@@ -481,7 +500,7 @@ export default function EventsPage() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
                                 <Label htmlFor="date" className="text-sm font-medium">
                                     Date *
@@ -497,14 +516,28 @@ export default function EventsPage() {
                             </div>
 
                             <div>
-                                <Label htmlFor="time" className="text-sm font-medium">
-                                    Time *
+                                <Label htmlFor="startTime" className="text-sm font-medium">
+                                    Start Time *
                                 </Label>
                                 <Input
-                                    id="time"
+                                    id="startTime"
                                     type="time"
-                                    value={formData.time}
-                                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                                    value={formData.startTime}
+                                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                                    required
+                                    className="mt-1"
+                                />
+                            </div>
+
+                            <div>
+                                <Label htmlFor="endTime" className="text-sm font-medium">
+                                    End Time *
+                                </Label>
+                                <Input
+                                    id="endTime"
+                                    type="time"
+                                    value={formData.endTime}
+                                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                                     required
                                     className="mt-1"
                                 />
@@ -512,15 +545,40 @@ export default function EventsPage() {
                         </div>
 
                         <div>
-                            <Label htmlFor="location" className="text-sm font-medium">
-                                Location *
+                            <Label className="text-sm font-medium">
+                                Event Location *
                             </Label>
+                            <div className="mt-2">
+                                <MapLocationPicker
+                                    coordinates={formData.coordinates}
+                                    onCoordinatesChange={(coords) => setFormData({
+                                        ...formData,
+                                        coordinates: coords
+                                    })}
+                                    onLocationNameChange={(name) => setFormData({
+                                        ...formData,
+                                        location: name
+                                    })}
+                                />
+                            </div>
                             <Input
-                                id="location"
                                 value={formData.location}
                                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                 required
-                                placeholder="Enter event location"
+                                placeholder="Location name will be filled automatically or enter manually"
+                                className="mt-2"
+                            />
+                        </div>
+
+                        <div>
+                            <Label htmlFor="mapEmbedUrl" className="text-sm font-medium">
+                                Map Embed URL (Optional)
+                            </Label>
+                            <Input
+                                id="mapEmbedUrl"
+                                value={formData.mapEmbedUrl}
+                                onChange={(e) => setFormData({ ...formData, mapEmbedUrl: e.target.value })}
+                                placeholder="Enter Google Maps embed URL"
                                 className="mt-1"
                             />
                         </div>
@@ -625,7 +683,7 @@ export default function EventsPage() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
                                 <Label htmlFor="edit-date" className="text-sm font-medium">
                                     Date *
@@ -641,14 +699,28 @@ export default function EventsPage() {
                             </div>
 
                             <div>
-                                <Label htmlFor="edit-time" className="text-sm font-medium">
-                                    Time *
+                                <Label htmlFor="edit-startTime" className="text-sm font-medium">
+                                    Start Time *
                                 </Label>
                                 <Input
-                                    id="edit-time"
+                                    id="edit-startTime"
                                     type="time"
-                                    value={formData.time}
-                                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                                    value={formData.startTime}
+                                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                                    required
+                                    className="mt-1"
+                                />
+                            </div>
+
+                            <div>
+                                <Label htmlFor="edit-endTime" className="text-sm font-medium">
+                                    End Time *
+                                </Label>
+                                <Input
+                                    id="edit-endTime"
+                                    type="time"
+                                    value={formData.endTime}
+                                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                                     required
                                     className="mt-1"
                                 />
@@ -656,15 +728,40 @@ export default function EventsPage() {
                         </div>
 
                         <div>
-                            <Label htmlFor="edit-location" className="text-sm font-medium">
-                                Location *
+                            <Label className="text-sm font-medium">
+                                Event Location *
                             </Label>
+                            <div className="mt-2">
+                                <MapLocationPicker
+                                    coordinates={formData.coordinates}
+                                    onCoordinatesChange={(coords) => setFormData({
+                                        ...formData,
+                                        coordinates: coords
+                                    })}
+                                    onLocationNameChange={(name) => setFormData({
+                                        ...formData,
+                                        location: name
+                                    })}
+                                />
+                            </div>
                             <Input
-                                id="edit-location"
                                 value={formData.location}
                                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                 required
-                                placeholder="Enter event location"
+                                placeholder="Location name will be filled automatically or enter manually"
+                                className="mt-2"
+                            />
+                        </div>
+
+                        <div>
+                            <Label htmlFor="edit-mapEmbedUrl" className="text-sm font-medium">
+                                Map Embed URL (Optional)
+                            </Label>
+                            <Input
+                                id="edit-mapEmbedUrl"
+                                value={formData.mapEmbedUrl}
+                                onChange={(e) => setFormData({ ...formData, mapEmbedUrl: e.target.value })}
+                                placeholder="Enter Google Maps embed URL"
                                 className="mt-1"
                             />
                         </div>
