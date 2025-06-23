@@ -193,9 +193,9 @@ export const handlePaymentCompletion = asyncHandler(async (req, res) => {
         }
 
         const hotelBooking = await HotelBooking.findOne({ transactionId: order_id });
+        console.log("Hotel booking found:", hotelBooking);
 
         if (hotelBooking) {
-            const paymentService = new PaymentService();
             const result = await paymentService.hotelBooking(order_id, event, hotelBooking);
             res.status(result.status).json(new ApiResponse(result.status, result.booking, result.message));
         }
