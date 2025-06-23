@@ -3,6 +3,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Cart } from '../models/cart.model.js';
 import { ItemBooking } from "../models/itemBooking.model.js";
+import { PaymentService } from "../services/payment.service.js";
+import { HotelBooking } from "../models/hotelBooking.model.js";
 import axios from 'axios';
 import { createRevolutOrder } from "../utils/revolut.js";
 
@@ -174,60 +176,32 @@ export const createDirectBooking = asyncHandler(async (req, res) => {
 // Function to handle payment completion/webhook
 export const handlePaymentCompletion = asyncHandler(async (req, res) => {
     try {
-        console.log('Webhook received:', JSON.stringify(req.body, null, 2));
-        
         const { event, order_id } = req.body;
 
         if (!event || !order_id) {
             throw new ApiError(400, "Invalid webhook payload");
         }
+        const booking = await ItemBooking.findOne({ paymentOrderId: order_id })
+            .populate('user', 'name email');
 
-        // Check if this is an order completion event
-        if (event === 'ORDER_COMPLETED' || event === 'ORDER_AUTHORISED') {
-            const orderId = order_id; // Use the order ID from the webhook payload
-            // Find booking by payment order ID
-            const booking = await ItemBooking.findOne({ paymentOrderId: orderId })
-                .populate('user', 'name email');
-
-            if (!booking) {
-                console.log(`Booking not found for order ID: ${orderId}`);
-                // Return 200 to acknowledge webhook receipt even if booking not found
-                return res.status(200).json({ message: "Webhook received" });
-            }
-
-            // Update payment status based on event type
-            if (event === 'ORDER_COMPLETED') {
-                booking.paymentStatus = 'completed';
-                booking.status = 'confirmed'; // Update booking status to confirmed
-                booking.paymentCompletedAt = new Date();
-                
-                // Clear user's cart after successful payment
-                await Cart.findOneAndUpdate(
-                    { user: booking.user._id },
-                    { $set: { items: [] } }
-                );
-                
-                console.log(`Payment completed for booking ${booking._id}`);
-            } else if (event === 'ORDER_AUTHORISED') {
-                booking.paymentStatus = 'completed';
-                console.log(`Payment authorized for booking ${booking._id}`);
-            }
-
-            await booking.save();
-
-            // Return 200 to acknowledge successful webhook processing
-            res.status(200).json({ 
-                message: "Webhook processed successfully",
-                bookingId: booking._id,
-                status: booking.paymentStatus
-            });
-        } else {
-            // For other events, just acknowledge receipt
-            res.status(200).json({ message: "Webhook received but not processed" });
+        const paymentService = new PaymentService();
+        if (booking) {
+           const result = await paymentService.itemBooking(order_id, event, booking);
+           console.log("Payment result:", result);
+            res.status(result.status).json(new ApiResponse(result.status, result.booking, result.message));
+            return
         }
+
+        const hotelBooking = await HotelBooking.findOne({ transactionId: order_id });
+        console.log("Hotel booking found:", hotelBooking);
+
+        if (hotelBooking) {
+            const result = await paymentService.hotelBooking(order_id, event, hotelBooking);
+            res.status(result.status).json(new ApiResponse(result.status, result.booking, result.message));
+        }
+
+
     } catch (error) {
-        console.error('Webhook processing error:', error);
-        // Return 200 to prevent webhook retries for application errors
         res.status(200).json({ message: "Webhook received with errors" });
     }
 });
@@ -279,7 +253,7 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
         };
 
         const response = await axios(config);
-        
+
         // Also get booking details from database
         const booking = await ItemBooking.findOne({ paymentOrderId: orderId })
             .populate({
@@ -302,7 +276,7 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
 // Function to setup Revolut webhook
 export const setupWebhook = asyncHandler(async (req, res) => {
     try {
-        const webhookUrl = process.env.NODE_ENV === 'production' 
+        const webhookUrl = process.env.NODE_ENV === 'production'
             ? 'https://yourdomain.com/api/item-booking/webhook/payment-completed'
             : 'https://4f93-2405-201-a423-5801-702b-aa6e-bdc3-2a08.ngrok-free.app/api/item-booking/webhook/payment-completed';
 
@@ -318,16 +292,16 @@ export const setupWebhook = asyncHandler(async (req, res) => {
             method: 'post',
             maxBodyLength: Infinity,
             url: 'https://sandbox-merchant.revolut.com/api/1.0/webhooks',
-            headers: { 
-                'Content-Type': 'application/json', 
-                'Accept': 'application/json', 
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'Authorization': `Bearer ${process.env.REVOLUT_SECRET_API_KEY}`
             },
             data: data
         };
 
         const response = await axios(config);
-        
+
         res.status(200).json(new ApiResponse(200, response.data, "Webhook setup successfully"));
     } catch (error) {
         console.error('Webhook setup error:', error.response?.data || error.message);
@@ -337,46 +311,46 @@ export const setupWebhook = asyncHandler(async (req, res) => {
 
 // Get current user's item bookings
 export const getMyItemBookings = asyncHandler(async (req, res) => {
-  const {
-    page = 1,
-    limit = 10,
-    status,
-    sortBy = "createdAt",
-    sortOrder = "desc"
-  } = req.query;
+    const {
+        page = 1,
+        limit = 10,
+        status,
+        sortBy = "createdAt",
+        sortOrder = "desc"
+    } = req.query;
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
-  
-  // Build query object
-  let query = { user: req.user._id };
+    const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  if (status) {
-    query.status = status;
-  }
+    // Build query object
+    let query = { user: req.user._id };
 
-  // Sorting
-  const sortOptions = {};
-  sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
-  const bookings = await ItemBooking.find(query)
-    .sort(sortOptions)
-    .skip(skip)
-    .limit(parseInt(limit))
-    .populate("user", "name email phoneNumber")
-    .populate({
-      path: "items.item",
-      select: "name price rentalPrice images category"
-    });
+    if (status) {
+        query.status = status;
+    }
 
-  const total = await ItemBooking.countDocuments(query);
+    // Sorting
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
+    const bookings = await ItemBooking.find(query)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate("user", "name email phoneNumber")
+        .populate({
+            path: "items.item",
+            select: "name price rentalPrice images category"
+        });
 
-  return res.status(200).json(
-    new ApiResponse(200, {
-      bookings,
-      total,
-      page: parseInt(page),
-      totalPages: Math.ceil(total / limit),
-    }, "Item bookings retrieved successfully")
-  );
+    const total = await ItemBooking.countDocuments(query);
+
+    return res.status(200).json(
+        new ApiResponse(200, {
+            bookings,
+            total,
+            page: parseInt(page),
+            totalPages: Math.ceil(total / limit),
+        }, "Item bookings retrieved successfully")
+    );
 });
 
 export const getAllItemBookings = asyncHandler(async (req, res) => {
@@ -387,30 +361,30 @@ export const getAllItemBookings = asyncHandler(async (req, res) => {
         sortBy = "createdAt",
         sortOrder = "desc"
     } = req.query;
-    
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    
+
     // Build query object
     let query = {};
-    
+
     if (status) {
         query.status = status;
     }
-    
+
     // Sorting
     const sortOptions = {};
     sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
-    
+
     const bookings = await ItemBooking.find(query)
         .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit))
         .populate("user", "name email phoneNumber")
         .populate({
-            path: "items.item", 
+            path: "items.item",
             select: "name price rentalPrice images category"
         });
-        
+
     const total = await ItemBooking.countDocuments(query);
 
     return res.status(200).json(

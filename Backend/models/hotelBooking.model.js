@@ -8,51 +8,57 @@ const hotelBookingSchema = new mongoose.Schema(
       index: true,
       required: true,
     },
-    hotels: [
-      {
-        hotel: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Hotel",
-          required: true,
-        },
-        quantity: {
-          type: Number,
-          min: 1,
-          required: true,
-        },
-        startDate: {
-          type: Date,
-        },
-        endDate: {
-          type: Date,
-        },
-      },
-    ],
+    guests: {
+      type: Number,
+      min: 1,
+      required: true,
+    },
+    numberOfRooms: {
+      type: Number,
+      min: 1,
+      required: true,
+    },
     status: {
       type: String,
       enum: ["pending", "confirmed", "cancelled"],
       default: "pending",
     },
-
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "completed", "failed"],
+      default: "pending",
+    },
     transactionId: {
       type: String,
       trim: true,
     },
-
     amount: {
       type: Number,
       min: 0,
     },
-
-    bookingDate: {
-      type: Date,
-      default: Date.now,
+    hotel: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Hotel",
+      index: true,
+      required: true,
     },
-
+    checkInDate: {
+      type: Date,
+      required: true,
+    },
+    checkOutDate: {
+      type: Date,
+      required: true,
+    },
     modeOfPayment: {
       type: String,
-      enum: ["card", "cash"],
+      enum: ["card", "cash", "revolut"],
       default: "card",
+    },
+    specialRequests: {
+      type: String,
+      trim: true,
+      default: "",
     },
   },
   {

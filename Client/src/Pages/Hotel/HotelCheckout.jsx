@@ -4,16 +4,16 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { toast } from "sonner"
-import { 
-  ArrowLeft, 
-  Calendar, 
-  CreditCard, 
-  Hotel as HotelIcon, 
-  MapPin, 
-  User, 
-  Clock, 
-  Bed, 
-  Phone, 
+import {
+  ArrowLeft,
+  Calendar,
+  CreditCard,
+  Hotel as HotelIcon,
+  MapPin,
+  User,
+  Clock,
+  Bed,
+  Phone,
   Mail,
   Shield,
   CalendarCheck
@@ -24,6 +24,7 @@ import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Separator } from "../../components/ui/separator"
 import { Badge } from "../../components/ui/badge"
+import { Slider } from "../../components/ui/slider"
 import { Navbar } from "../../components/Navbar"
 import { useTranslation } from "react-i18next"
 import { createHotelBooking } from "../../Api/hotelBooking.api"
@@ -33,105 +34,60 @@ export default function HotelCheckout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [isLoading, setIsLoading] = useState(false)
-  
+
   // Get hotel data from location state or redirect back
   const hotelData = location.state?.hotel
-  
+
   if (!hotelData) {
     useEffect(() => {
       toast.error("No hotel selected for booking")
       navigate("/hotels")
     }, [])
     return null
-  }
-  
-  const [bookingDetails, setBookingDetails] = useState({
+  } const [bookingDetails, setBookingDetails] = useState({
     checkInDate: location.state?.checkInDate || new Date().toISOString().split("T")[0],
     checkOutDate: location.state?.checkOutDate || new Date(Date.now() + 86400000).toISOString().split("T")[0],
     rooms: location.state?.rooms || 1,
-    guests: {
-      adults: location.state?.guests?.adults || 1,
-      children: location.state?.guests?.children || 0
-    },
-    guestInfo: {
-      fullName: "",
-      email: "",
-      phone: ""
-    },
+    guests: typeof location.state?.guests === 'object'
+      ? (location.state.guests.adults || 1) + (location.state.guests.children || 0)
+      : location.state?.guests || 2,
     specialRequests: ""
   })
 
   // Calculate stay duration in nights
   const nights = Math.ceil((new Date(bookingDetails.checkOutDate) - new Date(bookingDetails.checkInDate)) / (1000 * 60 * 60 * 24))
-  
+
   // Calculate total price
   const roomRate = hotelData.pricePerNight || hotelData.price || 0
-  const subtotal = roomRate * bookingDetails.rooms * nights
-  const tax = subtotal * 0.08 // 8% tax
-  const totalPrice = subtotal + tax
+  const totalPrice = roomRate * bookingDetails.rooms * nights
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    
-    if (name.startsWith("guestInfo.")) {
-      const field = name.split(".")[1]
-      setBookingDetails(prev => ({
-        ...prev,
-        guestInfo: {
-          ...prev.guestInfo,
-          [field]: value
-        }
-      }))
-    } else {
-      setBookingDetails(prev => ({
-        ...prev,
-        [name]: value
-      }))
-    }
+    setBookingDetails(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
-    
-    // Validate booking information
-    if (!bookingDetails.guestInfo.fullName || !bookingDetails.guestInfo.email || !bookingDetails.guestInfo.phone) {
-      toast.error("Please fill in all required guest information")
-      setIsLoading(false)
-      return
-    }
 
     try {
       // Prepare booking data
       const bookingData = {
-        hotels: [
-          {
-            hotel: hotelData._id,
-            checkInDate: bookingDetails.checkInDate,
-            checkOutDate: bookingDetails.checkOutDate,
-            quantity: bookingDetails.rooms,
-            nights: nights,
-            pricePerNight: roomRate
-          }
-        ],
-        amount: totalPrice,
-        guestInfo: bookingDetails.guestInfo,
+        guests: bookingDetails.guests,
+        numberOfRooms: bookingDetails.rooms,
+        hotel: hotelData._id,
+        checkInDate: bookingDetails.checkInDate,
+        checkOutDate: bookingDetails.checkOutDate,
         specialRequests: bookingDetails.specialRequests
       }
-        // Make API request to create hotel booking
+      // Make API request to create hotel booking
       const response = await createHotelBooking(bookingData)
-      
+
       // Check for successful booking
-      if (response.data && response.data.success) {
-        toast.success("Hotel booked successfully!")
-        
-        // Redirect to success page or booking details
-        navigate("/hotel/booking-success", { 
-          state: { 
-            bookingId: response.data.data._id,
-            bookingDetails: response.data.data
-          } 
-        })
+      if (response.data && response.data.data) {
+        window.location.href = response.data.data.checkout_url;
       } else {
         throw new Error(response.data?.message || "Booking failed")
       }
@@ -146,7 +102,7 @@ export default function HotelCheckout() {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -155,9 +111,9 @@ export default function HotelCheckout() {
       >
         {/* Back navigation */}
         <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            className="flex items-center text-gray-600 hover:text-gray-900 p-0" 
+          <Button
+            variant="ghost"
+            className="flex items-center text-gray-600 hover:text-gray-900 p-0"
             onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
@@ -218,7 +174,7 @@ export default function HotelCheckout() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
                       <Calendar className="h-5 w-5 text-blue-600" />
@@ -244,8 +200,13 @@ export default function HotelCheckout() {
                         <p className="text-sm text-gray-500">Rooms</p>
                         <p className="font-medium">{bookingDetails.rooms}</p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                    </div>                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                      <User className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-500">Guests</p>
+                        <p className="font-medium">{bookingDetails.guests}</p>
+                      </div>
+                    </div>                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
                       <Clock className="h-5 w-5 text-blue-600" />
                       <div>
                         <p className="text-sm text-gray-500">Duration</p>
@@ -256,48 +217,53 @@ export default function HotelCheckout() {
                 </CardContent>
               </Card>
 
-              {/* Guest Information */}
+              {/* Booking Configuration */}
               <Card className="mb-6">
                 <CardHeader className="pb-3">
-                  <CardTitle>Guest Information</CardTitle>
+                  <CardTitle>Booking Configuration</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                      <Label htmlFor="fullName">Full Name*</Label>
-                      <Input
-                        id="fullName"
-                        name="guestInfo.fullName"
-                        placeholder="Enter your full name"
-                        value={bookingDetails.guestInfo.fullName}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
+                  <div className="space-y-6">
+                    {/* Number of Rooms Slider */}
                     <div>
-                      <Label htmlFor="email">Email*</Label>
-                      <Input
-                        id="email"
-                        name="guestInfo.email"
-                        type="email"
-                        placeholder="your.email@example.com"
-                        value={bookingDetails.guestInfo.email}
-                        onChange={handleInputChange}
-                        required
-                      />
+                      <Label className="text-base font-medium">Number of Rooms: {bookingDetails.rooms}</Label>
+                      <div className="mt-3">
+                        <Slider
+                          value={[bookingDetails.rooms]}
+                          onValueChange={(value) => setBookingDetails(prev => ({ ...prev, rooms: value[0] }))}
+                          max={10}
+                          min={1}
+                          step={1}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-sm text-gray-500 mt-1">
+                          <span>1 room</span>
+                          <span>10 rooms</span>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Number of Guests Slider */}
                     <div>
-                      <Label htmlFor="phone">Phone*</Label>
-                      <Input
-                        id="phone"
-                        name="guestInfo.phone"
-                        placeholder="Your contact number"
-                        value={bookingDetails.guestInfo.phone}
-                        onChange={handleInputChange}
-                        required
-                      />
+                      <Label className="text-base font-medium">Number of Guests: {bookingDetails.guests}</Label>
+                      <div className="mt-3">
+                        <Slider
+                          value={[bookingDetails.guests]}
+                          onValueChange={(value) => setBookingDetails(prev => ({ ...prev, guests: value[0] }))}
+                          max={20}
+                          min={1}
+                          step={1}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-sm text-gray-500 mt-1">
+                          <span>1 guest</span>
+                          <span>20 guests</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="md:col-span-2">
+
+                    {/* Special Requests */}
+                    <div>
                       <Label htmlFor="specialRequests">Special Requests</Label>
                       <Input
                         id="specialRequests"
@@ -305,6 +271,7 @@ export default function HotelCheckout() {
                         placeholder="Any special requests or preferences"
                         value={bookingDetails.specialRequests}
                         onChange={handleInputChange}
+                        className="mt-2"
                       />
                     </div>
                   </div>
@@ -332,7 +299,7 @@ export default function HotelCheckout() {
                       <Badge variant="outline" className="bg-white">PayPal</Badge>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 text-sm mt-4">
                     <Shield className="h-4 w-4 text-green-600" />
                     <span className="text-gray-600">Your payment info is secure and encrypted</span>
@@ -356,7 +323,7 @@ export default function HotelCheckout() {
                     </span>
                     <span>${roomRate.toFixed(2)}</span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-gray-600">Duration</span>
                     <span>{nights} {nights === 1 ? 'night' : 'nights'}</span>
@@ -366,38 +333,28 @@ export default function HotelCheckout() {
                     <span className="text-gray-600">Rooms</span>
                     <span>{bookingDetails.rooms}</span>
                   </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tax (8%)</span>
-                    <span>${tax.toFixed(2)}</span>
-                  </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
                     <span>${totalPrice.toFixed(2)}</span>
                   </div>
-                  
+
                   <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
                     <p>You'll be charged the total amount after confirming this booking.</p>
                   </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-blue-600 hover:bg-blue-700" 
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                     size="lg"
                     disabled={isLoading}
                     onClick={handleSubmit}
                   >
                     {isLoading ? "Processing..." : "Confirm and Pay"}
                   </Button>
-                  
+
                   <p className="text-xs text-gray-500 text-center mt-2">
                     By confirming, you agree to our{" "}
                     <Link className="text-blue-600 underline" to="/terms">Terms & Conditions</Link> and{" "}

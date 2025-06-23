@@ -10,98 +10,70 @@ import { createRevolutOrder } from "../utils/revolut.js";
 // Create a new hotel booking
 export const createHotelBooking = asyncHandler(async (req, res) => {
   const {
-    hotels,
-    amount,
-    transactionId,
-    modeOfPayment = "card",
+    hotel,
+    numberOfRooms,
+    checkInDate,
+    checkOutDate,
+    guests,
+    specialRequests,
   } = req.body;
 
-  // Validate required fields
-  if (!hotels || !Array.isArray(hotels) || hotels.length === 0) {
-    throw new ApiError(400, "Hotels array is required and cannot be empty");
+  if (!hotel) {
+    throw new ApiError(400, "Hotel ID is required");
   }
 
-  if (!amount || amount <= 0) {
-    throw new ApiError(400, "Valid amount is required");
-  }  // Validate hotel data and process quantities
-  const processedHotels = [];
-  for (const hotelData of hotels) {
-    const { hotel, quantity, startDate, endDate, checkInDate, checkOutDate, nights, pricePerNight } = hotelData;
-
-    if (!hotel) {
-      throw new ApiError(400, "Hotel ID is required for each hotel");
-    }
-
-    // Handle different frontend data structures
-    let numQuantity = 1; // Default quantity for hotel bookings is 1 room
-    let bookingStartDate, bookingEndDate;
-
-    // Check if using the old structure (quantity, startDate, endDate)
-    if (quantity !== undefined) {
-      console.log('Quantity received:', quantity, 'Type:', typeof quantity);
-      
-      if (quantity === null || quantity === '') {
-        throw new ApiError(400, "Quantity is required");
-      }
-      
-      numQuantity = Number(quantity);
-      
-      if (isNaN(numQuantity) || numQuantity < 1 || !Number.isInteger(numQuantity)) {
-        throw new ApiError(400, "Quantity must be at least 1");
-      }
-      
-      bookingStartDate = startDate;
-      bookingEndDate = endDate;
-    } else {
-      // New structure (checkInDate, checkOutDate, no quantity field)
-      bookingStartDate = checkInDate;
-      bookingEndDate = checkOutDate;
-    }
-
-    if (!bookingStartDate || !bookingEndDate) {
-      throw new ApiError(400, "Check-in date and check-out date are required");
-    }
-
-    if (new Date(bookingStartDate) >= new Date(bookingEndDate)) {
-      throw new ApiError(400, "Check-out date must be after check-in date");
-    }
-
-    // Check if hotel exists
-    const hotelExists = await Hotel.findById(hotel);
-    if (!hotelExists) {
-      throw new ApiError(404, `Hotel with ID ${hotel} not found`);
-    }
-
-    // Check if hotel is approved
-    if (hotelExists.verified !== "approved") {
-      throw new ApiError(400, `Hotel ${hotelExists.name} is not approved for booking`);
-    }    // Add processed hotel data with numeric quantity
-    processedHotels.push({
-      hotel,
-      quantity: numQuantity,
-      startDate: bookingStartDate,
-      endDate: bookingEndDate
-    });
+  if (!numberOfRooms || numberOfRooms < 1) {
+    throw new ApiError(400, "Number of rooms must be at least 1");
   }
 
-  // Create the booking
+  if (!checkInDate || !checkOutDate) {
+    throw new ApiError(400, "Check-in and check-out dates are required");
+  }
+
+  if (new Date(checkInDate) >= new Date(checkOutDate)) {
+    throw new ApiError(400, "Check-out date must be after check-in date");
+  }
+
+  if (!guests || guests < 1) {
+    throw new ApiError(400, "Number of guests must be at least 1");
+  }
+
+  // Check if hotel exists
+  const hotelData = await Hotel.findById(hotel);
+  if (!hotelData) {
+    throw new ApiError(404, "Hotel not found");
+  }
+
+  // Calculate total price
+  const totalPrice = hotelData.pricePerNight * numberOfRooms *
+    Math.ceil((new Date(checkOutDate) - new Date(checkInDate)) / (1000 * 60 * 60 * 24));
+
   const booking = await HotelBooking.create({
     user: req.user._id,
-    hotels: processedHotels,
-    amount,
-    transactionId,
-    modeOfPayment,
+    hotel,
+    numberOfRooms,
+    checkInDate,
+    checkOutDate,
+    guests,
+    specialRequests,
+    amount: totalPrice,
+    modeOfPayment: req.body.modeOfPayment || "revolut",
   });
 
-  // If mode of payment is card, create a Revolut order
-  const response = await createRevolutOrder(
-    booking.amount,
-    "GBP", // Assuming GBP as the default currency
-    `Hotel Booking Payment for ${booking._id}`
+
+  // If payment mode is Revolut, create a payment order
+  const order = await createRevolutOrder(
+    totalPrice,
+    hotelData.currency || "GBP",
+   `Hotel booking for ${hotelData.name}`,
   );
 
-  return res.status(201).json(
-    new ApiResponse(201, response, "Hotel booking created successfully")
+  booking.transactionId = order.id; // Store Revolut order ID
+  booking.status = "pending"; // Set initial status to pending
+  await booking.save();
+
+  res.status(201).json(
+    new ApiResponse(201, order, "Hotel booking created successfully")
   );
 });
 
@@ -118,7 +90,7 @@ export const getAllHotelBookings = asyncHandler(async (req, res) => {
   } = req.query;
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  
+
   // Build query object
   let query = {};
 
@@ -189,7 +161,7 @@ export const getHotelBookingsByUserId = asyncHandler(async (req, res) => {
   }
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  
+
   // Build query object
   let query = { user: userId };
 
@@ -231,7 +203,7 @@ export const getMyHotelBookings = asyncHandler(async (req, res) => {
   } = req.query;
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  
+
   // Build query object
   let query = { user: req.user._id };
 
