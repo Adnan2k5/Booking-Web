@@ -73,66 +73,54 @@ export const BookingSummary = ({
         const bookingId = toast.loading("Creating your booking...");
 
         try {
-            const bookingResults = [];
+
+            if (!selectedInstructor) {
+                toast.error("Please select an instructor for your adventure.", { id: bookingId });
+                setIsBooking(false);
+                return;
+            }
+
+            let sessionBookingData = {};
+            let itemBookingData = {};
+            let hotelBookingData = {};
 
             // 1. Create Session Booking (for adventure/instructor)
-            if (selectedInstructor) {
-                const sessionBookingData = {
-                    session: selectedInstructor._id,
-                    groupMembers: groupMembers.map(member => member._id),
-                    amount: (selectedInstructor.price || 0) + (groupMembers.length * 30),
-                    transactionId: `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    modeOfPayment: "card"
-                };
+            sessionBookingData = {
+                session: selectedInstructor._id,
+                groupMembers: groupMembers.map(member => member._id),
+                amount: (selectedInstructor.price || 0) + (groupMembers.length * 30),
+                modeOfPayment: "revolut"
+            };
 
-                console.log(groupMembers);
 
-                const sessionResult = await createSessionBooking(sessionBookingData);
-                bookingResults.push({ type: 'session', result: sessionResult });
-            }            // 2. Create Item Booking (for cart items) - Direct approach without cart
+            // 2. Create Item Booking (for cart items) - Direct approach without cart
             if (cartItems.length > 0) {
-
-                // Calculate total amount for items
-                const itemsTotal = cartItems.reduce((total, item) => {
-                    const itemPrice = item.price || 0;
-                    const quantity = item.quantity || 1;
-
-                    if (item.purchased) {
-                        return total + (itemPrice * quantity);
-                    } else {
-                        // For rental items, calculate based on rental period
-                        const days = item.endDate && item.startDate
-                            ? Math.ceil((new Date(item.endDate) - new Date(item.startDate)) / (1000 * 60 * 60 * 24))
-                            : 1;
-                        return total + (itemPrice * quantity * days);
-                    }
-                }, 0);
-
                 // Format items for direct booking API
                 const formattedItems = cartItems.map(item => ({
-                    item: item._id || item.id,
+                    item: item._id,
                     quantity: item.quantity || 1,
-                    purchased: !item.rent, // Convert rent property: rent=true -> purchased=false, rent=false -> purchased=true
+                    purchased: !item.rent,
                     startDate: item.startDate || null,
                     endDate: item.endDate || null
                 }));
 
-                const itemBookingData = {
+                itemBookingData = {
                     items: formattedItems,
                 };
+            }
 
-
-                const itemResult = await createDirectItemBooking(itemBookingData);
-                bookingResults.push({ type: 'items', result: itemResult });
+            if(selectedHotel && (!checkInDate || !checkOutDate)) {
+                toast.error("Please select check-in and check-out dates for the hotel booking.", { id: bookingId });
+                setIsBooking(false);
+                return;
             }
 
             // 3. Create Hotel Booking (for accommodation)
             if (selectedHotel && checkInDate && checkOutDate) {
                 const hotel = mockHotels.find(h => h._id === selectedHotel || h.id === selectedHotel);
                 const nights = calculateNights();
-                const hotelAmount = (hotel?.pricePerNight || hotel?.price || 0) * nights;
 
-                const hotelBookingData = {
+                hotelBookingData = {
                     hotels: [{
                         hotel: selectedHotel,
                         checkInDate: checkInDate.toISOString(),
@@ -140,18 +128,21 @@ export const BookingSummary = ({
                         nights: nights,
                         pricePerNight: hotel?.pricePerNight || hotel?.price || 0
                     }],
-                    amount: hotelAmount,
-                    transactionId: `hotel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    modeOfPayment: "card"
                 };
+            }
+            
+            const bookingData = {
+                sessionBooking: sessionBookingData,
+                itemBooking: itemBookingData,
+                hotelBooking: selectedHotel ? hotelBookingData : null,
+                totalAmount: calculateTotal(),
+                paymentMethod: "revolut"
+            }
 
-                console.log("Creating hotel booking:", hotelBookingData);
-                const hotelResult = await createHotelBooking(hotelBookingData);
-                bookingResults.push({ type: 'hotel', result: hotelResult });
-            }            // Success handling
+            await createSessionBooking(bookingData);
+
+            // Success handling
             toast.success("Booking created successfully!", { id: bookingId });
-
-            console.log("All bookings completed:", bookingResults);
 
             // Navigate to confirmation page with booking details
             const totalAmount = calculateTotal();

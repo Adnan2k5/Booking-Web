@@ -124,7 +124,7 @@ export const getAllHotelBookings = asyncHandler(async (req, res) => {
     .skip(skip)
     .limit(parseInt(limit))
     .populate("user", "name email phoneNumber")
-    .populate("hotels.hotel", "name location pricePerNight rating medias");
+    .populate("hotel", "name location pricePerNight rating medias");
 
   const total = await HotelBooking.countDocuments(query);
 
@@ -178,7 +178,7 @@ export const getHotelBookingsByUserId = asyncHandler(async (req, res) => {
     .skip(skip)
     .limit(parseInt(limit))
     .populate("user", "name email phoneNumber")
-    .populate("hotels.hotel", "name location pricePerNight rating medias");
+    .populate("hotel", "name location pricePerNight rating medias");
 
   const total = await HotelBooking.countDocuments(query);
 
@@ -220,7 +220,7 @@ export const getMyHotelBookings = asyncHandler(async (req, res) => {
     .skip(skip)
     .limit(parseInt(limit))
     .populate("user", "name email phoneNumber")
-    .populate("hotels.hotel", "name location pricePerNight rating medias");
+    .populate("hotel", "name location pricePerNight rating medias");
 
   const total = await HotelBooking.countDocuments(query);
 
