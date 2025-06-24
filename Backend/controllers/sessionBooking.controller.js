@@ -5,127 +5,152 @@ import { UserAdventureExperience } from "../models/userAdventureExperience.model
 import ApiResponse from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { Item } from "../models/item.model.js";
+import { ItemBooking } from "../models/itemBooking.model.js";
+import { HotelBooking } from "../models/hotelBooking.model.js";
+import { createRevolutOrder } from "../utils/revolut.js";
+import { Hotel } from "../models/hotel.model.js";
 
 // Create a new session booking
 export const createSessionBooking = asyncHandler(async (req, res) => {
+  const { sessionBooking, itemBooking, hotelBooking } = req.body;
+
+  if (!sessionBooking) {
+    throw new ApiError(400, "Session booking details are required");
+  }
+
   const {
     session,
-    amount,
-    transactionId,
-    groupMembers = [], // Array of user IDs for group bookings
-    modeOfPayment = "card",
-  } = req.body;
+    groupMembers = [],
+  } = sessionBooking;
 
   // Validate required fields
   if (!session) {
-    throw new ApiError(400, "Session ID is required");
-  }
-
-  if (!amount || amount <= 0) {
-    throw new ApiError(400, "Valid amount is required");
+    throw new ApiError(400, "Session ID, User ID, and Mode of Payment are required");
   }
 
   // Check if session exists
-  const sessionExists = await Session.findById(session).populate(
-    "adventureId",
-    "exp"
-  );
-  if (!sessionExists) {
+  const sessionData = await Session.findById(session);
+  if (!sessionData) {
     throw new ApiError(404, "Session not found");
   }
 
-  // Check if session is active and not expired
-  if (sessionExists.status !== "active") {
-    throw new ApiError(400, "Session is not available for booking");
+  let totalPrice = sessionData.price * (groupMembers.length + 1);
+
+  // Check if user is booking for themselves or as a group
+  const userId = req.user._id;
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
   }
 
-  if (new Date() > new Date(sessionExists.expiresAt)) {
-    throw new ApiError(400, "Session has expired");
-  }
-
-  // Check if session start time is in the future
-  if (new Date() >= new Date(sessionExists.startTime)) {
-    throw new ApiError(400, "Cannot book a session that has already started");
-  }
-
-  // Check Capacity
-  const totalMembers = groupMembers.length + 1; // +1 for the user making the booking
-  if (totalMembers > sessionExists.capacity) {
-    throw new ApiError(
-      400,
-      `Cannot book more than ${sessionExists.capacity} members for this session`
-    );
-  }
-
-  // Check if session already has a booking (assuming one booking per session)
-  // if (sessionExists.booking) {
-  //   throw new ApiError(400, "Session is already booked");
-  // }
-
-  // Check if user already has a booking for this session
-  // const existingBooking = await Booking.findOne({
-  //   user: req.user._id,
-  //   session: session,
-  //   status: { $ne: "cancelled" }
-  // });
-
-  // if (existingBooking) {
-  //   throw new ApiError(400, "You have already booked this session");
-  // }
-
-  // Create the booking
+  // Create booking object
   const booking = await Booking.create({
-    user: req.user._id,
+    user: userId,
+    session: session,
     groupMember: groupMembers,
-    session,
-    amount,
-    transactionId,
-    modeOfPayment,
+    totalPrice,
+    modeOfPayment: sessionBooking.modeOfPayment || "revolut",
+    status: "pending",
   });
 
-  groupMembers.push(req.user._id); // Include the user making the booking
-
-  // Award adventure-specific experience to all group members
-  const experiencePromises = groupMembers.map((userId) =>
-    UserAdventureExperience.addExperience(
-      userId,
-      sessionExists.adventureId._id,
-      sessionExists.adventureId.exp
-    )
-  );
-
-  await Promise.all(experiencePromises);
-
-  // Update session with booking reference
+  // Add booking reference to session
   await Session.findByIdAndUpdate(session, {
     booking: booking._id,
-    $inc: { capacity: -totalMembers },
+    $inc: { capacity: -groupMembers.length - 1 }, // Decrease session capacity
   });
 
-  // Populate the booking with session and user details
-  const populatedBooking = await Booking.findById(booking._id)
-    .populate("user", "name email phoneNumber")
-    .populate({
-      path: "session",
-      populate: [
-        {
-          path: "adventureId",
-          select: "title description category difficulty",
+  const { items } = itemBooking;
+
+  if (items && items.length > 0) {
+    let itemPrice = 0;
+
+    for (const item of items) {
+      if (!item.item || !item.quantity) {
+        throw new ApiError(400, "Item ID and quantity are required for each item");
+      }
+
+      const itemData = await Item.findById(item.item);
+      if (!itemData) {
+        throw new ApiError(404, `Item with ID ${item.item} not found`);
+      }
+
+      if (item.purchased) {
+        itemPrice += itemData.price * item.quantity;
+      } else {
+        const days = Math.ceil((new Date(item.endDate) - new Date(item.startDate)) / (1000 * 60 * 60 * 24));
+        itemPrice += itemData.rentalPrice * item.quantity * days;
+      }
+    }
+
+    totalPrice += itemPrice;
+
+    const itemBookingData = await ItemBooking.create({
+      user: userId,
+      items: items.map((item) => ({
+        item: item.item,
+        quantity: item.quantity,
+        rentalPeriod: {
+          startDate: item.startDate,
+          endDate: item.endDate,
+          days: item.purchased ? null : Math.ceil((new Date(item.endDate) - new Date(item.startDate)) / (1000 * 60 * 60 * 24)),
         },
-        { path: "instructorId", select: "name email phoneNumber" },
-        { path: "location", select: "name address city state country" },
-      ],
+        purchase: item.purchased || false,
+      })),
+      totalPrice: itemPrice,
+      modeOfPayment: sessionBooking.modeOfPayment || "revolut",
+    });
+  }
+
+
+  // If hotel booking is provided, process it
+  const hotels = hotelBooking?.hotels[0] || null;
+  if (hotels) {
+    if (!hotels.hotel || !hotels.checkInDate || !hotels.checkOutDate) {
+      throw new ApiError(400, "Hotel ID, check-in date, and check-out date are required");
+    }
+
+    // Calculate nights between two dates
+    const nightsBetween = (startDate, endDate) => {
+      const difference = endDate.getTime() - startDate.getTime();
+      return Math.ceil(difference / (1000 * 3600 * 24));
+    };
+
+    const hotel = await Hotel.findById(hotels.hotel);
+
+    const hotelPrice = hotel.price * nightsBetween(
+      new Date(hotels.checkInDate),
+      new Date(hotels.checkOutDate)
+    );
+
+    await HotelBooking.create({
+      user: userId,
+      hotel: hotels.hotel,
+      numberOfRooms: 1,
+      guests: 1,
+      checkInDate: hotels.checkInDate,
+      checkOutDate: hotels.checkOutDate,
+      amount: hotelPrice,
+      modeOfPayment: sessionBooking.modeOfPayment || "revolut",
     });
 
-  return res
-    .status(201)
-    .json(
-      new ApiResponse(
-        201,
-        populatedBooking,
-        "Session booking created successfully"
-      )
-    );
+    totalPrice += hotelPrice;
+  }
+
+  const data = await createRevolutOrder(totalPrice, "GBP", "Session Booking Payment");
+
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      {
+        booking,
+        totalPrice,
+        paymentUrl: data.checkout_url, // Assuming createRevolutOrder returns a payment URL
+      },
+      "Session booking created successfully"
+    )
+  );
 });
 
 // Get all session bookings with optional filtering
