@@ -139,67 +139,10 @@ export const BookingSummary = ({
                 paymentMethod: "revolut"
             }
 
-            await createSessionBooking(bookingData);
+            const { data } = await createSessionBooking(bookingData);
 
-            // Success handling
-            toast.success("Booking created successfully!", { id: bookingId });
 
-            // Navigate to confirmation page with booking details
-            const totalAmount = calculateTotal();
-
-            // Create serializable data for navigation state - extract only essential data
-            const serializableBookingResults = bookingResults.map(booking => ({
-                type: booking.type,
-                result: {
-                    _id: booking.result?._id || booking.result?.id,
-                    id: booking.result?.id || booking.result?._id,
-                    bookingId: booking.result?.bookingId,
-                    amount: booking.result?.amount,
-                    status: booking.result?.status,
-                    createdAt: booking.result?.createdAt,
-                    message: booking.result?.message
-                }
-            }));
-
-            const serializableState = {
-                bookingResults: serializableBookingResults,
-                totalAmount,
-                adventure: {
-                    _id: adventure._id,
-                    name: adventure.name,
-                    location: adventure.location,
-                    date: adventure.date,
-                    medias: adventure.medias,
-                    images: adventure.images,
-                    image: adventure.image
-                },
-                selectedInstructor: selectedInstructor ? {
-                    _id: selectedInstructor._id,
-                    name: selectedInstructor.name || selectedInstructor.instructorId?.name,
-                    price: selectedInstructor.price || selectedInstructor.fee,
-                    profilePicture: selectedInstructor.instructorId?.profilePicture || selectedInstructor.img || selectedInstructor.image || selectedInstructor.avatar,
-                    specialty: selectedInstructor.instructorId?.instructor?.description?.[0] || selectedInstructor.specialty || selectedInstructor.specialization || selectedInstructor.expertise
-                } : null,
-                selectedHotel: selectedHotel,
-                cartItems: cartItems.map(item => ({
-                    _id: item._id,
-                    name: item.name,
-                    quantity: item.quantity,
-                    rent: item.rent,
-                    purchased: item.purchased,
-                    price: item.price,
-                    startDate: item.startDate,
-                    endDate: item.endDate
-                })),
-                groupMembers: groupMembers.map(member => ({
-                    id: member._id,
-                    name: member.name,
-                    email: member.email,
-                    avatar: member.avatar
-                }))
-            };
-
-            navigate("/confirmation", { state: serializableState });
+            window.location = data.data.paymentUrl;
 
         } catch (error) {
             console.error("Error during booking:", error);
