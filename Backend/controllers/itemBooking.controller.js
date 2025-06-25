@@ -95,6 +95,7 @@ export const handlePaymentCompletion = asyncHandler(async (req, res) => {
             processedBookings.push({ type: 'session', result });
         }
 
+        console.log('Processed Bookings:', processedBookings);
         // Return response based on processed bookings
         if (processedBookings.length > 0) {
             res.status(200).json(new ApiResponse(200, { 

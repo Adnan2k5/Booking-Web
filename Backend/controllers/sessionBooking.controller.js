@@ -90,17 +90,17 @@ const validateHotelBookingInput = (hotelBooking) => {
 
 // Helper function to process item bookings
 const processItemBookings = async (items, userId, modeOfPayment, session, transactionId = null, dbSession = null) => {
-  if (!items || items.length === 0) return { itemPrice: 0, itemBooking: null };
+  if (!items || items.length === 0) return { itemBooking: null };
 
-  // Get all item IDs and fetch them in parallel
-  const itemIds = items.map(item => item.item);
+  // Get unique item IDs and fetch them in parallel
+  const uniqueItemIds = [...new Set(items.map(item => item.item))];
   const itemsData = dbSession 
-    ? await Item.find({ _id: { $in: itemIds } }).session(dbSession)
-    : await Item.find({ _id: { $in: itemIds } });
+    ? await Item.find({ _id: { $in: uniqueItemIds } }).session(dbSession)
+    : await Item.find({ _id: { $in: uniqueItemIds } });
 
-  if (itemsData.length !== items.length) {
+  if (itemsData.length !== uniqueItemIds.length) {
     const foundIds = itemsData.map(item => item._id.toString());
-    const missingIds = itemIds.filter(id => !foundIds.includes(id));
+    const missingIds = uniqueItemIds.filter(id => !foundIds.includes(id));
     if (missingIds.length > 0) {
       throw new ApiError(404, `Items not found: ${missingIds.join(', ')}`);
     }
@@ -156,12 +156,12 @@ const processItemBookings = async (items, userId, modeOfPayment, session, transa
     ? await ItemBooking.create([itemBookingData], { session: dbSession }).then(result => result[0])
     : await ItemBooking.create(itemBookingData);
 
-  return { itemPrice, itemBooking };
+  return { itemBooking };
 };
 
 // Helper function to process hotel booking
 const processHotelBooking = async (hotelData, userId, modeOfPayment, session, transactionId = null, dbSession = null) => {
-  if (!hotelData) return { hotelPrice: 0, hotelBooking: null };
+  if (!hotelData) return { hotelBooking: null };
 
   const hotel = dbSession 
     ? await Hotel.findById(hotelData.hotel).session(dbSession)
@@ -194,7 +194,7 @@ const processHotelBooking = async (hotelData, userId, modeOfPayment, session, tr
     ? await HotelBooking.create([hotelBookingData], { session: dbSession }).then(result => result[0])
     : await HotelBooking.create(hotelBookingData);
 
-  return { hotelPrice, hotelBooking };
+  return { hotelBooking };
 };
 
 // Create a new session booking
@@ -240,7 +240,51 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
     // Calculate session price
     let totalPrice = sessionData.price * totalParticipants;
 
-    // Create payment order first to get transaction ID
+    // Calculate item prices if any
+    let itemPrice = 0;
+    if (validatedItems && validatedItems.length > 0) {
+      // Get unique item IDs and fetch them in parallel for price calculation
+      const uniqueItemIds = [...new Set(validatedItems.map(item => item.item))];
+      const itemsData = await Item.find({ _id: { $in: uniqueItemIds } }).session(session_db);
+      
+      if (itemsData.length !== uniqueItemIds.length) {
+        const foundIds = itemsData.map(item => item._id.toString());
+        const missingIds = uniqueItemIds.filter(id => !foundIds.includes(id));
+        if (missingIds.length > 0) {
+          throw new ApiError(404, `Items not found: ${missingIds.join(', ')}`);
+        }
+      }
+
+      // Create a map for quick lookup
+      const itemsMap = new Map(itemsData.map(item => [item._id.toString(), item]));
+
+      for (const item of validatedItems) {
+        const itemData = itemsMap.get(item.item);
+
+        if (item.purchased) {
+          itemPrice += itemData.price * item.quantity;
+        } else {
+          const days = calculateDaysBetween(item.startDate, item.endDate);
+          itemPrice += itemData.rentalPrice * item.quantity * days;
+        }
+      }
+    }
+
+    // Calculate hotel price if any
+    let hotelPrice = 0;
+    if (validatedHotel) {
+      const hotel = await Hotel.findById(validatedHotel.hotel).session(session_db);
+      if (!hotel) {
+        throw new ApiError(404, `Hotel with ID ${validatedHotel.hotel} not found`);
+      }
+      const nights = calculateDaysBetween(validatedHotel.checkInDate, validatedHotel.checkOutDate);
+      hotelPrice = hotel.price * nights;
+    }
+
+    // Calculate total price including all components
+    totalPrice += itemPrice + hotelPrice;
+
+    // Create payment order with complete total price
     const paymentData = await createRevolutOrder(totalPrice, "GBP", "Session Booking Payment");
 
     // Create main booking with transaction ID
@@ -248,7 +292,7 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
       user: userId,
       session: session,
       groupMember: groupMembers,
-      totalPrice: 0, // Will be updated after calculating all prices
+      totalPrice: totalPrice,
       modeOfPayment,
       status: "pending",
       transactionId: paymentData.id,
@@ -263,8 +307,8 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
       { session: session_db }
     );
 
-    // Process item bookings if any
-    const { itemPrice, itemBooking } = await processItemBookings(
+    // Process item bookings if any (prices already calculated)
+    const { itemBooking } = await processItemBookings(
       validatedItems,
       userId,
       modeOfPayment,
@@ -272,10 +316,9 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
       paymentData.id,
       session_db
     );
-    totalPrice += itemPrice;
 
-    // Process hotel booking if any
-    const { hotelPrice, hotelBooking } = await processHotelBooking(
+    // Process hotel booking if any (prices already calculated)
+    const { hotelBooking } = await processHotelBooking(
       validatedHotel,
       userId,
       modeOfPayment,
@@ -283,16 +326,6 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
       paymentData.id,
       session_db
     );
-    totalPrice += hotelPrice;
-
-    // Update booking with final total price
-    const updatedBooking = await Booking.findByIdAndUpdate(
-      booking[0]._id,
-      { totalPrice },
-      { new: true, session: session_db }
-    );
-
-
 
     // Commit transaction
     await session_db.commitTransaction();
@@ -301,7 +334,7 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
       new ApiResponse(
         201,
         {
-          booking: updatedBooking,
+          booking: booking[0],
           itemBooking,
           hotelBooking,
           totalPrice,
