@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Separator } from '../../components/ui/separator'
 import { Badge } from '../../components/ui/badge'
 import { Footer } from '../../components/Footer'
-import { createEventBookingPaymentSession } from '../../Api/eventBooking.api'
+import { createEventBooking } from '../../Api/eventBooking.api'
 
 const PaymentPage = () => {
     const navigate = useNavigate()
@@ -58,7 +58,7 @@ const PaymentPage = () => {
         setProcessing(true)
 
         try {
-            // Create payment session (NOT the actual booking yet)
+            // Create event booking with payment order
             const eventBookingData = {
                 event: selectedEvent._id,
                 participants: bookingData.participants,
@@ -71,11 +71,11 @@ const PaymentPage = () => {
                 paymentMethod: 'revolut'
             }
 
-            const response = await createEventBookingPaymentSession(eventBookingData)
+            const response = await createEventBooking(eventBookingData)
 
             // Redirect to Revolut payment page
-            if (response.paymentOrder?.checkout_url) {
-                window.location.href = response.paymentOrder.checkout_url
+            if (response.data?.paymentOrder?.checkout_url) {
+                window.location.href = response.data.paymentOrder.checkout_url
             } else {
                 toast.error('Failed to create payment session. Please try again.')
             }

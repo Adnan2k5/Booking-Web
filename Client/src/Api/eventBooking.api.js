@@ -1,22 +1,6 @@
 import { axiosClient } from '../AxiosClient/axios';
 
-// Create event booking payment session
-export const createEventBookingPaymentSession = async (bookingData) => {
-  try {
-    const { data } = await axiosClient.post(
-      '/api/event-bookings/payment-session',
-      bookingData,
-      {
-        withCredentials: true,
-      }
-    );
-    return data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// Create event booking
+// Create event booking (this now creates booking and payment order in one step)
 export const createEventBooking = async (bookingData) => {
   try {
     const { data } = await axiosClient.post(
@@ -44,10 +28,11 @@ export const getEventBookingById = async (id) => {
   }
 };
 
-// Get user's event bookings
-export const getUserEventBookings = async () => {
+// Get current user's event bookings
+export const getMyEventBookings = async (params = {}) => {
   try {
     const { data } = await axiosClient.get('/api/event-bookings/user', {
+      params,
       withCredentials: true,
     });
     return data;
@@ -56,12 +41,42 @@ export const getUserEventBookings = async () => {
   }
 };
 
+// Get payment status
+export const getPaymentStatus = async (bookingId) => {
+  try {
+    const { data } = await axiosClient.get(
+      `/api/event-bookings/${bookingId}/payment-status`,
+      {
+        withCredentials: true,
+      }
+    );
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Get order details from Revolut
+export const getOrderDetails = async (orderId) => {
+  try {
+    const { data } = await axiosClient.get(
+      `/api/event-bookings/order/${orderId}`,
+      {
+        withCredentials: true,
+      }
+    );
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Cancel event booking
-export const cancelEventBooking = async (id) => {
+export const cancelEventBooking = async (id, cancelReason) => {
   try {
     const { data } = await axiosClient.patch(
       `/api/event-bookings/${id}/cancel`,
-      {},
+      { cancelReason },
       {
         withCredentials: true,
       }
