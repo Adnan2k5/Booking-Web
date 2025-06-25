@@ -51,10 +51,11 @@ const sessionSchema = new moongoose.Schema(
       ref: "Location",
       required: true,
     },
-    booking: {
-      type: moongoose.Schema.Types.ObjectId,
-      ref: "Booking",
-    },
+    booking: [
+      {
+        type: moongoose.Schema.Types.ObjectId,
+        ref: "Booking",
+      }],
   },
   {
     timestamps: true,
