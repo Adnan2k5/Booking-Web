@@ -8,14 +8,7 @@ import axios from "axios";
 import { createRevolutOrder } from "../utils/revolut.js";
 
 export const createEventBooking = asyncHandler(async (req, res) => {
-  const {
-    event,
-    participants,
-    contactInfo,
-    specialRequests,
-    amount,
-    paymentMethod,
-  } = req.body;
+  const { event, participants, contactInfo, amount, paymentMethod } = req.body;
 
   // Validate required fields
   if (
@@ -82,7 +75,6 @@ export const createEventBooking = asyncHandler(async (req, res) => {
     event,
     participants,
     contactInfo,
-    specialRequests,
     amount,
     paymentMethod: paymentMethod || "revolut",
     paymentOrderId: revolutOrder.id, // Store Revolut order ID for reference
