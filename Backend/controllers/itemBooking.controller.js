@@ -5,6 +5,7 @@ import { Cart } from '../models/cart.model.js';
 import { ItemBooking } from "../models/itemBooking.model.js";
 import { PaymentService } from "../services/payment.service.js";
 import { HotelBooking } from "../models/hotelBooking.model.js";
+import { Booking } from "../models/booking.model.js";
 import axios from 'axios';
 import { createRevolutOrder } from "../utils/revolut.js";
 
@@ -55,123 +56,6 @@ export const createBooking = asyncHandler(async (req, res) => {
 
 });
 
-// New direct booking function that doesn't rely on cart
-export const createDirectBooking = asyncHandler(async (req, res) => {
-    const { items } = req.body;
-
-    if (!items || !Array.isArray(items) || items.length === 0) {
-        throw new ApiError(400, "Items array is required and cannot be empty");
-    }
-
-    const userId = req.user._id;
-
-    // Validate item structure and fetch item details for pricing
-    const validatedItems = await Promise.all(items.map(async (item) => {
-        if (!item.item || !item.quantity || item.quantity <= 0) {
-            throw new ApiError(400, "Each item must have valid item ID and quantity");
-        }
-
-        // Ensure dates are provided for rental items
-        if (!item.purchased && (!item.startDate || !item.endDate)) {
-            throw new ApiError(400, "Start date and end date are required for rental items");
-        }        // Validate dates for rental items
-        if (!item.purchased && item.startDate && item.endDate) {
-            const startDate = new Date(item.startDate);
-            const endDate = new Date(item.endDate);
-
-            if (startDate >= endDate) {
-                throw new ApiError(400, "End date must be after start date for rental items");
-            }
-
-            // Check if start date is in the past (allow same day bookings)
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // Set to start of today
-            const startDateOnly = new Date(startDate);
-            startDateOnly.setHours(0, 0, 0, 0); // Set to start of start date
-
-            if (startDateOnly < today) {
-                throw new ApiError(400, "Start date cannot be in the past");
-            }
-        }
-
-        return {
-            item: item.item,
-            quantity: item.quantity,
-            purchased: item.purchased || false,
-            startDate: item.startDate || null,
-            endDate: item.endDate || null
-        };
-    }));
-
-    // Calculate total amount by fetching item details
-    let totalAmount = 0;
-    const itemsWithDetails = await Promise.all(validatedItems.map(async (validatedItem) => {
-        const { Item } = await import('../models/item.model.js');
-        const itemDetails = await Item.findById(validatedItem.item).select('price rentalPrice purchase rent');
-
-        if (!itemDetails) {
-            throw new ApiError(404, `Item with ID ${validatedItem.item} not found`);
-        }
-
-        // Check if item supports the requested booking type
-        if (validatedItem.purchased && !itemDetails.purchase) {
-            throw new ApiError(400, `Item ${validatedItem.item} is not available for purchase`);
-        }
-
-        if (!validatedItem.purchased && !itemDetails.rent) {
-            throw new ApiError(400, `Item ${validatedItem.item} is not available for rent`);
-        }
-
-        let itemTotal = 0;
-        if (validatedItem.purchased) {
-            // Purchase calculation
-            itemTotal = itemDetails.price * validatedItem.quantity;
-        } else {
-            // Rental calculation
-            const startDate = new Date(validatedItem.startDate);
-            const endDate = new Date(validatedItem.endDate);
-            const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-            itemTotal = itemDetails.rentalPrice * validatedItem.quantity * days;
-        }
-
-        totalAmount += itemTotal;
-
-        return {
-            ...validatedItem,
-            rentalPeriod: !validatedItem.purchased ? {
-                startDate: validatedItem.startDate,
-                endDate: validatedItem.endDate,
-                days: validatedItem.startDate && validatedItem.endDate
-                    ? Math.ceil((new Date(validatedItem.endDate) - new Date(validatedItem.startDate)) / (1000 * 60 * 60 * 24))
-                    : null
-            } : undefined
-        };
-    }));
-
-    // Create Revolut payment order
-    const revolutOrder = await createRevolutOrder(totalAmount, 'GBP', `Direct Item Booking - User: ${req.user.name}`);
-
-    const booking = await ItemBooking.create({
-        amount: totalAmount,
-        user: userId,
-        items: itemsWithDetails,
-        paymentOrderId: revolutOrder.id, // Store Revolut order ID for reference
-        paymentStatus: 'pending'
-    });
-
-    // Populate the created booking with item details
-    const populatedBooking = await ItemBooking.findById(booking._id)
-        .populate({
-            path: 'items.item',
-            select: 'name price rentalPrice images category'
-        })
-        .populate('user', 'name email');
-
-    res.status(201).json(new ApiResponse(201, {
-        booking: populatedBooking,
-        paymentOrder: revolutOrder
-    }, "Direct Booking Created Successfully with Payment Order"));
-});
 
 // Function to handle payment completion/webhook
 export const handlePaymentCompletion = asyncHandler(async (req, res) => {
@@ -181,25 +65,47 @@ export const handlePaymentCompletion = asyncHandler(async (req, res) => {
         if (!event || !order_id) {
             throw new ApiError(400, "Invalid webhook payload");
         }
+
+        const paymentService = new PaymentService();
+        const processedBookings = [];
+
+        // Check for item booking
         const booking = await ItemBooking.findOne({ paymentOrderId: order_id })
             .populate('user', 'name email');
 
-        const paymentService = new PaymentService();
         if (booking) {
            const result = await paymentService.itemBooking(order_id, event, booking);
-           console.log("Payment result:", result);
-            res.status(result.status).json(new ApiResponse(result.status, result.booking, result.message));
-            return
+           processedBookings.push({ type: 'item', result });
         }
 
+        // Check for hotel booking
         const hotelBooking = await HotelBooking.findOne({ transactionId: order_id });
-        console.log("Hotel booking found:", hotelBooking);
 
         if (hotelBooking) {
             const result = await paymentService.hotelBooking(order_id, event, hotelBooking);
-            res.status(result.status).json(new ApiResponse(result.status, result.booking, result.message));
+            processedBookings.push({ type: 'hotel', result });
         }
 
+        // Check for session booking
+        const sessionBooking = await Booking.findOne({ transactionId: order_id })
+            .populate('user', 'name email');
+
+        if (sessionBooking) {
+            const result = await paymentService.sessionBooking(order_id, event, sessionBooking);
+            processedBookings.push({ type: 'session', result });
+        }
+
+        console.log('Processed Bookings:', processedBookings);
+        // Return response based on processed bookings
+        if (processedBookings.length > 0) {
+            res.status(200).json(new ApiResponse(200, { 
+                processedBookings,
+                totalProcessed: processedBookings.length 
+            }, `Payment completed successfully for ${processedBookings.length} booking(s)`));
+        } else {
+            // If no booking is found, still return success to acknowledge webhook
+            res.status(200).json({ message: "Webhook received - no matching booking found" });
+        }
 
     } catch (error) {
         res.status(200).json({ message: "Webhook received with errors" });

@@ -99,5 +99,32 @@ export class PaymentService {
     } else {
       throw new ApiError(400, `Unsupported event type: ${event}`);
     }
-  };
+  }
+
+
+    sessionBooking = async (order_id, event, booking) => {
+        // Check if this is an order completion event
+        if (event === 'ORDER_COMPLETED' || event === 'ORDER_AUTHORISED') {
+
+            if (!booking) {
+                return { status: 200, message: "Webhook received" };
+            }
+
+            // For session bookings, we only update the status since there's no paymentStatus field
+            if (event === 'ORDER_COMPLETED' || event === 'ORDER_AUTHORISED') {
+                booking.status = 'confirmed';
+            }
+
+            await booking.save();
+
+            return {
+                status: 200,
+                message: "Payment completed successfully",
+                booking: booking
+            };
+        } else {
+            throw new ApiError(400, `Unsupported event type: ${event}`);
+        }
+    }
+
 }
