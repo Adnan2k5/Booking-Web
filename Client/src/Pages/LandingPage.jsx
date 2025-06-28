@@ -90,11 +90,6 @@ const EventCard = memo(({ event, handleBooking }) => (
         <p className="text-gray-600 leading-relaxed pl-7">{event.description}</p>
       </div>
 
-      {/* Level */}
-      <div className="flex items-center space-x-2 text-gray-600">
-        <span className="font-medium">Level: {event.level}</span>
-      </div>
-
       {/* Book Button */}
       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
         <Button
@@ -785,20 +780,6 @@ export default function LandingPage() {
                       onChange={(e) => setBookingForm((prev) => ({ ...prev, phone: e.target.value }))}
                       className="mt-1"
                       placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="specialRequests" className="text-sm font-medium text-gray-700">
-                      Special Requests (Optional)
-                    </Label>
-                    <Input
-                      id="specialRequests"
-                      type="text"
-                      value={bookingForm.specialRequests}
-                      onChange={(e) => setBookingForm((prev) => ({ ...prev, specialRequests: e.target.value }))}
-                      className="mt-1"
-                      placeholder="Any special requirements or requests..."
                     />
                   </div>
                 </div>

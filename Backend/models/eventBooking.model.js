@@ -31,10 +31,6 @@ const eventBookingSchema = new mongoose.Schema(
         required: true,
       },
     },
-    specialRequests: {
-      type: String,
-      required: false,
-    },
     amount: {
       type: Number,
       required: true,
