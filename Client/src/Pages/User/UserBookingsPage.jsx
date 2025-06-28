@@ -38,14 +38,14 @@ const UserBookings = () => {
         try {
             setLoading(prev => ({ ...prev, [type]: true }))
             setError(prev => ({ ...prev, [type]: null }))
-            
+
             let response;
             const queryParams = {
                 page,
                 limit: pagination[type].limit,
                 sortBy: 'createdAt',
                 sortOrder: 'desc'
-            };            switch (type) {
+            }; switch (type) {
                 case "sessions":
                     response = await getCurrentUserSessionBookings(queryParams);
                     break;
@@ -58,7 +58,7 @@ const UserBookings = () => {
                 default:
                     throw new Error("Invalid booking type");
             }
-            
+
             const responseData = response.data.data || response.data
             setBookings(prev => ({
                 ...prev,
@@ -92,17 +92,11 @@ const UserBookings = () => {
         }
     }
 
-    const getStatusBadgeClass = (status) => {
-        switch (status?.toLowerCase()) {
-            case "confirmed":
-                return "bg-green-600 text-white"
-            case "pending":
-                return "bg-yellow-600 text-white"
-            case "cancelled":
-                return "bg-red-600 text-white"
-            default:
-                return "bg-gray-400 text-white"
+    const getStatusBadgeClass = (date) => {
+        if (date && new Date(date) > new Date()) {
+            return "bg-red-500 text-white"
         }
+        return "bg-green-500 text-white"
     }
 
     const formatDate = (dateString) => {
@@ -141,7 +135,6 @@ const UserBookings = () => {
         setSelectedBooking(booking)
         setIsDialogOpen(true)
     }
-
     const BookingDetailsDialog = () => {
         if (!selectedBooking) return null
 
@@ -156,14 +149,14 @@ const UserBookings = () => {
                             Booking ID: {selectedBooking._id}
                         </DialogDescription>
                     </DialogHeader>
-                    
+
                     <div className="space-y-6">
                         {/* Adventure Image */}
                         <div className="relative h-48 rounded-lg overflow-hidden">
                             <img
-                                src={selectedBooking.session?.adventureId?.medias[0] || 
-                                     selectedBooking.session?.adventureId?.thumbnail || 
-                                     "/placeholder.svg?height=200&width=400"}
+                                src={selectedBooking.session?.adventureId?.medias[0] ||
+                                    selectedBooking.session?.adventureId?.thumbnail ||
+                                    "/placeholder.svg?height=200&width=400"}
                                 alt={selectedBooking.session?.adventureId?.name || "Adventure"}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
@@ -196,7 +189,7 @@ const UserBookings = () => {
                                         </p>
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex items-center gap-3">
                                     <MapPin className="h-5 w-5 text-gray-500" />
                                     <div>
@@ -269,7 +262,7 @@ const UserBookings = () => {
                                         {formatDate(selectedBooking.bookingDate)} at {formatTime(selectedBooking.bookingDate)}
                                     </p>
                                 </div>
-                                
+
                                 <div>
                                     <p className="font-medium">Amount Paid</p>
                                     <p className="text-sm font-semibold text-green-600">
@@ -312,7 +305,7 @@ const UserBookings = () => {
                                         {selectedBooking.user?.name}
                                     </p>
                                 </div>
-                                
+
                                 <div>
                                     <p className="font-medium">Email</p>
                                     <p className="text-sm text-gray-600">
@@ -347,11 +340,10 @@ const UserBookings = () => {
                         )}
                     </div>
                 </DialogContent>
-            </Dialog>        )
+            </Dialog>)
     }
-
     const renderSessionBooking = (booking) => (
-        <Card key={booking._id} className="overflow-hidden rounded-2xl border-gray-200">
+        <Card key={booking._id} className="overflow-hidden rounded-2xl border-gray-200" >
             <div className="relative h-40">
                 <img
                     src={booking.session?.adventureId?.medias[0] || "/placeholder.svg?height=200&width=300"}
@@ -361,8 +353,8 @@ const UserBookings = () => {
                         e.target.src = "/placeholder.svg?height=200&width=300"
                     }}
                 />
-                <Badge className={`absolute top-2 right-2 rounded-full ${getStatusBadgeClass(booking.status)}`}>
-                    {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1) || "Pending"}
+                <Badge className={`absolute top-2 right-2 rounded-full ${getStatusBadgeClass(booking.startTime)}`}>
+                    {new Date(booking.startTime) > new Date() ? "Upcoming" : "Completed"}
                 </Badge>
             </div>
             <CardHeader className="pb-2">
@@ -391,9 +383,9 @@ const UserBookings = () => {
                     <div className="flex items-center gap-1">
                         <User className="h-3 w-3" />
                         <span className="text-sm">
-                            {booking.session?.instructorId?.fullName || 
-                             booking.session?.instructorId?.name || 
-                             "Instructor TBD"}
+                            {booking.session?.instructorId?.fullName ||
+                                booking.session?.instructorId?.name ||
+                                "Instructor TBD"}
                         </span>
                     </div>
                     {booking.rating && (
@@ -410,40 +402,34 @@ const UserBookings = () => {
                 )}
             </CardContent>
             <div className="px-6 pb-4">
-                <Button 
-                    variant="outline" 
+                <Button
+                    variant="outline"
                     className="w-full rounded-xl border-gray-300 hover:bg-gray-50"
                     onClick={() => handleViewDetails(booking)}
                 >
                     View Details
                 </Button>
             </div>
-        </Card>
+        </Card >
     )
 
     const renderHotelBooking = (booking) => (
         <Card key={booking._id} className="overflow-hidden rounded-2xl border-gray-200">
             <div className="relative h-40">
                 <img
-                    src={booking.hotels?.[0]?.hotel?.medias?.[0] || "/placeholder.svg?height=200&width=300"}
-                    alt={booking.hotels?.[0]?.hotel?.name || "Hotel"}
+                    src={booking.hotel?.medias?.[0]}
+                    alt={booking.hotel?.name}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                        e.target.src = "/placeholder.svg?height=200&width=300"
-                    }}
                 />
-                <Badge className={`absolute top-2 right-2 rounded-full ${getStatusBadgeClass(booking.status)}`}>
-                    {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1) || "Pending"}
-                </Badge>
             </div>
             <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2">
                     <Hotel className="h-4 w-4" />
-                    {booking.hotels?.[0]?.hotel?.name || "Hotel Booking"}
+                    {booking.hotel?.name}
                 </CardTitle>
                 <CardDescription className="flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
-                    {booking.hotels?.[0]?.hotel?.location || "Location TBD"}
+                    {booking.hotel?.location}
                 </CardDescription>
             </CardHeader>
             <CardContent className="pb-2">
@@ -451,34 +437,28 @@ const UserBookings = () => {
                     <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         <div className="flex flex-col">
-                            <span>{formatDate(booking.hotels?.[0]?.startDate)}</span>
+                            <span>{formatDate(booking.hotel?.startDate)}</span>
                             <span className="text-xs text-gray-500">
-                                to {formatDate(booking.hotels?.[0]?.endDate)}
+                                to {formatDate(booking.hotel?.endDate)}
                             </span>
                         </div>
                     </div>
                     <div className="font-medium">
-                        ${booking.amount || 0}
+                        ${booking.amount}
                     </div>
                 </div>
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
                         <span className="text-sm">
-                            {booking.hotels?.[0]?.quantity || 1} room{(booking.hotels?.[0]?.quantity || 1) > 1 ? 's' : ''}
+                            {booking.hotel?.quantity} room{(booking.hotel?.quantity) > 1 ? 's' : ''}
                         </span>
                     </div>
-                    {booking.hotels?.[0]?.hotel?.rating && (
-                        <div className="flex items-center">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-xs ml-1">{booking.hotels[0].hotel.rating}</span>
-                        </div>
-                    )}
                 </div>
             </CardContent>
             <div className="px-6 pb-4">
-                <Button 
-                    variant="outline" 
+                <Button
+                    variant="outline"
                     className="w-full rounded-xl border-gray-300 hover:bg-gray-50"
                     onClick={() => handleViewDetails(booking)}
                 >
@@ -493,16 +473,13 @@ const UserBookings = () => {
         <Card key={booking._id} className="overflow-hidden rounded-2xl border-gray-200">
             <div className="relative h-40">
                 <img
-                    src={booking.items?.[0]?.item?.images?.[0] || "/placeholder.svg?height=200&width=300"}
-                    alt={booking.items?.[0]?.item?.name || "Item"}
+                    src={booking.items?.[0]?.item?.images?.[0]}
+                    alt={booking.items?.[0]?.item?.name}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                         e.target.src = "/placeholder.svg?height=200&width=300"
                     }}
                 />
-                <Badge className={`absolute top-2 right-2 rounded-full ${getStatusBadgeClass(booking.status)}`}>
-                    {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1) || "Pending"}
-                </Badge>
             </div>
             <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2">
@@ -538,8 +515,8 @@ const UserBookings = () => {
                 </div>
             </CardContent>
             <div className="px-6 pb-4">
-                <Button 
-                    variant="outline" 
+                <Button
+                    variant="outline"
                     className="w-full rounded-xl border-gray-300 hover:bg-gray-50"
                     onClick={() => handleViewDetails(booking)}
                 >
@@ -568,8 +545,8 @@ const UserBookings = () => {
             return (
                 <div className="text-center py-8">
                     <p className="text-red-500">{currentError}</p>
-                    <Button 
-                        onClick={() => fetchBookings(type, currentPagination.page)} 
+                    <Button
+                        onClick={() => fetchBookings(type, currentPagination.page)}
                         className="mt-4"
                         variant="outline"
                     >
@@ -655,17 +632,16 @@ const UserBookings = () => {
                                     {[...Array(currentPagination.totalPages)].map((_, index) => {
                                         const pageNumber = index + 1;
                                         const isCurrentPage = pageNumber === currentPagination.page;
-                                        
+
                                         return (
                                             <Button
                                                 key={pageNumber}
                                                 onClick={() => handlePageChange(pageNumber)}
                                                 variant={isCurrentPage ? "default" : "outline"}
-                                                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
-                                                    isCurrentPage
-                                                        ? 'z-10 bg-black text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black'
-                                                        : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
-                                                }`}
+                                                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${isCurrentPage
+                                                    ? 'z-10 bg-black text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black'
+                                                    : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                                                    }`}
                                             >
                                                 {pageNumber}
                                             </Button>
