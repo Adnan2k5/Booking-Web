@@ -31,7 +31,7 @@ import { useEvents } from "../hooks/useEvent"
 // Lazy load heavy components
 const ReactPlayer = lazy(() => import("react-player"))
 
-const EventCard = memo(({ event, handleBooking }) => (
+const EventCard = memo(({ event, handleBooking, handleViewMore }) => (
   <motion.div
     key={event._id}
     className="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group"
@@ -87,7 +87,22 @@ const EventCard = memo(({ event, handleBooking }) => (
           <Compass className="h-5 w-5" />
           <span className="font-semibold">Description:</span>
         </div>
-        <p className="text-gray-600 leading-relaxed pl-7">{event.description}</p>
+        <p className="text-gray-600 leading-relaxed pl-7">
+          {event.description && event.description.length > 20
+            ? `${event.description.substring(0, 20)}...`
+            : event.description}
+        </p>
+        {event.description && event.description.length > 1 && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (handleViewMore) handleViewMore(event);
+            }}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium pl-7"
+          >
+            View More
+          </button>
+        )}
       </div>
 
       {/* Book Button */}
@@ -314,6 +329,7 @@ export default function LandingPage() {
   const [currentCountryIndex, setCurrentCountryIndex] = useState(0)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [bookingDialog, setBookingDialog] = useState(false)
+  const [viewMoreDialog, setViewMoreDialog] = useState(false)
   const [bookingForm, setBookingForm] = useState({
     participants: 1,
     email: "",
@@ -384,6 +400,11 @@ export default function LandingPage() {
   const handleBooking = useCallback((event) => {
     setSelectedEvent(event)
     setBookingDialog(true)
+  }, [])
+
+  const handleViewMore = useCallback((event) => {
+    setSelectedEvent(event)
+    setViewMoreDialog(true)
   }, [])
 
   const navigate = useNavigate()
@@ -685,6 +706,7 @@ export default function LandingPage() {
                     <EventCard
                       event={event}
                       handleBooking={handleBooking}
+                      handleViewMore={handleViewMore}
                     />
                   </motion.div>
                 ))}
@@ -795,6 +817,126 @@ export default function LandingPage() {
                   disabled={!bookingForm.email || !bookingForm.phone}
                 >
                   Continue to Payment
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* View More Dialog */}
+          <Dialog open={viewMoreDialog} onOpenChange={setViewMoreDialog}>
+            <DialogContent className="sm:max-w-[600px] bg-white rounded-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-gray-900">
+                  {selectedEvent?.title}
+                </DialogTitle>
+                <DialogDescription className="text-gray-600">
+                  {selectedEvent?.city}, {selectedEvent?.country}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-6 py-4">
+                {/* Event Image */}
+                <div className="relative h-64 overflow-hidden rounded-xl">
+                  <img
+                    src={selectedEvent?.image || "/placeholder.svg"}
+                    alt={selectedEvent?.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                </div>
+
+                {/* Event Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Location Details */}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2 text-gray-700">
+                      <MapPin className="h-5 w-5" />
+                      <span className="font-semibold">Location Details</span>
+                    </div>
+                    <div className="pl-7 space-y-1">
+                      <p className="text-gray-900 font-medium">{selectedEvent?.city}, {selectedEvent?.country}</p>
+                      {selectedEvent?.location && (
+                        <p className="text-gray-600 text-sm">{selectedEvent.location}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Time & Date */}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2 text-gray-700">
+                      <Clock className="h-5 w-5" />
+                      <span className="font-semibold">Schedule</span>
+                    </div>
+                    <div className="pl-7 space-y-1">
+                      <p className="text-gray-900 font-medium">
+                        {selectedEvent?.startTime} - {selectedEvent?.endTime}
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        {selectedEvent?.date && new Date(selectedEvent.date).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Full Description */}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2 text-gray-700">
+                    <Compass className="h-5 w-5" />
+                    <span className="font-semibold">About This Event</span>
+                  </div>
+                  <div className="pl-7">
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                      {selectedEvent?.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Additional Event Info (if available) */}
+                {(selectedEvent?.price || selectedEvent?.maxParticipants || selectedEvent?.difficulty) && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <h4 className="font-semibold text-gray-900 mb-3">Event Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      {selectedEvent?.price && (
+                        <div>
+                          <span className="text-gray-600">Price:</span>
+                          <p className="font-medium text-gray-900">${selectedEvent.price}</p>
+                        </div>
+                      )}
+                      {selectedEvent?.maxParticipants && (
+                        <div>
+                          <span className="text-gray-600">Max Participants:</span>
+                          <p className="font-medium text-gray-900">{selectedEvent.maxParticipants}</p>
+                        </div>
+                      )}
+                      {selectedEvent?.difficulty && (
+                        <div>
+                          <span className="text-gray-600">Difficulty:</span>
+                          <p className="font-medium text-gray-900">{selectedEvent.difficulty}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter className="space-x-3">
+                <Button variant="outline" onClick={() => setViewMoreDialog(false)} className="px-6">
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setViewMoreDialog(false);
+                    handleBooking(selectedEvent);
+                  }}
+                  className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-6"
+                >
+                  <Users className="h-5 w-5 mr-2" />
+                  Book Your Spot
                 </Button>
               </DialogFooter>
             </DialogContent>
