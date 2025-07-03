@@ -199,7 +199,7 @@ const processHotelBooking = async (hotelData, userId, modeOfPayment, session, tr
 
 // Create a new session booking
 export const createSessionBooking = asyncHandler(async (req, res) => {
-  const { sessionBooking, itemBooking = {}, hotelBooking } = req.body;
+  const { sessionBooking, itemBooking = {}, hotelBooking, modeOfPayment } = req.body;
 
   // Validate inputs
   const { session, groupMembers } = validateSessionBookingInput(sessionBooking);
@@ -207,7 +207,6 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
   const validatedHotel = validateHotelBookingInput(hotelBooking);
 
   const userId = req.user._id;
-  const modeOfPayment = sessionBooking.modeOfPayment || "revolut";
 
   // Start transaction for data consistency
   const session_db = await mongoose.startSession();

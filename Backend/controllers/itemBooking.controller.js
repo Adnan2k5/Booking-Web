@@ -10,7 +10,7 @@ import axios from 'axios';
 import { createRevolutOrder } from "../utils/revolut.js";
 
 export const createBooking = asyncHandler(async (req, res) => {
-    const { name } = req.query;
+    const { name, modeOfPayment } = req.query;
 
     if (req.user.name.toLowerCase() !== name.toLowerCase()) {
         throw new ApiError(401, "You are not authorized to perform this action");
@@ -39,20 +39,25 @@ export const createBooking = asyncHandler(async (req, res) => {
         } return sum;
     }, 0);
 
-    // Create Revolut payment order
-    const revolutOrder = await createRevolutOrder(totalPrice, 'GBP', `Item Booking - User: ${req.user.name}`);
-    const booking = await ItemBooking.create({
-        amount: totalPrice,
-        user: userId,
-        items: cart.items,
-        paymentOrderId: revolutOrder.id, // Store Revolut order ID for reference
-        paymentStatus: 'pending'
-    });
+    if (modeOfPayment && modeOfPayment.toLowerCase() !== 'revolut') {
+        // Create Revolut payment order
+        const revolutOrder = await createRevolutOrder(totalPrice, 'GBP', `Item Booking - User: ${req.user.name}`);
+        const booking = await ItemBooking.create({
+            amount: totalPrice,
+            user: userId,
+            items: cart.items,
+            paymentOrderId: revolutOrder.id, // Store Revolut order ID for reference
+            paymentStatus: 'pending'
+        });
 
-    res.status(201).json(new ApiResponse(201, {
-        booking,
-        paymentOrder: revolutOrder
-    }, "Booking Created with Payment Order"));
+        res.status(201).json(new ApiResponse(201, {
+            booking,
+            paymentOrder: revolutOrder
+        }, "Booking Created with Payment Order"));
+    }
+    else {
+        
+    }
 
 });
 
@@ -74,8 +79,8 @@ export const handlePaymentCompletion = asyncHandler(async (req, res) => {
             .populate('user', 'name email');
 
         if (booking) {
-           const result = await paymentService.itemBooking(order_id, event, booking);
-           processedBookings.push({ type: 'item', result });
+            const result = await paymentService.itemBooking(order_id, event, booking);
+            processedBookings.push({ type: 'item', result });
         }
 
         // Check for hotel booking
@@ -98,9 +103,9 @@ export const handlePaymentCompletion = asyncHandler(async (req, res) => {
         console.log('Processed Bookings:', processedBookings);
         // Return response based on processed bookings
         if (processedBookings.length > 0) {
-            res.status(200).json(new ApiResponse(200, { 
+            res.status(200).json(new ApiResponse(200, {
                 processedBookings,
-                totalProcessed: processedBookings.length 
+                totalProcessed: processedBookings.length
             }, `Payment completed successfully for ${processedBookings.length} booking(s)`));
         } else {
             // If no booking is found, still return success to acknowledge webhook
