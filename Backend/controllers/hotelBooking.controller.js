@@ -16,6 +16,7 @@ export const createHotelBooking = asyncHandler(async (req, res) => {
     checkOutDate,
     guests,
     specialRequests,
+    modeOfPayment = "revolut",
   } = req.body;
 
   if (!hotel) {
@@ -62,19 +63,26 @@ export const createHotelBooking = asyncHandler(async (req, res) => {
 
 
   // If payment mode is Revolut, create a payment order
-  const order = await createRevolutOrder(
-    totalPrice,
-    hotelData.currency || "GBP",
-   `Hotel booking for ${hotelData.name}`,
-  );
+  let order;
 
-  booking.transactionId = order.id; // Store Revolut order ID
-  booking.status = "pending"; // Set initial status to pending
-  await booking.save();
+  if (modeOfPayment === "revolut") {
+    order = await createRevolutOrder(
+      totalPrice,
+      hotelData.currency || "GBP",
+      `Hotel booking for ${hotelData.name}`,
+    );
 
-  res.status(201).json(
-    new ApiResponse(201, order, "Hotel booking created successfully")
-  );
+    booking.transactionId = order.id; // Store Revolut order ID
+    booking.status = "pending"; // Set initial status to pending
+    await booking.save();
+
+    res.status(201).json(
+      new ApiResponse(201, order, "Hotel booking created successfully")
+    );
+  }
+  else {
+   // For other payment methods, just return the booking details
+  }
 });
 
 // Get all hotel bookings with optional filtering
