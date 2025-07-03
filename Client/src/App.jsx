@@ -44,6 +44,8 @@ const HotelCheckout = lazy(() => import("./Pages/Hotel/HotelCheckout"))
 const HotelBookingSuccess = lazy(() => import("./Pages/Hotel/HotelBookingSuccess"))
 const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
 const Terms = lazy(() => import("./Pages/Terms"))
+const PaymentPage = lazy(() => import("./Pages/Payment/PaymentPage"))
+const EventBookingConfirmation = lazy(() => import("./Pages/Payment/EventBookingConfirmation"))
 
 // i18n
 import { I18nextProvider } from "react-i18next"
@@ -133,6 +135,8 @@ const App = () => {
                   <Route path="/browse" element={<BrowsingPage />} />
                   <Route path="/event/:id" element={<EventDetailPage />} />
                   <Route path="/booking" element={<Booking />} />
+                  <Route path="/payment" element={<PaymentPage />} />
+                  <Route path="/event-booking-confirmation" element={<EventBookingConfirmation />} />
                   <Route path="/confirmation" element={<ConfirmationPage />} />
                   <Route path="/chat" element={<ChatLayout />} />
 
@@ -146,7 +150,7 @@ const App = () => {
                     <FeatureRoute feature="hotels">
                       <Hotel />
                     </FeatureRoute>
-                  }/>                  <Route path="/cart" element={
+                  } />                  <Route path="/cart" element={
                     <FeatureRoute feature="shop">
                       <Cart />
                     </FeatureRoute>
@@ -192,7 +196,7 @@ const App = () => {
                     <FeatureRoute feature="hotels">
                       <HotelBookingSuccess />
                     </FeatureRoute>
-                  }/>
+                  } />
                   <Route
                     path="/instructor/"
                     element={

@@ -308,6 +308,7 @@ export default function LandingPage() {
   const { t, i18n } = useTranslation()
   const [location, setLocation] = useState("")
   const [date, setDate] = useState("")
+  const naviagate = useNavigate();
 
   const [showGroupDialog, setShowGroupDialog] = useState(false)
   const [groupMembers, setGroupMembers] = useState([])
@@ -390,11 +391,27 @@ export default function LandingPage() {
     setBookingDialog(true)
   }, [])
 
+  const navigate = useNavigate()
   const submitBooking = useCallback(() => {
-    // Handle booking submission here
+
+    // Validate booking form
+    if (!bookingForm.email || !bookingForm.phone) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    // Navigate to payment page with booking data
+    navigate('/payment', {
+      state: {
+        bookingData: bookingForm,
+        selectedEvent: selectedEvent
+      }
+    })
+
+    // Close the booking dialog and reset form
     setBookingDialog(false)
     setBookingForm({ participants: 1, email: "", phone: "", specialRequests: "" })
-  }, [selectedEvent, bookingForm])
+  }, [selectedEvent, bookingForm, navigate])
 
   const { adventures, loading: adventureLoading } = useAdventures()
   const {
@@ -728,6 +745,22 @@ export default function LandingPage() {
                 {/* Booking Form */}
                 <div className="space-y-4">
                   <div>
+                    <Label htmlFor="participants" className="text-sm font-medium text-gray-700">
+                      Number of Participants
+                    </Label>
+                    <Input
+                      id="participants"
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={bookingForm.participants}
+                      onChange={(e) => setBookingForm((prev) => ({ ...prev, participants: parseInt(e.target.value) || 1 }))}
+                      className="mt-1"
+                      placeholder="1"
+                    />
+                  </div>
+
+                  <div>
                     <Label htmlFor="email" className="text-sm font-medium text-gray-700">
                       Email Address
                     </Label>
@@ -754,6 +787,20 @@ export default function LandingPage() {
                       placeholder="+1 (555) 123-4567"
                     />
                   </div>
+
+                  <div>
+                    <Label htmlFor="specialRequests" className="text-sm font-medium text-gray-700">
+                      Special Requests (Optional)
+                    </Label>
+                    <Input
+                      id="specialRequests"
+                      type="text"
+                      value={bookingForm.specialRequests}
+                      onChange={(e) => setBookingForm((prev) => ({ ...prev, specialRequests: e.target.value }))}
+                      className="mt-1"
+                      placeholder="Any special requirements or requests..."
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -766,7 +813,7 @@ export default function LandingPage() {
                   className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-6"
                   disabled={!bookingForm.email || !bookingForm.phone}
                 >
-                  Confirm Booking
+                  Continue to Payment
                 </Button>
               </DialogFooter>
             </DialogContent>
