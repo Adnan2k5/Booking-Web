@@ -4,7 +4,7 @@ import { Eye, EyeClosed, Facebook, Linkedin, Lock, LogInIcon, Phone, User } from
 import { MdEmail } from "react-icons/md";
 import { useForm } from "react-hook-form";
 import { GoogleLoginSuccess, ResendOtp, UserLogin, UserRegister, VerifyUser } from "../Auth/UserAuth";
-import { Modal } from "antd";
+import { Checkbox, Modal } from "antd";
 import {
   InputOTPSlot,
   InputOTP,
@@ -522,6 +522,17 @@ export default function LoginPage() {
                   })}
                   className="w-full bg-transparent outline-none border-none"
                 />
+              </div>
+            )}
+            {signup && (
+              <div className="terms">
+                <Checkbox>
+                  <span className="text-gray-600 text-sm">
+                    I agree to the <a href="/terms" className="text-blue-500 hover:text-blue-700 transition-colors">
+                      Terms of Service
+                    </a>
+                  </span>
+                </Checkbox>
               </div>
             )}
             <div className="forgot mt-1 flex flex-col items-center justify-between gap-2">
