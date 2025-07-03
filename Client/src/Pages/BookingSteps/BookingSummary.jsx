@@ -109,7 +109,7 @@ export const BookingSummary = ({
                 };
             }
 
-            if(selectedHotel && (!checkInDate || !checkOutDate)) {
+            if (selectedHotel && (!checkInDate || !checkOutDate)) {
                 toast.error("Please select check-in and check-out dates for the hotel booking.", { id: bookingId });
                 setIsBooking(false);
                 return;
@@ -130,7 +130,7 @@ export const BookingSummary = ({
                     }],
                 };
             }
-            
+
             const bookingData = {
                 sessionBooking: sessionBookingData,
                 itemBooking: itemBookingData,
@@ -140,8 +140,6 @@ export const BookingSummary = ({
             }
 
             const { data } = await createSessionBooking(bookingData);
-
-
             window.location = data.data.paymentUrl;
 
         } catch (error) {
