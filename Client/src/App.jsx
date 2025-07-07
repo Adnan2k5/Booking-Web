@@ -45,6 +45,8 @@ const HotelBookingSuccess = lazy(() => import("./Pages/Hotel/HotelBookingSuccess
 const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
 const Terms = lazy(() => import("./Pages/Terms"))
 const PaymentPage = lazy(() => import("./Pages/Payment/PaymentPage"))
+const PaymentApprove = lazy(() => import("./Pages/Payment/PaymentApprove"))
+const PaymentCancel = lazy(() => import("./Pages/Payment/PaymentCancel"))
 const EventBookingConfirmation = lazy(() => import("./Pages/Payment/EventBookingConfirmation"))
 
 // i18n
@@ -136,6 +138,8 @@ const App = () => {
                   <Route path="/event/:id" element={<EventDetailPage />} />
                   <Route path="/booking" element={<Booking />} />
                   <Route path="/payment" element={<PaymentPage />} />
+                  <Route path="/payment/approve" element={<PaymentApprove />} />
+                  <Route path="/payment/cancel" element={<PaymentCancel />} />
                   <Route path="/event-booking-confirmation" element={<EventBookingConfirmation />} />
                   <Route path="/confirmation" element={<ConfirmationPage />} />
                   <Route path="/chat" element={<ChatLayout />} />
