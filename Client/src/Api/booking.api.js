@@ -1,7 +1,7 @@
 import { axiosClient } from '../AxiosClient/axios';
 
-export const createBooking = async (name) => {
-  const res = await axiosClient.get(`/api/itemBooking/create?name=${name}`, {
+export const createBooking = async (name, modeOfPayment) => {
+  const res = await axiosClient.get(`/api/itemBooking/create?name=${name}&modeOfPayment=${modeOfPayment}`, {
     withCredentials: true,
   });
   return res;

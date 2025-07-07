@@ -8,6 +8,7 @@ import { HotelBooking } from "../models/hotelBooking.model.js";
 import { Booking } from "../models/booking.model.js";
 import axios from 'axios';
 import { createRevolutOrder } from "../utils/revolut.js";
+import PayPalService from "../services/paypal.service.js";
 
 export const createBooking = asyncHandler(async (req, res) => {
     const { name, modeOfPayment } = req.query;
@@ -39,7 +40,7 @@ export const createBooking = asyncHandler(async (req, res) => {
         } return sum;
     }, 0);
 
-    if (modeOfPayment && modeOfPayment.toLowerCase() !== 'revolut') {
+    if (modeOfPayment && modeOfPayment.toLowerCase() === 'revolut') {
         // Create Revolut payment order
         const revolutOrder = await createRevolutOrder(totalPrice, 'GBP', `Item Booking - User: ${req.user.name}`);
         const booking = await ItemBooking.create({
@@ -56,9 +57,32 @@ export const createBooking = asyncHandler(async (req, res) => {
         }, "Booking Created with Payment Order"));
     }
     else {
-        
-    }
+        // Pay via Paypal
+        try {
+            const payPalService = new PayPalService();
+            const paypalResponse = await payPalService.createOrder(totalPrice, 'GBP');
+            console.log('PayPal Order Created:', paypalResponse);
+            
+            // Create booking with PayPal order ID
+            const booking = await ItemBooking.create({
+                amount: totalPrice,
+                user: userId,
+                items: cart.items,
+                paymentOrderId: paypalResponse.id, // Store PayPal order ID for reference
+                paymentStatus: 'pending'
+            });
 
+            res.status(201).json(new ApiResponse(201, {
+                booking,
+                paymentOrder: {
+                    checkout_url: paypalResponse.links[1].href // Use the PayPal approval URL for redirection
+                }
+            }, "Booking Created with PayPal Payment Order"));
+        } catch (error) {
+            console.error('PayPal order creation failed:', error);
+            throw new ApiError(500, `Failed to create PayPal order: ${error.message}`);
+        }
+    }
 });
 
 

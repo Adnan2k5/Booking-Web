@@ -114,7 +114,7 @@ export const Cart = () => {
         }
     }
 
-    const handleBooking = async () => {
+    const handleBooking = async (modeOfPayment) => {
         if (!name.trim()) {
             toast.error("Please enter your name")
             return
@@ -123,7 +123,7 @@ export const Cart = () => {
         setIsBookingLoading(true)
         const id = toast.loading("Creating Booking....")
         try {
-            const res = await createBooking(name)
+            const res = await createBooking(name, modeOfPayment)
             toast.success("Booking created successfully", { id })
             setIsDialogOpen(false)
             setName("")
@@ -470,7 +470,7 @@ export const Cart = () => {
                                                     </Button>
                                                     <Button
                                                         type="button"
-                                                        onClick={handleBooking}
+                                                        onClick={() => handleBooking("paypal")} 
                                                         disabled={isBookingLoading || !name.trim()}
                                                         className="bg-black hover:bg-gray-800 text-white"
                                                     >
@@ -480,7 +480,22 @@ export const Cart = () => {
                                                                 Processing...
                                                             </>
                                                         ) : (
-                                                            "Confirm Booking"
+                                                            "Pay with PayPal"
+                                                        )}
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        onClick={() => handleBooking("revolut")} 
+                                                        disabled={isBookingLoading || !name.trim()}
+                                                        className="bg-black hover:bg-gray-800 text-white"
+                                                    >
+                                                        {isBookingLoading ? (
+                                                            <>
+                                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                                Processing...
+                                                            </>
+                                                        ) : (
+                                                            "Pay with Revolut"
                                                         )}
                                                     </Button>
                                                 </DialogFooter>
