@@ -20,9 +20,12 @@ const markerIcon = new L.Icon({
 export default function MapLocationPicker({
     coordinates,
     onCoordinatesChange,
-    onLocationNameChange
+    onLocationNameChange,
+    onLocationDetailsChange,
+    address = '',
+    onAddressChange
 }) {
-    const [searchValue, setSearchValue] = useState('');
+    const [searchValue, setSearchValue] = useState(address);
     const [isSearching, setIsSearching] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState(null);
     const [locationInput, setLocationInput] = useState('');
@@ -88,6 +91,32 @@ export default function MapLocationPicker({
                     onLocationNameChange(location.display_name);
                 }
 
+                // Update the address input
+                if (onAddressChange) {
+                    onAddressChange(location.display_name);
+                }
+
+                // Extract city and country from search result
+                if (onLocationDetailsChange && location.address) {
+                    const address = location.address;
+                    const city = address.city ||
+                        address.town ||
+                        address.village ||
+                        address.municipality ||
+                        address.county ||
+                        address.state_district ||
+                        address.state ||
+                        '';
+                    const country = address.country || '';
+
+                    onLocationDetailsChange({
+                        city: city,
+                        country: country,
+                        fullAddress: location.display_name,
+                        addressComponents: address
+                    });
+                }
+
                 setLocationInput(location.display_name);
             }
         } catch (error) {
@@ -110,11 +139,46 @@ export default function MapLocationPicker({
                 if (onLocationNameChange) {
                     onLocationNameChange(data.display_name);
                 }
+
+                // Update the address input
+                if (onAddressChange) {
+                    onAddressChange(data.display_name);
+                }
+
+                // Extract city and country from address components
+                if (onLocationDetailsChange && data.address) {
+                    const address = data.address;
+                    const city = address.city ||
+                        address.town ||
+                        address.village ||
+                        address.municipality ||
+                        address.county ||
+                        address.state_district ||
+                        address.state ||
+                        '';
+                    const country = address.country || '';
+
+                    onLocationDetailsChange({
+                        city: city,
+                        country: country,
+                        fullAddress: data.display_name,
+                        addressComponents: address
+                    });
+                }
             }
         } catch (error) {
             console.error("Error reverse geocoding:", error);
             // Fallback to coordinates if reverse geocoding fails
             setLocationInput(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+        }
+    };
+
+    // Handle search input changes
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setSearchValue(value);
+        if (onAddressChange) {
+            onAddressChange(value);
         }
     };
 
@@ -150,26 +214,32 @@ export default function MapLocationPicker({
         }
     }, [coordinates]);
 
+    // Update search value when address prop changes
+    useEffect(() => {
+        if (address !== searchValue) {
+            setSearchValue(address);
+        }
+    }, [address]);
+
     const mapCenter = selectedPosition || [55.1694, 23.8813];
 
     return (
         <div className="space-y-4">
-            {/* Search Bar */}
-            <div className="flex gap-2">
-                <div className="flex-1">
-                    <Label htmlFor="location-search" className="text-sm font-medium">
-                        Search Location
-                    </Label>
+            {/* Address Input */}
+            <div>
+                <Label htmlFor="address-input" className="text-sm font-medium">
+                    Event Address *
+                </Label>
+                <div className="flex gap-2 mt-1">
                     <Input
-                        id="location-search"
+                        id="address-input"
                         value={searchValue}
-                        onChange={(e) => setSearchValue(e.target.value)}
+                        onChange={handleSearchChange}
                         onKeyPress={handleKeyPress}
-                        placeholder="Enter location name or address"
-                        className="mt-1"
+                        placeholder="Enter event address"
+                        className="flex-1"
+                        required
                     />
-                </div>
-                <div className="flex items-end">
                     <Button
                         type="button"
                         onClick={handleLocationSearchClick}
@@ -183,6 +253,9 @@ export default function MapLocationPicker({
                         )}
                     </Button>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                    Type an address and click search, or click on the map below
+                </p>
             </div>
 
             {/* Location Name Display */}
@@ -224,7 +297,7 @@ export default function MapLocationPicker({
             )}
 
             <p className="text-xs text-muted-foreground">
-                Click on the map or search for a location to set coordinates. The location name will be automatically filled.
+                Click on the map to select a location. The address will be automatically updated.
             </p>
         </div>
     );

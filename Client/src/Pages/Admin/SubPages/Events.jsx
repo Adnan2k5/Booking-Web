@@ -38,6 +38,8 @@ export default function EventsPage() {
         startTime: "",
         endTime: "",
         location: "",
+        city: "",
+        country: "",
         coordinates: {
             latitude: null,
             longitude: null,
@@ -87,6 +89,8 @@ export default function EventsPage() {
             startTime: "",
             endTime: "",
             location: "",
+            city: "",
+            country: "",
             coordinates: {
                 latitude: null,
                 longitude: null,
@@ -263,6 +267,8 @@ export default function EventsPage() {
             startTime: event.startTime || "",
             endTime: event.endTime || "",
             location: event.location,
+            city: event.city || "",
+            country: event.country || "",
             coordinates: {
                 latitude: event.coordinates?.latitude || null,
                 longitude: event.coordinates?.longitude || null,
@@ -636,23 +642,22 @@ export default function EventsPage() {
                             <div className="mt-2">
                                 <MapLocationPicker
                                     coordinates={formData.coordinates}
+                                    address={formData.location}
                                     onCoordinatesChange={(coords) => setFormData({
                                         ...formData,
                                         coordinates: coords
                                     })}
-                                    onLocationNameChange={(name) => setFormData({
+                                    onAddressChange={(address) => setFormData({
                                         ...formData,
-                                        location: name
+                                        location: address
+                                    })}
+                                    onLocationDetailsChange={(details) => setFormData({
+                                        ...formData,
+                                        city: details.city || "",
+                                        country: details.country || ""
                                     })}
                                 />
                             </div>
-                            <Input
-                                value={formData.location}
-                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                required
-                                placeholder="Location name will be filled automatically or enter manually"
-                                className="mt-2"
-                            />
                         </div>
 
                         <div>
@@ -942,23 +947,22 @@ export default function EventsPage() {
                             <div className="mt-2">
                                 <MapLocationPicker
                                     coordinates={formData.coordinates}
+                                    address={formData.location}
                                     onCoordinatesChange={(coords) => setFormData({
                                         ...formData,
                                         coordinates: coords
                                     })}
-                                    onLocationNameChange={(name) => setFormData({
+                                    onAddressChange={(address) => setFormData({
                                         ...formData,
-                                        location: name
+                                        location: address
+                                    })}
+                                    onLocationDetailsChange={(details) => setFormData({
+                                        ...formData,
+                                        city: details.city || "",
+                                        country: details.country || ""
                                     })}
                                 />
                             </div>
-                            <Input
-                                value={formData.location}
-                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                required
-                                placeholder="Location name will be filled automatically or enter manually"
-                                className="mt-2"
-                            />
                         </div>
 
                         <div>
