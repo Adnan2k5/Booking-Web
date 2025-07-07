@@ -6,7 +6,7 @@ import {
     getOrderDetails,
     setupWebhook,
     getMyItemBookings,
-    getAllItemBookings
+    getAllItemBookings,
 } from "../controllers/itemBooking.controller.js";
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
@@ -14,6 +14,7 @@ const router = express.Router();
 
 // Webhook endpoint (no auth required)
 router.post('/webhook/payment-completed', handlePaymentCompletion);
+
 
 // Setup webhook endpoint (admin only)
 router.post('/setup-webhook', verifyJWT, setupWebhook);
