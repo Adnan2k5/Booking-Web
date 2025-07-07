@@ -3,12 +3,20 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { EventBooking } from "../models/eventBooking.model.js";
 import { Event } from "../models/events.model.js";
+import { Adventure } from "../models/adventure.model.js";
 import { PaymentService } from "../services/payment.service.js";
 import axios from "axios";
 import { createRevolutOrder } from "../utils/revolut.js";
 
 export const createEventBooking = asyncHandler(async (req, res) => {
-  const { event, participants, contactInfo, amount, paymentMethod } = req.body;
+  const {
+    event,
+    participants,
+    contactInfo,
+    amount,
+    paymentMethod,
+    adventureInstructors,
+  } = req.body;
 
   // Validate required fields
   if (
@@ -21,10 +29,23 @@ export const createEventBooking = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All required fields must be provided");
   }
 
-  // Check if event exists
-  const eventExists = await Event.findById(event);
+  // Check if event exists and populate adventures
+  const eventExists = await Event.findById(event).populate("adventures");
   if (!eventExists) {
     throw new ApiError(404, "Event not found");
+  }
+
+  // Validate adventure instructors if provided
+  if (adventureInstructors && eventExists.adventures.length > 0) {
+    const eventAdventureIds = eventExists.adventures.map((adv) =>
+      adv._id.toString()
+    );
+
+    for (const advInstructor of adventureInstructors) {
+      if (!eventAdventureIds.includes(advInstructor.adventure.toString())) {
+        throw new ApiError(400, "Selected adventure is not part of this event");
+      }
+    }
   }
 
   // Check if user already has a confirmed booking for this event
@@ -80,15 +101,24 @@ export const createEventBooking = asyncHandler(async (req, res) => {
     paymentOrderId: revolutOrder.id, // Store Revolut order ID for reference
     paymentStatus: "pending",
     status: "pending",
+    adventureInstructors: adventureInstructors || [],
+    adventureCompletionStatus: eventExists.adventures.map((adventure) => ({
+      adventure: adventure._id,
+      completed: false,
+    })),
+    nftEligible: eventExists.isNftEvent || false,
   });
 
   // Populate the created booking with event details
   const populatedBooking = await EventBooking.findById(booking._id)
     .populate(
       "event",
-      "title description date startTime endTime location city country image"
+      "title description date startTime endTime location city country image adventures isNftEvent"
     )
-    .populate("user", "name email");
+    .populate("user", "name email")
+    .populate("adventureInstructors.adventure", "name description")
+    .populate("adventureInstructors.instructor", "name email")
+    .populate("adventureCompletionStatus.adventure", "name description");
 
   res.status(201).json(
     new ApiResponse(
@@ -441,4 +471,154 @@ export const getAllEventBookings = asyncHandler(async (req, res) => {
       "All event bookings retrieved successfully"
     )
   );
+});
+
+// Mark adventure as completed for a specific booking
+export const completeAdventure = asyncHandler(async (req, res) => {
+  const { bookingId, adventureId } = req.params;
+
+  const booking = await EventBooking.findById(bookingId)
+    .populate("event")
+    .populate("adventureCompletionStatus.adventure");
+
+  if (!booking) {
+    throw new ApiError(404, "Booking not found");
+  }
+
+  // Check if the adventure is part of this booking
+  const adventureStatus = booking.adventureCompletionStatus.find(
+    (status) => status.adventure._id.toString() === adventureId
+  );
+
+  if (!adventureStatus) {
+    throw new ApiError(400, "Adventure not part of this booking");
+  }
+
+  if (adventureStatus.completed) {
+    throw new ApiError(400, "Adventure already completed");
+  }
+
+  // Mark adventure as completed
+  adventureStatus.completed = true;
+  adventureStatus.completedAt = new Date();
+
+  // Check if all adventures are completed for NFT eligibility
+  const allCompleted = booking.adventureCompletionStatus.every(
+    (status) => status.completed
+  );
+
+  if (
+    allCompleted &&
+    booking.event.isNftEvent &&
+    booking.nftEligible &&
+    !booking.nftAwarded
+  ) {
+    // Auto-award NFT if all adventures are completed
+    booking.nftAwarded = true;
+    booking.nftAwardedAt = new Date();
+    // In a real implementation, you would mint the NFT here
+    booking.nftTokenId = `NFT_${booking._id}_${Date.now()}`;
+  }
+
+  await booking.save();
+
+  const updatedBooking = await EventBooking.findById(bookingId)
+    .populate("event")
+    .populate("adventureCompletionStatus.adventure", "name description")
+    .populate("adventureInstructors.adventure", "name description")
+    .populate("adventureInstructors.instructor", "name email");
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedBooking,
+        allCompleted && booking.event.isNftEvent
+          ? "Adventure completed and NFT awarded!"
+          : "Adventure completed successfully"
+      )
+    );
+});
+
+// Get adventures for a specific event (for admin to select)
+export const getEventAdventures = asyncHandler(async (req, res) => {
+  const { eventId } = req.params;
+
+  const event = await Event.findById(eventId).populate("adventures");
+
+  if (!event) {
+    throw new ApiError(404, "Event not found");
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        event.adventures,
+        "Event adventures retrieved successfully"
+      )
+    );
+});
+
+// Get all adventures (for admin selection)
+export const getAllAdventuresForSelection = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 50 } = req.query;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  const adventures = await Adventure.find()
+    .select("name description location thumbnail")
+    .populate("location", "name")
+    .skip(skip)
+    .limit(parseInt(limit));
+
+  const total = await Adventure.countDocuments();
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        data: adventures,
+        total,
+        page: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+      },
+      "Adventures retrieved successfully"
+    )
+  );
+});
+
+// Award NFT manually (admin function)
+export const awardNft = asyncHandler(async (req, res) => {
+  const { bookingId } = req.params;
+  const { nftTokenId } = req.body;
+
+  const booking = await EventBooking.findById(bookingId).populate("event");
+
+  if (!booking) {
+    throw new ApiError(404, "Booking not found");
+  }
+
+  if (!booking.event.isNftEvent) {
+    throw new ApiError(400, "This event is not configured for NFT rewards");
+  }
+
+  if (!booking.nftEligible) {
+    throw new ApiError(400, "This booking is not eligible for NFT reward");
+  }
+
+  if (booking.nftAwarded) {
+    throw new ApiError(400, "NFT already awarded for this booking");
+  }
+
+  booking.nftAwarded = true;
+  booking.nftAwardedAt = new Date();
+  booking.nftTokenId = nftTokenId || `NFT_${booking._id}_${Date.now()}`;
+
+  await booking.save();
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, booking, "NFT awarded successfully"));
 });

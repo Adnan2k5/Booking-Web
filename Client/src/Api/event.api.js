@@ -46,6 +46,12 @@ export const createEvent = async (eventData) => {
         // Handle coordinates separately
         formData.append('latitude', eventData[key].latitude);
         formData.append('longitude', eventData[key].longitude);
+      } else if (key === 'adventures' && eventData[key]) {
+        // Handle adventures array
+        formData.append('adventures', JSON.stringify(eventData[key]));
+      } else if (key === 'nftReward' && eventData[key]) {
+        // Handle NFT reward object
+        formData.append('nftReward', JSON.stringify(eventData[key]));
       } else if (eventData[key] !== undefined && eventData[key] !== null) {
         formData.append(key, eventData[key]);
       }
@@ -79,6 +85,12 @@ export const updateEvent = async (id, eventData) => {
         // Handle coordinates separately
         formData.append('latitude', eventData[key].latitude);
         formData.append('longitude', eventData[key].longitude);
+      } else if (key === 'adventures' && eventData[key]) {
+        // Handle adventures array
+        formData.append('adventures', JSON.stringify(eventData[key]));
+      } else if (key === 'nftReward' && eventData[key]) {
+        // Handle NFT reward object
+        formData.append('nftReward', JSON.stringify(eventData[key]));
       } else if (eventData[key] !== undefined && eventData[key] !== null) {
         formData.append(key, eventData[key]);
       }

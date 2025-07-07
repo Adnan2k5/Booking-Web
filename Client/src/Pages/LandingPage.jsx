@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider"
 
-import { Users, Search, UserPlus, UserX, MapPin, Calendar, Compass, Clock, ChevronLeft, ChevronRight } from "lucide-react"
+import { Users, Search, UserPlus, UserX, MapPin, Calendar, Compass, Clock, ChevronLeft, ChevronRight, Star } from "lucide-react"
 import { Button } from "../components/ui/button"
 import {
   Dialog,
@@ -80,6 +80,41 @@ const EventCard = memo(({ event, handleBooking, handleViewMore }) => (
           Date: {new Date(event.date).toLocaleDateString()}
         </span>
       </div>
+
+      {/* Adventures */}
+      {event.adventures && event.adventures.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2 text-gray-700">
+            <Compass className="h-5 w-5" />
+            <span className="font-semibold">Adventures:</span>
+          </div>
+          <div className="pl-7 space-y-1">
+            {event.adventures.slice(0, 2).map((adventure, index) => (
+              <div key={adventure._id || index} className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span className="text-gray-600 text-sm">{adventure.name}</span>
+              </div>
+            ))}
+            {event.adventures.length > 2 && (
+              <p className="text-gray-500 text-xs pl-4">
+                +{event.adventures.length - 2} more adventure{event.adventures.length - 2 > 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* NFT Badge */}
+      {event.isNftEvent && (
+        <div className="space-y-2">
+          <div className="pl-7">
+            <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border border-purple-200">
+              <Star className="h-3 w-3 mr-1" />
+              NFT Event
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Description */}
       <div className="space-y-2">
@@ -882,6 +917,70 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Adventures Section */}
+                {selectedEvent?.adventures && selectedEvent.adventures.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2 text-gray-700">
+                      <Compass className="h-5 w-5" />
+                      <span className="font-semibold">Adventures Included</span>
+                    </div>
+                    <div className="pl-7 space-y-2">
+                      {selectedEvent.adventures.map((adventure, index) => (
+                        <div key={adventure._id || index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                          {adventure.thumbnail && (
+                            <img
+                              src={adventure.thumbnail}
+                              alt={adventure.name}
+                              className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <h5 className="font-medium text-gray-900">{adventure.name}</h5>
+                            {adventure.description && (
+                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{adventure.description}</p>
+                            )}
+                            {adventure.exp && (
+                              <div className="flex items-center mt-2">
+                                <Star className="h-3 w-3 text-yellow-500 mr-1" />
+                                <span className="text-xs text-gray-500">{adventure.exp} XP</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* NFT Reward Section */}
+                {selectedEvent?.isNftEvent && (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2 text-gray-700">
+                      <Star className="h-5 w-5 text-purple-600" />
+                      <span className="font-semibold">NFT Reward</span>
+                    </div>
+                    <div className="pl-7">
+                      <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Star className="h-4 w-4 text-purple-600" />
+                          <span className="font-medium text-purple-900">Exclusive NFT Available</span>
+                        </div>
+                        <p className="text-sm text-purple-700">
+                          Complete all adventures in this event to earn an exclusive NFT reward!
+                        </p>
+                        {selectedEvent.nftReward?.nftName && (
+                          <div className="mt-3 space-y-1">
+                            <p className="text-sm font-medium text-purple-900">NFT: {selectedEvent.nftReward.nftName}</p>
+                            {selectedEvent.nftReward.nftDescription && (
+                              <p className="text-xs text-purple-700">{selectedEvent.nftReward.nftDescription}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Full Description */}
                 <div className="space-y-3">

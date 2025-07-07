@@ -65,6 +65,35 @@ const eventSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    adventures: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Adventure",
+        required: false,
+      },
+    ],
+    isNftEvent: {
+      type: Boolean,
+      default: false,
+    },
+    nftReward: {
+      enabled: {
+        type: Boolean,
+        default: false,
+      },
+      nftName: {
+        type: String,
+        required: false,
+      },
+      nftDescription: {
+        type: String,
+        required: false,
+      },
+      nftImage: {
+        type: String,
+        required: false,
+      },
+    },
   },
   { timestamps: true }
 );

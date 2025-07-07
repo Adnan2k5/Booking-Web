@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Search, Plus, Calendar, MapPin, Clock, Eye, Edit, Trash2, Star } from "lucide-react"
+import { Search, Plus, Calendar, MapPin, Clock, Eye, Edit, Trash2, Star, Compass, X } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../components/ui/card"
@@ -15,9 +15,12 @@ import {
 } from "../../../components/ui/dialog"
 import { Label } from "../../../components/ui/label"
 import { Textarea } from "../../../components/ui/textarea"
+import { Badge } from "../../../components/ui/badge"
+import { Checkbox } from "../../../components/ui/checkbox"
 import { toast } from "sonner"
 import { useEvents } from "../../../hooks/useEvent"
 import { createEvent, updateEvent, deleteEvent } from "../../../Api/event.api"
+import { useAdventures } from "../../../hooks/useAdventure"
 import MediaPreview from "../../../components/MediaPreview"
 import MapLocationPicker from "../../../components/MapLocationPicker"
 
@@ -42,7 +45,16 @@ export default function EventsPage() {
         mapEmbedUrl: "",
         level: 1,
         images: [],
+        adventures: [], // Array of adventure IDs
+        isNftEvent: false,
+        nftReward: {
+            nftName: "",
+            nftDescription: "",
+            nftImage: "",
+        },
     })
+    const [selectedAdventures, setSelectedAdventures] = useState([]) // For UI display
+    const [showAdventureSelection, setShowAdventureSelection] = useState(false)
     const [mediaPreviews, setMediaPreviews] = useState([])
     const [isSubmitting, setIsSubmitting] = useState(false)
     const fileInputRef = useRef(null)
@@ -53,6 +65,8 @@ export default function EventsPage() {
         page,
         limit,
     })
+
+    const { adventures, isLoading: adventuresLoading } = useAdventures()
 
     // Cleanup function to revoke object URLs on unmount
     useEffect(() => {
@@ -80,7 +94,15 @@ export default function EventsPage() {
             mapEmbedUrl: "",
             level: 1,
             images: [],
+            adventures: [],
+            isNftEvent: false,
+            nftReward: {
+                nftName: "",
+                nftDescription: "",
+                nftImage: "",
+            },
         })
+        setSelectedAdventures([])
         setMediaPreviews([])
         if (fileInputRef.current) {
             fileInputRef.current.value = ""
@@ -156,6 +178,35 @@ export default function EventsPage() {
         })
     }
 
+    // Adventure selection handlers
+    const handleAdventureToggle = (adventure) => {
+        const isSelected = selectedAdventures.some(a => a._id === adventure._id)
+        if (isSelected) {
+            const updated = selectedAdventures.filter(a => a._id !== adventure._id)
+            setSelectedAdventures(updated)
+            setFormData(prev => ({
+                ...prev,
+                adventures: updated.map(a => a._id)
+            }))
+        } else {
+            const updated = [...selectedAdventures, adventure]
+            setSelectedAdventures(updated)
+            setFormData(prev => ({
+                ...prev,
+                adventures: updated.map(a => a._id)
+            }))
+        }
+    }
+
+    const removeSelectedAdventure = (adventureId) => {
+        const updated = selectedAdventures.filter(a => a._id !== adventureId)
+        setSelectedAdventures(updated)
+        setFormData(prev => ({
+            ...prev,
+            adventures: updated.map(a => a._id)
+        }))
+    }
+
     const handleCreateEvent = async (e) => {
         e.preventDefault()
         setIsSubmitting(true)
@@ -219,7 +270,21 @@ export default function EventsPage() {
             mapEmbedUrl: event.mapEmbedUrl || "",
             level: event.level || 1,
             images: [], // Reset images array for new uploads
+            adventures: event.adventures?.map(a => a._id || a) || [],
+            isNftEvent: event.isNftEvent || false,
+            nftReward: {
+                nftName: event.nftReward?.nftName || "",
+                nftDescription: event.nftReward?.nftDescription || "",
+                nftImage: event.nftReward?.nftImage || "",
+            },
         })
+
+        // Set selected adventures for UI
+        if (event.adventures && event.adventures.length > 0) {
+            setSelectedAdventures(event.adventures)
+        } else {
+            setSelectedAdventures([])
+        }
 
         // Set existing images in preview (if any)
         if (event.medias && event.medias.length > 0) {
@@ -385,6 +450,26 @@ export default function EventsPage() {
                                             <Star className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                                             <span className="truncate">Level {event.level || 1}</span>
                                         </div>
+
+                                        {/* Adventures indicator */}
+                                        {event.adventures && event.adventures.length > 0 && (
+                                            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                                                <Compass className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                                <span className="truncate">
+                                                    {event.adventures.length} adventure{event.adventures.length > 1 ? 's' : ''}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* NFT indicator */}
+                                        {event.isNftEvent && (
+                                            <div className="flex items-center justify-between">
+                                                <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800">
+                                                    <Star className="mr-1 h-3 w-3" />
+                                                    NFT Event
+                                                </Badge>
+                                            </div>
+                                        )}
                                     </div>
                                 </CardContent>
 
@@ -582,6 +667,129 @@ export default function EventsPage() {
                                 className="mt-1"
                             />
                         </div>
+
+                        {/* Adventures Selection */}
+                        <div>
+                            <Label className="text-sm font-medium">
+                                Adventures (Optional)
+                            </Label>
+                            <div className="mt-2 space-y-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setShowAdventureSelection(!showAdventureSelection)}
+                                    className="w-full justify-between"
+                                >
+                                    <span>
+                                        {selectedAdventures.length > 0
+                                            ? `${selectedAdventures.length} adventure${selectedAdventures.length > 1 ? 's' : ''} selected`
+                                            : 'Select adventures'
+                                        }
+                                    </span>
+                                    <Compass className="h-4 w-4" />
+                                </Button>
+
+                                {selectedAdventures.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedAdventures.map((adventure) => (
+                                            <Badge key={adventure._id} variant="secondary" className="flex items-center gap-1">
+                                                {adventure.name}
+                                                <X
+                                                    className="h-3 w-3 cursor-pointer hover:text-red-500"
+                                                    onClick={() => removeSelectedAdventure(adventure._id)}
+                                                />
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {showAdventureSelection && (
+                                    <div className="border rounded-md max-h-40 overflow-y-auto p-2">
+                                        {adventuresLoading ? (
+                                            <div className="text-sm text-gray-500 p-2">Loading adventures...</div>
+                                        ) : adventures.length === 0 ? (
+                                            <div className="text-sm text-gray-500 p-2">No adventures available</div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {adventures.map((adventure) => (
+                                                    <div key={adventure._id} className="flex items-center space-x-2">
+                                                        <Checkbox
+                                                            id={`adventure-${adventure._id}`}
+                                                            checked={selectedAdventures.some(a => a._id === adventure._id)}
+                                                            onCheckedChange={() => handleAdventureToggle(adventure)}
+                                                        />
+                                                        <Label
+                                                            htmlFor={`adventure-${adventure._id}`}
+                                                            className="flex-1 text-sm cursor-pointer"
+                                                        >
+                                                            {adventure.name}
+                                                        </Label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* NFT Event Toggle */}
+                        <div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="isNftEvent"
+                                    checked={formData.isNftEvent}
+                                    onCheckedChange={(checked) => setFormData({ ...formData, isNftEvent: checked })}
+                                />
+                                <Label htmlFor="isNftEvent" className="text-sm font-medium flex items-center">
+                                    <Star className="h-4 w-4 mr-1 text-purple-600" />
+                                    NFT Event
+                                </Label>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Enable to award NFT rewards for completing all adventures
+                            </p>
+                        </div>
+
+                        {/* NFT Reward Details */}
+                        {formData.isNftEvent && (
+                            <div className="space-y-3 p-4 border rounded-lg bg-purple-50">
+                                <h4 className="text-sm font-medium text-purple-900">NFT Reward Details</h4>
+
+                                <div>
+                                    <Label htmlFor="nftName" className="text-sm font-medium">
+                                        NFT Name
+                                    </Label>
+                                    <Input
+                                        id="nftName"
+                                        value={formData.nftReward.nftName}
+                                        onChange={(e) => setFormData({
+                                            ...formData,
+                                            nftReward: { ...formData.nftReward, nftName: e.target.value }
+                                        })}
+                                        placeholder="Enter NFT name"
+                                        className="mt-1"
+                                    />
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="nftDescription" className="text-sm font-medium">
+                                        NFT Description
+                                    </Label>
+                                    <Textarea
+                                        id="nftDescription"
+                                        value={formData.nftReward.nftDescription}
+                                        onChange={(e) => setFormData({
+                                            ...formData,
+                                            nftReward: { ...formData.nftReward, nftDescription: e.target.value }
+                                        })}
+                                        placeholder="Describe the NFT reward"
+                                        rows={2}
+                                        className="mt-1 resize-none"
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         <div>
                             <Label htmlFor="level" className="text-sm font-medium">
@@ -786,6 +994,129 @@ export default function EventsPage() {
                             </p>
                         </div>
 
+                        {/* Adventures Selection */}
+                        <div>
+                            <Label className="text-sm font-medium">
+                                Adventures (Optional)
+                            </Label>
+                            <div className="mt-2 space-y-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setShowAdventureSelection(!showAdventureSelection)}
+                                    className="w-full justify-between"
+                                >
+                                    <span>
+                                        {selectedAdventures.length > 0
+                                            ? `${selectedAdventures.length} adventure${selectedAdventures.length > 1 ? 's' : ''} selected`
+                                            : 'Select adventures'
+                                        }
+                                    </span>
+                                    <Compass className="h-4 w-4" />
+                                </Button>
+
+                                {selectedAdventures.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedAdventures.map((adventure) => (
+                                            <Badge key={adventure._id} variant="secondary" className="flex items-center gap-1">
+                                                {adventure.name}
+                                                <X
+                                                    className="h-3 w-3 cursor-pointer hover:text-red-500"
+                                                    onClick={() => removeSelectedAdventure(adventure._id)}
+                                                />
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {showAdventureSelection && (
+                                    <div className="border rounded-md max-h-40 overflow-y-auto p-2">
+                                        {adventuresLoading ? (
+                                            <div className="text-sm text-gray-500 p-2">Loading adventures...</div>
+                                        ) : adventures.length === 0 ? (
+                                            <div className="text-sm text-gray-500 p-2">No adventures available</div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {adventures.map((adventure) => (
+                                                    <div key={adventure._id} className="flex items-center space-x-2">
+                                                        <Checkbox
+                                                            id={`edit-adventure-${adventure._id}`}
+                                                            checked={selectedAdventures.some(a => a._id === adventure._id)}
+                                                            onCheckedChange={() => handleAdventureToggle(adventure)}
+                                                        />
+                                                        <Label
+                                                            htmlFor={`edit-adventure-${adventure._id}`}
+                                                            className="flex-1 text-sm cursor-pointer"
+                                                        >
+                                                            {adventure.name}
+                                                        </Label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* NFT Event Toggle */}
+                        <div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="edit-isNftEvent"
+                                    checked={formData.isNftEvent}
+                                    onCheckedChange={(checked) => setFormData({ ...formData, isNftEvent: checked })}
+                                />
+                                <Label htmlFor="edit-isNftEvent" className="text-sm font-medium flex items-center">
+                                    <Star className="h-4 w-4 mr-1 text-purple-600" />
+                                    NFT Event
+                                </Label>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Enable to award NFT rewards for completing all adventures
+                            </p>
+                        </div>
+
+                        {/* NFT Reward Details */}
+                        {formData.isNftEvent && (
+                            <div className="space-y-3 p-4 border rounded-lg bg-purple-50">
+                                <h4 className="text-sm font-medium text-purple-900">NFT Reward Details</h4>
+
+                                <div>
+                                    <Label htmlFor="edit-nftName" className="text-sm font-medium">
+                                        NFT Name
+                                    </Label>
+                                    <Input
+                                        id="edit-nftName"
+                                        value={formData.nftReward.nftName}
+                                        onChange={(e) => setFormData({
+                                            ...formData,
+                                            nftReward: { ...formData.nftReward, nftName: e.target.value }
+                                        })}
+                                        placeholder="Enter NFT name"
+                                        className="mt-1"
+                                    />
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="edit-nftDescription" className="text-sm font-medium">
+                                        NFT Description
+                                    </Label>
+                                    <Textarea
+                                        id="edit-nftDescription"
+                                        value={formData.nftReward.nftDescription}
+                                        onChange={(e) => setFormData({
+                                            ...formData,
+                                            nftReward: { ...formData.nftReward, nftDescription: e.target.value }
+                                        })}
+                                        placeholder="Describe the NFT reward"
+                                        rows={2}
+                                        className="mt-1 resize-none"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         <div>
                             <Label htmlFor="edit-images" className="text-sm font-medium">
                                 Event Images
@@ -893,6 +1224,54 @@ export default function EventsPage() {
                                 <h4 className="font-medium text-sm text-muted-foreground mb-1">Required Level</h4>
                                 <p className="text-sm">Level {selectedEvent.level || 1}</p>
                             </div>
+
+                            {/* Adventures Section */}
+                            {selectedEvent.adventures && selectedEvent.adventures.length > 0 && (
+                                <div>
+                                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Adventures</h4>
+                                    <div className="space-y-2">
+                                        {selectedEvent.adventures.map((adventure, index) => (
+                                            <div key={adventure._id || index} className="flex items-center space-x-2 p-2 bg-gray-50 rounded-md">
+                                                <Compass className="h-4 w-4 text-blue-500" />
+                                                <span className="text-sm font-medium">{adventure.name}</span>
+                                                {adventure.exp && (
+                                                    <Badge variant="outline" className="text-xs">
+                                                        {adventure.exp} XP
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* NFT Event Info */}
+                            {selectedEvent.isNftEvent && (
+                                <div>
+                                    <h4 className="font-medium text-sm text-muted-foreground mb-2">NFT Reward</h4>
+                                    <div className="p-3 bg-purple-50 rounded-md border border-purple-200">
+                                        <div className="flex items-center space-x-2 mb-2">
+                                            <Star className="h-4 w-4 text-purple-600" />
+                                            <span className="text-sm font-medium text-purple-900">NFT Event</span>
+                                        </div>
+                                        {selectedEvent.nftReward?.nftName && (
+                                            <div className="space-y-1">
+                                                <p className="text-sm font-medium text-purple-900">
+                                                    {selectedEvent.nftReward.nftName}
+                                                </p>
+                                                {selectedEvent.nftReward.nftDescription && (
+                                                    <p className="text-xs text-purple-700">
+                                                        {selectedEvent.nftReward.nftDescription}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+                                        <p className="text-xs text-purple-600 mt-2">
+                                            Complete all adventures to earn this NFT!
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
