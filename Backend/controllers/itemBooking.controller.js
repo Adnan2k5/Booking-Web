@@ -39,7 +39,7 @@ export const createBooking = asyncHandler(async (req, res) => {
         } return sum;
     }, 0);
 
-    if (modeOfPayment && modeOfPayment.toLowerCase() !== 'revolut') {
+    if (modeOfPayment && modeOfPayment.toLowerCase() === 'revolut') {
         // Create Revolut payment order
         const revolutOrder = await createRevolutOrder(totalPrice, 'GBP', `Item Booking - User: ${req.user.name}`);
         const booking = await ItemBooking.create({
@@ -56,7 +56,7 @@ export const createBooking = asyncHandler(async (req, res) => {
         }, "Booking Created with Payment Order"));
     }
     else {
-        
+        // Pay via Paypal
     }
 
 });
