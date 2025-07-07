@@ -75,6 +75,53 @@ const eventBookingSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    adventureInstructors: [
+      {
+        adventure: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Adventure",
+          required: true,
+        },
+        instructor: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+      },
+    ],
+    adventureCompletionStatus: [
+      {
+        adventure: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Adventure",
+          required: true,
+        },
+        completed: {
+          type: Boolean,
+          default: false,
+        },
+        completedAt: {
+          type: Date,
+          required: false,
+        },
+      },
+    ],
+    nftEligible: {
+      type: Boolean,
+      default: false,
+    },
+    nftAwarded: {
+      type: Boolean,
+      default: false,
+    },
+    nftAwardedAt: {
+      type: Date,
+      required: false,
+    },
+    nftTokenId: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,

@@ -19,6 +19,9 @@ export const createEvents = asyncHandler(async (req, res, next) => {
     level,
     latitude,
     longitude,
+    adventures,
+    isNftEvent,
+    nftReward,
   } = req.body;
 
   if (
@@ -56,6 +59,31 @@ export const createEvents = asyncHandler(async (req, res, next) => {
     }
   }
 
+  // Parse adventures if provided as string
+  let adventureIds = [];
+  if (adventures) {
+    try {
+      adventureIds =
+        typeof adventures === "string" ? JSON.parse(adventures) : adventures;
+    } catch (error) {
+      return res.status(400).json({
+        message: "Invalid adventures format",
+      });
+    }
+  }
+
+  // Parse NFT reward settings if provided
+  let nftRewardSettings = {};
+  if (nftReward && typeof nftReward === "string") {
+    try {
+      nftRewardSettings = JSON.parse(nftReward);
+    } catch (error) {
+      nftRewardSettings = {};
+    }
+  } else if (nftReward && typeof nftReward === "object") {
+    nftRewardSettings = nftReward;
+  }
+
   const event = new Event({
     title,
     description,
@@ -73,13 +101,28 @@ export const createEvents = asyncHandler(async (req, res, next) => {
     medias,
     city,
     country,
+    adventures: adventureIds || [],
+    isNftEvent: isNftEvent === "true" || isNftEvent === true || false,
+    nftReward: {
+      enabled: isNftEvent === "true" || isNftEvent === true || false,
+      nftName: nftRewardSettings.nftName || "",
+      nftDescription: nftRewardSettings.nftDescription || "",
+      nftImage: nftRewardSettings.nftImage || "",
+    },
   });
 
   await event.save();
+
+  // Populate adventures in response
+  const populatedEvent = await Event.findById(event._id).populate(
+    "adventures",
+    "name description thumbnail"
+  );
+
   res.status(201).json({
     success: true,
     message: "Event created successfully",
-    data: event,
+    data: populatedEvent,
   });
 });
 
@@ -100,7 +143,8 @@ export const getAllEvents = asyncHandler(async (req, res, next) => {
   const eventsData = await Event.find(query)
     .sort({ date: 1 })
     .skip(skip)
-    .limit(parseInt(limit));
+    .limit(parseInt(limit))
+    .populate("adventures", "name description thumbnail");
 
   if (!eventsData || eventsData.length === 0) {
     return res.status(200).json({ message: "No events found" });
@@ -128,7 +172,10 @@ export const getEventById = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const language = getLanguage(req);
 
-  const eventData = await Event.findById(id);
+  const eventData = await Event.findById(id).populate(
+    "adventures",
+    "name description thumbnail"
+  );
   if (!eventData) {
     return res.status(404).json({ message: "Event not found" });
   }
@@ -164,6 +211,9 @@ export const updateEvent = asyncHandler(async (req, res, next) => {
     level,
     latitude,
     longitude,
+    adventures,
+    isNftEvent,
+    nftReward,
   } = req.body;
 
   const updateData = {
@@ -176,6 +226,45 @@ export const updateEvent = asyncHandler(async (req, res, next) => {
     mapEmbedUrl: mapEmbedUrl || "",
     level: level || 1,
   };
+
+  // Parse adventures if provided
+  if (adventures !== undefined) {
+    try {
+      updateData.adventures =
+        typeof adventures === "string"
+          ? JSON.parse(adventures)
+          : adventures || [];
+    } catch (error) {
+      return res.status(400).json({
+        message: "Invalid adventures format",
+      });
+    }
+  }
+
+  // Handle NFT settings
+  if (isNftEvent !== undefined) {
+    updateData.isNftEvent = isNftEvent === "true" || isNftEvent === true;
+  }
+
+  if (nftReward !== undefined) {
+    let nftRewardSettings = {};
+    if (typeof nftReward === "string") {
+      try {
+        nftRewardSettings = JSON.parse(nftReward);
+      } catch (error) {
+        nftRewardSettings = {};
+      }
+    } else if (typeof nftReward === "object") {
+      nftRewardSettings = nftReward;
+    }
+
+    updateData.nftReward = {
+      enabled: updateData.isNftEvent || false,
+      nftName: nftRewardSettings.nftName || "",
+      nftDescription: nftRewardSettings.nftDescription || "",
+      nftImage: nftRewardSettings.nftImage || "",
+    };
+  }
 
   // Update coordinates and extract city/country if provided
   if (latitude && longitude) {
@@ -210,7 +299,9 @@ export const updateEvent = asyncHandler(async (req, res, next) => {
     }
   }
 
-  const event = await Event.findByIdAndUpdate(id, updateData, { new: true });
+  const event = await Event.findByIdAndUpdate(id, updateData, {
+    new: true,
+  }).populate("adventures", "name description thumbnail");
   if (!event) {
     return res.status(404).json({ message: "Event not found" });
   }
