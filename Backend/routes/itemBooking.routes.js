@@ -1,6 +1,7 @@
 import express from "express";
 import { 
     createBooking, 
+    approveBooking,
     handlePaymentCompletion,
     getPaymentStatus,
     getOrderDetails,
@@ -24,6 +25,9 @@ router.use(verifyJWT);
 
 // Legacy cart-based booking
 router.get('/create', createBooking);
+
+// Approve payment
+router.post('/approve/:orderId', approveBooking);
 
 // Get payment status
 router.get('/payment-status/:bookingId', getPaymentStatus);

@@ -37,7 +37,8 @@ export const createBooking = asyncHandler(async (req, res) => {
             const endDate = new Date(item.rentalPeriod.endDate);
             const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
             sum += item.item.rentalPrice * item.quantity * days;
-        } return sum;
+        }
+        return sum;
     }, 0);
 
     if (modeOfPayment && modeOfPayment.toLowerCase() === 'revolut') {
@@ -62,7 +63,7 @@ export const createBooking = asyncHandler(async (req, res) => {
             const payPalService = new PayPalService();
             const paypalResponse = await payPalService.createOrder(totalPrice, 'GBP');
             console.log('PayPal Order Created:', paypalResponse);
-            
+
             // Create booking with PayPal order ID
             const booking = await ItemBooking.create({
                 amount: totalPrice,
@@ -330,4 +331,122 @@ export const getAllItemBookings = asyncHandler(async (req, res) => {
             totalPages: Math.ceil(total / limit),
         }, "All item bookings retrieved successfully")
     );
+});
+
+export const approveBooking = asyncHandler(async (req, res) => {
+    const { orderId } = req.params;
+    const { payerId } = req.body;
+
+    console.log('Approve booking request:', { orderId, payerId });
+
+    if (!orderId) {
+        throw new ApiError(400, "Order ID is required");
+    }
+
+    try {
+        // Find the booking by PayPal order ID
+        const booking = await ItemBooking.findOne({ paymentOrderId: orderId })
+            .populate('user', 'name email')
+            .populate({
+                path: 'items.item',
+                select: 'name price rentalPrice images category'
+            });
+
+        if (!booking) {
+            throw new ApiError(404, "Booking not found for this order ID");
+        }
+
+        // Check if user is authorized
+        if (booking.user._id.toString() !== req.user._id.toString()) {
+            throw new ApiError(401, "You are not authorized to approve this booking");
+        }
+
+        // Check if booking is already completed
+        if (booking.paymentStatus === 'completed') {
+            return res.status(200).json(new ApiResponse(200, {
+                booking,
+                message: "Payment already completed"
+            }, "Booking already approved"));
+        }
+
+        const payPalService = new PayPalService();
+
+        // Get order details from PayPal
+        const orderDetails = await payPalService.getOrder(orderId);
+
+        console.log('PayPal Order Details:', orderDetails);
+
+        if (!orderDetails) {
+            throw new ApiError(404, "PayPal order not found");
+        }
+
+        // Check if the order is already captured
+        if (orderDetails.status === 'COMPLETED') {
+            // Order already captured, update booking status if not already done
+            if (booking.paymentStatus !== 'completed') {
+                booking.paymentStatus = 'completed';
+                booking.paymentCompletedAt = new Date();
+                booking.status = 'confirmed';
+                await booking.save();
+
+                // Clear the user's cart
+                await Cart.findOneAndUpdate(
+                    { user: req.user._id },
+                    { $set: { items: [] } }
+                );
+            }
+
+            return res.status(200).json(new ApiResponse(200, {
+                booking,
+                message: "Payment already completed"
+            }, "Booking already approved"));
+        }
+
+        // Only capture if order is not already completed
+        const captureResponse = await payPalService.captureOrder(orderId);
+
+        if (!captureResponse) {
+            // Update booking status
+            booking.paymentStatus = 'completed';
+            booking.paymentCompletedAt = new Date();
+            booking.status = 'confirmed';
+            await booking.save();
+
+            // Clear the user's cart
+            await Cart.findOneAndUpdate(
+                { user: req.user._id },
+                { $set: { items: [] } }
+            );
+
+            res.status(200).json(new ApiResponse(200, {
+                booking,
+                captureDetails: captureResponse
+            }, "Booking approved and payment captured successfully"));
+        }
+
+        res.status(403).json(new ApiResponse(403, null, "Payment capture failed. Please try again later."));
+
+    } catch (error) {
+        console.error('Approve booking error:', error);
+
+        if (error instanceof ApiError) {
+            throw error;
+        }
+
+        // Handle specific PayPal errors
+        if (error.response?.status === 401) {
+            throw new ApiError(401, "PayPal authentication failed. Please check API credentials.");
+        }
+
+        if (error.response?.status === 404) {
+            throw new ApiError(404, "PayPal order not found or has expired.");
+        }
+
+        if (error.response?.status === 422) {
+            const errorDetail = error.response?.data?.details?.[0]?.description || "Payment cannot be processed";
+            throw new ApiError(422, `PayPal processing error: ${errorDetail}`);
+        }
+
+        throw new ApiError(500, `Failed to approve booking: ${error.message}`);
+    }
 });
