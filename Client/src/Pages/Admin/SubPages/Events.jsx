@@ -446,7 +446,7 @@ export default function EventsPage() {
                                         </div>
                                         <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                                             <Clock className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                                            <span className="truncate">{formatDisplayTime(event.time)}</span>
+                                            <span className="truncate">{formatDisplayTime(event.startTime)}</span>
                                         </div>
                                         <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                                             <MapPin className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
