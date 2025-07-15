@@ -104,18 +104,6 @@ const EventCard = memo(({ event, handleBooking, handleViewMore }) => (
         </div>
       )}
 
-      {/* NFT Badge */}
-      {event.isNftEvent && (
-        <div className="space-y-2">
-          <div className="pl-7">
-            <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border border-purple-200">
-              <Star className="h-3 w-3 mr-1" />
-              NFT Event
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Description */}
       <div className="space-y-2">
         <div className="flex items-center space-x-2 text-gray-700">
