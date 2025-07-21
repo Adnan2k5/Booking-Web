@@ -52,7 +52,7 @@ const hotelBookingSchema = new mongoose.Schema(
     },
     modeOfPayment: {
       type: String,
-      enum: ["card", "cash", "revolut"],
+      enum: ["card", "paypal", "revolut"],
       default: "card",
     },
     specialRequests: {

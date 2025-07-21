@@ -62,7 +62,6 @@ export const createBooking = asyncHandler(async (req, res) => {
         try {
             const payPalService = new PayPalService();
             const paypalResponse = await payPalService.createOrder(totalPrice, 'GBP');
-            console.log('PayPal Order Created:', paypalResponse);
 
             // Create booking with PayPal order ID
             const booking = await ItemBooking.create({
@@ -125,7 +124,6 @@ export const handlePaymentCompletion = asyncHandler(async (req, res) => {
             processedBookings.push({ type: 'session', result });
         }
 
-        console.log('Processed Bookings:', processedBookings);
         // Return response based on processed bookings
         if (processedBookings.length > 0) {
             res.status(200).json(new ApiResponse(200, {
@@ -337,20 +335,34 @@ export const approveBooking = asyncHandler(async (req, res) => {
     const { orderId } = req.params;
     const { payerId } = req.body;
 
-    console.log('Approve booking request:', { orderId, payerId });
-
     if (!orderId) {
         throw new ApiError(400, "Order ID is required");
     }
 
     try {
-        // Find the booking by PayPal order ID
-        const booking = await ItemBooking.findOne({ paymentOrderId: orderId })
+        // Try to find item booking
+        let booking = await ItemBooking.findOne({ paymentOrderId: orderId })
             .populate('user', 'name email')
             .populate({
                 path: 'items.item',
                 select: 'name price rentalPrice images category'
             });
+
+        let bookingType = 'item';
+
+        // If not found, try hotel booking
+        if (!booking) {
+            booking = await HotelBooking.findOne({ transactionId: orderId })
+                .populate('user', 'name email');
+            bookingType = 'hotel';
+        }
+
+        // If not found, try session booking
+        if (!booking) {
+            booking = await Booking.findOne({ transactionId: orderId })
+                .populate('user', 'name email');
+            bookingType = 'session';
+        }
 
         if (!booking) {
             throw new ApiError(404, "Booking not found for this order ID");
@@ -365,7 +377,8 @@ export const approveBooking = asyncHandler(async (req, res) => {
         if (booking.paymentStatus === 'completed') {
             return res.status(200).json(new ApiResponse(200, {
                 booking,
-                message: "Payment already completed"
+                message: "Payment already completed",
+                bookingType
             }, "Booking already approved"));
         }
 
@@ -373,8 +386,6 @@ export const approveBooking = asyncHandler(async (req, res) => {
 
         // Get order details from PayPal
         const orderDetails = await payPalService.getOrder(orderId);
-
-        console.log('PayPal Order Details:', orderDetails);
 
         if (!orderDetails) {
             throw new ApiError(404, "PayPal order not found");
@@ -389,16 +400,19 @@ export const approveBooking = asyncHandler(async (req, res) => {
                 booking.status = 'confirmed';
                 await booking.save();
 
-                // Clear the user's cart
-                await Cart.findOneAndUpdate(
-                    { user: req.user._id },
-                    { $set: { items: [] } }
-                );
+                // Clear the user's cart for item bookings only
+                if (bookingType === 'item') {
+                    await Cart.findOneAndUpdate(
+                        { user: req.user._id },
+                        { $set: { items: [] } }
+                    );
+                }
             }
 
             return res.status(200).json(new ApiResponse(200, {
                 booking,
-                message: "Payment already completed"
+                message: "Payment already completed",
+                bookingType
             }, "Booking already approved"));
         }
 
@@ -412,19 +426,22 @@ export const approveBooking = asyncHandler(async (req, res) => {
             booking.status = 'confirmed';
             await booking.save();
 
-            // Clear the user's cart
-            await Cart.findOneAndUpdate(
-                { user: req.user._id },
-                { $set: { items: [] } }
-            );
+            // Clear the user's cart for item bookings only
+            if (bookingType === 'item') {
+                await Cart.findOneAndUpdate(
+                    { user: req.user._id },
+                    { $set: { items: [] } }
+                );
+            }
 
-            res.status(200).json(new ApiResponse(200, {
+            return res.status(200).json(new ApiResponse(200, {
                 booking,
-                captureDetails: captureResponse
+                captureDetails: captureResponse,
+                bookingType
             }, "Booking approved and payment captured successfully"));
         }
 
-        res.status(403).json(new ApiResponse(403, null, "Payment capture failed. Please try again later."));
+        return res.status(403).json(new ApiResponse(403, null, "Payment capture failed. Please try again later."));
 
     } catch (error) {
         console.error('Approve booking error:', error);

@@ -52,7 +52,6 @@ export default class PayPalService {
   async createOrder(totalAmount, currency) {
     try {
       const accessToken = await this.getAccessToken();
-
       const purchase_units = [{
         amount: {
           currency_code: currency || "USD",

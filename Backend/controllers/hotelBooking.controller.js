@@ -5,6 +5,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { createRevolutOrder } from "../utils/revolut.js";
+import PayPalService from "../services/paypal.service.js";
 
 
 // Create a new hotel booking
@@ -81,7 +82,21 @@ export const createHotelBooking = asyncHandler(async (req, res) => {
     );
   }
   else {
-   // For other payment methods, just return the booking details
+    const payPalService = new PayPalService();
+    order = await payPalService.createOrder(
+      totalPrice,
+      hotelData.currency || "GBP",
+    );
+
+    booking.transactionId = order.id; // Store PayPal order ID
+    booking.status = "pending"; // Set initial status to pending
+    await booking.save();
+
+    res.status(201).json(
+      new ApiResponse(201, {
+        checkout_url: order.links[1].href,
+      }, "Hotel booking created successfully")
+    );
   }
 });
 
