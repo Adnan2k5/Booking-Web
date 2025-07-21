@@ -68,10 +68,9 @@ export default function HotelCheckout() {
       [name]: value
     }))
   }
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, paymentMode) => {
     e.preventDefault()
     setIsLoading(true)
-
     try {
       // Prepare booking data
       const bookingData = {
@@ -80,7 +79,8 @@ export default function HotelCheckout() {
         hotel: hotelData._id,
         checkInDate: bookingDetails.checkInDate,
         checkOutDate: bookingDetails.checkOutDate,
-        specialRequests: bookingDetails.specialRequests
+        specialRequests: bookingDetails.specialRequests,
+        modeOfPayment: paymentMode 
       }
       // Make API request to create hotel booking
       const response = await createHotelBooking(bookingData)
@@ -347,12 +347,46 @@ export default function HotelCheckout() {
 
                   <Button
                     type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
                     size="lg"
                     disabled={isLoading}
-                    onClick={handleSubmit}
+                    onClick={(e) => handleSubmit(e, "revolut")}
                   >
-                    {isLoading ? "Processing..." : "Confirm and Pay"}
+                    <CreditCard className="h-5 w-5" />
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                        </svg>
+                        Processing...
+                      </>
+                    ) : (
+                      <>Confirm and Pay with Revolut</>
+                    )}
+                  </Button>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-white font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                    size="lg"
+                    disabled={isLoading}
+                    onClick={(e) => handleSubmit(e, "paypal")}
+                  >
+                    <svg className="h-5 w-5" viewBox="0 0 32 32" fill="currentColor">
+                      <path d="M29.8 13.8c-.3-2.2-2.2-3.7-4.7-3.7h-7.8c-.5 0-.9.3-1 .8l-3.2 15.2c-.1.4.2.8.6.8h4.1c.5 0 .9-.3 1-.8l.9-4.2c.1-.5.5-.8 1-.8h2.6c4.1 0 7.3-2.1 8.2-6.4.2-.7.2-1.3.3-1.9zm-3.2 2.1c-.6 2.7-2.7 3.9-5.6 3.9h-1.7l1.1-5.2c.1-.5.5-.8 1-.8h1.7c1.2 0 2.1.3 2.7.8.6.5.8 1.3.6 2.3z"/>
+                    </svg>
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                        </svg>
+                        Processing...
+                      </>
+                    ) : (
+                      <>Confirm and Pay with PayPal</>
+                    )}
                   </Button>
 
                   <p className="text-xs text-gray-500 text-center mt-2">
