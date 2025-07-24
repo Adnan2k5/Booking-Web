@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -29,20 +29,70 @@ export default function MapLocationPicker({
     const [isSearching, setIsSearching] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState(null);
     const [locationInput, setLocationInput] = useState('');
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [userInteracted, setUserInteracted] = useState(false);
+
+    // Debounced update function to prevent conflicts
+    const updateLocationData = useCallback((locationData) => {
+        if (isUpdating) return; // Prevent concurrent updates
+
+        setIsUpdating(true);
+        const { latitude, longitude, displayName, address: locationAddress, city, country } = locationData;
+
+        // Batch all updates together
+        const newPosition = [latitude, longitude];
+        setSelectedPosition(newPosition);
+        setLocationInput(displayName);
+
+        // Use setTimeout to ensure parent state updates happen after local state is stable
+        setTimeout(() => {
+            if (onCoordinatesChange) {
+                onCoordinatesChange({ latitude, longitude });
+            }
+
+            if (onLocationNameChange) {
+                onLocationNameChange(displayName);
+            }
+
+            if (onAddressChange) {
+                onAddressChange(displayName);
+            }
+
+            if (onLocationDetailsChange && locationAddress) {
+                onLocationDetailsChange({
+                    city: city || "",
+                    country: country || "",
+                    fullAddress: displayName,
+                    addressComponents: locationAddress
+                });
+            }
+
+            setIsUpdating(false);
+        }, 50); // Small delay to batch updates
+    }, [onCoordinatesChange, onLocationNameChange, onAddressChange, onLocationDetailsChange, isUpdating]);
 
     // Map click handler component
     function LocationMarker() {
         useMapEvents({
             click(e) {
-                const newPosition = [e.latlng.lat, e.latlng.lng];
-                setSelectedPosition(newPosition);
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                const newPosition = [lat, lng];
 
+                // Mark that user has interacted with the map
+                setUserInteracted(true);
+
+                // Update local state immediately
+                setSelectedPosition(newPosition);
+                setLocationInput(`${lat.toFixed(4)}, ${lng.toFixed(4)}`); // Temporary placeholder
+
+                // Update parent coordinates immediately
                 if (onCoordinatesChange) {
-                    onCoordinatesChange({ latitude: e.latlng.lat, longitude: e.latlng.lng });
+                    onCoordinatesChange({ latitude: lat, longitude: lng });
                 }
 
-                // Reverse geocode to get location name
-                reverseGeocode(e.latlng.lat, e.latlng.lng);
+                // Reverse geocode to get proper address (this will update the address later)
+                reverseGeocodeFromClick(lat, lng);
             },
         });
         return selectedPosition ? <Marker position={selectedPosition} icon={markerIcon} /> : null;
@@ -66,12 +116,23 @@ export default function MapLocationPicker({
         }
 
         setIsSearching(true);
+        setUserInteracted(true); // Mark as user interaction
         try {
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
                     query
-                )}&limit=1&addressdetails=1`
+                )}&limit=1&addressdetails=1`,
+                {
+                    headers: {
+                        'User-Agent': 'Booking-Web/1.0'
+                    }
+                }
             );
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
             const data = await response.json();
 
             if (data && data.length > 0) {
@@ -79,45 +140,29 @@ export default function MapLocationPicker({
                 const lat = parseFloat(location.lat);
                 const lon = parseFloat(location.lon);
 
-                // Update map position and coordinates
-                const newPosition = [lat, lon];
-                setSelectedPosition(newPosition);
-
-                if (onCoordinatesChange) {
-                    onCoordinatesChange({ latitude: lat, longitude: lon });
-                }
-
-                if (onLocationNameChange) {
-                    onLocationNameChange(location.display_name);
-                }
-
-                // Update the address input
-                if (onAddressChange) {
-                    onAddressChange(location.display_name);
-                }
-
                 // Extract city and country from search result
-                if (onLocationDetailsChange && location.address) {
-                    const address = location.address;
-                    const city = address.city ||
-                        address.town ||
-                        address.village ||
-                        address.municipality ||
-                        address.county ||
-                        address.state_district ||
-                        address.state ||
-                        '';
-                    const country = address.country || '';
+                const address = location.address;
+                const city = address?.city ||
+                    address?.town ||
+                    address?.village ||
+                    address?.municipality ||
+                    address?.county ||
+                    address?.state_district ||
+                    address?.state ||
+                    '';
+                const country = address?.country || '';
 
-                    onLocationDetailsChange({
-                        city: city,
-                        country: country,
-                        fullAddress: location.display_name,
-                        addressComponents: address
-                    });
-                }
-
-                setLocationInput(location.display_name);
+                // Use the new batch update function
+                updateLocationData({
+                    latitude: lat,
+                    longitude: lon,
+                    displayName: location.display_name,
+                    address: address,
+                    city: city,
+                    country: country
+                });
+            } else {
+                console.warn("No search results found for:", query);
             }
         } catch (error) {
             console.error("Error searching location:", error);
@@ -126,50 +171,143 @@ export default function MapLocationPicker({
         }
     };
 
-    // Reverse geocoding function to get location name from coordinates
-    const reverseGeocode = async (lat, lng) => {
+    // Reverse geocoding function specifically for map clicks - uses batch update
+    const reverseGeocodeFromClick = async (lat, lng, retryCount = 0) => {
         try {
             const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+                {
+                    headers: {
+                        'User-Agent': 'Booking-Web/1.0'
+                    }
+                }
             );
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
             const data = await response.json();
 
             if (data && data.display_name) {
+                // Update location input display
                 setLocationInput(data.display_name);
-                if (onLocationNameChange) {
-                    onLocationNameChange(data.display_name);
-                }
 
-                // Update the address input
+                // Extract city and country from address components
+                const address = data.address;
+                const city = address?.city ||
+                    address?.town ||
+                    address?.village ||
+                    address?.municipality ||
+                    address?.county ||
+                    address?.state_district ||
+                    address?.state ||
+                    '';
+                const country = address?.country || '';
+
+                // Update parent callbacks without affecting map position
                 if (onAddressChange) {
                     onAddressChange(data.display_name);
                 }
-
-                // Extract city and country from address components
-                if (onLocationDetailsChange && data.address) {
-                    const address = data.address;
-                    const city = address.city ||
-                        address.town ||
-                        address.village ||
-                        address.municipality ||
-                        address.county ||
-                        address.state_district ||
-                        address.state ||
-                        '';
-                    const country = address.country || '';
-
+                if (onLocationNameChange) {
+                    onLocationNameChange(data.display_name);
+                }
+                if (onLocationDetailsChange) {
                     onLocationDetailsChange({
-                        city: city,
-                        country: country,
+                        city: city || "",
+                        country: country || "",
                         fullAddress: data.display_name,
                         addressComponents: address
                     });
                 }
+            } else {
+                // If no data, use coordinates as fallback
+                const fallbackText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                setLocationInput(fallbackText);
+                if (onAddressChange) {
+                    onAddressChange(fallbackText);
+                }
             }
         } catch (error) {
             console.error("Error reverse geocoding:", error);
-            // Fallback to coordinates if reverse geocoding fails
-            setLocationInput(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+
+            // Retry once if it's the first attempt
+            if (retryCount === 0) {
+                setTimeout(() => {
+                    reverseGeocodeFromClick(lat, lng, 1);
+                }, 1000);
+                return;
+            }
+
+            // Fallback to coordinates if reverse geocoding fails after retry
+            const fallbackText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            setLocationInput(fallbackText);
+            if (onAddressChange) {
+                onAddressChange(fallbackText);
+            }
+        }
+    };
+
+    // Reverse geocoding function to get location name from coordinates (for initial load only)
+    const reverseGeocode = async (lat, lng, retryCount = 0) => {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+                {
+                    headers: {
+                        'User-Agent': 'Booking-Web/1.0'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            if (data && data.display_name) {
+                // Only update the location input display, don't trigger parent callbacks
+                setLocationInput(data.display_name);
+
+                // Update the parent address only after a delay to prevent conflicts
+                setTimeout(() => {
+                    if (onAddressChange && !isUpdating) {
+                        onAddressChange(data.display_name);
+                    }
+                    if (onLocationNameChange && !isUpdating) {
+                        onLocationNameChange(data.display_name);
+                    }
+                }, 100);
+            } else {
+                // If no data, use coordinates as fallback
+                const fallbackText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                setLocationInput(fallbackText);
+                setTimeout(() => {
+                    if (onAddressChange && !isUpdating) {
+                        onAddressChange(fallbackText);
+                    }
+                }, 100);
+            }
+        } catch (error) {
+            console.error("Error reverse geocoding:", error);
+
+            // Retry once if it's the first attempt
+            if (retryCount === 0) {
+                setTimeout(() => {
+                    reverseGeocode(lat, lng, 1);
+                }, 1000);
+                return;
+            }
+
+            // Fallback to coordinates if reverse geocoding fails after retry
+            const fallbackText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            setLocationInput(fallbackText);
+            setTimeout(() => {
+                if (onAddressChange && !isUpdating) {
+                    onAddressChange(fallbackText);
+                }
+            }, 100);
         }
     };
 
@@ -197,29 +335,39 @@ export default function MapLocationPicker({
         }
     };
 
-    // Set initial position based on coordinates prop
+    // Set initial position based on coordinates prop (only on mount or when coordinates change externally)
     useEffect(() => {
+        // Don't override if user has manually interacted with the map
+        if (userInteracted) return;
+
         if (coordinates?.latitude && coordinates?.longitude) {
             const newPosition = [coordinates.latitude, coordinates.longitude];
-            setSelectedPosition(newPosition);
-            // Get location name for display
-            reverseGeocode(coordinates.latitude, coordinates.longitude);
-        } else {
-            // Set default location (you can customize this)
+            // Only update if the position is actually different to avoid infinite loops
+            if (!selectedPosition ||
+                Math.abs(selectedPosition[0] - coordinates.latitude) > 0.0001 ||
+                Math.abs(selectedPosition[1] - coordinates.longitude) > 0.0001) {
+                setSelectedPosition(newPosition);
+                // Only reverse geocode if we don't already have location input for this position
+                if (!locationInput || locationInput.includes('coordinates')) {
+                    reverseGeocode(coordinates.latitude, coordinates.longitude);
+                }
+            }
+        } else if (!selectedPosition) {
+            // Set default location only if no position is set
             const defaultPosition = [55.1694, 23.8813]; // Lithuania as default
             setSelectedPosition(defaultPosition);
             if (onCoordinatesChange) {
                 onCoordinatesChange({ latitude: 55.1694, longitude: 23.8813 });
             }
         }
-    }, [coordinates]);
+    }, [coordinates?.latitude, coordinates?.longitude, userInteracted]);
 
-    // Update search value when address prop changes
+    // Update search value when address prop changes (but don't reset map position)
     useEffect(() => {
-        if (address !== searchValue) {
+        if (address !== searchValue && !isUpdating) {
             setSearchValue(address);
         }
-    }, [address]);
+    }, [address, searchValue, isUpdating]);
 
     const mapCenter = selectedPosition || [55.1694, 23.8813];
 

@@ -338,17 +338,20 @@ export default function UserDashboardPage() {
                                         <div>
                                             <h4 className="font-medium mb-3">Achievements</h4>
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                                <div className={`flex flex-col items-center p-3 rounded-2xl ${userProfile.completedAdventures > 0 ? 'bg-blue-50' : 'bg-gray-100 opacity-50'}`}>
-                                                    <Award className={`h-8 w-8 mb-2 ${userProfile.completedAdventures > 0 ? 'text-blue-500' : 'text-gray-400'}`} />
+                                                <div className={`flex flex-col items-center p-3 rounded-2xl ${userProfile.completedAdventures >= 1 ? 'bg-blue-50' : 'bg-gray-100 opacity-50'}`}>
+                                                    <Award className={`h-8 w-8 mb-2 ${userProfile.completedAdventures >= 1 ? 'text-blue-500' : 'text-gray-400'}`} />
                                                     <span className="text-sm font-medium">First Adventure</span>
+                                                    <span className="text-xs text-gray-500 mt-1">Complete 1 adventure</span>
                                                 </div>
-                                                <div className={`flex flex-col items-center p-3 rounded-2xl ${userProfile.adventureCount >= 3 ? 'bg-green-50' : 'bg-gray-100 opacity-50'}`}>
-                                                    <Award className={`h-8 w-8 mb-2 ${userProfile.adventureCount >= 3 ? 'text-green-500' : 'text-gray-400'}`} />
+                                                <div className={`flex flex-col items-center p-3 rounded-2xl ${userProfile.completedAdventures >= 10 ? 'bg-green-50' : 'bg-gray-100 opacity-50'}`}>
+                                                    <Award className={`h-8 w-8 mb-2 ${userProfile.completedAdventures >= 10 ? 'text-green-500' : 'text-gray-400'}`} />
                                                     <span className="text-sm font-medium">Adventure Explorer</span>
+                                                    <span className="text-xs text-gray-500 mt-1">Complete 10 adventures</span>
                                                 </div>
-                                                <div className={`flex flex-col items-center p-3 rounded-2xl ${userProfile.level >= 10 ? 'bg-purple-50' : 'bg-gray-100 opacity-50'}`}>
-                                                    <Award className={`h-8 w-8 mb-2 ${userProfile.level >= 10 ? 'text-purple-500' : 'text-gray-400'}`} />
+                                                <div className={`flex flex-col items-center p-3 rounded-2xl ${userProfile.completedAdventures >= 25 ? 'bg-purple-50' : 'bg-gray-100 opacity-50'}`}>
+                                                    <Award className={`h-8 w-8 mb-2 ${userProfile.completedAdventures >= 25 ? 'text-purple-500' : 'text-gray-400'}`} />
                                                     <span className="text-sm font-medium">Adventure Master</span>
+                                                    <span className="text-xs text-gray-500 mt-1">Complete 25 adventures</span>
                                                 </div>
                                             </div>
                                         </div>
