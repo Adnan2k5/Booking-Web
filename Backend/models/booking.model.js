@@ -35,8 +35,8 @@ const bookingSchema = new mongoose.Schema(
     },
     modeOfPayment: {
       type: String,
-      enum: ["card", "cash", "revolut"],
-      default: "card",
+      enum: ["paypal", "cash", "revolut"],
+      default: "cash",
     },
   },
   {

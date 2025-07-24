@@ -10,6 +10,7 @@ import { HotelBooking } from "../models/hotelBooking.model.js";
 import { createRevolutOrder } from "../utils/revolut.js";
 import { Hotel } from "../models/hotel.model.js";
 import mongoose from "mongoose";
+import PayPalService from "../services/paypal.service.js";
 
 // Helper function to calculate days between dates
 const calculateDaysBetween = (startDate, endDate) => {
@@ -94,7 +95,7 @@ const processItemBookings = async (items, userId, modeOfPayment, session, transa
 
   // Get unique item IDs and fetch them in parallel
   const uniqueItemIds = [...new Set(items.map(item => item.item))];
-  const itemsData = dbSession 
+  const itemsData = dbSession
     ? await Item.find({ _id: { $in: uniqueItemIds } }).session(dbSession)
     : await Item.find({ _id: { $in: uniqueItemIds } });
 
@@ -163,7 +164,7 @@ const processItemBookings = async (items, userId, modeOfPayment, session, transa
 const processHotelBooking = async (hotelData, userId, modeOfPayment, session, transactionId = null, dbSession = null) => {
   if (!hotelData) return { hotelBooking: null };
 
-  const hotel = dbSession 
+  const hotel = dbSession
     ? await Hotel.findById(hotelData.hotel).session(dbSession)
     : await Hotel.findById(hotelData.hotel);
   if (!hotel) {
@@ -201,6 +202,7 @@ const processHotelBooking = async (hotelData, userId, modeOfPayment, session, tr
 export const createSessionBooking = asyncHandler(async (req, res) => {
   const { sessionBooking, itemBooking = {}, hotelBooking, modeOfPayment } = req.body;
 
+
   // Validate inputs
   const { session, groupMembers } = validateSessionBookingInput(sessionBooking);
   const validatedItems = validateItemBookingInput(itemBooking.items);
@@ -210,7 +212,7 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
 
   // Start transaction for data consistency
   const session_db = await mongoose.startSession();
-  session_db.startTransaction();
+  await session_db.startTransaction();
 
   try {
     // Fetch session and user data in parallel
@@ -245,7 +247,7 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
       // Get unique item IDs and fetch them in parallel for price calculation
       const uniqueItemIds = [...new Set(validatedItems.map(item => item.item))];
       const itemsData = await Item.find({ _id: { $in: uniqueItemIds } }).session(session_db);
-      
+
       if (itemsData.length !== uniqueItemIds.length) {
         const foundIds = itemsData.map(item => item._id.toString());
         const missingIds = uniqueItemIds.filter(id => !foundIds.includes(id));
@@ -283,8 +285,16 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
     // Calculate total price including all components
     totalPrice += itemPrice + hotelPrice;
 
-    // Create payment order with complete total price
-    const paymentData = await createRevolutOrder(totalPrice, "GBP", "Session Booking Payment");
+
+    let paymentData;
+    console.log("Mode of Payment:", modeOfPayment);
+    if (modeOfPayment === "revolut") {
+      // Create payment order with complete total price
+      paymentData = await createRevolutOrder(totalPrice, "GBP", "Session Booking Payment");
+    } else {
+      const payPalService = new PayPalService();
+      paymentData = await payPalService.createOrder(totalPrice, 'GBP');
+    }
 
     // Create main booking with transaction ID
     const booking = await Booking.create([{
@@ -326,6 +336,7 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
       session_db
     );
 
+    console.log(paymentData);
     // Commit transaction
     await session_db.commitTransaction();
 
@@ -337,19 +348,19 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
           itemBooking,
           hotelBooking,
           totalPrice,
-          paymentUrl: paymentData.checkout_url,
+          paymentUrl: (modeOfPayment === "revolut") ? paymentData.checkout_url : paymentData.links[1].href,
         },
         "Session booking created successfully"
       )
     );
 
   } catch (error) {
+    throw error;
     // Rollback transaction on error
     await session_db.abortTransaction();
-    throw error;
   } finally {
     // End session
-    session_db.endSession();
+    await session_db.endSession();
   }
 });
 
