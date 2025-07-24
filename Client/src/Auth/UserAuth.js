@@ -146,3 +146,19 @@ export const GoogleLoginSuccess = async (response, dispatch) => {
       return err;
     });
 };
+
+export const userLogout = async (dispatch) => {
+  try {
+    await axiosClient.post(
+      '/api/auth/logout',
+      {},
+      {
+        withCredentials: true,
+      }
+    );
+    dispatch(logout());
+    return 200;
+  } catch (error) {
+    return error;
+  }
+};
