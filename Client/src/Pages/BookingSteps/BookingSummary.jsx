@@ -51,13 +51,18 @@ export const BookingSummary = ({
         }
     };
 
-    const handleProceedToPayment = async () => {
+    const handleProceedToPayment = async (paymentMethod = "revolut") => {
         if (!declaration) {
             await fetchDeclaration();
         } else {
             setShowDeclaration(true);
         }
+        // Store payment method for use in proceedToPayment
+        setSelectedPaymentMethod(paymentMethod);
     };
+
+    // Add state to track selected payment method
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("revolut");
 
     const handleUserConsent = (declId) => {
         // Here you can handle the user consent for the specific declaration
@@ -73,7 +78,6 @@ export const BookingSummary = ({
         const bookingId = toast.loading("Creating your booking...");
 
         try {
-
             if (!selectedInstructor) {
                 toast.error("Please select an instructor for your adventure.", { id: bookingId });
                 setIsBooking(false);
@@ -89,9 +93,8 @@ export const BookingSummary = ({
                 session: selectedInstructor._id,
                 groupMembers: groupMembers.map(member => member._id),
                 amount: (selectedInstructor.price || 0) + (groupMembers.length * 30),
-                modeOfPayment: "revolut"
+                modeOfPayment: selectedPaymentMethod
             };
-
 
             // 2. Create Item Booking (for cart items) - Direct approach without cart
             if (cartItems.length > 0) {
@@ -136,7 +139,7 @@ export const BookingSummary = ({
                 itemBooking: itemBookingData,
                 hotelBooking: selectedHotel ? hotelBookingData : null,
                 totalAmount: calculateTotal(),
-                paymentMethod: "revolut"
+                modeOfPayment: selectedPaymentMethod
             }
 
             const { data } = await createSessionBooking(bookingData);
@@ -419,12 +422,20 @@ export const BookingSummary = ({
                         <div className="flex justify-between items-center text-xl font-bold">
                             <span>{t("total")}</span>
                             <span>${calculateTotal().toFixed(2)}</span>
-                        </div>                        <Button
-                            onClick={handleProceedToPayment}
+                        </div>                        
+                        <Button
+                            onClick={() => { setSelectedPaymentMethod("revolut"); handleProceedToPayment("revolut"); }}
                             disabled={isBooking}
                             className="w-full mt-6 bg-white text-blue-600 hover:bg-blue-50 disabled:opacity-50"
                         >
-                            {isBooking ? "Creating Booking..." : t("proceedToPayment")}
+                            {isBooking && selectedPaymentMethod === "revolut" ? "Creating Booking..." : t("proceedToPayment")}
+                        </Button>
+                        <Button
+                            onClick={() => { setSelectedPaymentMethod("paypal"); handleProceedToPayment("paypal"); }}
+                            disabled={isBooking}
+                            className="w-full mt-2 bg-yellow-400 text-gray-800 hover:bg-yellow-300 disabled:opacity-50"
+                        >
+                            {isBooking && selectedPaymentMethod === "paypal" ? "Processing PayPal..." : "Pay with PayPal"}
                         </Button>
                     </div>
                 </div>
