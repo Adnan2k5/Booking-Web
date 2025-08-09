@@ -176,12 +176,12 @@ export const removeCartItem = asyncHandler(async (req, res) => {
   if (!cart) throw new ApiError(404, "Cart not found");
 
   cart.items = cart.items.filter(
-    (i) => !(i.item.toString() === itemId && i.purchase === !!purchase)
+    (i) => !(i.item.toString() === itemId && i.purchase === !purchase)
   );
 
   await cart.save();
   await cart.populate("items.item");
-
+console.log("Item Removed")
   const totalPrice = cart.items.reduce((total, cartItem) => {
     const item = cartItem.item;
     if (item && cartItem.purchase) {
