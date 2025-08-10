@@ -13,7 +13,8 @@ export default function AdventureShop() {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/items");
+        const baseUrl = import.meta.env.VITE_SERVER_URL; 
+      const response = await fetch(`${baseUrl}api/items`);
         const data = await response.json();
         console.log("Fetched items from API:", data);
         setItems(data.message || []);
