@@ -27,6 +27,7 @@ import { updateLanguageHeaders } from "../Api/language.api.js"
 import { userLogout } from "../Auth/UserAuth.js"
 import { set } from "date-fns"
 import { toast } from "sonner"
+import { Link } from "react-router-dom"
 
 export const Nav_Landing = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -119,7 +120,7 @@ export const Nav_Landing = () => {
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
-                                    <Link href="/shop">{t("shop")}</Link>
+                                    <Link to="/shop">{t("shop")}</Link>
                                 </motion.li>
                             )}
                             {isHotelsEnabled && (
