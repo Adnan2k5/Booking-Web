@@ -7,7 +7,7 @@ import { Separator } from "../../components/ui/separator"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog"
 import { Input } from "../../components/ui/input"
 import DateRangePicker from "../../components/ui/DateRangePicker"
-import {useCart} from '../../hooks/useCart';
+import { useCart } from '../../hooks/useCart';
 import { Link, useNavigate } from "react-router-dom"
 import { Navbar } from "../../components/Navbar"
 import { useState, useMemo, useEffect } from "react"
@@ -24,18 +24,19 @@ export const Cart = () => {
     const [isBookingLoading, setIsBookingLoading] = useState(false)
     console.log(cart);
     const fetchCart = async () => {
-    try {
-      const res = await fetch("http://localhost:8080/api/cart", {
-        credentials: "include",
-      });
-      const data = await res.json();
-      setCart(data.data.cart);
+  try {
+    const baseUrl = import.meta.env.VITE_SERVER_URL;
+    const res = await fetch(`${baseUrl}api/cart`, {
+      credentials: "include",
+    });
+    const data = await res.json();
+    setCart(data.data.cart);
 
-      console.log("Full Cart Data:", data);
-    } catch (error) {
-      console.error("Error fetching cart:", error);
-    }
-  };
+    console.log("Full Cart Data:", data);
+  } catch (error) {
+    console.error("Error fetching cart:", error);
+  }
+};
 
   useEffect(() => {
     fetchCart(); // Call once on mount
