@@ -119,7 +119,7 @@ export const Nav_Landing = () => {
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
-                                    <a href="/shop">{t("shop")}</a>
+                                    <Link href="/shop">{t("shop")}</Link>
                                 </motion.li>
                             )}
                             {isHotelsEnabled && (
