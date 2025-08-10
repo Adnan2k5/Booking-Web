@@ -13,7 +13,7 @@ const translateCartItems = async (cart, language) => {
   }
 
   // Convert to plain object if it's a Mongoose document
-  const plainCart = cart.toJSON() ? cart.toJSON() : cart;
+  const plainCart = cart.toJSON ? cart.toJSON() : cart;
   
   // Extract items and translate them
   const items = plainCart.items.map(cartItem => cartItem.item);

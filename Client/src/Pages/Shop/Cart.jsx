@@ -7,13 +7,12 @@ import { Separator } from "../../components/ui/separator"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog"
 import { Input } from "../../components/ui/input"
 import DateRangePicker from "../../components/ui/DateRangePicker"
-import useCart from '../../hooks/useCart';
+import {useCart} from '../../hooks/useCart';
 import { Link, useNavigate } from "react-router-dom"
 import { Navbar } from "../../components/Navbar"
-import { useState, useMemo, useContext,useEffect } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { toast } from "sonner"
 import { createBooking } from "../../Api/booking.api";
-import { CartContext } from "../Cart/CartContext"
 
 export const Cart = () => {
     const navigate = useNavigate()

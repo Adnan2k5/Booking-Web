@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { useRef, useContext, useState, useEffect } from "react";
-import axios from 'axios';
 import { Button } from "../../components/ui/button";
 import { Heart, Search, ShoppingCart, ChevronLeft, ChevronRight, Home, Phone, Mail, Facebook, Instagram } from "lucide-react";
-import { CartContext } from "../cart/CartContext"; 
+import { CartContext } from "../Cart/CartContext"; 
 
 export default function AdventureShop() {
   const [items, setItems] = useState([]);
