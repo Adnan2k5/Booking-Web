@@ -38,11 +38,10 @@ const instructorSchema = new mongoose.Schema(
     },
     portfolioMedias: [
       {
-        type: String
+        type: String,
       }
     ],
-    certificate:
-    {
+    certificate: {
       type: String
     },
     governmentId: {
@@ -53,11 +52,17 @@ const instructorSchema = new mongoose.Schema(
         type: String,
       },
     ],
+
+    achievements: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "InstructorAchievement",
+      },
+    ],
   },
   {
-    Timestamps: true,
+    timestamps: true,
   }
 );
 
 export const Instructor = mongoose.model("Instructor", instructorSchema);
-

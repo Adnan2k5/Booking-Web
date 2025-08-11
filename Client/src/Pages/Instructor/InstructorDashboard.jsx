@@ -16,7 +16,7 @@ import UpcomingBookingsCard from "../../components/UpcomingBookingsCard"
 import { fetchAllAdventures, getAdventure } from "../../Api/adventure.api"
 import { getInstructorSessions } from "../../Api/session.api"
 import { staggerContainer, fadeIn } from "../../assets/Animations"
-
+import { getInstructorBadge } from '../../Api/instructorAchievement.api'
 // Mock data for the instructor dashboard
 const mockData = {
     instructor: {
@@ -245,6 +245,16 @@ const InstructorDashboard = () => {
             toast.error("No adventure ID found for instructor")
         }
         fetchUpcomingSessions()
+        const fetchBadge = async () => {
+    try {
+      const res = await getInstructorBadge(user?.user?._id);
+      console.log("Instructor Badge:", res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  
+  fetchBadge();
     }, [user, navigate])
 
     return (
