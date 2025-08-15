@@ -350,9 +350,6 @@ export default function EventsPage() {
             </div>
         )
     }
-
-    console.log("Events:", events)
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
