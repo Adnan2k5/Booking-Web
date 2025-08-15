@@ -103,7 +103,7 @@ const EventCard = memo(({ event, handleBooking, handleViewMore }) => (
           </div>
         </div>
       )}
- 
+
       {/* Description */}
       <div className="space-y-2">
         <div className="flex items-center space-x-2 text-gray-700">
@@ -1141,14 +1141,6 @@ export default function LandingPage() {
             <div className="bg-blue-50 rounded-lg p-4 mb-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-gray-800">{t("yourFriends")}</h3>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShowFriendsList(!showFriendsList)}
-                  className="text-xs text-gray-600"
-                >
-                  {showFriendsList ? t("hide") : t("show")}
-                </Button>
               </div>
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {friends
