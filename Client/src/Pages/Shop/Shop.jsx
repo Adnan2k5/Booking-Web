@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useRef, useContext, useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { Heart, Search, ShoppingCart, ChevronLeft, ChevronRight, Home, Phone, Mail, Facebook, Instagram } from "lucide-react";
-import { CartContext } from "../Cart/CartContext"; 
+import { CartContext } from "../Cart/CartContext";
 
 export default function AdventureShop() {
   const [items, setItems] = useState([]);
@@ -48,7 +48,6 @@ export default function AdventureShop() {
       <header className="bg-black text-white px-6 py-4 flex justify-between items-center">
         <div className="text-2xl font-bold">Adventure Shop</div>
         <nav className="flex items-center gap-6">
-          
           <div className="relative">
             <form onSubmit={handleSearch} className="relative">
             <input
@@ -72,7 +71,13 @@ export default function AdventureShop() {
       </header>
 
       {/* Banner */}
-      
+      <section className="relative h-[300px] w-full bg-gray-200 bg-center bg-cover" style={{ backgroundImage: "url('/your-banner.jpg')" }}>
+        <div className="absolute inset-0 bg-black/50 flex flex-col justify-center items-start px-10">
+          <h1 className="text-white text-4xl font-bold max-w-xl leading-tight mb-4">
+            Rain jackets<br /> for your adventures
+          </h1>
+        </div>
+      </section>
       {/* Highlights */}
       
       {/* Recommended */}
@@ -173,54 +178,45 @@ export default function AdventureShop() {
       </section>
       {/* Brand Logos */}
 
+      <div className="flex flex-wrap justify-center items-center gap-12 py-10 bg-white">
+        <img src="/logo-opinel.png" alt="Opinel" className="h-12" />
+        <img src="/logo-osprey.png" alt="Osprey" className="h-14" />
+        <img src="/logo-patagonia.png" alt="Patagonia" className="h-14" />
+        <img src="/logo-platypus.png" alt="Platypus" className="h-10" />
+        <img src="/logo-primus.png" alt="Primus" className="h-10" />
+        <img src="/logo-real.png" alt="Real Turmat" className="h-10" />
+      </div>
 
-{/* Footer */}
-<footer className="bg-black text-white px-6 md:px-20 py-10 grid grid-cols-1 md:grid-cols-4 gap-10">
-  {/* Logo + Tagline */}
-  <div className="space-y-3">
-    <div className="text-yellow-400 text-2xl font-bold flex items-center gap-2">
-      <span className="text-3xl">🟧</span>
-      <span>grynam<br />ore</span>
-    </div>
-    <p className="text-sm text-white">Active leisure and tourism goods</p>
-    <p className="text-sm font-semibold text-white">Stuff for new stories.</p>
-  </div>
+      {/* Footer */}
+      <footer className="bg-black text-white px-6 md:px-20 py-10 grid grid-cols-1 md:grid-cols-4 gap-10">
+        {/* Logo + Tagline */}
+        <div className="space-y-3">
+          <div className="text-white text-2xl font-bold flex items-center gap-2">
+            <span>FullSend<br />Adventure</span>
+          </div>
+          <p className="text-sm text-white">Active leisure and tourism goods</p>
+          <p className="text-sm font-semibold text-white">Stuff for new stories.</p>
+        </div>
 
-  {/* Information */}
-  <div>
-    <h4 className="font-bold mb-3">Information</h4>
-    <ul className="space-y-2 text-sm text-white">
-      <li><a href="#">Delivery and returns</a></li>
-      <li><a href="#">Terms of use</a></li>
-      <li><a href="#">Privacy Policy</a></li>
-      <li><a href="#">My account</a></li>
-    </ul>
-  </div>
+        {/* Information */}
+        <div>
+          <h4 className="font-bold mb-3">Information</h4>
+          <ul className="space-y-2 text-sm text-white">
+            <li><a href="#">Terms of use</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+          </ul>
+        </div>
 
-  {/* Contacts */}
-  <div>
-    <h4 className="font-bold mb-3">Contacts</h4>
-    <ul className="space-y-2 text-sm text-white">
-      <li className="flex items-center gap-2"><Home size={16} /> Bangu St. 7, Klaipėda</li>
-      <li className="flex items-center gap-2"><Phone size={16} /> +37062965123</li>
-      <li className="flex items-center gap-2"><Mail size={16} /> info@grynamore.lt</li>
-      <li className="flex items-center gap-2"><Facebook size={16} /> pure love</li>
-      <li className="flex items-center gap-2"><Instagram size={16} /> pureamorelt</li>
-    </ul>
-  </div>
+        {/* Contacts */}
+        <div>
+          <h4 className="font-bold mb-3">Contacts</h4>
+        </div>
 
-  {/* Working Hours */}
-  <div>
-    <h4 className="font-bold mb-3">Working hours</h4>
-    <ul className="space-y-2 text-sm text-white">
-      <li>I – we are not working</li>
-      <li>II–V 11:00 – 19:00</li>
-      <li>VI 11:00 – 16:00</li>
-      <li>VII – we are not working</li>
-    </ul>
-  </div>
-</footer>
-
+        {/* Working Hours */}
+        <div>
+          <h4 className="font-bold mb-3">Working hours</h4>
+        </div>
+      </footer>
     </div>
   );
 }

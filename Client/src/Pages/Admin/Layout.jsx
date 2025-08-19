@@ -1,4 +1,3 @@
-// components/admin/AdminLayout.jsx
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import {
@@ -10,16 +9,14 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
   SidebarInset,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
 } from '../../components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
-import { BarChart3, BookOpen, CalendarDays, ClipboardCheck, Compass, FileCheck, Hotel, LifeBuoy, LogOut, Mountain, Settings, ShoppingBag, Store, TicketCheck, User, Users } from 'lucide-react';
+import { BarChart3, BookOpen, ClipboardCheck, Compass, FileCheck, Hotel, LogOut, Mountain, Settings, Store, TicketCheck, User } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { useAuth } from '../AuthProvider';
 import { useDispatch } from 'react-redux';
 import { userLogout } from '../../Auth/UserAuth.js';
 import { toast } from 'sonner';
@@ -208,8 +205,6 @@ function AdminSidebar({ pathname }) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Continue with other sidebar groups */}
       </SidebarContent>
       <SidebarFooter className="border-t p-4">
         <Button onClick={handleLogout} variant="outline" className="w-full justify-start" size="sm">
