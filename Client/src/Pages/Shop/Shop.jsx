@@ -6,24 +6,36 @@ import { CartContext } from "../Cart/CartContext";
 
 export default function AdventureShop() {
   const [items, setItems] = useState([]);
-
+  const [searchQuery, setSearchQuery] = useState("");
   const scrollRef = useRef(null);
   const { addToCart } = useContext(CartContext);
 
+  const baseUrl = import.meta.env.VITE_SERVER_URL; 
+
+  // Fetch items
+  const fetchItems = async (query = "") => {
+    try {
+      const url = query
+        ? `${baseUrl}api/items?search=${encodeURIComponent(query)}`
+        : `${baseUrl}api/items`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+      console.log("Fetched items from API:", data);
+      setItems(data.message || []);
+    } catch (error) {
+      console.error("Error fetching items:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const baseUrl = import.meta.env.VITE_SERVER_URL;
-        const response = await fetch(`${baseUrl}api/items`);
-        const data = await response.json();
-        console.log("Fetched items from API:", data);
-        setItems(data.message || []);
-      } catch (error) {
-        console.error("Error fetching items:", error);
-      }
-    };
     fetchItems();
   }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchItems(searchQuery);
+  };
 
   const handleScroll = (direction) => {
     const container = scrollRef.current;
@@ -37,12 +49,18 @@ export default function AdventureShop() {
         <div className="text-2xl font-bold">Adventure Shop</div>
         <nav className="flex items-center gap-6">
           <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search..."
               className="px-4 py-1 rounded-md text-grey w-48 bg-transparent border-b border-white focus:outline-none"
             />
-            <Search className="absolute right-2 top-1.5 h-4 w-4 text-gray-400 " />
+            <button type="submit">
+              <Search className="absolute right-2 top-1.5 h-4 w-4 text-gray-400" />
+            </button>
+          </form>
           </div>
           <Link to="/cart">
             <Button variant="ghost" className="text-white hover:text-gray-300 transition">
@@ -60,23 +78,8 @@ export default function AdventureShop() {
           </h1>
         </div>
       </section>
-
       {/* Highlights */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
-        {[1, 2].map((_, index) => (
-          <div key={index} className="relative h-[250px] bg-gray-100 overflow-hidden rounded-none">
-            <img src={`/placeholder${index + 1}.jpg`} alt="Highlight" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-6 pb-20">
-              <h2 className="text-white text-xl font-bold mb-2">
-                {index === 0
-                  ? `"JET BOIL"\n camping stoves`
-                  : `Extremely lightweight\n BIG AGNES tents`}
-              </h2>
-              <Button className="w-fit bg-white text-black hover:bg-orange-300 hover:text-white rounded-none transition">View Products</Button>
-            </div>
-          </div>
-        ))}
-      </section>
+      
       {/* Recommended */}
       <section className="w-full px-4 md:px-12 py-8 space-y-10">
         <h2 className="text-2xl md:text-3xl font-bold text-center">RECOMMENDED</h2>
@@ -142,18 +145,28 @@ export default function AdventureShop() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative bg-yellow-400 h-[200px] flex items-center justify-center">
             <div className="text-center space-y-3">
-              <h3 className="text-black text-xl font-bold">GRYNAM ORE<br />DOVANŲ ČEKIS</h3>
+              <h3 className="text-black text-xl font-bold">
+        ADVENTURE <br /> GIFT CARD
+      </h3>
+      <p className="text-sm text-black">
+        Give the gift of unforgettable experiences.
+      </p>
               <Button className="bg-white text-black hover:bg-orange-400 hover:text-white transition">SELECT AMOUNT</Button>
             </div>
           </div>
 
-          <div className="relative bg-cover bg-center h-[200px]" style={{ backgroundImage: "url('/discount.jpg')" }}>
-            <div className="bg-black/40 h-full w-full flex flex-col justify-center items-center text-center p-4 space-y-2">
-              <h3 className="text-orange-300 text-xl font-bold">SALE!</h3>
-              <p className="text-white font-semibold">DISCOUNTS up to -40%</p>
-              <Button className="bg-white text-black hover:bg-orange-400 hover:text-white transition">VIEW PRODUCTS</Button>
-            </div>
-          </div>
+          <div
+    className="relative bg-cover bg-center h-[200px]"
+    style={{ backgroundImage: "url('/sale-camping.jpg')" }}
+  >
+    <div className="bg-black/40 h-full w-full flex flex-col justify-center items-center text-center p-4 space-y-2">
+      <h3 className="text-orange-300 text-xl font-bold">SUMMER SALE</h3>
+      <p className="text-white font-semibold">Up to 40% OFF on camping gear</p>
+      <Button className="bg-white text-black hover:bg-orange-400 hover:text-white transition">
+        VIEW PRODUCTS
+      </Button>
+    </div>
+  </div>
 
           <div className="relative bg-cover bg-center h-[200px]" style={{ backgroundImage: "url('/maintenance.jpg')" }}>
             <div className="bg-black/40 h-full w-full flex flex-col justify-center items-center text-center p-4 space-y-2">
@@ -164,6 +177,7 @@ export default function AdventureShop() {
         </div>
       </section>
       {/* Brand Logos */}
+
       <div className="flex flex-wrap justify-center items-center gap-12 py-10 bg-white">
         <img src="/logo-opinel.png" alt="Opinel" className="h-12" />
         <img src="/logo-osprey.png" alt="Osprey" className="h-14" />
@@ -203,7 +217,6 @@ export default function AdventureShop() {
           <h4 className="font-bold mb-3">Working hours</h4>
         </div>
       </footer>
-
     </div>
   );
 }
