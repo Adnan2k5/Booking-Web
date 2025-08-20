@@ -6,8 +6,6 @@ import { useTranslation } from "react-i18next"
 import { LayoutDashboard, Calendar, TicketIcon, User, Settings, LogOut, Menu, Bell, ChevronRight, Users } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Button } from "../../components/ui/button"
-import { Separator } from "../../components/ui/separator"
-import { Badge } from "../../components/ui/badge"
 import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet"
 import {
     DropdownMenu,
@@ -19,17 +17,24 @@ import {
 } from "../../components/ui/dropdown-menu"
 import LanguageSelector from "../../components/LanguageSelector"
 import { useAuth } from "../AuthProvider"
+import { userLogout } from "../../Auth/UserAuth.js"
+import { useDispatch } from "react-redux"
+import { toast } from "sonner"
 
 const UserLayout = ({ children }) => {
     const navigate = useNavigate()
     const location = useLocation()
     const { t } = useTranslation()
     const { user, logout } = useAuth()
+    const dispatch = useDispatch();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-    const handleLogout = () => {
-        logout()
-        navigate("/login")
+    const handleLogout = async () => {
+        await userLogout(dispatch).then(() => {
+            window.location.reload();
+        }).catch((error) => {
+            toast.error("Logout error:", error);
+        });
     }
 
     const navItems = [

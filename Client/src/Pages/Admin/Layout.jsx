@@ -20,11 +20,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import { BarChart3, BookOpen, CalendarDays, ClipboardCheck, Compass, FileCheck, Hotel, LifeBuoy, LogOut, Mountain, Settings, ShoppingBag, Store, TicketCheck, User, Users } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../AuthProvider';
+import { useDispatch } from 'react-redux';
+import { userLogout } from '../../Auth/UserAuth.js';
+import { toast } from 'sonner';
 
 export default function AdminLayout() {
   const location = useLocation();
   const pathname = location.pathname;
-  const { user } = useAuth(); //user email and name to be added
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -59,6 +61,16 @@ export default function AdminLayout() {
 }
 
 function AdminSidebar({ pathname }) {
+
+  const dispatch = useDispatch();
+  const handleLogout = async () => {
+    await userLogout(dispatch).then(() => {
+      window.location.reload();
+    }).catch((error) => {
+      toast.error("Logout failed. Please try again.");
+    });
+  }
+
   return (
     <Sidebar>
       <SidebarHeader className="flex h-16 items-center justify-center border-b px-6">
@@ -200,7 +212,7 @@ function AdminSidebar({ pathname }) {
         {/* Continue with other sidebar groups */}
       </SidebarContent>
       <SidebarFooter className="border-t p-4">
-        <Button variant="outline" className="w-full justify-start" size="sm">
+        <Button onClick={handleLogout} variant="outline" className="w-full justify-start" size="sm">
           <LogOut className="mr-2 h-4 w-4" />
           Logout
         </Button>

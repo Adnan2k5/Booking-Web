@@ -66,7 +66,7 @@ export default function Dash_Terms() {
       setIsContentLoading(true);
       try {
         const termDetails = await getAllTerms(term.title);
-        
+
         // Determine which content to show based on term status
         let content = "";
         if (term.status === "draft") {
@@ -83,7 +83,7 @@ export default function Dash_Terms() {
         }
 
         setTermContent(content);
-        setOriginalContent(content); // Store original content
+        setOriginalContent(content);
       } catch (err) {
         console.error(`Failed to fetch content for ${term.title}:`, err);
         setContentError(err?.response?.data?.message || "Failed to load term content. Please try again.");

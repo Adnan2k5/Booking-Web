@@ -23,10 +23,11 @@ import { Button } from "./ui/button"
 import { Avatar, AvatarFallback } from "./ui/avatar"
 import LanguageSelector from "./LanguageSelector"
 import { useDispatch } from "react-redux";
-import { logout } from "../Store/UserSlice";
-import { toast } from "sonner"
-import { axiosClient } from "../AxiosClient/axios.js"
 import { updateLanguageHeaders } from "../Api/language.api.js"
+import { userLogout } from "../Auth/UserAuth.js"
+import { set } from "date-fns"
+import { toast } from "sonner"
+import { Link } from "react-router-dom"
 
 export const Nav_Landing = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -39,16 +40,13 @@ export const Nav_Landing = () => {
     const dispatch = useDispatch();
 
     const handleLogout = async () => {
-        try {
-            await axiosClient.post("/api/auth/logout", {}, {
-                withCredentials: true
-            });
-            dispatch(logout());
-            navigate("/");
-        } catch (error) {
-            toast.error("Logout failed. Please try again.");
-        }
-    };
+        await userLogout(dispatch).then(() => {
+            window.location.reload()
+        }).catch((error) => {
+            toast.error(t("logoutError")
+            )
+        })
+    }
 
     const languages = [
         { code: "en", name: "English" },
@@ -122,7 +120,7 @@ export const Nav_Landing = () => {
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
-                                    <a href="/shop">{t("shop")}</a>
+                                    <Link to="/shop">{t("shop")}</Link>
                                 </motion.li>
                             )}
                             {isHotelsEnabled && (
