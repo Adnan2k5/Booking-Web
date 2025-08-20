@@ -329,6 +329,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (user.user !== null && !loading) {
       // Check if there's a redirect URL stored in localStorage
+      localStorage.setItem("accessToken", user.user.refreshToken)
       const redirectAfterLogin = localStorage.getItem("redirectAfterLogin");
 
       if (redirectAfterLogin) {
