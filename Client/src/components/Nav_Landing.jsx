@@ -70,11 +70,11 @@ export const Nav_Landing = () => {
     }
 
     const navigateprofile = () => {
-        if (user.user.role === "instructor") {
+        if (user.user.data.role === "instructor") {
             navigate("/instructor/dashboard")
-        } else if (user.user.role === "hotel") {
+        } else if (user.user.data.role === "hotel") {
             navigate("/hotel")
-        } else if (user.user.role === "admin") {
+        } else if (user.user.data.role === "admin") {
             navigate("/admin")
         } else {
             navigate("/dashboard")
@@ -152,14 +152,14 @@ export const Nav_Landing = () => {
                                                 variant="ghost"
                                                 className="relative h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 p-0"
                                             >                                                <Avatar className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 text-black">
-                                                    <AvatarFallback>{user?.user?.email?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
+                                                    <AvatarFallback>{user?.user?.data.email?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
                                                 </Avatar>
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent className="w-56" align="end" forceMount>
                                             <DropdownMenuLabel className="font-normal">
                                                 <div className="flex flex-col space-y-1">
-                                                    <p className="text-sm font-medium leading-none">{user?.user?.email}</p>
+                                                    <p className="text-sm font-medium leading-none">{user?.user?.data.email}</p>
                                                 </div>
                                             </DropdownMenuLabel>
                                             <DropdownMenuSeparator />
@@ -262,7 +262,7 @@ export const Nav_Landing = () => {
                                             onClick={() => navigateprofile()}
                                         >
                                             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex items-center justify-center rounded-full">
-                                                {user?.user?.email.charAt(0).toUpperCase()}
+                                                {user?.user?.data?.email?.charAt(0)?.toUpperCase()}
                                             </div>
                                             <span className="text-sm sm:text-base">{t("profile")}</span>
                                         </div>

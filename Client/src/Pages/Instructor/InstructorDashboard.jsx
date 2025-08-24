@@ -4,17 +4,14 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../AuthProvider"
 import { motion } from "framer-motion"
 import { Separator } from "../../components/ui/separator"
-import { Award, Calendar, DollarSign, Users, Star, TrendingUp, Clock, MapPin, Filter, Search, Check } from "lucide-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
-import { Button } from "../../components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
+import { Award, Calendar, Users, Star, TrendingUp } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import InstructorLayout from "./InstructorLayout"
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import SessionCalendar from "../../components/SessionCalendar"
 import UpcomingBookingsCard from "../../components/UpcomingBookingsCard"
-import { fetchAllAdventures, getAdventure } from "../../Api/adventure.api"
+import { getAdventure } from "../../Api/adventure.api"
 import { getInstructorSessions } from "../../Api/session.api"
 import { staggerContainer, fadeIn } from "../../assets/Animations"
 import { getInstructorBadge } from '../../Api/instructorAchievement.api'
@@ -205,11 +202,11 @@ const InstructorDashboard = () => {
     const [isLoadingSessions, setIsLoadingSessions] = useState(false)
 
     const fetchUpcomingSessions = async () => {
-        if (!user?.user?._id) return
+        if (!user?.user?.data?._id) return
 
         setIsLoadingSessions(true)
         try {
-            const res = await getInstructorSessions(user.user._id)
+            const res = await getInstructorSessions(user.user.data._id)
             if (res.status === 200 && res.data) {
                 const sessions = res.data
                 const now = new Date()
@@ -238,8 +235,9 @@ const InstructorDashboard = () => {
         
         
         // Check if the user has instructor data and adventure ID
-        if (user?.user?.instructor?.adventure) {
-            getAdventure(user.user.instructor.adventure).then((res) => {
+        console.log("User Data:", user.user.data);  
+        if (user?.user?.data.instructor?.adventure) {
+            getAdventure(user.user.data.instructor.adventure).then((res) => {
                 setAdventureTypes(res.data)
             }).catch((err) => {
                 toast.error("Failed to load adventure data")
@@ -250,18 +248,18 @@ const InstructorDashboard = () => {
         fetchUpcomingSessions()
         const fetchBadge = async () => {
             try {
-                console.log("Instructor Id:", user?.user?.instructor)
-                const res = await getInstructorBadge(user?.user?.instructor?._id);
+                console.log("Instructor Id:", user?.user?.data?.instructor)
+                const res = await getInstructorBadge(user?.user?.data?.instructor?._id);
                 console.log("Instructor Badge:", res.data);
                 setInstructorBadge(res.data);
             } catch (err) {
                 console.error(err);
             }
         };
-        
-        if (user?.user?.instructor?._id) {
-  fetchBadge(user.user.instructor._id);
-}
+
+        if (user?.user?.data?.instructor?._id) {
+            fetchBadge(user.user.data.instructor._id);
+        }
     }, [user, navigate])
 
     const achievementData = [

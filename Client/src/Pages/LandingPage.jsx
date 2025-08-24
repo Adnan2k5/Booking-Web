@@ -464,7 +464,6 @@ export default function LandingPage() {
     fetchFriends
   } = useFriend()
 
-  console.log(user.user);
 
   // Fetch friends when component mounts or dialog opens
   useEffect(() => {
@@ -1191,11 +1190,11 @@ export default function LandingPage() {
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10 border border-gray-100 bg-black">
                   <AvatarFallback className="text-white">
-                    {user?.user ? user.user.email.charAt(0).toUpperCase() : "Y"}
+                    {user?.user ? user.user.data.email.charAt(0).toUpperCase() : "Y"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium text-gray-800">{user?.user ? user.user.email : "You"}</p>
+                  <p className="font-medium text-gray-800">{user?.user ? user.user.data.email : "You"}</p>
                   <p className="text-xs text-gray-500">{t("groupLeader")}</p>
                 </div>
               </div>
