@@ -5,12 +5,14 @@ import {
   getUsers,
   deleteUser,
   getUserAdventureExperiences,
-  getUserAdventure
+  getUserAdventure,
+  getMe,
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
 
-router.get("/me", verifyJWT, getUser);
+router.get("/me", verifyJWT, getMe);
+router.get("/profile", verifyJWT, getUser);
 router.get("/adventure-experiences", verifyJWT, getUserAdventureExperiences);
 router.get("/adventure", verifyJWT, getUserAdventure)
 router.get("/", verifyJWT, getUsers);

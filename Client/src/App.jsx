@@ -47,6 +47,8 @@ const Terms = lazy(() => import("./Pages/Terms"))
 const PaymentPage = lazy(() => import("./Pages/Payment/PaymentPage"))
 const PaymentApprove = lazy(() => import("./Pages/Payment/PaymentApprove"))
 const PaymentCancel = lazy(() => import("./Pages/Payment/PaymentCancel"))
+const Payout = lazy(() => import("./Pages/Payment/Payout"))
+const PayPalSuccess = lazy(() => import("./Pages/Payment/PayPalSuccess"))
 const EventBookingConfirmation = lazy(() => import("./Pages/Payment/EventBookingConfirmation"))
 const SecretNftEvents = lazy(() => import("./Pages/SecretNftEvents"))
 
@@ -142,6 +144,8 @@ const App = () => {
                   <Route path="/payment" element={<PaymentPage />} />
                   <Route path="/payment/approve" element={<PaymentApprove />} />
                   <Route path="/payment/cancel" element={<PaymentCancel />} />
+                  <Route path="/payment/payout" element={<Payout />} />
+                  <Route path="/paypal/success" element={<PayPalSuccess />} />
                   <Route path="/event-booking-confirmation" element={<EventBookingConfirmation />} />
                   <Route path="/confirmation" element={<ConfirmationPage />} />
                   <Route path="/chat" element={<ChatLayout />} />

@@ -31,7 +31,9 @@ const InstructorLayout = ({ children }) => {
         logout()
         navigate("/login")
     }
-
+    const handlePayout = () => {
+        navigate("/payment/payout")
+    }
 
     const navItems = [
         {
@@ -227,6 +229,16 @@ const InstructorLayout = ({ children }) => {
                             </ul>
                         </nav>
                         <div className="p-4 xl:p-6 border-t border-gray-200 dark:border-gray-700">
+                            <Button
+                                variant="outline"
+                                className="w-full flex items-center gap-2 text-black hover:text-white hover:bg-black hover:cursor-pointer"
+                                onClick={handlePayout}
+                            >
+                                <LogOut className="h-4 w-4" />
+                                <span>{t("Payout")}</span>
+                            </Button>
+                        </div>
+                        <div className="p-4 xl:p-6">
                             <Button
                                 variant="outline"
                                 className="w-full flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"

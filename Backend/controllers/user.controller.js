@@ -4,6 +4,23 @@ import { UserAdventureExperience } from "../models/userAdventureExperience.model
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
+export const getMe = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select("-password -refreshToken");
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      paypalLinked: user.paypalAccount?.linked || false,
+    }, "User profile fetched successfully")
+  );
+});
+
 export const getUser = asyncHandler(async (req, res) => {
   let user;
   if (req.user.role === "instructor") {

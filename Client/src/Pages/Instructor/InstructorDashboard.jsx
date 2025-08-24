@@ -214,7 +214,6 @@ const InstructorDashboard = () => {
                 const sessions = res.data
                 const now = new Date()
 
-                // Count sessions that start after current time
                 const upcomingCount = sessions.filter(session => {
                     const sessionStart = new Date(session.startTime)
                     return sessionStart > now
@@ -236,7 +235,8 @@ const InstructorDashboard = () => {
             navigate("/login")
             return
         }
-
+        
+        
         // Check if the user has instructor data and adventure ID
         if (user?.user?.instructor?.adventure) {
             getAdventure(user.user.instructor.adventure).then((res) => {
@@ -258,8 +258,10 @@ const InstructorDashboard = () => {
                 console.error(err);
             }
         };
-
-        fetchBadge();
+        
+        if (user?.user?.instructor?._id) {
+  fetchBadge(user.user.instructor._id);
+}
     }, [user, navigate])
 
     const achievementData = [

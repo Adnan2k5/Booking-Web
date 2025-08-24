@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       index: true,
+      required: true,
     },
     profilePicture: {
       type: String,
@@ -19,7 +20,6 @@ const userSchema = new mongoose.Schema(
     phoneNumber: {
       type: String,
       index: true,
-      Number: true,
     },
     name: {
       type: String,
@@ -32,16 +32,18 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
     refreshToken: { type: String },
+
     role: {
       type: String,
       enum: ["user", "admin", "instructor", "hotel", "superadmin"],
       default: "user",
     },
-    // Legacy level field - now calculated from UserAdventureExperience
+
     level: {
       type: Number,
       default: 0,
     },
+
     instructor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Instructor",
@@ -57,11 +59,11 @@ const userSchema = new mongoose.Schema(
       },
     ],
     adventures: [
-  {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Adventure",
-  },
-],
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Adventure",
+      },
+    ],
     friends: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -69,13 +71,47 @@ const userSchema = new mongoose.Schema(
       },
     ],
     friendRequests: [],
+
+    paypalPayerId: {
+    type: String,
+    index: true, // PayPal Merchant ID
+  },
+  paypalEmail: {
+    type: String,
+    lowercase: true,
+    trim: true,
+  },
+  paypalLinkedAt: {
+    type: Date,
+  },
+  paypalEmailConfirmed: {
+    type: Boolean,
+    default: false,
+  },
+  paypalAccountStatus: {
+    type: String,
+    enum: ["BUSINESS_ACCOUNT", "PERSONAL_ACCOUNT", "UNKNOWN"],
+    default: "UNKNOWN",
+  },
+  paypalPermissionsGranted: {
+    type: Boolean,
+    default: false,
+  },
+  paypalConsentStatus: {
+    type: Boolean,
+    default: false,
+  },
+  paypalRiskStatus: {
+    type: String,
+    trim: true,
+  },
+
   },
   {
     timestamps: true,
   }
 );
 
-// This hook is called just before data is saved
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, 10);
@@ -112,7 +148,6 @@ userSchema.methods.generateRefreshToken = function () {
   );
 };
 
-// Method to get overall level from adventure experiences
 userSchema.methods.getOverallLevel = async function () {
   const { UserAdventureExperience } = await import(
     "./userAdventureExperience.model.js"
@@ -120,7 +155,6 @@ userSchema.methods.getOverallLevel = async function () {
   return await UserAdventureExperience.calculateOverallLevel(this._id);
 };
 
-// Method to get adventure-specific experiences
 userSchema.methods.getAdventureExperiences = async function () {
   const { UserAdventureExperience } = await import(
     "./userAdventureExperience.model.js"
