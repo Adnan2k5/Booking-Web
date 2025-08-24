@@ -72,9 +72,40 @@ const userSchema = new mongoose.Schema(
     ],
     friendRequests: [],
 
-    paypalPayerId: { type: String, index: true }, // PayPal account ID
-    paypalEmail: { type: String, lowercase: true, trim: true },
-    paypalLinkedAt: { type: Date },
+    paypalPayerId: {
+    type: String,
+    index: true, // PayPal Merchant ID
+  },
+  paypalEmail: {
+    type: String,
+    lowercase: true,
+    trim: true,
+  },
+  paypalLinkedAt: {
+    type: Date,
+  },
+  paypalEmailConfirmed: {
+    type: Boolean,
+    default: false,
+  },
+  paypalAccountStatus: {
+    type: String,
+    enum: ["BUSINESS_ACCOUNT", "PERSONAL_ACCOUNT", "UNKNOWN"],
+    default: "UNKNOWN",
+  },
+  paypalPermissionsGranted: {
+    type: Boolean,
+    default: false,
+  },
+  paypalConsentStatus: {
+    type: Boolean,
+    default: false,
+  },
+  paypalRiskStatus: {
+    type: String,
+    trim: true,
+  },
+
   },
   {
     timestamps: true,

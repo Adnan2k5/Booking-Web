@@ -9,6 +9,16 @@ export const getPayPalConnectUrl = async (token) => {
   return res.data;
 };
 
+export const submitPayPalSuccess = async (token, payload) => {
+  const res = await axios.post(`${API_URL}/payouts/success`, payload, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  return res.data;
+};
+
 export const handlePayPalCallback = async (query) => {
   const res = await axios.get(`${API_URL}/payouts/callback`, { params: query });
   return res.data;

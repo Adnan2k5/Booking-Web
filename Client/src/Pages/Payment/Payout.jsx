@@ -26,10 +26,10 @@ useEffect(() => {
         }
       );
 
-      console.log("✅ Response from /user/me:", res.data);
-      setIsLinked(res.data.data?.paypalLinked ?? false);
+      console.log("Response from /user/me:", res.data);
+      setIsLinked(res.data.data?.paypalPayerId ?? false);
     } catch (err) {
-      console.error("❌ Error fetching user:", err.response?.data || err.message);
+      console.error(" Error fetching user:", err.response?.data || err.message);
       setIsLinked(false);
     }
   };
@@ -37,18 +37,33 @@ useEffect(() => {
   if (token) {
     checkLinkStatus();
   } else {
-    console.warn("⚠️ No token found in localStorage");
+    console.warn("No token found in localStorage");
     setIsLinked(false);
   }
 }, [token]);
 
-  const handleLinkAccount = () => {
-    // ✅ Redirect directly to backend route
-    window.location.href = `${import.meta.env.VITE_API_URL || "http://localhost:8080/api"}/payouts/connect`;
-  };
+  const handleLinkAccount = async () => {
+  try {
+    const token = localStorage.getItem("accessToken")
+    const res = await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/payouts/connect`, {
+  headers: {
+    Authorization: `Bearer ${token}`
+  }
+});
+    console.log("Full Response",res.data)
+const redirectUrl = res.data?.data?.redirectUrl;
 
+if (redirectUrl) {
+  window.location.href = redirectUrl;
+} else {
+  console.error("No redirect URL received. Response:", res.data);
+}
+  } catch (err) {
+    console.error("Failed to start PayPal onboarding:", err.response?.data || err.message);
+  }
+};
 
-  // 3️⃣ Trigger payout (for linked users)
+  //  Trigger payout (for linked users)
   const handlePayout = async () => {
     setLoading(true);
     setMessage("");
@@ -63,10 +78,10 @@ useEffect(() => {
         },
         token
       );
-      setMessage("✅ Payout created successfully! Batch ID: " + res.batchId);
+      setMessage("Payout created successfully! Batch ID: " + res.batchId);
     } catch (err) {
       console.error(err.response?.data || err.message);
-      setMessage("❌ Failed to create payout");
+      setMessage("Failed to create payout");
     } finally {
       setLoading(false);
     }
@@ -93,7 +108,7 @@ useEffect(() => {
         </>
       ) : (
         <>
-          <p className="mb-4">✅ Your PayPal account is linked.</p>
+          <p className="mb-4">Your PayPal account is linked.</p>
           <button
             onClick={handlePayout}
             disabled={loading}
