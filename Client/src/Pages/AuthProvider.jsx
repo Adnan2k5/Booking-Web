@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { axiosClient } from "../AxiosClient/axios";
-import { loginFailure, loginStart, setUser } from "../Store/UserSlice";
+import { loginFailure, loginStart, setUser, logout } from "../Store/UserSlice";
 import { Loader } from "../components/Loader";
 
 // Create Authentication Context
@@ -24,12 +24,34 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const logoutUser = async () => {
+        try {
+            await axiosClient.post(
+                '/api/auth/logout',
+                {},
+                {
+                    withCredentials: true,
+                }
+            );
+            dispatch(logout());
+            // Clear localStorage
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("redirectAfterLogin");
+        } catch (error) {
+            console.error("Logout error:", error);
+            // Even if the API call fails, clear the local state
+            dispatch(logout());
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("redirectAfterLogin");
+        }
+    };
+
     useEffect(() => {
         verifyToken();
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, loading }}>
+        <AuthContext.Provider value={{ user, loading, logout: logoutUser }}>
             {loading ? <Loader /> : children}
         </AuthContext.Provider>
     );
