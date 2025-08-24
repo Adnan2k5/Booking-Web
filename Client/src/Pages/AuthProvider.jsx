@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
     const verifyToken = async () => {
         try {
             dispatch(loginStart());
-            const res = await axiosClient.get("/api/user/me", { withCredentials: true });
+            const res = await axiosClient.get("/api/user/profile", { withCredentials: true });
             dispatch(setUser(res.data));
         } catch (err) {
             dispatch(loginFailure(err.response?.status || 500));

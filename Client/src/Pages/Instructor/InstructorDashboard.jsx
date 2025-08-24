@@ -206,7 +206,7 @@ const InstructorDashboard = () => {
 
         setIsLoadingSessions(true)
         try {
-            const res = await getInstructorSessions(user.user.data._id)
+            const res = await getInstructorSessions(user.user._id)
             if (res.status === 200 && res.data) {
                 const sessions = res.data
                 const now = new Date()
@@ -235,9 +235,8 @@ const InstructorDashboard = () => {
         
         
         // Check if the user has instructor data and adventure ID
-        console.log("User Data:", user.user.data);  
         if (user?.user?.data.instructor?.adventure) {
-            getAdventure(user.user.data.instructor.adventure).then((res) => {
+            getAdventure(user.user.instructor.adventure).then((res) => {
                 setAdventureTypes(res.data)
             }).catch((err) => {
                 toast.error("Failed to load adventure data")
@@ -248,17 +247,15 @@ const InstructorDashboard = () => {
         fetchUpcomingSessions()
         const fetchBadge = async () => {
             try {
-                console.log("Instructor Id:", user?.user?.data?.instructor)
-                const res = await getInstructorBadge(user?.user?.data?.instructor?._id);
-                console.log("Instructor Badge:", res.data);
+                const res = await getInstructorBadge(user?.user?.instructor?._id);
                 setInstructorBadge(res.data);
             } catch (err) {
                 console.error(err);
             }
         };
 
-        if (user?.user?.data?.instructor?._id) {
-            fetchBadge(user.user.data.instructor._id);
+        if (user?.user?.instructor?._id) {
+            fetchBadge(user.user.instructor._id);
         }
     }, [user, navigate])
 
