@@ -202,7 +202,7 @@ const InstructorDashboard = () => {
     const [isLoadingSessions, setIsLoadingSessions] = useState(false)
 
     const fetchUpcomingSessions = async () => {
-        if (!user?.user?.data?._id) return
+        if (!user?.user?._id) return
 
         setIsLoadingSessions(true)
         try {
@@ -235,7 +235,7 @@ const InstructorDashboard = () => {
         
         
         // Check if the user has instructor data and adventure ID
-        if (user?.user?.data.instructor?.adventure) {
+        if (user?.user?.instructor?.adventure) {
             getAdventure(user.user.instructor.adventure).then((res) => {
                 setAdventureTypes(res.data)
             }).catch((err) => {

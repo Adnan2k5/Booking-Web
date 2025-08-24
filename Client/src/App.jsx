@@ -135,7 +135,8 @@ const App = () => {
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/login-options" element={<LoginOptionsPage />} />
                   <Route path="/auth/signInWithLinkedin" element={<LinkedInCallback />} />
-                  <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />                  
+                  <Route path="/" element={<LandingPage />} />
                   <Route path="/secret-nft-events" element={<SecretNftEvents />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/browse" element={<BrowsingPage />} />
@@ -144,7 +145,7 @@ const App = () => {
                   <Route path="/payment" element={<PaymentPage />} />
                   <Route path="/payment/approve" element={<PaymentApprove />} />
                   <Route path="/payment/cancel" element={<PaymentCancel />} />
-                  <Route path="/payment/payout" element={<Payout />} />
+                  <Route path="/instructor/payout" element={<Payout />} />
                   <Route path="/paypal/success" element={<PayPalSuccess />} />
                   <Route path="/event-booking-confirmation" element={<EventBookingConfirmation />} />
                   <Route path="/confirmation" element={<ConfirmationPage />} />

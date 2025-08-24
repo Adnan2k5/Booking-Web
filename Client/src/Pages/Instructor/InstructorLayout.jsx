@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { LayoutDashboard, Users, Calendar, Settings, LogOut, Menu, Bell, User, LifeBuoy } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Button } from "../../components/ui/button"
-import { Separator } from "../../components/ui/separator"
-import { Badge } from "../../components/ui/badge"
 import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet"
 import {
     DropdownMenu,
@@ -17,6 +15,7 @@ import {
 } from "../../components/ui/dropdown-menu"
 import LanguageSelector from "../../components/LanguageSelector"
 import { useAuth } from "../AuthProvider"
+import { MdMoney } from "react-icons/md"
 
 
 
@@ -31,9 +30,7 @@ const InstructorLayout = ({ children }) => {
         logout()
         navigate("/login")
     }
-    const handlePayout = () => {
-        navigate("/payment/payout")
-    }
+
 
     const navItems = [
         {
@@ -62,34 +59,14 @@ const InstructorLayout = ({ children }) => {
             path: "/instructor/support",
         },
         {
+            icon: <MdMoney className="h-5 w-5" />,
+            label: t("instructor.payout"),
+            path: "/instructor/payout",
+        },
+        {
             icon: <Settings className="h-5 w-5" />,
             label: t("instructor.settings"),
             path: "/instructor/settings",
-        },
-    ]
-
-    // Mock notifications
-    const notifications = [
-        {
-            id: 1,
-            title: "New booking",
-            message: "You have a new booking for Mountain Climbing on April 20",
-            time: "10 minutes ago",
-            unread: true,
-        },
-        {
-            id: 2,
-            title: "Session reminder",
-            message: "Your Wilderness Survival session is scheduled for tomorrow",
-            time: "2 hours ago",
-            unread: true,
-        },
-        {
-            id: 3,
-            title: "Review received",
-            message: "You received a 5-star review from John Doe",
-            time: "Yesterday",
-            unread: false,
         },
     ]
 
@@ -228,16 +205,6 @@ const InstructorLayout = ({ children }) => {
                                 ))}
                             </ul>
                         </nav>
-                        <div className="p-4 xl:p-6 border-t border-gray-200 dark:border-gray-700">
-                            <Button
-                                variant="outline"
-                                className="w-full flex items-center gap-2 text-black hover:text-white hover:bg-black hover:cursor-pointer"
-                                onClick={handlePayout}
-                            >
-                                <LogOut className="h-4 w-4" />
-                                <span>{t("Payout")}</span>
-                            </Button>
-                        </div>
                         <div className="p-4 xl:p-6">
                             <Button
                                 variant="outline"
