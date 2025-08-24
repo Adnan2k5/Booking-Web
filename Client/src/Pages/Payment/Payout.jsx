@@ -14,6 +14,7 @@ import {
 } from "../../Api/payoutApi";
 import axios from "axios";
 import { staggerContainer, fadeIn } from "../../assets/Animations";
+import { axiosClient } from "../../AxiosClient/axios.js";
 
 export default function PayoutPage() {
   const navigate = useNavigate();
@@ -78,13 +79,7 @@ useEffect(() => {
 
   const handleLinkAccount = async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/payouts/connect`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      console.log("Full Response", res.data);
+      const res = await axiosClient.get(`api/payouts/connect`);
       const redirectUrl = res.data?.data?.redirectUrl;
 
       if (redirectUrl) {
