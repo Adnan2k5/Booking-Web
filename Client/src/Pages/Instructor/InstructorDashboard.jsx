@@ -4,17 +4,14 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../AuthProvider"
 import { motion } from "framer-motion"
 import { Separator } from "../../components/ui/separator"
-import { Award, Calendar, DollarSign, Users, Star, TrendingUp, Clock, MapPin, Filter, Search, Check } from "lucide-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
-import { Button } from "../../components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
+import { Award, Calendar, Users, Star, TrendingUp } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import InstructorLayout from "./InstructorLayout"
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import SessionCalendar from "../../components/SessionCalendar"
 import UpcomingBookingsCard from "../../components/UpcomingBookingsCard"
-import { fetchAllAdventures, getAdventure } from "../../Api/adventure.api"
+import { getAdventure } from "../../Api/adventure.api"
 import { getInstructorSessions } from "../../Api/session.api"
 import { staggerContainer, fadeIn } from "../../assets/Animations"
 import { getInstructorBadge } from '../../Api/instructorAchievement.api'
@@ -214,7 +211,6 @@ const InstructorDashboard = () => {
                 const sessions = res.data
                 const now = new Date()
 
-                // Count sessions that start after current time
                 const upcomingCount = sessions.filter(session => {
                     const sessionStart = new Date(session.startTime)
                     return sessionStart > now
@@ -236,7 +232,8 @@ const InstructorDashboard = () => {
             navigate("/login")
             return
         }
-
+        
+        
         // Check if the user has instructor data and adventure ID
         if (user?.user?.instructor?.adventure) {
             getAdventure(user.user.instructor.adventure).then((res) => {
@@ -250,16 +247,16 @@ const InstructorDashboard = () => {
         fetchUpcomingSessions()
         const fetchBadge = async () => {
             try {
-                console.log("Instructor Id:", user?.user?.instructor)
                 const res = await getInstructorBadge(user?.user?.instructor?._id);
-                console.log("Instructor Badge:", res.data);
                 setInstructorBadge(res.data);
             } catch (err) {
                 console.error(err);
             }
         };
 
-        fetchBadge();
+        if (user?.user?.instructor?._id) {
+            fetchBadge(user.user.instructor._id);
+        }
     }, [user, navigate])
 
     const achievementData = [

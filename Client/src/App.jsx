@@ -47,6 +47,9 @@ const Terms = lazy(() => import("./Pages/Terms"))
 const PaymentPage = lazy(() => import("./Pages/Payment/PaymentPage"))
 const PaymentApprove = lazy(() => import("./Pages/Payment/PaymentApprove"))
 const PaymentCancel = lazy(() => import("./Pages/Payment/PaymentCancel"))
+const Payout = lazy(() => import("./Pages/Payment/Payout"))
+const PayPalSuccess = lazy(() => import("./Pages/Payment/PayPalSuccess"))
+const PayPalError = lazy(() => import("./Pages/Payment/PayPalError"))
 const EventBookingConfirmation = lazy(() => import("./Pages/Payment/EventBookingConfirmation"))
 const SecretNftEvents = lazy(() => import("./Pages/SecretNftEvents"))
 
@@ -133,7 +136,8 @@ const App = () => {
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/login-options" element={<LoginOptionsPage />} />
                   <Route path="/auth/signInWithLinkedin" element={<LinkedInCallback />} />
-                  <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />                  
+                  <Route path="/" element={<LandingPage />} />
                   <Route path="/secret-nft-events" element={<SecretNftEvents />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/browse" element={<BrowsingPage />} />
@@ -142,6 +146,9 @@ const App = () => {
                   <Route path="/payment" element={<PaymentPage />} />
                   <Route path="/payment/approve" element={<PaymentApprove />} />
                   <Route path="/payment/cancel" element={<PaymentCancel />} />
+                  <Route path="/instructor/payout" element={<Payout />} />
+                  <Route path="/paypal/success" element={<PayPalSuccess />} />
+                  <Route path="/paypal/error" element={<PayPalError />} />
                   <Route path="/event-booking-confirmation" element={<EventBookingConfirmation />} />
                   <Route path="/confirmation" element={<ConfirmationPage />} />
                   <Route path="/chat" element={<ChatLayout />} />

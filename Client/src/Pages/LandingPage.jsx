@@ -464,7 +464,6 @@ export default function LandingPage() {
     fetchFriends
   } = useFriend()
 
-  console.log(user.user);
 
   // Fetch friends when component mounts or dialog opens
   useEffect(() => {

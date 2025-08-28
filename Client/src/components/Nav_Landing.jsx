@@ -262,7 +262,7 @@ export const Nav_Landing = () => {
                                             onClick={() => navigateprofile()}
                                         >
                                             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex items-center justify-center rounded-full">
-                                                {user?.user?.email.charAt(0).toUpperCase()}
+                                                {user?.user?.email?.charAt(0)?.toUpperCase()}
                                             </div>
                                             <span className="text-sm sm:text-base">{t("profile")}</span>
                                         </div>

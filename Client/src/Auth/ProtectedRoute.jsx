@@ -7,6 +7,7 @@ export const AdminRoute = ({ children }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   useEffect(() => {
+    console.log(user);
     if (user.user === null) {
       navigate('/login')
     }

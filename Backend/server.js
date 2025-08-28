@@ -29,6 +29,7 @@ import eventBookingRouter from "./routes/eventBooking.routes.js";
 import friendRouter from "./routes/friend.routes.js";
 import websiteSettingsRouter from "./routes/websiteSettings.routes.js";
 import translationRouter from "./routes/translation.routes.js";
+import payoutRouter from "./routes/payout.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
 import { ensureDefaultDeclaration } from "./controllers/declaration.controller.js";
@@ -80,6 +81,7 @@ app.use("/api/website-settings", websiteSettingsRouter);
 app.use("/api/hotelBooking", hotelBookingRouter);
 app.use("/api/sessionBooking", sessionBookingRouter);
 app.use("/api/translation", translationRouter);
+app.use("/api/payouts", payoutRouter);
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
