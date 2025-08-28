@@ -40,19 +40,12 @@ useEffect(() => {
     try {
       console.log("🔑 Token from localStorage:", token);
 
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL || "http://localhost:8080/api"}/user/me`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axiosClient.get('/api/payouts/status');
 
-      console.log("Response from /user/me:", res.data);
-      setIsLinked(res.data.data?.paypalPayerId ?? false);
+      console.log("PayPal status response:", res.data);
+      setIsLinked(res.data.data?.isLinked ?? false);
     } catch (err) {
-      console.error("Error fetching user:", err.response?.data || err.message);
+      console.error("Error fetching PayPal status:", err.response?.data || err.message);
       setIsLinked(false);
     }
   };
@@ -75,11 +68,22 @@ useEffect(() => {
     console.warn("No token found in localStorage");
     setIsLinked(false);
   }
+
+  // Listen for focus events to refresh status when user returns from PayPal
+  const handleFocus = () => {
+    if (token) {
+      checkLinkStatus();
+    }
+  };
+
+  window.addEventListener('focus', handleFocus);
+  return () => window.removeEventListener('focus', handleFocus);
 }, [token, user, navigate]);
 
   const handleLinkAccount = async () => {
     try {
-      const res = await axiosClient.get(`api/payouts/connect`);
+      setLoading(true);
+      const res = await axiosClient.post('/api/payouts/connect');
       const redirectUrl = res.data?.data?.redirectUrl;
 
       if (redirectUrl) {
@@ -91,6 +95,8 @@ useEffect(() => {
     } catch (err) {
       console.error("Failed to start PayPal onboarding:", err.response?.data || err.message);
       toast.error("Failed to start PayPal onboarding");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -266,11 +272,12 @@ useEffect(() => {
                     </p>
                     <Button 
                       onClick={handleLinkAccount}
+                      disabled={loading}
                       size="lg"
                       className="bg-yellow-500 hover:bg-yellow-600 text-white"
                     >
                       <LinkIcon className="h-4 w-4 mr-2" />
-                      Link PayPal Account
+                      {loading ? "Connecting..." : "Link PayPal Account"}
                     </Button>
                   </div>
                 </div>

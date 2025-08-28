@@ -11,67 +11,136 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 /* ----------------------- PAYPAL ACCOUNT LINKING ----------------------- */
 
 export const linkPayPalAccount = asyncHandler(async (req, res) => {
+  const userId = req.user?.id || req.body.userId; // Get user ID from authenticated request
+  
   const accessToken = await getAccessToken();
+  const trackingId = `track-${Date.now()}-${userId}`;
 
-  const trackingId = `track-${Date.now()}`;
-
-  const response = await axios.post(
-    `${process.env.PAYPAL_API_BASE}/v2/customer/partner-referrals`,
-    {
-      tracking_id: trackingId,
-      partner_config_override: {
-        return_url: "http://localhost:5173/paypal/success",
-        return_url_description: "Return after PayPal onboarding",
-      },
-      operations: [
-        {
-          operation: "API_INTEGRATION",
-          api_integration_preference: {
-            rest_api_integration: {
-              integration_method: "PAYPAL",
-              integration_type: "THIRD_PARTY",
-              third_party_details: {
-                features: [
-                  "PAYMENT",
-                  "REFUND"
-                ]
+  try {
+    const response = await axios.post(
+      `${process.env.PAYPAL_API_BASE}/v2/customer/partner-referrals`,
+      {
+        tracking_id: trackingId,
+        partner_config_override: {
+          return_url: `${process.env.FRONTEND_URL}/paypal/success`,
+          return_url_description: "Return after PayPal onboarding",
+          show_add_credit_card: false,
+        },
+        operations: [
+          {
+            operation: "API_INTEGRATION",
+            api_integration_preference: {
+              rest_api_integration: {
+                integration_method: "PAYPAL",
+                integration_type: "THIRD_PARTY",
+                third_party_details: {
+                  features: [
+                    "PAYMENT",
+                    "REFUND"
+                  ]
+                },
               },
             },
           },
-        },
-      ],
-      products: [
-        "EXPRESS_CHECKOUT"
-      ],
-      legal_consents: [
-        {
-          type: "SHARE_DATA_CONSENT",
-          granted: true,
-        },
-      ],
-    },
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-        "PayPal-Partner-Attribution-Id":
-          process.env.PAYPAL_PARTNER_ATTRIBUTION_ID,
+        ],
+        products: [
+          "EXPRESS_CHECKOUT"
+        ],
+        legal_consents: [
+          {
+            type: "SHARE_DATA_CONSENT",
+            granted: true,
+          },
+        ],
+        partner_customer_id: userId,
       },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          "PayPal-Partner-Attribution-Id": process.env.PAYPAL_PARTNER_ATTRIBUTION_ID,
+        },
+      }
+    );
+
+    // Get the redirect URL from response
+    const redirectUrl = response.data.links?.find(
+      (link) => link.rel === "action_url"
+    )?.href;
+
+    if (!redirectUrl) {
+      console.error("PayPal response:", response.data);
+      throw new ApiError(500, "No redirect URL returned from PayPal");
     }
-  );
 
-  // Get the redirect URL from response
-  const redirectUrl = response.data.links.find(
-    (link) => link.rel === "action_url"
-  )?.href;
+    // Store tracking info for verification
+    await User.findByIdAndUpdate(userId, {
+      paypalTrackingId: trackingId,
+      paypalOnboardingStarted: new Date(),
+    });
 
-  if (!redirectUrl) {
-    throw new ApiError(500, "No redirect URL returned from PayPal");
+    return res
+      .status(200)
+      .json(new ApiResponse(200, { redirectUrl, trackingId }, "PayPal link initiated"));
+
+  } catch (error) {
+    console.error("PayPal API Error:", error.response?.data || error.message);
+    throw new ApiError(500, `PayPal API error: ${error.response?.data?.message || error.message}`);
+  }
+});
+
+// PayPal onboarding completion callback
+export const paypalOnboardingComplete = asyncHandler(async (req, res) => {
+  const { userId } = req.query;
+  const {
+    merchantId,
+    merchantIdInPayPal,
+    permissionsGranted,
+    accountStatus,
+    consentStatus,
+    isEmailConfirmed,
+    productIntentId,
+    riskStatus
+  } = req.query;
+
+  console.log("PayPal onboarding callback received:", req.query);
+
+  if (!userId) {
+    return res.status(400).send("Missing userId parameter");
   }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, { redirectUrl }, "Success"));
+  try {
+    // Update user with PayPal details
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        paypalPayerId: merchantIdInPayPal,
+        paypalMerchantId: merchantId,
+        paypalLinkedAt: new Date(),
+        paypalEmailConfirmed: isEmailConfirmed === "true",
+        paypalAccountStatus: accountStatus,
+        paypalPermissionsGranted: permissionsGranted === "true",
+        paypalConsentStatus: consentStatus === "true",
+        paypalProductIntentId: productIntentId,
+        paypalRiskStatus: riskStatus,
+        paypalOnboardingCompleted: true,
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    console.log(`PayPal onboarding completed for user: ${user._id}`);
+
+    // Redirect to frontend success page
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/paypal/success?status=linked&userId=${userId}`);
+    
+  } catch (error) {
+    console.error("Error handling PayPal onboarding callback:", error);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/paypal/error?message=linking_failed`);
+  }
 });
 
 
@@ -147,7 +216,7 @@ export const getSuccessPage = asyncHandler(async (req, res) => {
     productIntentId,
     consentStatus,
     isEmailConfirmed
-  } = req.body; // assuming frontend sends a POST request
+  } = req.body;
 
   // Validate required fields
   if (
@@ -167,29 +236,65 @@ export const getSuccessPage = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Unauthorized: User not found");
   }
 
-  // Prevent duplicate entries
-  if (user.paymentDetails) {
-    throw new ApiError(400, "Payment details already exist for this user");
+  // Check if PayPal is already linked
+  if (user.paypalOnboardingCompleted) {
+    throw new ApiError(400, "PayPal account already linked for this user");
   }
 
-  // Save payment details
-  const paymentDetail = await User.create({
-    merchantId,
-    merchantIdInPayPal,
-    permissionsGranted,
-    productIntentId,
-    consentStatus,
-    isEmailConfirmed
-  });
-
-  // Link payment details to user
-  user.paymentDetails = paymentDetail._id;
-  await user.save();
+  // Update user with PayPal details
+  const updatedUser = await User.findByIdAndUpdate(
+    user._id,
+    {
+      paypalMerchantId: merchantId,
+      paypalPayerId: merchantIdInPayPal,
+      paypalPermissionsGranted: permissionsGranted === "true",
+      paypalProductIntentId: productIntentId,
+      paypalConsentStatus: consentStatus === "true",
+      paypalEmailConfirmed: isEmailConfirmed === "true",
+      paypalOnboardingCompleted: true,
+      paypalLinkedAt: new Date(),
+    },
+    { new: true }
+  );
 
   return res.status(200).json(
-    new ApiResponse(200, paymentDetail, "Payment details saved successfully")
+    new ApiResponse(200, {
+      merchantId: updatedUser.paypalMerchantId,
+      merchantIdInPayPal: updatedUser.paypalPayerId,
+      permissionsGranted: updatedUser.paypalPermissionsGranted,
+      onboardingCompleted: updatedUser.paypalOnboardingCompleted
+    }, "PayPal account linked successfully")
   );
 });
+
+// Check PayPal linking status
+export const getPayPalLinkStatus = asyncHandler(async (req, res) => {
+  const userId = req.user?.id || req.params.userId;
+
+  if (!userId) {
+    throw new ApiError(401, "User authentication required");
+  }
+
+  const user = await User.findById(userId).select(
+    'paypalOnboardingCompleted paypalPayerId paypalMerchantId paypalLinkedAt paypalEmailConfirmed paypalAccountStatus'
+  );
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      isLinked: user.paypalOnboardingCompleted || false,
+      payerId: user.paypalPayerId || null,
+      merchantId: user.paypalMerchantId || null,
+      linkedAt: user.paypalLinkedAt || null,
+      emailConfirmed: user.paypalEmailConfirmed || false,
+      accountStatus: user.paypalAccountStatus || "UNKNOWN"
+    }, "PayPal link status retrieved")
+  );
+});
+
 /* -------------------------- PAYOUT CREATION --------------------------- */
 
 export const createBatchPayout = asyncHandler(async (req, res) => {
