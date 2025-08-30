@@ -394,6 +394,8 @@ export default function LandingPage() {
     [countriesFromEvents, currentCountryIndex]
   )
 
+  console.log(user);
+
   // Auto-slide effect
   useEffect(() => {
     if (countriesFromEvents.length <= 1) return
