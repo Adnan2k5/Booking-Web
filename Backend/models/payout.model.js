@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const payoutSchema = new mongoose.Schema(
   {
@@ -44,5 +45,8 @@ const payoutSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Add pagination plugin
+payoutSchema.plugin(mongoosePaginate);
 
 export const Payout = mongoose.model("Payout", payoutSchema);
