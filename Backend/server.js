@@ -30,6 +30,7 @@ import friendRouter from "./routes/friend.routes.js";
 import websiteSettingsRouter from "./routes/websiteSettings.routes.js";
 import translationRouter from "./routes/translation.routes.js";
 import payoutRouter from "./routes/payout.routes.js";
+import transactionRouter from "./routes/transaction.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
 import { ensureDefaultDeclaration } from "./controllers/declaration.controller.js";
@@ -38,6 +39,7 @@ import initSocketIO from "./socket/socket.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import redis from "./config/redis.config.js";
+import { initPayoutCronJob } from "./controllers/transaction.controller.js";
 const app = express();
 // Create HTTP server using Express app
 const server = createServer(app);
@@ -82,6 +84,7 @@ app.use("/api/hotelBooking", hotelBookingRouter);
 app.use("/api/sessionBooking", sessionBookingRouter);
 app.use("/api/translation", translationRouter);
 app.use("/api/payouts", payoutRouter);
+app.use("/api/transactions", transactionRouter);
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
@@ -89,4 +92,6 @@ server.listen(PORT, () => {
   initCloudinary();
   ensureDefaultTerms();
   ensureDefaultDeclaration();
+  // Initialize payout cron job
+  initPayoutCronJob();
 });

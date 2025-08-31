@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../AuthProvider"
 import { motion } from "framer-motion"
 import { Separator } from "../../components/ui/separator"
-import { Award, Calendar, Users, Star, TrendingUp } from "lucide-react"
+import { Award, Calendar, Users, Star, TrendingUp, Loader2, DollarSign } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
@@ -15,179 +15,7 @@ import { getAdventure } from "../../Api/adventure.api"
 import { getInstructorSessions } from "../../Api/session.api"
 import { staggerContainer, fadeIn } from "../../assets/Animations"
 import { getInstructorBadge } from '../../Api/instructorAchievement.api'
-
-// Mock data for the instructor dashboard
-const mockData = {
-    instructor: {
-        id: 1,
-        name: "Alex Johnson",
-        email: "alex.johnson@example.com",
-        specialty: "Mountain Hiking",
-        experience: "8 years",
-        rating: 4.9,
-        img: "/placeholder.svg?height=400&width=300",
-        bio: "Certified mountain guide with expertise in alpine terrain and wilderness survival.",
-        totalRevenue: 24580,
-        totalBookings: 156,
-        upcomingSessions: 12,
-        completedSessions: 144,
-        revenueIncrease: 12.5,
-        bookingIncrease: 8.2,
-        languages: ["English", "Spanish", "French"],
-        certificates: ["Mountain Guide Certification", "First Aid Certification", "Avalanche Safety"],
-    },
-    upcomingBookings: [
-        {
-            id: "B-1234",
-            adventure: "Mountain Climbing",
-            location: "Alpine Heights",
-            date: "2025-04-20",
-            time: "09:00 AM",
-            duration: "6 hours",
-            participants: 4,
-            amount: 450,
-            status: "confirmed",
-        },
-        {
-            id: "B-1235",
-            adventure: "Wilderness Survival",
-            location: "Evergreen Forest",
-            date: "2025-04-22",
-            time: "10:00 AM",
-            duration: "8 hours",
-            participants: 6,
-            amount: 720,
-            status: "confirmed",
-        },
-        {
-            id: "B-1236",
-            adventure: "Rock Climbing",
-            location: "Granite Peaks",
-            date: "2025-04-25",
-            time: "08:30 AM",
-            duration: "5 hours",
-            participants: 3,
-            amount: 375,
-            status: "pending",
-        },
-    ],
-    recentBookings: [
-        {
-            id: "B-1230",
-            adventure: "Mountain Climbing",
-            location: "Alpine Heights",
-            date: "2025-04-10",
-            participants: 5,
-            amount: 550,
-            status: "completed",
-            rating: 5,
-        },
-        {
-            id: "B-1231",
-            adventure: "Wilderness Survival",
-            location: "Evergreen Forest",
-            date: "2025-04-08",
-            participants: 4,
-            amount: 480,
-            status: "completed",
-            rating: 4.8,
-        },
-        {
-            id: "B-1232",
-            adventure: "Rock Climbing",
-            location: "Granite Peaks",
-            date: "2025-04-05",
-            participants: 3,
-            amount: 375,
-            status: "completed",
-            rating: 5,
-        },
-        {
-            id: "B-1233",
-            adventure: "Alpine Hiking",
-            location: "Mountain Range",
-            date: "2025-04-02",
-            participants: 6,
-            amount: 600,
-            status: "completed",
-            rating: 4.7,
-        },
-    ],
-    monthlyRevenue: [
-        { month: "Jan", revenue: 1800 },
-        { month: "Feb", revenue: 2200 },
-        { month: "Mar", revenue: 2500 },
-        { month: "Apr", revenue: 2800 },
-        { month: "May", revenue: 3200 },
-        { month: "Jun", revenue: 3500 },
-        { month: "Jul", revenue: 3800 },
-        { month: "Aug", revenue: 3600 },
-        { month: "Sep", revenue: 3400 },
-        { month: "Oct", revenue: 3100 },
-        { month: "Nov", revenue: 2800 },
-        { month: "Dec", revenue: 2500 },
-    ],
-    adventureTypes: [
-        { name: "Mountain Climbing", bookings: 45, revenue: 5400 },
-        { name: "Wilderness Survival", bookings: 38, revenue: 4560 },
-        { name: "Rock Climbing", bookings: 32, revenue: 3840 },
-        { name: "Alpine Hiking", bookings: 41, revenue: 4920 },
-    ],
-    sessions: [
-        {
-            id: "S-1001",
-            title: "Mountain Climbing Basics",
-            adventure: "Mountain Climbing",
-            location: "Alpine Heights",
-            price: 120,
-            duration: "6 hours",
-            capacity: 8,
-            description: "Learn the fundamentals of mountain climbing in a safe environment with professional guidance.",
-            upcoming: [
-                { date: "2025-04-20", time: "09:00 AM", booked: 4, available: 4 },
-                { date: "2025-04-27", time: "09:00 AM", booked: 6, available: 2 },
-                { date: "2025-05-04", time: "09:00 AM", booked: 2, available: 6 },
-            ],
-            status: "active",
-            days: ["Monday", "Wednesday"],
-        },
-        {
-            id: "S-1002",
-            title: "Wilderness Survival Workshop",
-            adventure: "Wilderness Survival",
-            location: "Evergreen Forest",
-            price: 150,
-            duration: "8 hours",
-            capacity: 10,
-            description:
-                "Master essential survival skills in the wilderness, including shelter building, fire making, and navigation.",
-            upcoming: [
-                { date: "2025-04-22", time: "10:00 AM", booked: 6, available: 4 },
-                { date: "2025-04-29", time: "10:00 AM", booked: 8, available: 2 },
-                { date: "2025-05-06", time: "10:00 AM", booked: 3, available: 7 },
-            ],
-            status: "active",
-            days: ["Tuesday", "Thursday"],
-        },
-        {
-            id: "S-1003",
-            title: "Rock Climbing for Beginners",
-            adventure: "Rock Climbing",
-            location: "Granite Peaks",
-            price: 125,
-            duration: "5 hours",
-            capacity: 6,
-            description: "Introduction to rock climbing techniques, safety procedures, and equipment for beginners.",
-            upcoming: [
-                { date: "2025-04-25", time: "08:30 AM", booked: 3, available: 3 },
-                { date: "2025-05-02", time: "08:30 AM", booked: 5, available: 1 },
-                { date: "2025-05-09", time: "08:30 AM", booked: 2, available: 4 },
-            ],
-            status: "active",
-            days: ["Friday"],
-        },
-    ],
-}
+import { axiosClient } from '../../AxiosClient/axios'
 
 const InstructorDashboard = () => {
     const [instructorBadge, setInstructorBadge] = useState(null);
@@ -196,10 +24,159 @@ const InstructorDashboard = () => {
     const { t } = useTranslation()
     const [timeRange, setTimeRange] = useState("month")
     const [adventureTypes, setAdventureTypes] = useState([])
-
+    
+    // Dashboard data state
+    const [dashboardData, setDashboardData] = useState({
+        totalBookings: 0,
+        totalRevenue: 0,
+        rating: 0,
+        completedBookings: 0,
+        bookingIncrease: 0,
+        revenueIncrease: 0
+    })
+    const [upcomingBookings, setUpcomingBookings] = useState([])
+    const [isLoadingData, setIsLoadingData] = useState(false)
 
     const [upcomingSessionsCount, setUpcomingSessionsCount] = useState(0)
     const [isLoadingSessions, setIsLoadingSessions] = useState(false)
+
+    const fetchDashboardData = async () => {
+        if (!user?.user?._id) return
+
+        setIsLoadingData(true)
+        try {
+            // Fetch instructor's bookings for statistics
+            const [eventBookingsRes, sessionBookingsRes, payoutHistoryRes] = await Promise.allSettled([
+                axiosClient.get(`/api/event-bookings?instructor=${user.user._id}`),
+                axiosClient.get(`/api/sessionBooking?instructor=${user.user._id}`),
+                axiosClient.get('/api/transactions/payout/history?limit=50')
+            ])
+
+            let allBookings = []
+            let totalRevenue = 0
+
+            // Process event bookings
+            if (eventBookingsRes.status === 'fulfilled' && eventBookingsRes.value?.data?.success) {
+                const eventBookings = eventBookingsRes.value.data.data || []
+                allBookings.push(...eventBookings)
+                totalRevenue += eventBookings.reduce((sum, booking) => 
+                    sum + (booking.status === 'completed' && booking.paymentStatus === 'completed' ? booking.amount * 0.8 : 0), 0
+                )
+            }
+
+            // Process session bookings
+            if (sessionBookingsRes.status === 'fulfilled' && sessionBookingsRes.value?.data?.success) {
+                const sessionBookings = sessionBookingsRes.value.data.data || []
+                allBookings.push(...sessionBookings)
+                totalRevenue += sessionBookings.reduce((sum, booking) => 
+                    sum + (booking.status === 'completed' ? booking.amount * 0.8 : 0), 0
+                )
+            }
+
+            // Add completed payout amounts
+            if (payoutHistoryRes.status === 'fulfilled' && payoutHistoryRes.value?.data?.success) {
+                const payouts = payoutHistoryRes.value.data.data.docs || []
+                const completedPayouts = payouts.filter(p => p.status === 'SUCCESS')
+                totalRevenue = completedPayouts.reduce((sum, payout) => sum + payout.amount, 0)
+            }
+
+            // Calculate statistics
+            const completedBookings = allBookings.filter(b => b.status === 'completed')
+            const confirmedBookings = allBookings.filter(b => b.status === 'confirmed')
+            
+            // Calculate upcoming bookings
+            const now = new Date()
+            const upcoming = allBookings.filter(booking => {
+                const bookingDate = new Date(booking.event?.date || booking.session?.date || booking.bookingDate)
+                return bookingDate >= now && ['confirmed', 'pending'].includes(booking.status)
+            }).slice(0, 3)
+
+            // Format upcoming bookings for display
+            const formattedUpcoming = upcoming.map(booking => ({
+                id: booking._id,
+                adventure: booking.event?.title || booking.session?.title || 'Adventure',
+                location: booking.event?.location || booking.session?.location || 'Location TBD',
+                date: booking.event?.date || booking.session?.date || booking.bookingDate,
+                time: booking.event?.startTime || booking.session?.startTime || 'TBD',
+                duration: calculateDuration(
+                    booking.event?.startTime || booking.session?.startTime,
+                    booking.event?.endTime || booking.session?.endTime
+                ),
+                participants: booking.participants || 1,
+                amount: booking.amount || 0,
+                status: booking.status,
+                customerName: booking.user?.name || 'Guest'
+            }))
+
+            // Calculate average rating
+            const ratingsSum = completedBookings.reduce((sum, booking) => {
+                return sum + (booking.rating || 0)
+            }, 0)
+            const averageRating = completedBookings.length > 0 ? 
+                (ratingsSum / completedBookings.length).toFixed(1) : 0
+
+            // Calculate growth metrics (simplified - comparing with half of total)
+            const recentBookings = allBookings.filter(booking => {
+                const bookingDate = new Date(booking.bookingDate || booking.createdAt)
+                const oneMonthAgo = new Date()
+                oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
+                return bookingDate >= oneMonthAgo
+            })
+
+            const oldBookings = allBookings.filter(booking => {
+                const bookingDate = new Date(booking.bookingDate || booking.createdAt)
+                const twoMonthsAgo = new Date()
+                twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2)
+                const oneMonthAgo = new Date()
+                oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
+                return bookingDate >= twoMonthsAgo && bookingDate < oneMonthAgo
+            })
+
+            const bookingIncrease = oldBookings.length > 0 ? 
+                ((recentBookings.length - oldBookings.length) / oldBookings.length * 100).toFixed(1) : 0
+
+            setDashboardData({
+                totalBookings: allBookings.length,
+                totalRevenue: totalRevenue,
+                rating: parseFloat(averageRating),
+                completedBookings: completedBookings.length,
+                bookingIncrease: parseFloat(bookingIncrease),
+                revenueIncrease: 12.5 // This could be calculated similarly if historical revenue data is available
+            })
+
+            setUpcomingBookings(formattedUpcoming)
+
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error)
+            toast.error('Failed to load dashboard data')
+        } finally {
+            setIsLoadingData(false)
+        }
+    }
+
+    const calculateDuration = (startTime, endTime) => {
+        if (!startTime || !endTime) return 'Duration TBD'
+        
+        try {
+            const [startHour, startMin] = startTime.split(':').map(Number)
+            const [endHour, endMin] = endTime.split(':').map(Number)
+            
+            const startMinutes = startHour * 60 + startMin
+            const endMinutes = endHour * 60 + endMin
+            const durationMinutes = endMinutes - startMinutes
+            
+            if (durationMinutes <= 0) return 'Duration TBD'
+            
+            const hours = Math.floor(durationMinutes / 60)
+            const minutes = durationMinutes % 60
+            
+            if (hours === 0) return `${minutes} minutes`
+            if (minutes === 0) return `${hours} ${hours === 1 ? 'hour' : 'hours'}`
+            return `${hours}h ${minutes}m`
+        } catch {
+            return 'Duration TBD'
+        }
+    }
 
     const fetchUpcomingSessions = async () => {
         if (!user?.user?._id) return
@@ -244,7 +221,11 @@ const InstructorDashboard = () => {
         } else {
             toast.error("No adventure ID found for instructor")
         }
+        
+        // Fetch real dashboard data instead of just upcoming sessions
+        fetchDashboardData()
         fetchUpcomingSessions()
+        
         const fetchBadge = async () => {
             try {
                 const res = await getInstructorBadge(user?.user?.instructor?._id);
@@ -316,18 +297,22 @@ const InstructorDashboard = () => {
                                     </CardHeader>
                                     <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
                                         <div className="text-lg sm:text-xl lg:text-2xl font-bold">
-                                            {mockData.instructor.totalBookings}
+                                            {isLoadingData ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                dashboardData.totalBookings
+                                            )}
                                         </div>
                                         <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
                                             <span
-                                                className={`flex items-center ${mockData.instructor.bookingIncrease > 0 ? "text-green-500" : "text-red-500"}`}
+                                                className={`flex items-center ${dashboardData.bookingIncrease > 0 ? "text-green-500" : "text-red-500"}`}
                                             >
-                                                {mockData.instructor.bookingIncrease > 0 ? (
+                                                {dashboardData.bookingIncrease > 0 ? (
                                                     <TrendingUp className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
                                                 ) : (
                                                     <TrendingUp className="h-2 w-2 sm:h-3 sm:w-3 mr-1 transform rotate-180" />
                                                 )}
-                                                {Math.abs(mockData.instructor.bookingIncrease)}%
+                                                {Math.abs(dashboardData.bookingIncrease)}%
                                             </span>
                                             <span className="hidden sm:inline">
                                                 {t("instructor.fromLast")} {timeRange}
@@ -370,7 +355,11 @@ const InstructorDashboard = () => {
                                     </CardHeader>
                                     <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
                                         <div className="text-lg sm:text-xl lg:text-2xl font-bold">
-                                            {mockData.instructor.rating}
+                                            {isLoadingData ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                dashboardData.rating || "0.0"
+                                            )}
                                         </div>
                                         <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
                                             <span className="text-yellow-500 flex items-center">
@@ -392,8 +381,9 @@ const InstructorDashboard = () => {
 
                         <motion.div variants={fadeIn} initial="hidden" animate="visible" className="w-full">
                             <UpcomingBookingsCard
-                                bookings={mockData.upcomingBookings}
+                                bookings={upcomingBookings}
                                 onViewAll={() => navigate("/instructor/bookings")}
+                                isLoading={isLoadingData}
                             />
                         </motion.div>
 
