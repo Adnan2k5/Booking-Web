@@ -17,21 +17,12 @@ const SecretNftEvents = () => {
         const fetchNftEvents = async () => {
             try {
                 setIsLoading(true)
-                const response = await getEvents({ limit: 100 }) // Get all events
+                const response = await getEvents({ limit: 10 })
+                const eventsWithNfts = response.data.filter(
+                    (event) => event.isNftEvent || (event.nftReward && event.nftReward.enabled),
+                )
+                setNftEvents(eventsWithNfts)
 
-                if (response && response.data) {
-                    // Filter events that have NFT rewards
-                    const eventsWithNfts =
-                        response.data.events?.filter((event) => event.isNftEvent || (event.nftReward && event.nftReward.enabled)) ||
-                        []
-
-                    setNftEvents(eventsWithNfts)
-                } else if (Array.isArray(response)) {
-                    const eventsWithNfts = response.filter(
-                        (event) => event.isNftEvent || (event.nftReward && event.nftReward.enabled),
-                    )
-                    setNftEvents(eventsWithNfts)
-                }
             } catch (err) {
                 console.error("Error fetching NFT events:", err)
                 setError("Failed to load NFT events")
@@ -39,7 +30,6 @@ const SecretNftEvents = () => {
                 setIsLoading(false)
             }
         }
-
         fetchNftEvents()
     }, [])
 
