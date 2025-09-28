@@ -40,6 +40,7 @@ const mockData = {
   recentBookings: [
     {
       id: "B-1234",
+      key: 1,
       user: "John Doe",
       adventure: "Mountain Climbing",
       date: "2025-02-24",
@@ -47,6 +48,7 @@ const mockData = {
     },
     {
       id: "B-1235",
+      key: 2,
       user: "Jane Smith",
       adventure: "Scuba Diving",
       date: "2025-02-23",
@@ -54,6 +56,7 @@ const mockData = {
     },
     {
       id: "B-1236",
+      key: 3,
       user: "Mike Johnson",
       adventure: "Sky Diving",
       date: "2025-02-22",
@@ -65,8 +68,10 @@ const mockData = {
       adventure: "River Rafting",
       date: "2025-02-21",
       amount: 300,
+      key: 4,
     },
     {
+      key: 5,
       id: "B-1238",
       user: "David Brown",
       adventure: "Bungee Jumping",
