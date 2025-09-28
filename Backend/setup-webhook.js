@@ -29,11 +29,7 @@ async function setupWebhook() {
             data: data
         };
 
-        console.log('Setting up webhook with URL:', webhookUrl);
-        console.log('Request payload:', data);
-
         const response = await axios(config);
-        console.log('Webhook setup successful:', JSON.stringify(response.data, null, 2));
     } catch (error) {
         console.error('Webhook setup error:', error.response?.data || error.message);
     }

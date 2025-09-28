@@ -336,7 +336,6 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
       session_db
     );
 
-    console.log(paymentData);
     // Commit transaction
     await session_db.commitTransaction();
 

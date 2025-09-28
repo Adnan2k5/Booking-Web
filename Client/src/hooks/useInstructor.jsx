@@ -14,7 +14,6 @@ export function useInstructors() {
         setIsLoading(true);
         try {
             const res = await getAllInstructors();
-            console.log(res.data.message);
             setInstructors(res.data.message.instructors);
             setTotal(res.data.message.total);
             setTotalPages(res.data.message.totalPages);

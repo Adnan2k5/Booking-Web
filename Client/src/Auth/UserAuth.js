@@ -135,7 +135,7 @@ export const GoogleLoginSuccess = async (response, dispatch) => {
     )
     .then((res) => {
       if (res.status === 200) {
-        dispatch(loginSuccess(res.data.data));
+        dispatch(loginSuccess(res.data.data.user));
         return res.status;
       }
     })

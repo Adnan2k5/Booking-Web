@@ -21,7 +21,6 @@ export default function AdventureShop() {
 
       const response = await fetch(url);
       const data = await response.json();
-      console.log("Fetched items from API:", data);
       setItems(data.message || []);
     } catch (error) {
       console.error("Error fetching items:", error);

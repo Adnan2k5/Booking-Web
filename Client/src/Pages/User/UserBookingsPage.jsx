@@ -469,7 +469,6 @@ const UserBookings = () => {
     )
 
     const renderItemBooking = (booking) => (
-        console.log(booking),
         <Card key={booking._id} className="overflow-hidden rounded-2xl border-gray-200">
             <div className="relative h-40">
                 <img

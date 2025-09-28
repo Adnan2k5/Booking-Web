@@ -63,13 +63,13 @@ export default function LandingPage() {
     page: eventsPage,
     limit: eventsLimit
   })
-  
+
   const { adventures, loading: adventureLoading } = useAdventures()
-  
+
   const eventBooking = useEventBooking()
-  
+
   const groupManagement = useGroupManagement(user, useFriend, t)
-  
+
   const countrySlider = useCountrySlider(events)
 
   // Handlers
@@ -730,7 +730,7 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-            
+
             <AnimatePresence>
               {groupManagement.groupMembers.map((member) => (
                 <motion.div
