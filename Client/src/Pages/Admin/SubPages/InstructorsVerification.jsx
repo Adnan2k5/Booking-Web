@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Search, Download, Eye, Edit, Trash2, FileText, X } from "lucide-react"
 import { Button } from "../../../components/ui/button"
@@ -22,11 +22,21 @@ import { toast } from "sonner"
 
 export default function InstructorsPage() {
     const [searchTerm, setSearchTerm] = useState("")
+    const [debouncedSearch, setDebouncedSearch] = useState("")
     const [selectedInstructor, setSelectedInstructor] = useState(null)
     const [showDocuments, setShowDocuments] = useState(false)
-    const { instructors, page, setPage, deleteInstructorById, totalPages, changeDocumentStatus } = useInstructors()
+    const { instructors, page, setPage, deleteInstructorById, totalPages, changeDocumentStatus } = useInstructors(debouncedSearch)
 
-    console.log(page);
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm.trim())
+        }, 400)
+        return () => clearTimeout(handler)
+    }, [searchTerm])
+
+    useEffect(() => {
+        setPage((prev) => (prev !== 1 ? 1 : prev))
+    }, [debouncedSearch, setPage])
 
     const handleViewDocuments = (instructor) => {
         setSelectedInstructor(instructor)
@@ -91,7 +101,13 @@ export default function InstructorsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {instructors.map((instructor) => (
+                            {instructors.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                        {debouncedSearch ? `No instructors found for "${searchTerm.trim()}"` : "No instructors yet."}
+                                    </TableCell>
+                                </TableRow>
+                            ) : instructors.map((instructor) => (
                                 <TableRow key={instructor._id}>
                                     <TableCell className="font-medium">{instructor.name}</TableCell>
                                     <TableCell>{instructor.email}</TableCell>

@@ -5,12 +5,23 @@ import { User } from "../models/user.model.js";
 import { Instructor } from "../models/instructor.model.js";
 
 export const getAllInstructors = asyncHandler(async (req, res) => {
-  const { page, limit = 10 } = req.query;
+  const { page, limit = 10, search = "" } = req.query;
 
   const pageNumber = Math.max(1, Number.parseInt(page, 10) || 1);
   const pageSize = Math.max(1, Number.parseInt(limit, 10) || 10);
 
-  const instructors = await User.find({ role: "instructor" })
+  const searchTerm = typeof search === "string" ? search.trim() : "";
+  const filter = { role: "instructor" };
+
+  if (searchTerm) {
+    filter.$or = [
+      { name: { $regex: searchTerm, $options: "i" } },
+      { email: { $regex: searchTerm, $options: "i" } },
+      { phoneNumber: { $regex: searchTerm, $options: "i" } },
+    ];
+  }
+
+  const instructors = await User.find(filter)
     .skip((pageNumber - 1) * pageSize)
     .limit(pageSize)
     .populate({
@@ -29,7 +40,7 @@ export const getAllInstructors = asyncHandler(async (req, res) => {
     })
     .select("email name phoneNumber profilePicture instructor");
 
-  const total = await User.countDocuments({ role: "instructor" });
+  const total = await User.countDocuments(filter);
   const totalPages = Math.ceil(total / pageSize);
 
   res.status(200).json(
