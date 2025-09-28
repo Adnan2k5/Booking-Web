@@ -26,6 +26,8 @@ export default function InstructorsPage() {
     const [showDocuments, setShowDocuments] = useState(false)
     const { instructors, page, setPage, deleteInstructorById, totalPages, changeDocumentStatus } = useInstructors()
 
+    console.log(page);
+
     const handleViewDocuments = (instructor) => {
         setSelectedInstructor(instructor)
         setShowDocuments(true)

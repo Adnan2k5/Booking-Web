@@ -7,9 +7,12 @@ import { Instructor } from "../models/instructor.model.js";
 export const getAllInstructors = asyncHandler(async (req, res) => {
   const { page, limit = 10 } = req.query;
 
+  const pageNumber = Math.max(1, Number.parseInt(page, 10) || 1);
+  const pageSize = Math.max(1, Number.parseInt(limit, 10) || 10);
+
   const instructors = await User.find({ role: "instructor" })
-    .skip((page - 1) * limit)
-    .limit(limit)
+    .skip((pageNumber - 1) * pageSize)
+    .limit(pageSize)
     .populate({
       path: "instructor",
       populate: [
@@ -27,14 +30,14 @@ export const getAllInstructors = asyncHandler(async (req, res) => {
     .select("email name phoneNumber profilePicture instructor");
 
   const total = await User.countDocuments({ role: "instructor" });
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = Math.ceil(total / pageSize);
 
   res.status(200).json(
-    new ApiResponse(200, "Instructors retrieved successfully", {
+    new ApiResponse(200, {
       instructors,
       total,
       totalPages,
-    })
+    }, "Instructors retrieved successfully")
   );
 });
 
@@ -58,9 +61,9 @@ export const getInstructorById = asyncHandler(async (req, res) => {
     .select("email name phoneNumber profilePicture instructor");
 
   res.status(200).json(
-    new ApiResponse(200, "Instructor retrieved successfully", {
+    new ApiResponse(200, {
       instructor,
-    })
+    }, "Instructor retrieved successfully")
   );
 });
 
@@ -74,7 +77,9 @@ export const deleteInstructor = asyncHandler(async (req, res) => {
 
   await User.findByIdAndDelete(id);
 
-  res.status(200).json(new ApiResponse(200, "Instructor deleted successfully"));
+  res
+    .status(200)
+    .json(new ApiResponse(200, null, "Instructor deleted successfully"));
 });
 
 export const changeDocumentStatusById = asyncHandler(async (req, res) => {
@@ -92,9 +97,11 @@ export const changeDocumentStatusById = asyncHandler(async (req, res) => {
   instructor.documentVerified = status;
   await instructor.save();
 
-  res
-    .status(200)
-    .json(
-      new ApiResponse(200, "Instructor document status updated successfully")
-    );
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      null,
+      "Instructor document status updated successfully"
+    )
+  );
 });
