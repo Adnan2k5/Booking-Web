@@ -6,6 +6,7 @@ import {
   createAdmin,
   deleteAdmin,
   getAllAdmins,
+  getDashboardStats,
   updateAdmin,
 } from "../controllers/admin.controller.js";
 
@@ -15,6 +16,7 @@ adminRouter.use(verifyJWT);
 adminRouter.use(verifyAdmin);
 
 adminRouter.post("/create", createAdmin);
+adminRouter.get("/dashboard/stats", getDashboardStats);
 adminRouter.get("/", getAllAdmins);
 adminRouter.put("/:id", updateAdmin);
 adminRouter.delete("/:id", deleteAdmin);

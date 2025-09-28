@@ -20,3 +20,16 @@ export const deleteAdmin = async (adminId) => {
   const res = await axiosClient.delete(`/api/admin/${adminId}`);
   return res.data;
 };
+
+export const getAdminDashboardStats = async (range = "month") => {
+  const params = {};
+  if (range) {
+    params.range = range;
+  }
+
+  const res = await axiosClient.get("/api/admin/dashboard/stats", {
+    params,
+  });
+
+  return res.data;
+};

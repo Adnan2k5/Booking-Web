@@ -1,15 +1,15 @@
 import { Table } from "antd";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
-  Calendar,
   CreditCard,
   DollarSign,
   Mountain,
   Users,
   TrendingUp,
   Compass,
+  RefreshCw,
 } from "lucide-react";
 import {
   Card,
@@ -26,82 +26,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { useAdminDashboard } from "../../hooks/useAdminDashboard";
 
-// Mock data for the dashboard
-const mockData = {
-  totalRevenue: 124580,
-  totalUsers: 2845,
-  activeAdventures: 48,
-  totalBookings: 1256,
-  revenueIncrease: 14.5,
-  userIncrease: 7.2,
-  adventureIncrease: 4.8,
-  bookingIncrease: 12.3,
-  recentBookings: [
-    {
-      id: "B-1234",
-      key: 1,
-      user: "John Doe",
-      adventure: "Mountain Climbing",
-      date: "2025-02-24",
-      amount: 450,
-    },
-    {
-      id: "B-1235",
-      key: 2,
-      user: "Jane Smith",
-      adventure: "Scuba Diving",
-      date: "2025-02-23",
-      amount: 350,
-    },
-    {
-      id: "B-1236",
-      key: 3,
-      user: "Mike Johnson",
-      adventure: "Sky Diving",
-      date: "2025-02-22",
-      amount: 550,
-    },
-    {
-      id: "B-1237",
-      user: "Sarah Williams",
-      adventure: "River Rafting",
-      date: "2025-02-21",
-      amount: 300,
-      key: 4,
-    },
-    {
-      key: 5,
-      id: "B-1238",
-      user: "David Brown",
-      adventure: "Bungee Jumping",
-      date: "2025-02-20",
-      amount: 250,
-    },
-  ],
-  topAdventures: [
-    { name: "Sky Diving", bookings: 245, revenue: 36750 },
-    { name: "Scuba Diving", bookings: 198, revenue: 29700 },
-    { name: "Mountain Climbing", bookings: 156, revenue: 23400 },
-    { name: "Bungee Jumping", bookings: 132, revenue: 19800 },
-    { name: "River Rafting", bookings: 124, revenue: 18600 },
-  ],
-  monthlyRevenue: [
-    { month: "Jan", revenue: 8500 },
-    { month: "Feb", revenue: 9200 },
-    { month: "Mar", revenue: 10500 },
-    { month: "Apr", revenue: 9800 },
-    { month: "May", revenue: 11200 },
-    { month: "Jun", revenue: 12500 },
-    { month: "Jul", revenue: 13800 },
-    { month: "Aug", revenue: 14200 },
-    { month: "Sep", revenue: 13500 },
-    { month: "Oct", revenue: 12800 },
-    { month: "Nov", revenue: 11500 },
-    { month: "Dec", revenue: 10800 },
-  ],
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0,
+});
+
+const formatCurrency = (value = 0) =>
+  currencyFormatter.format(Number.isFinite(Number(value)) ? Number(value) : 0);
+
+const defaultDashboardStats = {
+  totalRevenue: 0,
+  totalUsers: 0,
+  activeAdventures: 0,
+  totalBookings: 0,
+  revenueIncrease: 0,
+  userIncrease: 0,
+  adventureIncrease: 0,
+  bookingIncrease: 0,
+  recentBookings: [],
+  topAdventures: [],
+  monthlyRevenue: [],
 };
-const columns = [
+
+const bookingColumns = [
   {
     title: "Booking ID",
     dataIndex: "id",
@@ -113,7 +71,7 @@ const columns = [
     key: "user",
   },
   {
-    title: "Adventure",
+    title: "Adventure / Event",
     dataIndex: "adventure",
     key: "adventure",
   },
@@ -121,23 +79,50 @@ const columns = [
     title: "Date",
     dataIndex: "date",
     key: "date",
+    render: (value) => (value ? new Date(value).toLocaleDateString() : "—"),
   },
   {
     title: "Amount",
     dataIndex: "amount",
     key: "amount",
+    render: (value) => formatCurrency(value ?? 0),
   },
 ];
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+
 export default function AdminDashboard() {
   const [timeRange, setTimeRange] = useState("month");
+  const { data, isLoading, error, refresh } = useAdminDashboard(timeRange);
+
+  const stats = data ?? defaultDashboardStats;
+
+  const recentBookingsData = useMemo(
+    () => stats.recentBookings.map((booking) => ({ ...booking, key: booking.id })),
+    [stats.recentBookings]
+  );
+
+  const maxTopAdventureBookings = useMemo(() => {
+    if (!stats.topAdventures.length) {
+      return 1;
+    }
+    return stats.topAdventures.reduce(
+      (max, adventure) => Math.max(max, adventure.bookings ?? 0),
+      1
+    );
+  }, [stats.topAdventures]);
+
+  const averageBookingValue = useMemo(() => {
+    if (!stats.totalBookings) {
+      return 0;
+    }
+    return stats.totalRevenue / stats.totalBookings;
+  }, [stats.totalRevenue, stats.totalBookings]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
         <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center space-x-2">
-          <Select defaultValue={timeRange} onValueChange={setTimeRange}>
+          <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select time range" />
             </SelectTrigger>
@@ -148,11 +133,28 @@ export default function AdminDashboard() {
               <SelectItem value="year">Last year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon">
-            <Calendar className="h-4 w-4" />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={refresh}
+            disabled={isLoading}
+            title="Refresh dashboard"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
           </Button>
         </div>
       </div>
+
+      {error && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="flex items-center justify-between py-3 text-sm text-destructive">
+            <span>Failed to load dashboard data. Please try again.</span>
+            <Button size="sm" variant="destructive" onClick={refresh} disabled={isLoading}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -161,24 +163,19 @@ export default function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ${mockData.totalRevenue.toLocaleString()}
-            </div>
+            <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
               <span
-                className={`flex items-center ${mockData.revenueIncrease > 0
-                  ? "text-green-500"
-                  : "text-red-500"
-                  }`}
+                className={`flex items-center ${stats.revenueIncrease >= 0 ? "text-green-500" : "text-red-500"}`}
               >
-                {mockData.revenueIncrease > 0 ? (
+                {stats.revenueIncrease >= 0 ? (
                   <ArrowUp className="h-3 w-3" />
                 ) : (
                   <ArrowDown className="h-3 w-3" />
                 )}
-                {Math.abs(mockData.revenueIncrease)}%
+                {Math.abs(stats.revenueIncrease ?? 0).toFixed(1)}%
               </span>
-              <span>from last {timeRange}</span>
+              <span>vs last {timeRange}</span>
             </div>
           </CardContent>
         </Card>
@@ -189,82 +186,65 @@ export default function AdminDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {mockData.totalUsers.toLocaleString()}
-            </div>
+            <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
               <span
-                className={`flex items-center ${mockData.userIncrease > 0 ? "text-green-500" : "text-red-500"
-                  }`}
+                className={`flex items-center ${stats.userIncrease >= 0 ? "text-green-500" : "text-red-500"}`}
               >
-                {mockData.userIncrease > 0 ? (
+                {stats.userIncrease >= 0 ? (
                   <ArrowUp className="h-3 w-3" />
                 ) : (
                   <ArrowDown className="h-3 w-3" />
                 )}
-                {Math.abs(mockData.userIncrease)}%
+                {Math.abs(stats.userIncrease ?? 0).toFixed(1)}%
               </span>
-              <span>from last {timeRange}</span>
+              <span>vs last {timeRange}</span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Adventures
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Active Adventures</CardTitle>
             <Mountain className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {mockData.activeAdventures}
-            </div>
+            <div className="text-2xl font-bold">{stats.activeAdventures}</div>
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
               <span
-                className={`flex items-center ${mockData.adventureIncrease > 0
-                  ? "text-green-500"
-                  : "text-red-500"
-                  }`}
+                className={`flex items-center ${stats.adventureIncrease >= 0 ? "text-green-500" : "text-red-500"}`}
               >
-                {mockData.adventureIncrease > 0 ? (
+                {stats.adventureIncrease >= 0 ? (
                   <ArrowUp className="h-3 w-3" />
                 ) : (
                   <ArrowDown className="h-3 w-3" />
                 )}
-                {Math.abs(mockData.adventureIncrease)}%
+                {Math.abs(stats.adventureIncrease ?? 0).toFixed(1)}%
               </span>
-              <span>from last {timeRange}</span>
+              <span>vs last {timeRange}</span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Bookings
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {mockData.totalBookings.toLocaleString()}
-            </div>
+            <div className="text-2xl font-bold">{stats.totalBookings.toLocaleString()}</div>
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
               <span
-                className={`flex items-center ${mockData.bookingIncrease > 0
-                  ? "text-green-500"
-                  : "text-red-500"
-                  }`}
+                className={`flex items-center ${stats.bookingIncrease >= 0 ? "text-green-500" : "text-red-500"}`}
               >
-                {mockData.bookingIncrease > 0 ? (
+                {stats.bookingIncrease >= 0 ? (
                   <ArrowUp className="h-3 w-3" />
                 ) : (
                   <ArrowDown className="h-3 w-3" />
                 )}
-                {Math.abs(mockData.bookingIncrease)}%
+                {Math.abs(stats.bookingIncrease ?? 0).toFixed(1)}%
               </span>
-              <span>from last {timeRange}</span>
+              <span>vs last {timeRange}</span>
             </div>
           </CardContent>
         </Card>
@@ -274,13 +254,14 @@ export default function AdminDashboard() {
         <Card className="col-span-4">
           <CardHeader>
             <CardTitle>Revenue Overview</CardTitle>
-            <CardDescription>
-              Monthly revenue for the current year
-            </CardDescription>
+            <CardDescription>Monthly revenue for the last 12 months</CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
             <div className="h-[300px]">
-              <RevenueChart data={mockData.monthlyRevenue} />
+              <RevenueChart
+                data={stats.monthlyRevenue}
+                isLoading={isLoading && !stats.monthlyRevenue.length}
+              />
             </div>
           </CardContent>
         </Card>
@@ -288,47 +269,55 @@ export default function AdminDashboard() {
         <Card className="col-span-3">
           <CardHeader>
             <CardTitle>Top Adventures</CardTitle>
-            <CardDescription>
-              Most popular adventures by bookings
-            </CardDescription>
+            <CardDescription>Most popular adventures by bookings</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockData.topAdventures.map((adventure, i) => (
-                <div key={i} className="flex items-center">
-                  <div className="w-[45px] text-center">
-                    <span className="text-2xl font-bold text-muted-foreground">
-                      {i + 1}
-                    </span>
-                  </div>
-                  <div className="ml-2 flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {adventure.name}
-                    </p>
-                    <div className="flex items-center text-xs text-muted-foreground">
-                      <span>{adventure.bookings} bookings</span>
-                      <span className="mx-2">•</span>
-                      <span>${adventure.revenue.toLocaleString()}</span>
+              {stats.topAdventures.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Not enough adventure data yet.</p>
+              ) : (
+                stats.topAdventures.map((adventure, index) => (
+                  <div key={adventure.id ?? index} className="flex items-center space-x-4">
+                    <div className="w-[32px] text-center">
+                      <span className="text-xl font-bold text-muted-foreground">
+                        {index + 1}
+                      </span>
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <p className="text-sm font-medium leading-none">{adventure.name}</p>
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <span>{adventure.bookings.toLocaleString()} bookings</span>
+                        <span className="mx-2">•</span>
+                        <span>{formatCurrency(adventure.revenue)}</span>
+                      </div>
+                      <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{
+                            width: `${Math.max(
+                              (adventure.bookings / maxTopAdventureBookings) * 100,
+                              6
+                            )}%`,
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div
-                    className={`h-2 w-[${Math.max(
-                      adventure.bookings / 3,
-                      30
-                    )}px] bg-primary rounded-full`}
-                  />
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
+
       <div className="flex flex-col">
         <Card className="md:col-span-2 col-span-1">
           <Table
             className="w-full"
-            columns={columns}
-            dataSource={mockData.recentBookings}
+            columns={bookingColumns}
+            dataSource={recentBookingsData}
+            loading={isLoading && !stats.recentBookings.length}
+            pagination={false}
           />
         </Card>
 
@@ -344,11 +333,9 @@ export default function AdminDashboard() {
                   <div className="rounded-full p-1 bg-green-100">
                     <TrendingUp className="h-4 w-4 text-green-600" />
                   </div>
-                  <span className="text-sm font-medium">
-                    Avg. Booking Value
-                  </span>
+                  <span className="text-sm font-medium">Avg. Booking Value</span>
                 </div>
-                <span className="text-sm font-bold">$345</span>
+                <span className="text-sm font-bold">{formatCurrency(averageBookingValue)}</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -356,9 +343,11 @@ export default function AdminDashboard() {
                   <div className="rounded-full p-1 bg-purple-100">
                     <Compass className="h-4 w-4 text-purple-600" />
                   </div>
-                  <span className="text-sm font-medium">Top Location</span>
+                  <span className="text-sm font-medium">Top Adventure</span>
                 </div>
-                <span className="text-sm font-bold">Alpine Heights</span>
+                <span className="text-sm font-bold">
+                  {stats.topAdventures[0]?.name ?? "—"}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -368,13 +357,29 @@ export default function AdminDashboard() {
   );
 }
 
-function RevenueChart({ data }) {
+function RevenueChart({ data, isLoading }) {
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+        Loading revenue...
+      </div>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+        No revenue data yet.
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
         <XAxis dataKey="month" stroke="#000000" />
         <YAxis stroke="#000000" />
-        <Tooltip />
+        <Tooltip formatter={(value) => formatCurrency(value)} labelFormatter={(label) => label} />
         <Line type="monotone" dataKey="revenue" stroke="#00bfa0" strokeWidth={2} dot={{ r: 4 }} />
       </LineChart>
     </ResponsiveContainer>
