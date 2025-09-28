@@ -20,7 +20,6 @@ const LinkedInCallback = () => {
         .post("/api/auth/signInWithLinkedin", { code })
         .then((res) => {
           setTimeout(() => {
-            console.log("Login Successful:", res.data);
             dispatch(loginSuccess(res.data.data));
           }, 40000);
           navigate("/");

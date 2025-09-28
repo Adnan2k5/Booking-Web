@@ -68,7 +68,6 @@ export const HotelRegister = () => {    const [formData, setFormData] = useState
 
     const getLocation = async () => {
         const res = await fetchLocations()
-        console.log(res)
         if (res.statusCode === 200) {
             setlocation(res.data);
         } else {

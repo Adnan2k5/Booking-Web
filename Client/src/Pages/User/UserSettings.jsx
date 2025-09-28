@@ -35,7 +35,7 @@ export const UserSettings = () => {
             extpassword: extpassword,
             newpassword: newpassword,
         });
-        console.log(res);
+        
         if (res.statusCode === 200) {
             toast.success("Password updated successfully.");
             setExtPassword("");

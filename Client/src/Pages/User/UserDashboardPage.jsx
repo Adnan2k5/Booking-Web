@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import {
     Calendar,
     Award,
-    TrendingUp,
     Target,
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "../../components/ui/avatar"
@@ -36,7 +35,6 @@ export default function UserDashboardPage() {
         const fetchUserAdventures = async () => {
             try {
                 const response = await getUserAdventures();
-                console.log("Adventure response:", response);
                 if (response.success) {
                     const adventures = response.data.adventures || [];
                     const stats = adventures.map((adv) => ({
@@ -45,7 +43,6 @@ export default function UserDashboardPage() {
                     }));
 
                     setAdventureStats(stats);
-                    console.log("Adventure Stats", adventureStats)
                 }
 
             } catch (error) {
@@ -56,7 +53,6 @@ export default function UserDashboardPage() {
         async function loadUserAdventureData() {
             try {
                 const response = await getUserAdventureExperiences();
-                console.log("Adventure Experience response:", response);
 
                 const adventureData = response?.data?.data;
                 if (!adventureData) {
