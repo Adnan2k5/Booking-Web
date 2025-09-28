@@ -31,7 +31,6 @@ export const Cart = () => {
             const data = await res.json();
             setCart(data.data.cart);
 
-            console.log("Full Cart Data:", data);
         } catch (error) {
             console.error("Error fetching cart:", error);
         }
@@ -185,7 +184,6 @@ export const Cart = () => {
             </div>
         )
     }
-    console.log("Cart.jsx cart state:", cart);
     return (
         <div className="min-h-screen bg-white mt-20">
             <Navbar />

@@ -9,17 +9,16 @@ import { useAuth } from '../AuthProvider'
 
 export default function UserProfilePage() {
     const { user } = useAuth();
-    console.log("User Data", user)
     const userProfile = {
         name: user.user.name || "John Doe",
         email: user.user.email || "",
         level: user.user.level || "Beginner",
         joinDate: user.user.updatedAt
-  ? new Date(user.user.updatedAt).toLocaleDateString()
-  : "2023-01-01",
+            ? new Date(user.user.updatedAt).toLocaleDateString()
+            : "2023-01-01",
         completedAdventures: user.user.completedAdventures || 0,
         experience: user.user.level || 400,
-        nextLevel: user.user.nextLevel || Math.floor(user.user.level/100) * 100 + 100, // Example calculation for next level
+        nextLevel: user.user.nextLevel || Math.floor(user.user.level / 100) * 100 + 100, // Example calculation for next level
     }
     const progressPercentage = (userProfile.experience / userProfile.nextLevel) * 100
     return (

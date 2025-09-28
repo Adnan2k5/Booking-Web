@@ -44,20 +44,12 @@ export const uploadFile = async (file) => {
       throw new Error('No file provided');
     }
 
-    console.log('Starting file upload for:', file.name);
 
-    // In a real app, you would use fetch or axios to upload the file to a server
-    // For now, we'll simulate an upload by creating a data URL
     const dataURL = await fileToDataURL(file);
 
     if (!dataURL) {
       throw new Error('Failed to generate data URL');
     }
-
-    // Simulate network delay for realism
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    console.log('File upload completed successfully');
 
     return {
       url: dataURL, // In a real app, this would be the URL returned by the server

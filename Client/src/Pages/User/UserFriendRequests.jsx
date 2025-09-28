@@ -49,7 +49,6 @@ export function UserFriendRequests() {
 
     const handleSendFriendRequest = async (userId) => {
         try {
-            console.log("Sending friend request to user ID:", userId)
             if (!userId) {
                 toast.error("Invalid user ID")
                 return

@@ -369,7 +369,6 @@ export default function LandingPage() {
     limit: eventsLimit
   });
 
-  console.log(events)
 
   // Group events by country
   const countriesFromEvents = useMemo(() => {
@@ -393,8 +392,6 @@ export default function LandingPage() {
     countriesFromEvents[currentCountryIndex] || null,
     [countriesFromEvents, currentCountryIndex]
   )
-
-  console.log(user);
 
   // Auto-slide effect
   useEffect(() => {

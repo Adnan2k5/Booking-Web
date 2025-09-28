@@ -17,7 +17,6 @@ const FacebookCallback = () => {
       axios
         .post("http://localhost:8080/api/auth/signInWithFacebook", { code })
         .then((res) => {
-          console.log("Login Successful:", res.data);
           navigate("/");
         })
         .catch((err) => {

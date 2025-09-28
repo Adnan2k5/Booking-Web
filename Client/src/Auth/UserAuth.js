@@ -32,7 +32,6 @@ export const UserLogin = async (data, dispatch) => {
     withCredentials: true,
   });
   if (res.data.statusCode === 200) {
-    console.log(res.data.data);
     dispatch(loginSuccess(res.data.data.user));
     return res;
   }
@@ -81,7 +80,6 @@ export const VerifyNewEmail = async (data) => {
         withCredentials: true,
       }
     );
-    console.log(res);
     if (res.status === 200) {
       return res;
     } else {
@@ -99,7 +97,6 @@ export const UpdateEmail = async (data) => {
     const res = await axiosClient.post('/api/auth/updateEmail', data, {
       withCredentials: true,
     });
-    console.log(res);
     if (res.status === 200) {
       return res;
     } else {

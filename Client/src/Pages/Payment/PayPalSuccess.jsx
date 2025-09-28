@@ -35,9 +35,6 @@ const PayPalSuccess = () => {
         return;
       }
 
-      console.log("🔑 Submitting PayPal success with token:", token ? "Token present" : "No token");
-      console.log("📋 PayPal data:", paypalData);
-
       const response = await submitPayPalSuccess(token, paypalData);
 
       if (response.success) {
