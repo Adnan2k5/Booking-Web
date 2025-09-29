@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback, lazy, Suspense } from "react"
+import { useState, useRef, useCallback, lazy, Suspense, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider"
@@ -53,10 +53,11 @@ export default function LandingPage() {
   const [date, setDate] = useState("")
   const [adventure, setAdventure] = useState("")
   const [eventsPage, setEventsPage] = useState(1)
-  const [playerReady, setPlayerReady] = useState(false)
+  const [isVideoReady, setIsVideoReady] = useState(false)
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
 
   const eventsLimit = 6
-  const playerRef = useRef(null)
+  const videoContainerRef = useRef(null)
 
   // Custom hooks
   const { events, isLoading: eventsLoading, totalPages: eventsTotalPages } = useEvents({
@@ -86,12 +87,40 @@ export default function LandingPage() {
   }, [location, date, adventure, navigate, t, groupManagement])
 
   const onReady = useCallback(() => {
-    const internalPlayer = playerRef.current?.getInternalPlayer()
-    if (internalPlayer?.setPlaybackQuality) {
-      internalPlayer.setPlaybackQuality('hd1080')
-    }
-    setPlayerReady(true)
+    setIsVideoReady(true)
   }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
+      setShouldLoadVideo(true)
+      return
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setShouldLoadVideo(true)
+        observer.disconnect()
+      }
+    }, {
+      threshold: 0.2
+    })
+
+    const target = videoContainerRef.current
+    if (target) {
+      observer.observe(target)
+    }
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!shouldLoadVideo && typeof window !== "undefined") {
+      const timeoutId = window.setTimeout(() => setShouldLoadVideo(true), 2000)
+      return () => window.clearTimeout(timeoutId)
+    }
+  }, [shouldLoadVideo])
 
   const handleSubmitBooking = useCallback(() => {
     const result = eventBooking.submitBooking()
@@ -103,7 +132,11 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Background Video */}
-      <div className="bg absolute top-0 left-0 w-full h-screen overflow-hidden -z-50">
+      <div
+        className="bg absolute top-0 left-0 w-full h-screen overflow-hidden -z-50 object-cover"
+        ref={videoContainerRef}
+        style={{ width: '100vw', height: '100vh' }}
+      >
         <motion.div
           className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 z-10"
           initial={{ opacity: 0 }}
@@ -111,28 +144,34 @@ export default function LandingPage() {
           transition={{ duration: 1.5 }}
         />
         <Suspense fallback={<div className="w-full h-full bg-gray-900" />}>
-          <ReactPlayer
-            ref={playerRef}
-            url={"https://youtu.be/FfPVvtNo92s"}
-            onReady={onReady}
-            controls={false}
-            loop={true}
-            playing={playerReady}
-            muted={true}
-            width="100%"
-            height="100%"
-            config={{
-              youtube: {
-                playerVars: {
-                  showinfo: 0,
-                  modestbranding: 1,
-                  autoplay: 1,
-                  rel: 0,
-                  iv_load_policy: 3
-                }
-              }
-            }}
-          />
+          {shouldLoadVideo && (
+            <div className="player-wrapper h-full w-full absolute top-0 left-0">
+              <ReactPlayer
+                url={"https://dazzling-chaja-b80bdd.netlify.app/video.mp4"}
+                onReady={onReady}
+                controls={false}
+                loop={true}
+                playing={shouldLoadVideo}
+                muted={true}
+                width="100%"
+                height="100%"
+                onStart={() => setIsVideoReady(true)}
+                style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                className="react-player absolute top-0 left-0"
+                wrapperClassName={`h-full w-full transition-opacity duration-700 ${isVideoReady ? "opacity-100" : "opacity-0"}`}
+                config={{
+                  file: {
+                    attributes: {
+                      preload: "auto",
+                      playsInline: true,
+                      autoPlay: true,
+                      muted: true
+                    }
+                  }
+                }}
+              />
+            </div>
+          )}
         </Suspense>
       </div>
 
