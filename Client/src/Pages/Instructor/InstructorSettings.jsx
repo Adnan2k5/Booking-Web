@@ -96,7 +96,6 @@ const InstructorSettings = () => {
         try {
             const data = { email: newEmail, otp: otp };
             const res = await UpdateEmail(data);
-            console.log(res.statusCode);
             if (res.status) {
                 toast("Email Verified Successfully");
                 setOtpSent(false);

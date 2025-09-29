@@ -9,8 +9,8 @@ import { Badge } from "../../components/ui/badge";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import InstructorLayout from "../Instructor/InstructorLayout";
-import { 
-  createBatchPayout 
+import {
+  createBatchPayout
 } from "../../Api/payoutApi";
 import axios from "axios";
 import { staggerContainer, fadeIn } from "../../assets/Animations";
@@ -33,145 +33,143 @@ export default function PayoutPage() {
 
   const token = localStorage.getItem("accessToken");
 
-useEffect(() => {
-  if (!user?.user) {
-    toast.error("Please login to access the payout page");
-    navigate("/login");
-    return;
-  }
-
-  const checkLinkStatus = async () => {
-    try {
-      console.log("🔑 Token from localStorage:", token);
-
-      const res = await axiosClient.get('/api/payouts/status');
-
-      console.log("PayPal status response:", res.data);
-      setIsLinked(res.data.data?.isLinked ?? false);
-    } catch (err) {
-      console.error("Error fetching PayPal status:", err.response?.data || err.message);
-      setIsLinked(false);
+  useEffect(() => {
+    if (!user?.user) {
+      toast.error("Please login to access the payout page");
+      navigate("/login");
+      return;
     }
-  };
 
-  const loadPayoutData = async () => {
-    try {
-      // Fetch payout history
-      const historyRes = await axiosClient.get('/api/transactions/payout/history?limit=10');
-      if (historyRes.data.success) {
-        const history = historyRes.data.data.docs || [];
-        setPayoutHistory(history.map(payout => ({
-          id: payout._id,
-          amount: payout.amount,
-          date: new Date(payout.createdAt).toLocaleDateString(),
-          status: payout.status.toLowerCase(),
-          note: payout.note,
-          currency: payout.currency
-        })));
+    const checkLinkStatus = async () => {
+      try {
 
-        // Calculate total earnings from completed payouts
-        const completedPayouts = history.filter(p => p.status === 'SUCCESS');
-        const totalEarned = completedPayouts.reduce((sum, p) => sum + p.amount, 0);
-        setTotalEarnings(totalEarned);
+        const res = await axiosClient.get('/api/payouts/status');
 
-        // Calculate pending payouts
-        const pendingPayoutsList = history.filter(p => ['QUEUED', 'SENT'].includes(p.status));
-        const pendingAmount = pendingPayoutsList.reduce((sum, p) => sum + p.amount, 0);
-        setPendingPayouts(pendingAmount);
+        setIsLinked(res.data.data?.isLinked ?? false);
+      } catch (err) {
+        console.error("Error fetching PayPal status:", err.response?.data || err.message);
+        setIsLinked(false);
       }
+    };
 
-      // Fetch potential earnings from confirmed bookings
-      await loadPotentialEarnings();
+    const loadPayoutData = async () => {
+      try {
+        // Fetch payout history
+        const historyRes = await axiosClient.get('/api/transactions/payout/history?limit=10');
+        if (historyRes.data.success) {
+          const history = historyRes.data.data.docs || [];
+          setPayoutHistory(history.map(payout => ({
+            id: payout._id,
+            amount: payout.amount,
+            date: new Date(payout.createdAt).toLocaleDateString(),
+            status: payout.status.toLowerCase(),
+            note: payout.note,
+            currency: payout.currency
+          })));
 
-    } catch (error) {
-      console.error('Error loading payout data:', error);
-      // Fallback to basic data if API fails
-      setTotalEarnings(0);
-      setPendingPayouts(0);
-      setPayoutHistory([]);
-    }
-  };
+          // Calculate total earnings from completed payouts
+          const completedPayouts = history.filter(p => p.status === 'SUCCESS');
+          const totalEarned = completedPayouts.reduce((sum, p) => sum + p.amount, 0);
+          setTotalEarnings(totalEarned);
 
-  const loadPotentialEarnings = async () => {
-    try {
-      // Get user's confirmed bookings that haven't been paid out yet
-      const bookingsData = await Promise.allSettled([
-        // Event bookings where user is an instructor
-        axiosClient.get(`/api/event-bookings?instructor=${user?.user?._id}&status=confirmed&paymentStatus=completed`),
-        // Hotel bookings if user owns hotels
-        axiosClient.get(`/api/hotelBooking?owner=${user?.user?._id}&status=confirmed&paymentStatus=completed`),
-        // Session bookings if user is an instructor
-        axiosClient.get(`/api/sessionBooking?instructor=${user?.user?._id}&status=confirmed`)
-      ]);
-
-      let potentialEarnings = 0;
-      let bookingCount = 0;
-
-      bookingsData.forEach((result, index) => {
-        if (result.status === 'fulfilled' && result.value?.data?.success) {
-          const bookings = result.value.data.data || [];
-          bookingCount += bookings.length;
-
-          bookings.forEach(booking => {
-            // Calculate 80% payout (20% platform fee)
-            const payoutAmount = (booking.amount || 0) * 0.8;
-            
-            // Only include bookings that are at least 24 hours old and haven't been processed
-            const bookingDate = new Date(booking.paymentCompletedAt || booking.bookingDate);
-            const hoursSinceBooking = (new Date() - bookingDate) / (1000 * 60 * 60);
-            
-            if (hoursSinceBooking >= 24) {
-              potentialEarnings += payoutAmount;
-            }
-          });
+          // Calculate pending payouts
+          const pendingPayoutsList = history.filter(p => ['QUEUED', 'SENT'].includes(p.status));
+          const pendingAmount = pendingPayoutsList.reduce((sum, p) => sum + p.amount, 0);
+          setPendingPayouts(pendingAmount);
         }
-      });
 
-      setNextPayoutAmount(potentialEarnings);
-      setTotalBookings(bookingCount);
+        // Fetch potential earnings from confirmed bookings
+        await loadPotentialEarnings();
 
-      // Calculate next payout date (next daily cron run at 2 AM UTC)
-      const now = new Date();
-      const nextRun = new Date();
-      nextRun.setUTCHours(2, 0, 0, 0);
-      
-      // If it's already past 2 AM UTC today, set for tomorrow
-      if (now.getUTCHours() >= 2) {
-        nextRun.setDate(nextRun.getDate() + 1);
+      } catch (error) {
+        console.error('Error loading payout data:', error);
+        // Fallback to basic data if API fails
+        setTotalEarnings(0);
+        setPendingPayouts(0);
+        setPayoutHistory([]);
       }
-      
-      setNextPayoutDate(nextRun);
+    };
 
-    } catch (error) {
-      console.error('Error loading potential earnings:', error);
-      setNextPayoutAmount(0);
-    }
-  };
+    const loadPotentialEarnings = async () => {
+      try {
+        // Get user's confirmed bookings that haven't been paid out yet
+        const bookingsData = await Promise.allSettled([
+          // Event bookings where user is an instructor
+          axiosClient.get(`/api/event-bookings?instructor=${user?.user?._id}&status=confirmed&paymentStatus=completed`),
+          // Hotel bookings if user owns hotels
+          axiosClient.get(`/api/hotelBooking?owner=${user?.user?._id}&status=confirmed&paymentStatus=completed`),
+          // Session bookings if user is an instructor
+          axiosClient.get(`/api/sessionBooking?instructor=${user?.user?._id}&status=confirmed`)
+        ]);
 
-  const loadMockData = () => {
-    // Remove mock data - will be replaced with real data
-    console.log('Loading real data instead of mock data...');
-  };
+        let potentialEarnings = 0;
+        let bookingCount = 0;
 
-  if (token) {
-    checkLinkStatus();
-    loadPayoutData();
-  } else {
-    console.warn("No token found in localStorage");
-    setIsLinked(false);
-  }
+        bookingsData.forEach((result, index) => {
+          if (result.status === 'fulfilled' && result.value?.data?.success) {
+            const bookings = result.value.data.data || [];
+            bookingCount += bookings.length;
 
-  // Listen for focus events to refresh status when user returns from PayPal
-  const handleFocus = () => {
+            bookings.forEach(booking => {
+              // Calculate 80% payout (20% platform fee)
+              const payoutAmount = (booking.amount || 0) * 0.8;
+
+              // Only include bookings that are at least 24 hours old and haven't been processed
+              const bookingDate = new Date(booking.paymentCompletedAt || booking.bookingDate);
+              const hoursSinceBooking = (new Date() - bookingDate) / (1000 * 60 * 60);
+
+              if (hoursSinceBooking >= 24) {
+                potentialEarnings += payoutAmount;
+              }
+            });
+          }
+        });
+
+        setNextPayoutAmount(potentialEarnings);
+        setTotalBookings(bookingCount);
+
+        // Calculate next payout date (next daily cron run at 2 AM UTC)
+        const now = new Date();
+        const nextRun = new Date();
+        nextRun.setUTCHours(2, 0, 0, 0);
+
+        // If it's already past 2 AM UTC today, set for tomorrow
+        if (now.getUTCHours() >= 2) {
+          nextRun.setDate(nextRun.getDate() + 1);
+        }
+
+        setNextPayoutDate(nextRun);
+
+      } catch (error) {
+        console.error('Error loading potential earnings:', error);
+        setNextPayoutAmount(0);
+      }
+    };
+
+    const loadMockData = () => {
+      // Remove mock data - will be replaced with real data
+      console.log('Loading real data instead of mock data...');
+    };
+
     if (token) {
       checkLinkStatus();
       loadPayoutData();
+    } else {
+      console.warn("No token found in localStorage");
+      setIsLinked(false);
     }
-  };
 
-  window.addEventListener('focus', handleFocus);
-  return () => window.removeEventListener('focus', handleFocus);
-}, [token, user, navigate]);
+    // Listen for focus events to refresh status when user returns from PayPal
+    const handleFocus = () => {
+      if (token) {
+        checkLinkStatus();
+        loadPayoutData();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [token, user, navigate]);
 
   const handleLinkAccount = async () => {
     try {
@@ -200,11 +198,11 @@ useEffect(() => {
     try {
       // Trigger the automated payout system instead of manual payout
       const res = await axiosClient.post('/api/transactions/payout/trigger');
-      
+
       if (res.data.success) {
         setMessage("Payout processing initiated successfully! Check back in a few minutes for updates.");
         toast.success("Payout processing started!");
-        
+
         // Refresh data after a short delay
         setTimeout(() => {
           loadPayoutData();
@@ -231,10 +229,10 @@ useEffect(() => {
       pending: { variant: "secondary", icon: AlertCircle, text: "Pending" },
       failed: { variant: "destructive", icon: AlertCircle, text: "Failed" }
     };
-    
+
     const config = statusConfig[status] || statusConfig.pending;
     const Icon = config.icon;
-    
+
     return (
       <Badge variant={config.variant} className="flex items-center gap-1">
         <Icon className="h-3 w-3" />
@@ -245,12 +243,12 @@ useEffect(() => {
 
   const formatNextPayoutInfo = () => {
     if (!nextPayoutDate) return "Calculating...";
-    
+
     const now = new Date();
     const diffTime = nextPayoutDate - now;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
-    
+
     if (diffHours < 24) {
       return `Next payout in ${diffHours} hours`;
     } else if (diffDays === 1) {
@@ -263,13 +261,13 @@ useEffect(() => {
   const calculateMonthlyProjection = () => {
     // Calculate average earnings per booking and project monthly
     if (totalBookings === 0) return 0;
-    
+
     const avgPerBooking = nextPayoutAmount / totalBookings;
     const bookingsPerMonth = totalBookings * 4; // Rough weekly to monthly conversion
     return avgPerBooking * bookingsPerMonth;
   };
 
-    // UI
+  // UI
   if (isLinked === null) {
     return (
       <InstructorLayout>
@@ -415,7 +413,7 @@ useEffect(() => {
                     <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                       Connect your PayPal account to receive payments. This is a secure process managed by PayPal.
                     </p>
-                    <Button 
+                    <Button
                       onClick={handleLinkAccount}
                       disabled={loading}
                       size="lg"
@@ -437,14 +435,14 @@ useEffect(() => {
                       <p className="text-muted-foreground mb-6">
                         Your PayPal account is successfully linked and ready to receive payments.
                       </p>
-                      <Button 
+                      <Button
                         onClick={handlePayout}
                         disabled={loading || nextPayoutAmount < 10}
                         size="lg"
                       >
                         {loading ? "Processing..." : nextPayoutAmount < 10 ? `Minimum $10 Required` : `Request Payout ($${nextPayoutAmount.toFixed(2)})`}
                       </Button>
-                      
+
                       {nextPayoutAmount < 10 && (
                         <p className="text-sm text-muted-foreground mt-2">
                           You need at least $10 in confirmed bookings to request a payout.
@@ -453,7 +451,7 @@ useEffect(() => {
                       )}
                     </div>
                   </div>
-                  
+
                   {message && (
                     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-blue-800">{message}</p>
@@ -536,7 +534,7 @@ useEffect(() => {
                   </ul>
                 </div>
               </div>
-              
+
               {nextPayoutAmount > 0 && (
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <h4 className="font-semibold text-sm text-blue-800 mb-2">Next Payout Preview</h4>

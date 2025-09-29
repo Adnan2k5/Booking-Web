@@ -24,14 +24,13 @@ const PaymentApprove = () => {
 
       try {
         // Call the API to approve the payment
-        console.log('Approving payment with token:', token, 'and payerId:', payerId);
         const response = await axiosClient.post(`/api/itemBooking/approve/${token}`, { payerId });
 
 
         if (response.status === 200) {
           setStatus('success');
           toast.success('Payment approved successfully!');
-          
+
           // Redirect to success page after 2 seconds
           setTimeout(() => {
             navigate('/cart/success');
@@ -39,7 +38,7 @@ const PaymentApprove = () => {
         } else {
           setStatus('error');
           toast.error(data.message || 'Payment approval failed');
-          
+
           // Redirect to cart after 3 seconds
           setTimeout(() => {
             navigate('/cart');
@@ -49,7 +48,7 @@ const PaymentApprove = () => {
         console.error('Payment approval error:', error);
         setStatus('error');
         toast.error('An error occurred while processing your payment');
-        
+
         // Redirect to cart after 3 seconds
         setTimeout(() => {
           navigate('/cart');

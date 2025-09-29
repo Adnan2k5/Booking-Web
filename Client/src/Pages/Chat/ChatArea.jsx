@@ -37,23 +37,19 @@ export const ChatArea = ({ selectedFriend, toggleSidebar, onClose }) => {
 
             // Set up event listeners
             socket.on('connect', () => {
-                console.log('Connected to socket server');
                 setIsConnected(true);
                 socket.emit('joinRoom', { userId });
             });
 
             socket.on('disconnect', () => {
-                console.log('Disconnected from socket server');
                 setIsConnected(false);
             });
 
             socket.on('receiveMessage', (message) => {
-                console.log('Received message:', message);
 
                 // Format the received message to match our local format
                 const formattedMessage = formatMessage(message);
 
-                console.log('Formatted received message:', formattedMessage);
                 setMessages((prevMessages) => [...prevMessages, formattedMessage]);
             });
 
@@ -88,7 +84,6 @@ export const ChatArea = ({ selectedFriend, toggleSidebar, onClose }) => {
             const formattedMessages = messageHistory.map(msg => formatMessage(msg));
 
             setMessages(formattedMessages);
-            console.log('Formatted messages:', formattedMessages);
         }
     }, [messageHistory]);
 

@@ -5,9 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Button } from "../../components/ui/button";
 import { motion } from "framer-motion";
 import { submitPayPalSuccess } from "../../Api/payoutApi";
+import { useAuth } from "../AuthProvider";
+import { toast } from "sonner";
 
 const PayPalSuccess = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [status, setStatus] = useState("loading"); // loading, success, error
   const [message, setMessage] = useState("");
 
@@ -16,11 +19,20 @@ const PayPalSuccess = () => {
       setStatus("loading");
       setMessage("Finalizing PayPal account linking...");
 
-      // Get the auth token from localStorage or wherever you store it
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      // Check if user is authenticated
+      if (!user?.user) {
+        toast.error("Please login to complete PayPal linking");
+        navigate("/login");
+        return;
+      }
+
+      // Get the auth token from localStorage
+      const token = localStorage.getItem("accessToken");
       
       if (!token) {
-        throw new Error("Authentication required");
+        toast.error("Authentication required. Please login again.");
+        navigate("/login");
+        return;
       }
 
       const response = await submitPayPalSuccess(token, paypalData);
@@ -28,6 +40,7 @@ const PayPalSuccess = () => {
       if (response.success) {
         setStatus("success");
         setMessage("Your PayPal account has been successfully linked!");
+        toast.success("PayPal account linked successfully!");
         
         // Auto redirect after 3 seconds
         setTimeout(() => {
@@ -39,54 +52,76 @@ const PayPalSuccess = () => {
     } catch (error) {
       console.error("Error completing PayPal onboarding:", error);
       setStatus("error");
-      setMessage(error.response?.data?.message || error.message || "Failed to complete PayPal account linking. Please try again.");
+      const errorMessage = error.response?.data?.message || error.message || "Failed to complete PayPal account linking. Please try again.";
+      setMessage(errorMessage);
+      toast.error(errorMessage);
     }
-  }, [navigate]);
+  }, [navigate, user]);
 
   useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const statusParam = queryParams.get("status");
-    const userId = queryParams.get("userId");
-    const errorMessage = queryParams.get("message");
-    
-    // PayPal onboarding completion parameters
-    const merchantId = queryParams.get("merchantId");
-    const merchantIdInPayPal = queryParams.get("merchantIdInPayPal");
-    const productIntentId = queryParams.get("productIntentId");
-    const isEmailConfirmed = queryParams.get("isEmailConfirmed");
-    const permissionsGranted = queryParams.get("permissionsGranted");
-    const consentStatus = queryParams.get("consentStatus");
+    // Add a small delay to allow auth context to load
+    const checkAuthAndProcess = () => {
+      // Check if user is authenticated first
+      if (!user?.user) {
+        // Give some time for auth context to load before redirecting
+        const timer = setTimeout(() => {
+          if (!user?.user) {
+            toast.error("Please login to access this page");
+            navigate("/login");
+          }
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
 
-    // Handle PayPal onboarding completion
-    if (merchantId && merchantIdInPayPal && productIntentId && isEmailConfirmed && permissionsGranted && consentStatus) {
-      handlePayPalOnboardingComplete({
-        merchantId,
-        merchantIdInPayPal,
-        productIntentId,
-        isEmailConfirmed,
-        permissionsGranted,
-        consentStatus
-      });
-      return;
-    }
-
-    // Handle existing logic for status-based redirects
-    if (statusParam === "linked" && userId) {
-      setStatus("success");
-      setMessage("Your PayPal account has been successfully linked!");
+      const queryParams = new URLSearchParams(window.location.search);
+      const statusParam = queryParams.get("status");
+      const userId = queryParams.get("userId");
+      const errorMessage = queryParams.get("message");
       
-      // Auto redirect after 3 seconds
-      setTimeout(() => {
-        navigate("/instructor/payout");
-      }, 3000);
-    } else if (errorMessage) {
-      setStatus("error");
-      setMessage("Failed to link PayPal account. Please try again.");
-    } else {
-      setStatus("error");
-      setMessage("Invalid redirect parameters.");
-    }
-  }, [navigate, handlePayPalOnboardingComplete]);
+      // PayPal onboarding completion parameters
+      const merchantId = queryParams.get("merchantId");
+      const merchantIdInPayPal = queryParams.get("merchantIdInPayPal");
+      const productIntentId = queryParams.get("productIntentId");
+      const isEmailConfirmed = queryParams.get("isEmailConfirmed");
+      const permissionsGranted = queryParams.get("permissionsGranted");
+      const consentStatus = queryParams.get("consentStatus");
+
+      // Handle PayPal onboarding completion
+      if (merchantId && merchantIdInPayPal && productIntentId && isEmailConfirmed && permissionsGranted && consentStatus) {
+        handlePayPalOnboardingComplete({
+          merchantId,
+          merchantIdInPayPal,
+          productIntentId,
+          isEmailConfirmed,
+          permissionsGranted,
+          consentStatus
+        });
+        return;
+      }
+
+      // Handle existing logic for status-based redirects
+      if (statusParam === "linked" && userId) {
+        setStatus("success");
+        setMessage("Your PayPal account has been successfully linked!");
+        toast.success("PayPal account linked successfully!");
+        
+        // Auto redirect after 3 seconds
+        setTimeout(() => {
+          navigate("/instructor/payout");
+        }, 3000);
+      } else if (errorMessage) {
+        setStatus("error");
+        setMessage("Failed to link PayPal account. Please try again.");
+        toast.error("Failed to link PayPal account");
+      } else {
+        setStatus("error");
+        setMessage("Invalid redirect parameters.");
+        toast.error("Invalid redirect parameters");
+      }
+    };
+
+    checkAuthAndProcess();
+  }, [navigate, handlePayPalOnboardingComplete, user]);
 
   const handleGoToPayout = () => {
     navigate("/instructor/payout");

@@ -15,9 +15,7 @@ async function listWebhooks() {
             }
         };
 
-        console.log('Fetching existing webhooks...');
         const response = await axios(config);
-        console.log('Existing webhooks:', JSON.stringify(response.data, null, 2));
     } catch (error) {
         console.error('Error fetching webhooks:', error.response?.data || error.message);
     }

@@ -29,12 +29,10 @@ export const fetchFilteredAdventures = async ({
   const res = await axiosClient.get(
     `/api/adventure/filter?${params.toString()}`
   );
-  console.log(res);
   return res;
 };
 
 export const updateAdventure = async (data) => {
-  console.log(data);
   const id = data.get('_id');
   const res = await axiosClient.put(`/api/adventure/${id}`, data, {
     withCredentials: true,

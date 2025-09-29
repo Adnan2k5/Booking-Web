@@ -21,18 +21,15 @@ const PAYOUT_CURRENCY = 'USD';
  * This function is called by the cron job
  */
 export const processPayouts = asyncHandler(async () => {
-  console.log('🔄 Starting payout processing...', new Date().toISOString());
   
   try {
     // Get all confirmed bookings that haven't been processed for payouts
     const confirmedBookings = await getConfirmedBookings();
     
     if (confirmedBookings.length === 0) {
-      console.log('✅ No confirmed bookings found for payout processing');
       return;
     }
     
-    console.log(`📊 Found ${confirmedBookings.length} confirmed bookings to process`);
     
     // Group bookings by service provider/instructor
     const groupedPayouts = await groupBookingsByProvider(confirmedBookings);
@@ -42,7 +39,6 @@ export const processPayouts = asyncHandler(async () => {
       await processProviderPayout(providerId, bookings);
     }
     
-    console.log('✅ Payout processing completed successfully');
     
   } catch (error) {
     console.error('❌ Error processing payouts:', error);

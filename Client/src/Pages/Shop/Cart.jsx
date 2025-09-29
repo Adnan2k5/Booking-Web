@@ -17,30 +17,28 @@ import { createBooking } from "../../Api/booking.api";
 export const Cart = () => {
     const navigate = useNavigate()
     const [cart, setCart] = useState(null)
-    const {  totalPrice, loading, error, updateCartItem, removeCartItem, clearCart } = useCart()
+    const { totalPrice, loading, error, updateCartItem, removeCartItem, clearCart } = useCart()
     const [loadingItems, setLoadingItems] = useState({})
     const [name, setName] = useState("")
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [isBookingLoading, setIsBookingLoading] = useState(false)
-    console.log(cart);
     const fetchCart = async () => {
-  try {
-    const baseUrl = import.meta.env.VITE_SERVER_URL;
-    const res = await fetch(`${baseUrl}api/cart`, {
-      credentials: "include",
-    });
-    const data = await res.json();
-    setCart(data.data.cart);
+        try {
+            const baseUrl = import.meta.env.VITE_SERVER_URL;
+            const res = await fetch(`${baseUrl}api/cart`, {
+                credentials: "include",
+            });
+            const data = await res.json();
+            setCart(data.data.cart);
 
-    console.log("Full Cart Data:", data);
-  } catch (error) {
-    console.error("Error fetching cart:", error);
-  }
-};
+        } catch (error) {
+            console.error("Error fetching cart:", error);
+        }
+    };
 
-  useEffect(() => {
-    fetchCart(); // Call once on mount
-  }, []);
+    useEffect(() => {
+        fetchCart(); // Call once on mount
+    }, []);
 
 
     const handleQuantityUpdate = async (itemId, newQuantity, purchase) => {
@@ -57,18 +55,18 @@ export const Cart = () => {
     }
 
     const handleRemoveItem = async (cartItemId, purchase = false) => {
-  setLoadingItems(prev => ({ ...prev, [cartItemId]: true }));
-  try {
-    await removeCartItem({ itemId: cartItemId, purchase });
-    toast.success("Item removed from cart");
-    fetchCart();
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    toast.error("Failed to remove item");
-  } finally {
-    setLoadingItems(prev => ({ ...prev, [cartItemId]: false }));
-  }
-};
+        setLoadingItems(prev => ({ ...prev, [cartItemId]: true }));
+        try {
+            await removeCartItem({ itemId: cartItemId, purchase });
+            toast.success("Item removed from cart");
+            fetchCart();
+        } catch (err) {
+            console.error(err.response?.data || err.message);
+            toast.error("Failed to remove item");
+        } finally {
+            setLoadingItems(prev => ({ ...prev, [cartItemId]: false }));
+        }
+    };
 
     const handleClearCart = async () => {
         try {
@@ -129,7 +127,7 @@ export const Cart = () => {
     const formatDate = (dateString) => {
         try {
             return new Date(dateString).toLocaleDateString("en-US", {
-                month: "short",                day: "numeric",
+                month: "short", day: "numeric",
                 year: "numeric"
             })
         } catch (error) {
@@ -150,8 +148,8 @@ export const Cart = () => {
             toast.success("Booking created successfully", { id })
             setIsDialogOpen(false)
             setName("")
-            
- 
+
+
             window.location.href = res.data.data.paymentOrder.checkout_url; // Navigate to success page or home
         } catch (e) {
             // Check if it's a 401 error (unauthorized)
@@ -186,7 +184,6 @@ export const Cart = () => {
             </div>
         )
     }
-console.log("Cart.jsx cart state:", cart);
     return (
         <div className="min-h-screen bg-white mt-20">
             <Navbar />
@@ -493,7 +490,7 @@ console.log("Cart.jsx cart state:", cart);
                                                     </Button>
                                                     <Button
                                                         type="button"
-                                                        onClick={() => handleBooking("paypal")} 
+                                                        onClick={() => handleBooking("paypal")}
                                                         disabled={isBookingLoading || !name.trim()}
                                                         className="bg-black hover:bg-gray-800 text-white"
                                                     >
@@ -508,7 +505,7 @@ console.log("Cart.jsx cart state:", cart);
                                                     </Button>
                                                     <Button
                                                         type="button"
-                                                        onClick={() => handleBooking("revolut")} 
+                                                        onClick={() => handleBooking("revolut")}
                                                         disabled={isBookingLoading || !name.trim()}
                                                         className="bg-black hover:bg-gray-800 text-white"
                                                     >

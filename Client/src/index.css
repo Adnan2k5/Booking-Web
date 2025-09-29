@@ -127,4 +127,25 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* ReactPlayer styling for full width */
+  .player-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  .react-player {
+    position: absolute;
+    top: 0;
+    left: 0;
+    object-fit: cover;
+  }
+  
+  .react-player video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
 }

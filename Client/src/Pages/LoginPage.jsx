@@ -63,10 +63,6 @@ export default function LoginPage() {
         setEmail(data.email);
         const user = res.data?.data?.user;
 
-    console.log("✅ Logged in user:", user);
-    console.log("🎯 Instructor ID:", user?.instructor);
-
-
         if (res.status === 200) {
           toast.success("Login successful! Welcome back.");
         }

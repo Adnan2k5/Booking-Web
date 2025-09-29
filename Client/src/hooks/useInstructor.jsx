@@ -1,7 +1,7 @@
 import { getAllInstructors, deleteInstructor, changeDocumentStatusById, getInstructorById } from "../Api/instructor.api";
 import { useState, useEffect } from "react";
 
-export function useInstructors() {
+export function useInstructors(searchTerm = "") {
     const [instructors, setInstructors] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -13,11 +13,11 @@ export function useInstructors() {
     const getProfile = async () => {
         setIsLoading(true);
         try {
-            const res = await getAllInstructors();
-            console.log(res.data.message);
-            setInstructors(res.data.message.instructors);
-            setTotal(res.data.message.total);
-            setTotalPages(res.data.message.totalPages);
+            const res = await getAllInstructors({ page, limit, search: searchTerm });
+            const payload = res?.data?.data ?? {};
+            setInstructors(payload.instructors ?? []);
+            setTotal(payload.total ?? 0);
+            setTotalPages(payload.totalPages ?? 0);
             setError(null);
         } catch (err) {
             setError(err);
@@ -28,13 +28,13 @@ export function useInstructors() {
     };
     useEffect(() => {
         getProfile();
-    }, [page]);
+    }, [page, searchTerm]);
 
     const deleteInstructorById = async (id) => {
         setIsLoading(true);
         try {
             await deleteInstructor(id);
-            fetchItems();
+            getProfile();
             setError(null);
         } catch (err) {
             setError(err);
@@ -48,10 +48,15 @@ export function useInstructors() {
         setIsLoading(true);
         try {
             const res = await getInstructorById(id)
-            if (res.data.message.instructor[0].instructor.documentVerified === "pending") {
+            const payload = res?.data?.data;
+            const instructorRecord = payload?.instructor?.[0]?.instructor;
+            if (!instructorRecord) {
                 return false;
             }
-            else if (res.data.message.instructor[0].instructor.documentVerified === "verified") {
+            if (instructorRecord.documentVerified === "pending") {
+                return false;
+            }
+            else if (instructorRecord.documentVerified === "verified") {
                 return true;
             }
         } catch (error) {
@@ -76,7 +81,7 @@ export function useInstructors() {
                     } : instructor
                 )
             );
-            fetchItems();
+            getProfile();
             setError(null);
         } catch (err) {
             setError(err);

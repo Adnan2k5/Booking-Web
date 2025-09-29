@@ -133,7 +133,19 @@ export default function Dash_User() {
                     <TableCell>
                       <Badge variant="outline">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
                     </TableCell>
-                    <TableCell>{format(new Date(user.createdAt), "dd-MM-yyyy")}</TableCell>
+                    <TableCell>
+                      {user.createdAt
+                        ? (() => {
+                          try {
+                            const date = new Date(user.createdAt);
+                            return isNaN(date.getTime()) ? "Invalid Date" : format(date, "dd-MM-yyyy");
+                          } catch (error) {
+                            return "Invalid Date";
+                          }
+                        })()
+                        : "N/A"
+                      }
+                    </TableCell>
                     <TableCell>{user.bookings?.length || 0}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">

@@ -26,7 +26,6 @@ import { toast } from "sonner"
 
 const deleteUser = async (userId) => {
     // Mock implementation
-    console.log("Deleting user:", userId)
 }
 
 

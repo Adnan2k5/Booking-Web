@@ -3,31 +3,27 @@
  */
 
 /**
+ * Validates if a file is provided
+ * @param {File} file - The file to validate
+ * @throws {Error} - If no file is provided
+ */
+const validateFile = (file) => {
+  if (!file) throw new Error('No file provided');
+};
+
+/**
  * Creates a data URL from a file
  * @param {File} file - The file to convert
  * @returns {Promise<string>} - A promise that resolves to the data URL
  */
 export const fileToDataURL = (file) => {
+  validateFile(file);
+  
   return new Promise((resolve, reject) => {
-    if (!file) {
-      reject(new Error('No file provided'));
-      return;
-    }
-
     const reader = new FileReader();
-
     reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => {
-      console.error('Error reading file:', error);
-      reject(error);
-    };
-
-    try {
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error('Error initializing file read:', error);
-      reject(error);
-    }
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
 };
 
@@ -39,36 +35,16 @@ export const fileToDataURL = (file) => {
  * @returns {Promise<{url: string, name: string, type: string, size: number}>} - A promise that resolves to the file metadata
  */
 export const uploadFile = async (file) => {
-  try {
-    if (!file) {
-      throw new Error('No file provided');
-    }
-
-    console.log('Starting file upload for:', file.name);
-
-    // In a real app, you would use fetch or axios to upload the file to a server
-    // For now, we'll simulate an upload by creating a data URL
-    const dataURL = await fileToDataURL(file);
-
-    if (!dataURL) {
-      throw new Error('Failed to generate data URL');
-    }
-
-    // Simulate network delay for realism
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    console.log('File upload completed successfully');
-
-    return {
-      url: dataURL, // In a real app, this would be the URL returned by the server
-      name: file.name,
-      type: file.type,
-      size: file.size,
-    };
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    throw error;
-  }
+  validateFile(file);
+  
+  const url = await fileToDataURL(file);
+  
+  return {
+    url, // In a real app, this would be the URL returned by the server
+    name: file.name,
+    type: file.type,
+    size: file.size,
+  };
 };
 
 /**

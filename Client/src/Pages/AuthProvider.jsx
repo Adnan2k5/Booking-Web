@@ -34,12 +34,10 @@ export const AuthProvider = ({ children }) => {
                 }
             );
             dispatch(logout());
-            // Clear localStorage
             localStorage.removeItem("accessToken");
             localStorage.removeItem("redirectAfterLogin");
         } catch (error) {
             console.error("Logout error:", error);
-            // Even if the API call fails, clear the local state
             dispatch(logout());
             localStorage.removeItem("accessToken");
             localStorage.removeItem("redirectAfterLogin");

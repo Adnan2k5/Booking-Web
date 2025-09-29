@@ -24,7 +24,6 @@ export const CartProvider = ({ children }) => {
   }, [cart])
 
   const addToCart = (product) => {
-    console.log("Trying to add product to cart:", product)
 
     setCart((prevCart) => {
       const existingItemIndex = prevCart.findIndex(
@@ -35,14 +34,12 @@ export const CartProvider = ({ children }) => {
         const updatedCart = [...prevCart]
         const quantity = product.quantity || 1
         updatedCart[existingItemIndex].quantity += quantity
-        console.log("Updated quantity in cart:", updatedCart)
         return updatedCart
       } else {
         const newItem = {
           ...product,
           quantity: product.quantity || 1,
         }
-        console.log("Added new item to cart:", newItem)
         return [...prevCart, newItem]
       }
     })
@@ -74,7 +71,6 @@ export const CartProvider = ({ children }) => {
   const getCartItemsCount = () => {
     return cart.reduce((count, item) => count + item.quantity, 0)
   }
-console.log("Cart",cart)
   return (
     <CartContext.Provider
       value={{

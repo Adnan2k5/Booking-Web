@@ -50,7 +50,6 @@ export const ResetPass = () => {
 
     const update = async () => {
         const data = {email: email, password: pass};
-        console.log(data);
         const res = await UpdatePass(data);
         if(res.data.statusCode === 200){
             toast("Password Updated Successfully");

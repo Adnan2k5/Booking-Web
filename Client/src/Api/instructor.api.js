@@ -22,9 +22,15 @@ export const getAllSessions = async ({
   }
 };
 
-export const getAllInstructors = async () => {
+export const getAllInstructors = async ({ page, limit, search } = {}) => {
   try {
-    const res = await axiosClient.get('/api/instructor');
+    const params = {};
+    if (page !== undefined) params.page = page;
+    if (limit !== undefined) params.limit = limit;
+    if (search !== undefined && search !== null && search !== "") {
+      params.search = search;
+    }
+    const res = await axiosClient.get('/api/instructor', { params });
     return res;
   } catch (error) {
     console.error('Error fetching all instructors:', error);
