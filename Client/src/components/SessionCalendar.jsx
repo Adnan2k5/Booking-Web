@@ -204,7 +204,6 @@ const CalendarDay = ({ day, isToday, hasSession, sessionCount, onClick }) => (
 const SessionCalendar = ({ adventureTypes }) => {
     const { t } = useTranslation()
     const user = useAuth()
-
     // Core state
     const [currentDate, setCurrentDate] = useState(new Date())
     const [selectedDate, setSelectedDate] = useState(null)
@@ -214,7 +213,6 @@ const SessionCalendar = ({ adventureTypes }) => {
     const [presetDialog, setPresetDialog] = useState(false)
     const [sessionDetailDialog, setSessionDetailDialog] = useState(false)
     const [selectedSession, setSelectedSession] = useState(null)
-    const [isEditMode, setIsEditMode] = useState(false)
 
     const instructorId = user?.user?.user?._id
     const { sessions, refetch: refetchSessions } = useSessions(instructorId)

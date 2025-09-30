@@ -24,7 +24,7 @@ const InstructorDashboard = () => {
     const { t } = useTranslation()
     const [timeRange, setTimeRange] = useState("month")
     const [adventureTypes, setAdventureTypes] = useState([])
-    
+
     // Dashboard data state
     const [dashboardData, setDashboardData] = useState({
         totalBookings: 0,
@@ -59,7 +59,7 @@ const InstructorDashboard = () => {
             if (eventBookingsRes.status === 'fulfilled' && eventBookingsRes.value?.data?.success) {
                 const eventBookings = eventBookingsRes.value.data.data || []
                 allBookings.push(...eventBookings)
-                totalRevenue += eventBookings.reduce((sum, booking) => 
+                totalRevenue += eventBookings.reduce((sum, booking) =>
                     sum + (booking.status === 'completed' && booking.paymentStatus === 'completed' ? booking.amount * 0.8 : 0), 0
                 )
             }
@@ -68,7 +68,7 @@ const InstructorDashboard = () => {
             if (sessionBookingsRes.status === 'fulfilled' && sessionBookingsRes.value?.data?.success) {
                 const sessionBookings = sessionBookingsRes.value.data.data || []
                 allBookings.push(...sessionBookings)
-                totalRevenue += sessionBookings.reduce((sum, booking) => 
+                totalRevenue += sessionBookings.reduce((sum, booking) =>
                     sum + (booking.status === 'completed' ? booking.amount * 0.8 : 0), 0
                 )
             }
@@ -83,7 +83,7 @@ const InstructorDashboard = () => {
             // Calculate statistics
             const completedBookings = allBookings.filter(b => b.status === 'completed')
             const confirmedBookings = allBookings.filter(b => b.status === 'confirmed')
-            
+
             // Calculate upcoming bookings
             const now = new Date()
             const upcoming = allBookings.filter(booking => {
@@ -112,7 +112,7 @@ const InstructorDashboard = () => {
             const ratingsSum = completedBookings.reduce((sum, booking) => {
                 return sum + (booking.rating || 0)
             }, 0)
-            const averageRating = completedBookings.length > 0 ? 
+            const averageRating = completedBookings.length > 0 ?
                 (ratingsSum / completedBookings.length).toFixed(1) : 0
 
             // Calculate growth metrics (simplified - comparing with half of total)
@@ -132,7 +132,7 @@ const InstructorDashboard = () => {
                 return bookingDate >= twoMonthsAgo && bookingDate < oneMonthAgo
             })
 
-            const bookingIncrease = oldBookings.length > 0 ? 
+            const bookingIncrease = oldBookings.length > 0 ?
                 ((recentBookings.length - oldBookings.length) / oldBookings.length * 100).toFixed(1) : 0
 
             setDashboardData({
@@ -156,20 +156,20 @@ const InstructorDashboard = () => {
 
     const calculateDuration = (startTime, endTime) => {
         if (!startTime || !endTime) return 'Duration TBD'
-        
+
         try {
             const [startHour, startMin] = startTime.split(':').map(Number)
             const [endHour, endMin] = endTime.split(':').map(Number)
-            
+
             const startMinutes = startHour * 60 + startMin
             const endMinutes = endHour * 60 + endMin
             const durationMinutes = endMinutes - startMinutes
-            
+
             if (durationMinutes <= 0) return 'Duration TBD'
-            
+
             const hours = Math.floor(durationMinutes / 60)
             const minutes = durationMinutes % 60
-            
+
             if (hours === 0) return `${minutes} minutes`
             if (minutes === 0) return `${hours} ${hours === 1 ? 'hour' : 'hours'}`
             return `${hours}h ${minutes}m`
@@ -209,8 +209,8 @@ const InstructorDashboard = () => {
             navigate("/login")
             return
         }
-        
-        
+
+
         // Check if the user has instructor data and adventure ID
         if (user?.user?.instructor?.adventure) {
             getAdventure(user.user.instructor.adventure).then((res) => {
@@ -221,11 +221,11 @@ const InstructorDashboard = () => {
         } else {
             toast.error("No adventure ID found for instructor")
         }
-        
+
         // Fetch real dashboard data instead of just upcoming sessions
         fetchDashboardData()
         fetchUpcomingSessions()
-        
+
         const fetchBadge = async () => {
             try {
                 const res = await getInstructorBadge(user?.user?.instructor?._id);
@@ -389,32 +389,30 @@ const InstructorDashboard = () => {
 
                         {/* Achievements Section */}
                         <Separator />
-<h4 className="text-lg font-medium mb-4">{t("Achievements")}</h4>
+                        <h4 className="text-lg font-medium mb-4">{t("Achievements")}</h4>
 
-<div className="flex flex-col gap-4">
-  {achievementData.map((ach, index) => {
-    const unlocked = index <= currentIndex && currentIndex !== -1;
+                        <div className="flex flex-col gap-4">
+                            {achievementData.map((ach, index) => {
+                                const unlocked = index <= currentIndex && currentIndex !== -1;
 
-    return (
-      <div
-        key={ach.title}
-        className={`flex items-center gap-4 p-4 rounded-2xl bg-gray-100 transition-opacity duration-300 ${
-          unlocked ? "opacity-100" : "opacity-50"
-        }`}
-      >
-        <Award
-          className={`h-8 w-8 ${
-            unlocked ? "text-yellow-500" : "text-gray-400"
-          }`}
-        />
-        <div>
-          <span className="text-sm font-medium">{ach.title}</span>
-          <p className="text-xs text-gray-600">{ach.description}</p>
-        </div>
-      </div>
-    );
-  })}
-</div>
+                                return (
+                                    <div
+                                        key={ach.title}
+                                        className={`flex items-center gap-4 p-4 rounded-2xl bg-gray-100 transition-opacity duration-300 ${unlocked ? "opacity-100" : "opacity-50"
+                                            }`}
+                                    >
+                                        <Award
+                                            className={`h-8 w-8 ${unlocked ? "text-yellow-500" : "text-gray-400"
+                                                }`}
+                                        />
+                                        <div>
+                                            <span className="text-sm font-medium">{ach.title}</span>
+                                            <p className="text-xs text-gray-600">{ach.description}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
 
                     </div>
                 </div>
