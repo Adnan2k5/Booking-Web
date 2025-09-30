@@ -9,8 +9,55 @@ import { fetchLocations } from "../../../Api/location.api"
 import { toast } from "sonner"
 import { useForm } from "react-hook-form"
 import MediaPreview from "../../../components/MediaPreview"
-import { ArrowLeft, ImageIcon, Video } from 'lucide-react'
+import { ArrowLeft, ImageIcon, Video, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card"
+
+// Validation helper functions
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_TOTAL_MEDIA_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_MEDIA_COUNT = 10;
+
+const validateFileType = (file, allowedTypes) => {
+    if (!file) return true;
+    const fileType = file.type.split('/')[0];
+    return allowedTypes.includes(fileType);
+}
+
+const validateFileSize = (file, maxSize = MAX_FILE_SIZE) => {
+    if (!file) return true;
+    return file.size <= maxSize;
+}
+
+const validateMediaFiles = (files) => {
+    if (!files || !files.length) return { valid: true };
+    
+    // Check number of files
+    if (files.length > MAX_MEDIA_COUNT) {
+        return { valid: false, message: `Maximum ${MAX_MEDIA_COUNT} files allowed` };
+    }
+    
+    // Check total size
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    if (totalSize > MAX_TOTAL_MEDIA_SIZE) {
+        return { valid: false, message: `Total file size exceeds ${MAX_TOTAL_MEDIA_SIZE / (1024 * 1024)}MB` };
+    }
+    
+    // Check individual files
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileType = file.type.split('/')[0];
+        
+        if (!['image', 'video'].includes(fileType)) {
+            return { valid: false, message: `File '${file.name}' is not an image or video` };
+        }
+        
+        if (file.size > MAX_FILE_SIZE) {
+            return { valid: false, message: `File '${file.name}' exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB` };
+        }
+    }
+    
+    return { valid: true };
+}
 
 const AdventureFormPage = () => {
     const navigate = useNavigate()
@@ -23,6 +70,7 @@ const AdventureFormPage = () => {
         reset,
         setValue,
         formState: { errors },
+        watch,
     } = useForm({
         defaultValues: {
             name: "",
@@ -33,6 +81,7 @@ const AdventureFormPage = () => {
             thumbnail: null,
             previewVideo: null,
         },
+        mode: "onBlur" // Validate fields when they lose focus
     })
 
     const [mediaFiles, setMediaFiles] = useState([])
@@ -192,11 +241,64 @@ const AdventureFormPage = () => {
                 toast.error("Failed to load locations")
                 setLocations([])
             })
+            
+        // Register location field with validation
+        register("location", { 
+            validate: value => (value && value.length > 0) || "At least one location must be selected" 
+        })
+
+        // Register thumbnail field with validation
+        register("thumbnail", { 
+            validate: value => {
+                // If we're in create mode, thumbnail is required
+                if (!isEditMode && !value && !adventure?.thumbnail) {
+                    return "Thumbnail image is required";
+                }
+                return true;
+            }
+        });
+        
+        // Register preview video field with validation
+        register("previewVideo", { 
+            validate: value => {
+                // Optional field but if provided, validate it's a video
+                if (value && !validateFileType(value, ['video'])) {
+                    return "Please provide a valid video file";
+                }
+                return true;
+            }
+        });
+        
+        // Register media files field with validation
+        register("medias", {
+            validate: value => {
+                // If editing and there are existing media files, it's optional
+                if (isEditMode && adventure && adventure.medias && adventure.medias.length > 0) {
+                    return true;
+                }
+                
+                // In create mode, at least one media file is required
+                if (!isEditMode && (!value || !value.length)) {
+                    return "At least one media file is required";
+                }
+                
+                // If there are files, validate them
+                if (value && value.length > 0) {
+                    const validation = validateMediaFiles(value);
+                    return validation.valid || validation.message;
+                }
+                
+                return true;
+            }
+        });
     }, [])
 
     // Sync selectedLocations with form value
     useEffect(() => {
-        setValue("location", selectedLocations)
+        setValue("location", selectedLocations, { 
+            shouldValidate: true, 
+            shouldDirty: true 
+        })
     }, [selectedLocations, setValue])
 
     // Remove a selected media file (only local files)
@@ -205,7 +307,11 @@ const AdventureFormPage = () => {
         const serverCount =
             adventure && adventure.medias && Array.isArray(adventure.medias) ? adventure.medias.length : 0
         if (idx >= serverCount) {
-            setMediaFiles((files) => files.filter((_, i) => i !== idx - serverCount))
+            setMediaFiles((files) => {
+                const updatedFiles = files.filter((_, i) => i !== idx - serverCount);
+                setValue('medias', updatedFiles, { shouldValidate: true });
+                return updatedFiles;
+            });
         }
         // Optionally, handle server media removal here if backend supports it
     }
@@ -225,46 +331,81 @@ const AdventureFormPage = () => {
     }
 
     const onSubmit = async (data) => {
-        setIsSubmitting(true)
-        const toastId = toast.loading(isEditMode ? "Updating adventure..." : "Creating adventure...")
         try {
-            const formData = new FormData()
-            formData.append("name", data.name)
-            data.location.forEach((locId) => formData.append("location", locId))
-            formData.append("description", data.description)
-            formData.append("exp", data.exp)
+            // Run validation checks before submission
+            if (!isEditMode && !thumbnailFile && !adventure?.thumbnail) {
+                toast.error("Thumbnail image is required");
+                return;
+            }
+            
+            if (!isEditMode && (!mediaFiles.length) && (!adventure?.medias || adventure.medias.length === 0)) {
+                toast.error("At least one media file is required");
+                return;
+            }
+            
+            // Validate thumbnail if exists
+            if (thumbnailFile && (!validateFileType(thumbnailFile, ['image']) || !validateFileSize(thumbnailFile))) {
+                toast.error("Invalid thumbnail file. Please check size and format.");
+                return;
+            }
+            
+            // Validate preview video if exists
+            if (previewVideoFile && !validateFileType(previewVideoFile, ['video'])) {
+                toast.error("Invalid preview video. Please check format.");
+                return;
+            }
+            
+            // Validate media files if exist
+            if (mediaFiles.length > 0) {
+                const validation = validateMediaFiles(mediaFiles);
+                if (!validation.valid) {
+                    toast.error(validation.message);
+                    return;
+                }
+            }
+            
+            // If all validations pass, proceed with form submission
+            setIsSubmitting(true);
+            const toastId = toast.loading(isEditMode ? "Updating adventure..." : "Creating adventure...");
+            
+            const formData = new FormData();
+            formData.append("name", data.name);
+            data.location.forEach((locId) => formData.append("location", locId));
+            formData.append("description", data.description);
+            formData.append("exp", data.exp);
+            
             if (isEditMode && id) {
-                formData.append("_id", id)
+                formData.append("_id", id);
             }
 
             // Add thumbnail if available
             if (thumbnailFile) {
-                formData.append("thumbnail", thumbnailFile)
+                formData.append("thumbnail", thumbnailFile);
             }
 
             // Add preview video if available
             if (previewVideoFile) {
-                formData.append("previewVideo", previewVideoFile)
+                formData.append("previewVideo", previewVideoFile);
             }
 
             // Add regular media files
             mediaFiles.forEach((file) => {
-                formData.append("medias", file)
-            })
+                formData.append("medias", file);
+            });
 
             if (isEditMode) {
-                await updateAdventure(formData)
-                toast.success("Adventure updated successfully", { id: toastId })
+                await updateAdventure(formData);
+                toast.success("Adventure updated successfully", { id: toastId });
             } else {
-                await createAdventure(formData)
-                toast.success("Adventure created successfully", { id: toastId })
+                await createAdventure(formData);
+                toast.success("Adventure created successfully", { id: toastId });
             }
-            navigate("/admin/adventures")
+            navigate("/admin/adventures");
         } catch (error) {
-            toast.error("Error saving adventure", { id: toastId })
-            console.error(error)
+            toast.error(error.response?.data?.message || "Error saving adventure");
+            console.error(error);
         } finally {
-            setIsSubmitting(false)
+            setIsSubmitting(false);
         }
     }
 
@@ -294,6 +435,8 @@ const AdventureFormPage = () => {
                 <CardHeader>
                     <CardTitle className="text-xl">
                         {isEditMode ? "Update adventure details" : "Enter adventure details"}
+                        <br />
+                        <span className="text-muted-foreground text-sm">Please also add Media to submit the adventure</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -318,10 +461,19 @@ const AdventureFormPage = () => {
                                             id="name"
                                             placeholder="Enter adventure name"
                                             disabled={isSubmitting}
-                                            {...register("name", { required: "Adventure name is required" })}
-                                            className="w-full p-3"
+                                            {...register("name", { 
+                                                required: "Adventure name is required",
+                                                minLength: { value: 3, message: "Name must be at least 3 characters" },
+                                                maxLength: { value: 100, message: "Name must be less than 100 characters" }
+                                            })}
+                                            className={`w-full p-3 ${errors.name ? "border-red-500" : ""}`}
                                         />
-                                        {errors.name && <span className="text-red-500 text-sm">{errors.name.message}</span>}
+                                        {errors.name && (
+                                            <div className="flex items-center text-red-500 text-sm mt-1">
+                                                <AlertCircle className="h-4 w-4 mr-1" />
+                                                <span>{errors.name.message}</span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="space-y-2">
@@ -333,10 +485,20 @@ const AdventureFormPage = () => {
                                             placeholder="Enter experience points"
                                             type="number"
                                             disabled={isSubmitting}
-                                            {...register("exp", { required: "Experience points are required" })}
-                                            className="w-full p-3"
+                                            {...register("exp", { 
+                                                required: "Experience points are required",
+                                                min: { value: 0, message: "Experience points must be positive" },
+                                                max: { value: 10000, message: "Experience points cannot exceed 10,000" },
+                                                valueAsNumber: true
+                                            })}
+                                            className={`w-full p-3 ${errors.exp ? "border-red-500" : ""}`}
                                         />
-                                        {errors.exp && <span className="text-red-500 text-sm">{errors.exp.message}</span>}
+                                        {errors.exp && (
+                                            <div className="flex items-center text-red-500 text-sm mt-1">
+                                                <AlertCircle className="h-4 w-4 mr-1" />
+                                                <span>{errors.exp.message}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -345,7 +507,7 @@ const AdventureFormPage = () => {
                                         Location
                                     </Label>
                                     <div
-                                        className="block w-full border rounded-md p-3 bg-white cursor-pointer select-none"
+                                        className={`block w-full border ${errors.location ? "border-red-500" : ""} rounded-md p-3 bg-white cursor-pointer select-none`}
                                         onClick={() => setShowLocationDropdown((v) => !v)}
                                     >
                                         {selectedLocations.length === 0
@@ -381,7 +543,12 @@ const AdventureFormPage = () => {
                                             )}
                                         </div>
                                     )}
-                                    {errors.location && <span className="text-red-500 text-sm">{errors.location.message}</span>}
+                                    {errors.location && (
+                                        <div className="flex items-center text-red-500 text-sm mt-1">
+                                            <AlertCircle className="h-4 w-4 mr-1" />
+                                            <span>{errors.location.message}</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -392,10 +559,19 @@ const AdventureFormPage = () => {
                                         id="description"
                                         placeholder="Enter adventure description"
                                         disabled={isSubmitting}
-                                        {...register("description", { required: "Description is required" })}
-                                        className="w-full p-3"
+                                        {...register("description", { 
+                                            required: "Description is required",
+                                            minLength: { value: 20, message: "Description must be at least 20 characters" },
+                                            maxLength: { value: 500, message: "Description must be less than 500 characters" }
+                                        })}
+                                        className={`w-full p-3 ${errors.description ? "border-red-500" : ""}`}
                                     />
-                                    {errors.description && <span className="text-red-500 text-sm">{errors.description.message}</span>}
+                                    {errors.description && (
+                                        <div className="flex items-center text-red-500 text-sm mt-1">
+                                            <AlertCircle className="h-4 w-4 mr-1" />
+                                            <span>{errors.description.message}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </TabsContent>
 
@@ -403,15 +579,42 @@ const AdventureFormPage = () => {
                                 {/* Thumbnail Image */}
                                 <div className="space-y-3">
                                     <Label className="flex items-center gap-2 text-base font-medium">
-                                        <ImageIcon size={18} /> Thumbnail Image
+                                        <ImageIcon size={18} /> Thumbnail Image {!isEditMode && <span className="text-red-500">*</span>}
                                     </Label>
                                     <Input
+                                        id="thumbnail-input"
                                         type="file"
                                         accept="image/*"
-                                        onChange={(e) => e.target.files[0] && setThumbnailFile(e.target.files[0])}
-                                        className="block w-full p-3"
+                                        onChange={(e) => {
+                                            const file = e.target.files[0];
+                                            if (file) {
+                                                // Validate file type
+                                                if (!validateFileType(file, ['image'])) {
+                                                    toast.error('Please select an image file');
+                                                    e.target.value = '';
+                                                    return;
+                                                }
+                                                
+                                                // Validate file size
+                                                if (!validateFileSize(file)) {
+                                                    toast.error(`Thumbnail image must be less than ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
+                                                    e.target.value = '';
+                                                    return;
+                                                }
+                                                
+                                                setThumbnailFile(file);
+                                                setValue('thumbnail', file, { shouldValidate: true });
+                                            }
+                                        }}
+                                        className={`block w-full p-3 ${errors.thumbnail ? "border-red-500" : ""}`}
                                         disabled={isSubmitting}
                                     />
+                                    {errors.thumbnail && (
+                                        <div className="flex items-center text-red-500 text-sm mt-1">
+                                            <AlertCircle className="h-4 w-4 mr-1" />
+                                            <span>{errors.thumbnail.message}</span>
+                                        </div>
+                                    )}
                                     {thumbnailPreview && (
                                         <div className="relative mt-3 inline-block">
                                             <img
@@ -424,7 +627,11 @@ const AdventureFormPage = () => {
                                                 variant="destructive"
                                                 size="sm"
                                                 className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full"
-                                                onClick={handleRemoveThumbnail}
+                                                onClick={() => {
+                                                    handleRemoveThumbnail();
+                                                    setValue('thumbnail', null, { shouldValidate: true });
+                                                    document.getElementById('thumbnail-input').value = '';
+                                                }}
                                             >
                                                 ×
                                             </Button>
@@ -438,12 +645,40 @@ const AdventureFormPage = () => {
                                         <Video size={18} /> Preview Video
                                     </Label>
                                     <Input
+                                        id="preview-video-input"
                                         type="file"
                                         accept="video/*"
-                                        onChange={(e) => e.target.files[0] && setPreviewVideoFile(e.target.files[0])}
-                                        className="block w-full p-3"
+                                        onChange={(e) => {
+                                            const file = e.target.files[0];
+                                            if (file) {
+                                                // Validate file type
+                                                if (!validateFileType(file, ['video'])) {
+                                                    toast.error('Please select a video file');
+                                                    e.target.value = '';
+                                                    return;
+                                                }
+                                                
+                                                // Validate file size (videos can be larger)
+                                                const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+                                                if (file.size > MAX_VIDEO_SIZE) {
+                                                    toast.error(`Preview video must be less than ${MAX_VIDEO_SIZE / (1024 * 1024)}MB`);
+                                                    e.target.value = '';
+                                                    return;
+                                                }
+                                                
+                                                setPreviewVideoFile(file);
+                                                setValue('previewVideo', file, { shouldValidate: true });
+                                            }
+                                        }}
+                                        className={`block w-full p-3 ${errors.previewVideo ? "border-red-500" : ""}`}
                                         disabled={isSubmitting}
                                     />
+                                    {errors.previewVideo && (
+                                        <div className="flex items-center text-red-500 text-sm mt-1">
+                                            <AlertCircle className="h-4 w-4 mr-1" />
+                                            <span>{errors.previewVideo.message}</span>
+                                        </div>
+                                    )}
                                     {previewVideoPreview && (
                                         <div className="relative mt-3 inline-block">
                                             <video
@@ -456,7 +691,11 @@ const AdventureFormPage = () => {
                                                 variant="destructive"
                                                 size="sm"
                                                 className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full"
-                                                onClick={handleRemovePreviewVideo}
+                                                onClick={() => {
+                                                    handleRemovePreviewVideo();
+                                                    setValue('previewVideo', null);
+                                                    document.getElementById('preview-video-input').value = '';
+                                                }}
                                             >
                                                 ×
                                             </Button>
@@ -466,15 +705,45 @@ const AdventureFormPage = () => {
 
                                 {/* Regular Media Files */}
                                 <div className="space-y-3">
-                                    <Label className="text-base font-medium">Additional Media (images/videos)</Label>
+                                    <Label className="text-base font-medium">Additional Media (images/videos) {!isEditMode && <span className="text-red-500">*</span>}</Label>
                                     <Input
+                                        id="media-files-input"
                                         type="file"
                                         accept="image/*,video/*"
                                         multiple
-                                        onChange={(e) => setMediaFiles(Array.from(e.target.files))}
-                                        className="block w-full p-3"
+                                        onChange={(e) => {
+                                            const files = Array.from(e.target.files);
+                                            if (files && files.length > 0) {
+                                                // Validate using the helper function
+                                                const validation = validateMediaFiles(files);
+                                                if (!validation.valid) {
+                                                    toast.error(validation.message);
+                                                    e.target.value = '';
+                                                    return;
+                                                }
+                                                
+                                                setMediaFiles(files);
+                                                setValue('medias', files, { shouldValidate: true });
+                                            }
+                                        }}
+                                        className={`block w-full p-3 ${errors.medias ? "border-red-500" : ""}`}
                                         disabled={isSubmitting}
                                     />
+                                    {errors.medias && (
+                                        <div className="flex items-center text-red-500 text-sm mt-1">
+                                            <AlertCircle className="h-4 w-4 mr-1" />
+                                            <span>{errors.medias.message}</span>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Display stats about media */}
+                                    {mediaFiles.length > 0 && (
+                                        <div className="text-sm text-gray-600 mt-2">
+                                            {mediaFiles.length} file(s) selected. 
+                                            Total size: {(mediaFiles.reduce((sum, file) => sum + file.size, 0) / (1024 * 1024)).toFixed(2)}MB
+                                        </div>
+                                    )}
+                                    
                                     <div className="mt-4">
                                         <MediaPreview mediaPreviews={mediaPreviews} onRemove={handleRemoveMedia} isSubmitting={isSubmitting} />
                                     </div>
@@ -494,7 +763,7 @@ const AdventureFormPage = () => {
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={isSubmitting}
+                                disabled={isSubmitting || Object.keys(errors).length > 0}
                                 className="px-8 py-2.5 bg-black hover:bg-gray-800 text-white"
                             >
                                 {isSubmitting ? (
