@@ -39,8 +39,10 @@ export const createPreset = asyncHandler(async (req, res, next) => {
   if (!location) {
     throw new ApiError(400, "Location is required");
   }
+
   if (!price) {
     throw new ApiError(400, "Price is required");
+
   }
 
   // Check if adventure and instructor exist

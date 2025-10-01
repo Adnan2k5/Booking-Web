@@ -40,6 +40,9 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import redis from "./config/redis.config.js";
 import { initPayoutCronJob } from "./controllers/transaction.controller.js";
+import { ApiError } from "./utils/ApiError.js";
+import ApiResponse from "./utils/ApiResponse.js"
+import { errorHandlingMiddleware } from "./middlewares/error.middleware.js";
 const app = express();
 // Create HTTP server using Express app
 const server = createServer(app);
@@ -85,8 +88,12 @@ app.use("/api/sessionBooking", sessionBookingRouter);
 app.use("/api/translation", translationRouter);
 app.use("/api/payouts", payoutRouter);
 app.use("/api/transactions", transactionRouter);
+app.use(errorHandlingMiddleware);   // middlware for handling error
+
+
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
+
   console.log(`Server is running on port ${PORT}`);
   connectDB();
   initCloudinary();
@@ -95,3 +102,4 @@ server.listen(PORT, () => {
   // Initialize payout cron job
   initPayoutCronJob();
 });
+

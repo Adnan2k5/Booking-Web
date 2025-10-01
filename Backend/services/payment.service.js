@@ -112,6 +112,7 @@ export class PaymentService {
 
             // For session bookings, we only update the status since there's no paymentStatus field
             if (event === 'ORDER_COMPLETED' || event === 'ORDER_AUTHORISED') {
+              // Todo funcion chalana h 
                 booking.status = 'confirmed';
             }
 

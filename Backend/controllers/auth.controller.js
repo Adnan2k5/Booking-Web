@@ -278,7 +278,7 @@ const resendOtp = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-
+  throw new ApiError(403, "Ankit sisodya")
   if (email?.trim() === "" || !email || password?.trim() === "" || !password) {
     throw new ApiError(400, "Email and Password are Required");
   }
