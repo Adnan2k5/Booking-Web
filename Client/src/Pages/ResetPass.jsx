@@ -53,7 +53,7 @@ export const ResetPass = () => {
   const update = async () => {
     const data = { email: email, password: pass };
     if (pass !== pass2) {
-      alert("Both password don't matches");
+      toast("Both password don't matches");
       return;
     }
     const res = await UpdatePass(data);
