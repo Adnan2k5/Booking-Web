@@ -376,29 +376,21 @@ const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 const updatePassword = asyncHandler(async (req, res) => {
-  const { extpassword, newpassword } = req.body;
+  const { email, password: newpassword } = req.body;
 
   if (
-    extpassword?.trim() === "" ||
-    !extpassword ||
+    email?.trim() === "" ||
+    !email ||
     newpassword?.trim() === "" ||
     !newpassword
   ) {
-    throw new ApiError(400, "Current and New Password are Required");
+    throw new ApiError(400, "Email and New Password are Required");
   }
 
-  console.log(req.user);
-
-  const user = await User.findById(req.user._id).select("password email");
+  const user = await User.findOne({ email: email }).select("password email");
 
   if (!user) {
     throw new ApiError(404, "User not found");
-  }
-
-  const isMatch = await user.isPasswordCorrect(extpassword);
-
-  if (!isMatch) {
-    throw new ApiError(400, "Current password is incorrect");
   }
 
   user.password = newpassword;
