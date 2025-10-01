@@ -384,7 +384,7 @@ const updatePassword = asyncHandler(async (req, res) => {
     newpassword?.trim() === "" ||
     !newpassword
   ) {
-    throw new ApiError(400, "Current and New Password are Required");
+    throw new ApiError(400, "Email and New Password are Required");
   }
 
   const user = await User.findOne({ email: email }).select("password email");
