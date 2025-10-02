@@ -1,6 +1,6 @@
-import moongoose from "mongoose";
+import mongoose from "mongoose";
 
-const sessionSchema = new moongoose.Schema(
+const sessionSchema = new mongoose.Schema(
   {
     days: {
       type: String,
@@ -33,12 +33,12 @@ const sessionSchema = new moongoose.Schema(
       required: true,
     },
     adventureId: {
-      type: moongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Adventure",
       required: true,
     },
     instructorId: {
-      type: moongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
@@ -47,13 +47,13 @@ const sessionSchema = new moongoose.Schema(
       default: "",
     },
     location: {
-      type: moongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Location",
       required: true,
     },
     booking: [
       {
-        type: moongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Booking",
       }],
   },
@@ -62,4 +62,4 @@ const sessionSchema = new moongoose.Schema(
   }
 );
 
-export const Session = moongoose.model("Session", sessionSchema);
+export const Session = mongoose.model("Session", sessionSchema);

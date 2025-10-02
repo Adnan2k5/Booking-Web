@@ -1,6 +1,8 @@
-import { Cart } from "../models/cart.model.js";
 import { Booking } from "../models/booking.model.js";
+import { Cart } from "../models/cart.model.js";
 import { ApiError } from "../utils/ApiError.js";
+import { updateInstructorAchievement } from "../utils/updateInstructorAchievement.js";
+import { updateUserAchievement } from "../utils/updateUserAchievement.js";
 
 export class PaymentService {
   itemBooking = async (order_id, event, booking) => {
@@ -99,20 +101,29 @@ export class PaymentService {
     } else {
       throw new ApiError(400, `Unsupported event type: ${event}`);
     }
-  }
-
+  };
 
   sessionBooking = async (order_id, event, booking) => {
     // Check if this is an order completion event
-    if (event === 'ORDER_COMPLETED' || event === 'ORDER_AUTHORISED') {
-
+    if (event === "ORDER_COMPLETED" || event === "ORDER_AUTHORISED") {
       if (!booking) {
         return { status: 200, message: "Webhook received" };
       }
 
       // For session bookings, we only update the status since there's no paymentStatus field
-      if (event === 'ORDER_COMPLETED' || event === 'ORDER_AUTHORISED') {
-        booking.status = 'confirmed';
+      if (event === "ORDER_COMPLETED" || event === "ORDER_AUTHORISED") {
+        // Todo funcion chalana h
+        await updateUserAchievement(booking.user._id);
+
+        const populatedBooking = await Booking.findById(booking._id).populate({
+          path: "session",
+          select: "instructorId",
+        });
+
+        await updateInstructorAchievement(
+          populatedBooking?.session?.instructorId
+        );
+        booking.status = "confirmed";
       }
 
       await booking.save();
@@ -120,11 +131,10 @@ export class PaymentService {
       return {
         status: 200,
         message: "Payment completed successfully",
-        booking: booking
+        booking: booking,
       };
     } else {
       throw new ApiError(400, `Unsupported event type: ${event}`);
     }
-  }
-
+  };
 }

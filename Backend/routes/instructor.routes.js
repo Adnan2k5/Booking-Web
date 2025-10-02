@@ -2,9 +2,10 @@ import express from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 import {
-  getAllInstructors,
-  deleteInstructor,
   changeDocumentStatusById,
+  deleteInstructor,
+  getAllInstructors,
+  getInstructorAchievements,
   getInstructorById,
 } from "../controllers/instructor.controller.js";
 
@@ -15,6 +16,7 @@ router.use(verifyJWT);
 
 // Route to get all instructors
 router.get("/", getAllInstructors);
+router.get("/getInstructorAchievement", verifyJWT, getInstructorAchievements);
 router.get("/:id", getInstructorById);
 router.delete("/:id", deleteInstructor).put("/:id", changeDocumentStatusById);
 
