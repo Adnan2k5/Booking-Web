@@ -33,7 +33,6 @@ import transactionRouter from "./routes/transaction.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
 import { ensureDefaultDeclaration } from "./controllers/declaration.controller.js";
-import instructorAchievementRouter from "./routes/instructorAchievement.routes.js";
 import initSocketIO from "./socket/socket.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -71,7 +70,7 @@ app.use("/api/location", locationRouter);
 app.use("/api/items", itemRouter);
 app.use("/api/category", categoryRoute);
 app.use("/api/instructor", instructorRouter);
-app.use("/api/instructorAchievement", instructorAchievementRouter);
+
 app.use("/api/hotel", hotelRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/cart", cartRouter);

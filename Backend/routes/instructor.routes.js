@@ -6,6 +6,7 @@ import {
   deleteInstructor,
   changeDocumentStatusById,
   getInstructorById,
+  getInstructorAchievments,
 } from "../controllers/instructor.controller.js";
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.use(verifyJWT);
 
 // Route to get all instructors
 router.get("/", getAllInstructors);
+router.get("/getInstructorAchievment", verifyJWT, getInstructorAchievments);
 router.get("/:id", getInstructorById);
 router.delete("/:id", deleteInstructor).put("/:id", changeDocumentStatusById);
 

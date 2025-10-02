@@ -5,7 +5,7 @@ import { ApiError } from "../utils/ApiError.js"; // ✅ Import ApiError
 import { updateUserAchievment } from "../utils/updateUserAchievment.js";
 
 export const getUserAchievements = asyncHandler(async (req, res) => {
-  console.log(req.user);
+ 
   const userId = req.user._id; // ✅ Fixed: req.user._id instead of req.user.user
 
 

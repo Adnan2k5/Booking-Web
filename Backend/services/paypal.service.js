@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Booking } from "../models/booking.model.js";
 import { updateUserAchievment } from "../utils/updateUserAchievment.js";
+import { updateInstructorAchievment } from "../utils/updateInstructorAchievment.js";
 
 export default class PayPalService {
   constructor() {
@@ -204,14 +205,20 @@ export default class PayPalService {
       // ✅ Find user from orderId after successful capture
       if (response.data && response.data.status === "COMPLETED") {
         try {
-
           // ✅ Use transactionId field to find booking
           const booking = await Booking.findOne({
             transactionId: orderId,
-          }).populate("user", "_id");
+          })
+            .populate("user", "_id")
+            .populate({
+              path: "session",
+              select: "instructorId",
+             
+            });
 
           if (booking && booking.user) {
             await updateUserAchievment(booking.user._id);
+            await updateInstructorAchievment(booking?.session?.instructorId);
             console.log("Achievement updated for user:", booking.user._id);
           } else {
             console.log("No booking found for transactionId:", orderId);
