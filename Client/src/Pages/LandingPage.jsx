@@ -179,7 +179,7 @@ export default function LandingPage() {
       {/* Main Content - First Section */}
       <section className="flex items-center h-screen justify-center">
         <motion.div
-          className="bg-white/80 backdrop-blur-3xl mx-auto px-4 sm:px-6 md:px-8 py-8 flex-col w-[90%] rounded-lg shadow-lg border border-white/50"
+          className="mx-auto px-4 sm:px-6 md:px-8 py-8 flex-col w-[90%] rounded-lg shadow-lg"
           variants={fadeIn}
           initial="hidden"
           animate="visible"
