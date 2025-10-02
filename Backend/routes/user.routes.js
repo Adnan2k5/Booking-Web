@@ -9,7 +9,7 @@ import {
   getMe,
 } from "../controllers/user.controller.js";
 import { getUserAchievements } from "../controllers/Achievment.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+
 
 const router = express.Router();
 

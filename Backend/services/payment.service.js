@@ -1,6 +1,7 @@
 import { Cart } from "../models/cart.model.js";
 import { Booking } from "../models/booking.model.js";
 import { ApiError } from "../utils/ApiError.js";
+import { updateUserAchievment } from "../utils/updateUserAchievment.js";
 
 export class PaymentService {
   itemBooking = async (order_id, event, booking) => {
@@ -99,33 +100,31 @@ export class PaymentService {
     } else {
       throw new ApiError(400, `Unsupported event type: ${event}`);
     }
-  }
+  };
 
+  sessionBooking = async (order_id, event, booking) => {
+    // Check if this is an order completion event
+    if (event === "ORDER_COMPLETED" || event === "ORDER_AUTHORISED") {
+      if (!booking) {
+        return { status: 200, message: "Webhook received" };
+      }
 
-    sessionBooking = async (order_id, event, booking) => {
-        // Check if this is an order completion event
-        if (event === 'ORDER_COMPLETED' || event === 'ORDER_AUTHORISED') {
+      // For session bookings, we only update the status since there's no paymentStatus field
+      if (event === "ORDER_COMPLETED" || event === "ORDER_AUTHORISED") {
+        // Todo funcion chalana h
+        await updateUserAchievment(booking.user._id);
+        booking.status = "confirmed";
+      }
 
-            if (!booking) {
-                return { status: 200, message: "Webhook received" };
-            }
+      await booking.save();
 
-            // For session bookings, we only update the status since there's no paymentStatus field
-            if (event === 'ORDER_COMPLETED' || event === 'ORDER_AUTHORISED') {
-              // Todo funcion chalana h 
-                booking.status = 'confirmed';
-            }
-
-            await booking.save();
-
-            return {
-                status: 200,
-                message: "Payment completed successfully",
-                booking: booking
-            };
-        } else {
-            throw new ApiError(400, `Unsupported event type: ${event}`);
-        }
+      return {
+        status: 200,
+        message: "Payment completed successfully",
+        booking: booking,
+      };
+    } else {
+      throw new ApiError(400, `Unsupported event type: ${event}`);
     }
-
+  };
 }
