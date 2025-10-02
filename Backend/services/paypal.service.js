@@ -96,8 +96,6 @@ export default class PayPalService {
           },
         }
       );
-      // Todo ->
-
       return response.data;
     } catch (error) {
       console.error(
