@@ -236,7 +236,6 @@ export const updateInstructorAchievment = asyncHandler(async (instructorId) => {
   if (instructorDetails.length === 0) return null;
 
   const instructorData = instructorDetails[0];
-  console.log('instructorData', instructorData);
   // ✅ Validate that this is actually an instructor
   if (instructorData.role !== "instructor") {
     throw new Error("User is not an instructor");
