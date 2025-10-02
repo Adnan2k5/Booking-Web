@@ -1,12 +1,11 @@
-import { UserAchievment } from "../models/userAchievment.model.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
-import ApiResponse from "../utils/ApiResponse.js";
+import { UserAchievement } from "../models/userAchievement.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { updateUserAchievment } from "../utils/updateUserAchievment.js";
+import ApiResponse from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const getUserAchievements = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const userAchievement = await UserAchievment.findOne({ userId: userId });
+  const userAchievement = await UserAchievement.findOne({ userId: userId });
   if (!userAchievement) {
     throw new ApiError(404, "User achievements not found");
   }

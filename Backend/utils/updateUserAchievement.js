@@ -1,8 +1,8 @@
 import { User } from "../models/user.model.js";
+import { UserAchievement } from "../models/userAchievement.model.js";
 import { asyncHandler } from "./asyncHandler.js";
-import { UserAchievment } from "../models/userAchievment.model.js";
 
-export const updateUserAchievment = asyncHandler(async (userId) => {
+export const updateUserAchievement = asyncHandler(async (userId) => {
   const userAdventureDetails = await User.aggregate([
     // Stage 1: Match the specific user
     {
@@ -148,9 +148,9 @@ export const updateUserAchievment = asyncHandler(async (userId) => {
   ]);
   if (userAdventureDetails.length === 0) return;
   const userData = userAdventureDetails[0];
-//   console.log('userdata -> ', userData);
+  //   console.log('userdata -> ', userData);
   // Use the static method to save/update
-  const savedAchievement = await UserAchievment.createOrUpdate({
+  const savedAchievement = await UserAchievement.createOrUpdate({
     userId: userData._id,
     email: userData.email,
     name: userData.name,
@@ -165,6 +165,6 @@ export const updateUserAchievment = asyncHandler(async (userId) => {
     ),
     adventureStats: userData.adventureStats,
   });
-//   console.log('saved', savedAchievement);
+  //   console.log('saved', savedAchievement);
   return savedAchievement;
 });

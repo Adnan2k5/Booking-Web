@@ -1,8 +1,8 @@
-import { Cart } from "../models/cart.model.js";
 import { Booking } from "../models/booking.model.js";
+import { Cart } from "../models/cart.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { updateUserAchievment } from "../utils/updateUserAchievment.js";
-import { updateInstructorAchievment } from "../utils/updateInstructorAchievment.js";
+import { updateInstructorAchievement } from "../utils/updateInstructorAchievement.js";
+import { updateUserAchievement } from "../utils/updateUserAchievement.js";
 
 export class PaymentService {
   itemBooking = async (order_id, event, booking) => {
@@ -113,14 +113,14 @@ export class PaymentService {
       // For session bookings, we only update the status since there's no paymentStatus field
       if (event === "ORDER_COMPLETED" || event === "ORDER_AUTHORISED") {
         // Todo funcion chalana h
-        await updateUserAchievment(booking.user._id);
+        await updateUserAchievement(booking.user._id);
 
         const populatedBooking = await Booking.findById(booking._id).populate({
           path: "session",
           select: "instructorId",
         });
 
-        await updateInstructorAchievment(
+        await updateInstructorAchievement(
           populatedBooking?.session?.instructorId
         );
         booking.status = "confirmed";

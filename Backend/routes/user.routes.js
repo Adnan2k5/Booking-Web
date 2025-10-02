@@ -1,15 +1,14 @@
 import express from "express";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { getUserAchievements } from "../controllers/Achievement.js";
 import {
-  getUser,
-  getUsers,
   deleteUser,
-  getUserAdventureExperiences,
-  getUserAdventure,
   getMe,
+  getUser,
+  getUserAdventure,
+  getUserAdventureExperiences,
+  getUsers,
 } from "../controllers/user.controller.js";
-import { getUserAchievements } from "../controllers/Achievment.js";
-
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 

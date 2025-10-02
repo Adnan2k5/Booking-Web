@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const userAchievmentSchema = new mongoose.Schema(
+const userAchievementSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -110,18 +110,20 @@ const userAchievmentSchema = new mongoose.Schema(
 );
 
 // Indexes for performance
-userAchievmentSchema.index({ userId: 1 });
-userAchievmentSchema.index({ level: -1 });
-userAchievmentSchema.index({ totalExperiencePoints: -1 });
+userAchievementSchema.index({ userId: 1 });
+userAchievementSchema.index({ level: -1 });
+userAchievementSchema.index({ totalExperiencePoints: -1 });
 
 // Update lastUpdated on save
-userAchievmentSchema.pre("save", function (next) {
+userAchievementSchema.pre("save", function (next) {
   this.lastUpdated = new Date();
   next();
 });
 
 // Static method to create or update achievement
-userAchievmentSchema.statics.createOrUpdate = async function (achievementData) {
+userAchievementSchema.statics.createOrUpdate = async function (
+  achievementData
+) {
   const { userId, ...updateData } = achievementData;
 
   return await this.findOneAndUpdate(
@@ -138,7 +140,7 @@ userAchievmentSchema.statics.createOrUpdate = async function (achievementData) {
   );
 };
 
-export const UserAchievment = mongoose.model(
-  "UserAchievment",
-  userAchievmentSchema
+export const UserAchievement = mongoose.model(
+  "UserAchievement",
+  userAchievementSchema
 );

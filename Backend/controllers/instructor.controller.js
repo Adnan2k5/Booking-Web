@@ -1,10 +1,9 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { Instructor } from "../models/instructor.model.js";
+import { InstructorAchievement } from "../models/instructorAchievement.model.js";
+import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
-import { User } from "../models/user.model.js";
-import { Instructor } from "../models/instructor.model.js";
-import { InstructorAchievment } from "../models/instructorAchievment.model.js";
-import { updateInstructorAchievment } from "../utils/updateInstructorAchievment.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const getAllInstructors = asyncHandler(async (req, res) => {
   const { page, limit = 10, search = "" } = req.query;
@@ -129,22 +128,21 @@ export const changeDocumentStatusById = asyncHandler(async (req, res) => {
     );
 });
 
-export const getInstructorAchievments = asyncHandler(async (req, res) => {
+export const getInstructorAchievements = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const instructorAchievment = await InstructorAchievment.findOne({
+  const instructorAchievement = await InstructorAchievement.findOne({
     instructorId: userId,
   });
-  if (!instructorAchievment) {
+  if (!instructorAchievement) {
     throw new ApiError(404, "Instructor achievements not found");
   }
 
-  // ✅ Send proper response
   res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        instructorAchievment,
+        instructorAchievement,
         "User achievements retrieved successfully"
       )
     );
