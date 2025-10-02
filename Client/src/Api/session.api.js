@@ -7,10 +7,12 @@ export const createPreset = async (data) => {
     });
 
     if (res.status === 201) {
-      return true;
+      return res;
     }
+    return false;
   } catch (err) {
-    console.error(err);
+    console.error('Error creating preset:', err);
+    throw err;
   }
 };
 
@@ -21,20 +23,62 @@ export const createSession = async (data) => {
     });
 
     if (res.status === 201) {
-      return true;
+      return res;
     }
+    return false;
   } catch (err) {
-    console.error(err);
+    console.error('Error creating session:', err);
+    throw err;
   }
 };
 
 export const getInstructorSessions = async (id) => {
-  const res = await axiosClient.get(`/api/session/${id}`, {
-    withCredentials: true,
-  });
-  if (res.status === 200) {
-    return res;
+  try {
+    const res = await axiosClient.get(`/api/session/${id}`, {
+      withCredentials: true,
+    });
+    if (res.status === 200) {
+      return res;
+    }
+    throw new Error(`Unexpected status code: ${res.status}`);
+  } catch (err) {
+    console.error('Error fetching instructor sessions by ID:', err);
+    throw err;
   }
 };
 
-export const deleteSession = async (id) => {};
+export const getInstructorSessionsWithBookings = async (queryParams = {}) => {
+  try {
+    const params = new URLSearchParams(queryParams).toString();
+    const res = await axiosClient.get(`/api/session/instructor/my-sessions${params ? `?${params}` : ''}`, {
+      withCredentials: true,
+    });
+    if (res.status === 200) {
+      return res;
+    }
+    throw new Error(`Unexpected status code: ${res.status}`);
+  } catch (err) {
+    console.error('Error fetching instructor sessions:', err);
+    throw err;
+  }
+};
+
+export const deleteSession = async (id) => {
+  try {
+    if (!id) {
+      throw new Error('Session ID is required');
+    }
+    
+    const res = await axiosClient.delete(`/api/session/${id}`, {
+      withCredentials: true,
+    });
+    
+    if (res.status === 200 || res.status === 204) {
+      return res;
+    }
+    throw new Error(`Unexpected status code: ${res.status}`);
+  } catch (err) {
+    console.error('Error deleting session:', err);
+    throw err;
+  }
+};
