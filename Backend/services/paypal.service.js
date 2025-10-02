@@ -219,7 +219,7 @@ export default class PayPalService {
             await updateInstructorAchievment(booking?.session?.instructorId);
             console.log("Achievement updated for user:", booking.user._id);
           } else {
-            console.log("No booking found for transactionId:", orderId);
+            console.error("No booking found for transactionId:", orderId);
           }
         } catch (achievementError) {
           console.error("Failed to update user achievement:", achievementError);
