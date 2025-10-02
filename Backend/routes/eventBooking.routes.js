@@ -15,7 +15,7 @@ import {
   awardNft,
 } from "../controllers/eventBooking.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { verifyAdmin } from "../middlewares/admin.middleware.js";
+import { verifyAdmin, verifyInstructor } from "../middlewares/admin.middleware.js";
 
 const router = express.Router();
 
@@ -36,7 +36,7 @@ router.patch("/:bookingId/adventure/:adventureId/complete", completeAdventure); 
 router.get("/events/:eventId/adventures", getEventAdventures); // Get adventures for specific event
 
 // Admin routes
-router.get("/", verifyAdmin, getAllEventBookings); // Admin: Get all event bookings
+router.get("/", verifyInstructor, getAllEventBookings); // Admin: Get all event bookings
 router.get("/adventures/all", verifyAdmin, getAllAdventuresForSelection); // Admin: Get all adventures for selection
 router.patch("/:bookingId/award-nft", verifyAdmin, awardNft); // Admin: Award NFT manually
 

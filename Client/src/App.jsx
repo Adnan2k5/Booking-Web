@@ -65,7 +65,6 @@ import esTranslation from "./Locales/es.json"
 import itTranslation from "./Locales/it.json"
 import { updateLanguageHeaders } from "./Api/language.api.js"
 import { InstructorRegister } from "./Pages/Instructor/InstructorLogin"
-import { InstructorBookings } from "./Pages/Instructor/Instructor.bookings"
 import { InstructorSession } from "./Pages/Instructor/InstructorSession"
 import { InstructorProfile } from "./Pages/Instructor/InstructorProfile"
 import InstructorSettings from "./Pages/Instructor/InstructorSettings"
@@ -226,14 +225,6 @@ const App = () => {
                     element={
                       <InstructorRoute>
                         <InstructorDashboard />
-                      </InstructorRoute>
-                    }
-                  />
-                  <Route
-                    path="/instructor/bookings"
-                    element={
-                      <InstructorRoute>
-                        <InstructorBookings />
                       </InstructorRoute>
                     }
                   />

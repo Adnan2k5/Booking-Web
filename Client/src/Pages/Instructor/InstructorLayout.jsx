@@ -39,11 +39,6 @@ const InstructorLayout = ({ children }) => {
             path: "/instructor/dashboard",
         },
         {
-            icon: <Users className="h-5 w-5" />,
-            label: t("instructor.bookings"),
-            path: "/instructor/bookings",
-        },
-        {
             icon: <Calendar className="h-5 w-5" />,
             label: t("instructor.sessions"),
             path: "/instructor/sessions",

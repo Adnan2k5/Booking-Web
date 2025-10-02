@@ -11,7 +11,7 @@ import {
   getSessionBookingsBySessionId,
 } from "../controllers/sessionBooking.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { verifyAdmin } from "../middlewares/admin.middleware.js";
+import { verifyAdmin, verifyInstructor } from "../middlewares/admin.middleware.js";
 
 const router = Router();
 
@@ -29,7 +29,7 @@ router.route("/:bookingId/status").patch(updateSessionBookingStatus);
 router.route("/:bookingId/cancel").patch(cancelSessionBooking);
 
 // Admin routes
-router.route("/").get(verifyAdmin, getAllSessionBookings);
+router.route("/").get(verifyInstructor, getAllSessionBookings);
 router.route("/user/:userId").get(verifyAdmin, getSessionBookingsByUserId);
 router.route("/:bookingId").delete(verifyAdmin, deleteSessionBooking);
 
