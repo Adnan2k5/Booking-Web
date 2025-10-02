@@ -130,12 +130,10 @@ export const changeDocumentStatusById = asyncHandler(async (req, res) => {
 });
 
 export const getInstructorAchievments = asyncHandler(async (req, res) => {
-  const userId = req.user._id; // ✅ Fixed: req.user._id instead of req.user.user
-
-
+  const userId = req.user._id;
   const instructorAchievment = await InstructorAchievment.findOne({
     instructorId: userId,
-  }); // ✅ Added await and correct field name
+  });
   if (!instructorAchievment) {
     throw new ApiError(404, "Instructor achievements not found");
   }
