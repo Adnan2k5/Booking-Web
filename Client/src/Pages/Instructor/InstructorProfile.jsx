@@ -28,6 +28,28 @@ export const InstructorProfile = () => {
     const [fetchedAdventure, setFetchedAdventure] = useState(null)
     const { user } = useAuth();
 
+    // Helper function to construct proper image URLs
+    const getImageUrl = (imagePath, fallback = "/placeholder.svg") => {
+        if (!imagePath) return fallback;
+        
+        // If it's already a full URL, return as is
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('/')) {
+            return imagePath;
+        }
+        
+        // If it's a relative path, construct the full URL
+        // Adjust this base URL according to your backend configuration
+        const baseUrl = process.env.REACT_APP_BASE_URL || 'http://localhost:5000';
+        return `${baseUrl}/uploads/${imagePath}`;
+    };
+
+    // Helper function to detect video files
+    const isVideoFile = (filename) => {
+        if (!filename) return false;
+        const videoExtensions = ['.mp4', '.webm', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.m4v'];
+        return videoExtensions.some(ext => filename.toLowerCase().includes(ext));
+    };
+
     const fetchAdventure = async (adventureId) => {
         try {
             const res = await getAdventure(adventureId)
@@ -53,17 +75,18 @@ export const InstructorProfile = () => {
                 id: user.user._id || prev.id,
                 name: user.user.name || "",
                 email: user.user.email || "",
+                profilePicture: getImageUrl(user.user.profilePicture),
                 specialty: fetchedAdventure?.name || "",
                 experience: `0 years`,
                 rating: user.user.instructor?.avgReview || 0,
-                img: fetchedAdventure?.thumbnail || "/placeholder.svg?height=400&width=300",
+                img: getImageUrl(fetchedAdventure?.thumbnail),
                 bio: user.user.instructor?.description?.join(", ") || "Certified instructor with expertise in adventure activities.",
                 languages: user.user.instructor?.languages || [],
                 certificates: [
                     {
                         name: "Adventure Certification",
                         verified: user.user.verified || false,
-                        link: user.user.instructor?.certificate
+                        link: getImageUrl(user.user.instructor?.certificate)
                     },
                 ],
                 selectedAdventures: [fetchedAdventure?.name || ""].filter(Boolean),
@@ -73,10 +96,16 @@ export const InstructorProfile = () => {
                         name: "Government ID",
                         status: user.user.instructor?.documentVerified || "pending",
                         date: new Date(user.user.createdAt).toISOString().split("T")[0] || "2024-01-15",
-                        link: user.user.instructor?.governmentId
+                        link: getImageUrl(user.user.instructor?.governmentId)
                     },
                 ],
-                gallery: user.user.instructor?.portfolioMedias || []
+                gallery: (user.user.instructor?.portfolioMedias || []).map((mediaUrl, index) => ({
+                    id: index + 1,
+                    type: isVideoFile(mediaUrl) ? 'video' : 'image',
+                    url: getImageUrl(mediaUrl),
+                    caption: `Media ${index + 1}`,
+                    thumbnail: isVideoFile(mediaUrl) ? null : getImageUrl(mediaUrl)
+                }))
             }))
         }
     }, [user, fetchedAdventure])
@@ -85,14 +114,15 @@ export const InstructorProfile = () => {
         id: user?.user?._id || 1,
         name: user?.user?.name || "",
         email: user?.user?.email || "",
+        profilePicture: getImageUrl(user?.user?.profilePicture),
         specialty: fetchedAdventure?.name || "",
         experience: `${fetchedAdventure?.exp || 0} years`,
         rating: user?.user?.instructor?.avgReview || 0,
-        img: fetchedAdventure?.thumbnail || "/placeholder.svg?height=400&width=300",
+        img: getImageUrl(fetchedAdventure?.thumbnail),
         bio: user?.user?.instructor?.description?.join(", ") || "Certified instructor with expertise in adventure activities.",
         languages: user?.user?.instructor?.languages || [],
         certificates: [
-            { name: "Adventure Certification", verified: user?.user?.verified || false, link: user?.user?.instructor?.certificate },
+            { name: "Adventure Certification", verified: user?.user?.verified || false, link: getImageUrl(user?.user?.instructor?.certificate) },
         ],
         selectedAdventures: [fetchedAdventure?.name || ""],
         verificationDocuments: [
@@ -101,10 +131,16 @@ export const InstructorProfile = () => {
                 name: "Government ID",
                 status: user?.user?.instructor?.documentVerified || "pending",
                 date: new Date(user?.user?.createdAt).toISOString().split("T")[0] || "2024-01-15",
-                link: user?.user?.instructor?.governmentId
+                link: getImageUrl(user?.user?.instructor?.governmentId)
             },
         ],
-        gallery: user?.user?.instructor?.portfolioMedias || []
+        gallery: (user?.user?.instructor?.portfolioMedias || []).map((mediaUrl, index) => ({
+            id: index + 1,
+            type: isVideoFile(mediaUrl) ? 'video' : 'image',
+            url: getImageUrl(mediaUrl),
+            caption: `Media ${index + 1}`,
+            thumbnail: isVideoFile(mediaUrl) ? null : getImageUrl(mediaUrl)
+        }))
     })
 
     const [newCertificate, setNewCertificate] = useState({
@@ -274,7 +310,6 @@ export const InstructorProfile = () => {
                         </Button>
                     )}
                 </div>
-
                 <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab}>
                     <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
                         <TabsTrigger value="profile" className="text-sm sm:text-base">Profile</TabsTrigger>
@@ -292,7 +327,13 @@ export const InstructorProfile = () => {
                                     <div className="lg:w-1/3 flex flex-col items-center">
                                         <div className="relative mb-4">
                                             <Avatar className="h-24 w-24 sm:h-32 sm:w-32">
-                                                <AvatarImage src={profileData.img || "/placeholder.svg"} alt={profileData.name} />
+                                                <AvatarImage 
+                                                    src={profileData.profilePicture || "/placeholder.svg"} 
+                                                    alt={profileData.name}
+                                                    onError={(e) => {
+                                                        e.target.src = "/placeholder.svg";
+                                                    }}
+                                                />
                                                 <AvatarFallback>{profileData.name.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             {editMode && (
@@ -682,6 +723,10 @@ export const InstructorProfile = () => {
                                                         src={item.url || "/placeholder.svg"}
                                                         alt={item.caption}
                                                         className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            e.target.src = "/placeholder.svg";
+                                                        }}
+                                                        loading="lazy"
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full relative">
@@ -689,6 +734,10 @@ export const InstructorProfile = () => {
                                                             src={item.thumbnail || "/placeholder.svg?height=300&width=300"}
                                                             alt={item.caption}
                                                             className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                e.target.src = "/placeholder.svg?height=300&width=300";
+                                                            }}
+                                                            loading="lazy"
                                                         />
                                                         <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                                                             <Play className="h-12 w-12 text-white" fill="white" />
@@ -745,9 +794,19 @@ export const InstructorProfile = () => {
                                         src={selectedMedia.url || "/placeholder.svg"}
                                         alt={selectedMedia.caption}
                                         className="w-full max-h-[70vh] object-contain"
+                                        onError={(e) => {
+                                            e.target.src = "/placeholder.svg";
+                                        }}
                                     />
                                 ) : (
-                                    <video src={selectedMedia.url} controls className="w-full max-h-[70vh]" />
+                                    <video 
+                                        src={selectedMedia.url} 
+                                        controls 
+                                        className="w-full max-h-[70vh]"
+                                        onError={(e) => {
+                                            console.error("Video failed to load:", selectedMedia.url);
+                                        }}
+                                    />
                                 )}
                                 <button
                                     className="absolute top-2 right-2 p-2 bg-black/50 rounded-full text-white"
