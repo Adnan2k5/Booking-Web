@@ -1,8 +1,9 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { Instructor } from "../models/instructor.model.js";
+import { InstructorAchievement } from "../models/instructorAchievement.model.js";
+import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
-import { User } from "../models/user.model.js";
-import { Instructor } from "../models/instructor.model.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const getAllInstructors = asyncHandler(async (req, res) => {
   const { page, limit = 10, search = "" } = req.query;
@@ -44,11 +45,15 @@ export const getAllInstructors = asyncHandler(async (req, res) => {
   const totalPages = Math.ceil(total / pageSize);
 
   res.status(200).json(
-    new ApiResponse(200, {
-      instructors,
-      total,
-      totalPages,
-    }, "Instructors retrieved successfully")
+    new ApiResponse(
+      200,
+      {
+        instructors,
+        total,
+        totalPages,
+      },
+      "Instructors retrieved successfully"
+    )
   );
 });
 
@@ -72,9 +77,13 @@ export const getInstructorById = asyncHandler(async (req, res) => {
     .select("email name phoneNumber profilePicture instructor");
 
   res.status(200).json(
-    new ApiResponse(200, {
-      instructor,
-    }, "Instructor retrieved successfully")
+    new ApiResponse(
+      200,
+      {
+        instructor,
+      },
+      "Instructor retrieved successfully"
+    )
   );
 });
 
@@ -108,11 +117,33 @@ export const changeDocumentStatusById = asyncHandler(async (req, res) => {
   instructor.documentVerified = status;
   await instructor.save();
 
-  res.status(200).json(
-    new ApiResponse(
-      200,
-      null,
-      "Instructor document status updated successfully"
-    )
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        null,
+        "Instructor document status updated successfully"
+      )
+    );
+});
+
+export const getInstructorAchievements = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const instructorAchievement = await InstructorAchievement.findOne({
+    instructorId: userId,
+  });
+  if (!instructorAchievement) {
+    throw new ApiError(404, "Instructor achievements not found");
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        instructorAchievement,
+        "User achievements retrieved successfully"
+      )
+    );
 });

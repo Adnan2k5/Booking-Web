@@ -6,20 +6,11 @@ import { useNavigate } from "react-router-dom"
 import { ArrowRight } from 'lucide-react'
 import { useTranslation } from "react-i18next"
 import { Nav_Landing } from "../components/Nav_Landing"
-import ReactPlayer from "react-player"
 
 export default function LoginOptionsPage() {
     const navigate = useNavigate()
     const { t } = useTranslation()
     const [hoveredCard, setHoveredCard] = useState(null)
-
-    const onReady = (reactPlayer) => {
-        const internalPlayer = reactPlayer.getInternalPlayer();
-        // Tries to set quality — doesn't always work depending on YouTube
-        if (internalPlayer.setPlaybackQuality) {
-            internalPlayer.setPlaybackQuality('hd1080'); // 'small', 'medium', 'large', 'hd720', 'hd1080', 'highres'
-        }
-    };
 
     const cards = [
         {
@@ -52,27 +43,7 @@ export default function LoginOptionsPage() {
     ]
 
     return (
-        <div className="min-h-screen flex flex-col relative ">
-            {/* Background Video - Fixed at 100vh */}
-            <div className="bg absolute top-0 left-0 w-full h-screen overflow-hidden -z-50">
-                <motion.div
-                    className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 z-10"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 1.5 }}
-                />
-                <ReactPlayer
-                    url={"https://youtu.be/FfPVvtNo92s"}
-                    onReady={onReady}
-                    controls={false}
-                    loop={true}
-                    playing={true}
-                    muted={true}
-                    width="100%"
-                    height="100%"
-                />
-            </div>
-
+        <div className="flex-1 flex flex-col">
             <Nav_Landing />
 
             <div className="flex-1 flex items-center justify-center">

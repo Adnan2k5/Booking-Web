@@ -4,10 +4,8 @@ import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
 import { Card, CardContent } from "../../../components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
 import { deleteAdventure } from "../../../Api/adventure.api"
 import { toast } from "sonner"
-import AdventureCard from "./../../../components/AdventureCard"
 import AdventureTableRow from "./../../../components/AdventureTableRow"
 import { useAdventures } from "../../../hooks/useAdventure"
 import { useNavigate } from "react-router-dom"
@@ -19,14 +17,11 @@ export default function AdventuresPage() {
   const {
     adventures,
     isLoading,
-    error,
     refetch,
     page,
     setPage,
     totalPages,
     total,
-    limit,
-    setLimit,
     search,
     setSearch,
   } = useAdventures()

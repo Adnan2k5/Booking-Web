@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 dotenv.config({ path: "./.env" });
 import express from "express";
 import cookieParser from "cookie-parser";
-import bodyParser from "body-parser";
 import cors from "cors";
 import connectDB from "./config/db.config.js";
 import authRoute from "./routes/auth.routes.js";
@@ -34,12 +33,12 @@ import transactionRouter from "./routes/transaction.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
 import { ensureDefaultDeclaration } from "./controllers/declaration.controller.js";
-import instructorAchievementRouter from './routes/instructorAchievement.routes.js'
 import initSocketIO from "./socket/socket.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import redis from "./config/redis.config.js";
 import { initPayoutCronJob } from "./controllers/transaction.controller.js";
+import { errorHandlingMiddleware } from "./middlewares/error.middleware.js";
+
 const app = express();
 // Create HTTP server using Express app
 const server = createServer(app);
@@ -71,7 +70,7 @@ app.use("/api/location", locationRouter);
 app.use("/api/items", itemRouter);
 app.use("/api/category", categoryRoute);
 app.use("/api/instructor", instructorRouter);
-app.use("/api/instructorAchievement", instructorAchievementRouter);
+
 app.use("/api/hotel", hotelRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/cart", cartRouter);
@@ -85,6 +84,8 @@ app.use("/api/sessionBooking", sessionBookingRouter);
 app.use("/api/translation", translationRouter);
 app.use("/api/payouts", payoutRouter);
 app.use("/api/transactions", transactionRouter);
+app.use(errorHandlingMiddleware); // middlware for handling error
+
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

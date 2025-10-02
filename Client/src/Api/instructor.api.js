@@ -1,5 +1,17 @@
 import { axiosClient } from '../AxiosClient/axios';
 
+export const getInstructorAdventure = async (instructorId) => {
+  try {
+    const res = await axiosClient.get(`/api/adventure/instructor`, {
+      withCredentials: true
+    });
+    return res;
+  } catch (error) {
+    console.error('Error fetching instructor adventures:', error);
+    throw error;
+  }
+};
+
 export const getAllSessions = async ({
   adventure = '',
   location = '',

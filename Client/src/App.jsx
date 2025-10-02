@@ -43,6 +43,7 @@ const Hotel = lazy(() => import("./Pages/Hotel/Hotel"))
 const HotelCheckout = lazy(() => import("./Pages/Hotel/HotelCheckout"))
 const HotelBookingSuccess = lazy(() => import("./Pages/Hotel/HotelBookingSuccess"))
 const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
+const AuthLayout = lazy(() => import("./Pages/Auth/AuthLayout"))
 const Terms = lazy(() => import("./Pages/Terms"))
 const PaymentPage = lazy(() => import("./Pages/Payment/PaymentPage"))
 const PaymentApprove = lazy(() => import("./Pages/Payment/PaymentApprove"))
@@ -133,11 +134,13 @@ const App = () => {
                 <Toaster />
                 <Routes>
                   {/* Public routes */}
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/login-options" element={<LoginOptionsPage />} />
+                  <Route element={<AuthLayout />}>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/login-options" element={<LoginOptionsPage />} />
+                  </Route>
+                  <Route path="/" element={<LandingPage />} />
                   <Route path="/auth/signInWithLinkedin" element={<LinkedInCallback />} />
                   <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />                  
-                  <Route path="/" element={<LandingPage />} />
                   <Route path="/secret-nft-events" element={<SecretNftEvents />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/browse" element={<BrowsingPage />} />
