@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const userAchievmentSchema = new mongoose.Schema(
   {
     userId: {
-      type: mongoose.Schema.Types.ObjectId, // Fixed typo: moongoose -> mongoose
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
       unique: true, // One achievement record per user
