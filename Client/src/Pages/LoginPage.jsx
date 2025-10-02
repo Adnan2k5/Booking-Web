@@ -15,8 +15,6 @@ import { useNavigate } from "react-router-dom";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "./AuthProvider";
 import { Loader } from "../components/Loader";
-import ReactPlayer from "react-player";
-import { motion } from "framer-motion";
 
 export default function LoginPage() {
   document.title = "Adventure Login"
@@ -33,13 +31,6 @@ export default function LoginPage() {
   const { user, loading } = useAuth();
   const Navigate = useNavigate();
 
-  const onReady = (reactPlayer) => {
-    const internalPlayer = reactPlayer.getInternalPlayer();
-    // Tries to set quality — doesn't always work depending on YouTube
-    if (internalPlayer.setPlaybackQuality) {
-      internalPlayer.setPlaybackQuality('hd1080'); // 'small', 'medium', 'large', 'hd720', 'hd1080', 'highres'
-    }
-  };
   const onSubmit = async (data) => {
     // Validate form data before submission
     if (!validateFormData(data)) {
@@ -354,27 +345,8 @@ export default function LoginPage() {
     , [user, loading, Navigate])
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-5 relative">
-      {/* Background Video - Fixed at 100vh */}
-      <div className="bg absolute top-0 left-0 w-full h-screen overflow-hidden -z-50">
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 z-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.5 }}
-        />
-        <ReactPlayer
-          url={"https://youtu.be/FfPVvtNo92s"}
-          onReady={onReady}
-          controls={false}
-          loop={true}
-          playing={true}
-          muted={true}
-          width="100%"
-          height="100%"
-        />
-      </div>
-      <div className="login relative  bg-gradient-to-b from-[#CEF2FF] to-white rounded-xl shadow-lg flex flex-col items-center justify-items-end  md:py-8 md:px-10 lg:w-1/2 py-4">
+    <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 relative">
+      <div className="login relative bg-gradient-to-b from-[#CEF2FF] to-white rounded-xl shadow-lg flex flex-col items-center justify-items-end md:py-8 md:px-10 lg:w-1/2 py-4">
         <Modal open={openOtp} footer={null} onCancel={cancel}>
           <div className="space-y-2 flex flex-col items-center gap-4">
             <h1 className="text-lg font-semibold text-center">
