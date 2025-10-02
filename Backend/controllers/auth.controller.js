@@ -286,7 +286,6 @@ const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email: email }).select(
     "email phoneNumber name verified role password instructor"
   );
-
   if (!user) {
     throw new ApiError(404, "User not found");
   }

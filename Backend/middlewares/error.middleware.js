@@ -1,3 +1,5 @@
+import { ApiError } from "../utils/ApiError.js";
+
 export const errorHandlingMiddleware = (err, req, res, next) => {
   // Default error values
   let statusCode = 500;
@@ -10,17 +12,18 @@ export const errorHandlingMiddleware = (err, req, res, next) => {
     statusCode = err.statusCode;
     message = err.message;
     errors = err.errors;
-  } else {
-    // For generic errors, we log them for debugging
-    // but send a generic message to the client.
-    console.error(err.stack); // Important for debugging!
   }
+  // For generic errors, we log them for debugging
+  // but send a generic message to the client.
+  console.error(err.stack); // Important for debugging!
 
-  const response = {
+const response = {
     success: false,
     message,
     ...(errors.length > 0 && { errors: errors }),
+    ...(process.env.NODE_ENV === "development" ? { stack: err.stack } : {}),
   };
+
 
   return res.status(statusCode).json(response);
 };
