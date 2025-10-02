@@ -3,9 +3,6 @@ import { asyncHandler } from "./asyncHandler.js";
 import { InstructorAchievment } from "../models/instructorAchievment.model.js";
 
 export const updateInstructorAchievment = asyncHandler(async (instructorId) => {
-
-
-
   const instructorDetails = await User.aggregate([
     // Stage 1: Match the specific instructor (User with instructor role)
     {
