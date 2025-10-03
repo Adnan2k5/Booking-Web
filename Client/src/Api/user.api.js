@@ -30,14 +30,24 @@ export const getUserAdventureExperiences = async () => {
   return data;
 };
 
+export const updateUserProfile = async (payload) => {
+  const { data } = await axiosClient.put('/api/user/profile', payload, {
+    withCredentials: true,
+  });
+  return data;
+};
+
 export const getCurrentUser = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/api/user/me`, {
+    const { data } = await axiosClient.get('/api/user/me', {
       withCredentials: true,
     });
-    return response.data;
+    return data;
   } catch (error) {
-    console.error("❌ Failed to fetch current user:", error.response?.data || error.message);
+    console.error(
+      "❌ Failed to fetch current user:",
+      error.response?.data || error.message
+    );
     throw new Error("Unable to retrieve user information");
   }
 };

@@ -1,5 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
+import { Instructor } from "../models/instructor.model.js";
 import { UserAdventureExperience } from "../models/userAdventureExperience.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
@@ -114,6 +115,80 @@ export const updateUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, updatedUser, "User updated successfully"));
+});
+
+export const updateUserProfile = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+
+  const { name, profilePicture, bio, languages } = req.body;
+
+  const user = await User.findById(userId).populate("instructor");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (typeof name === "string") {
+    user.name = name.trim();
+  }
+
+  if (profilePicture !== undefined) {
+    user.profilePicture = profilePicture;
+  }
+
+  await user.save();
+
+  if (user.instructor) {
+    const instructor = await Instructor.findById(user.instructor._id);
+
+    if (instructor) {
+      if (bio !== undefined) {
+        let bioArray;
+
+        if (Array.isArray(bio)) {
+          bioArray = bio
+            .filter((entry) => typeof entry === "string")
+            .map((entry) => entry.trim())
+            .filter(Boolean);
+        } else if (typeof bio === "string") {
+          bioArray = bio
+            .split(/\r?\n/)
+            .map((entry) => entry.trim())
+            .filter(Boolean);
+        }
+
+        if (bioArray !== undefined) {
+          instructor.description = bioArray;
+        }
+      }
+
+      if (Array.isArray(languages)) {
+        instructor.languages = languages
+          .filter((language) => typeof language === "string")
+          .map((language) => language.trim())
+          .filter(Boolean);
+      }
+
+      await instructor.save();
+    }
+  }
+
+  const refreshedUser = await User.findById(userId)
+    .populate("instructor")
+    .select("-password -refreshToken");
+
+  if (!refreshedUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const levelData = await refreshedUser.getOverallLevel();
+  const adventureExperiences = await refreshedUser.getAdventureExperiences();
+
+  return res.status(200).json({
+    ...refreshedUser.toJSON(),
+    levelData,
+    adventureExperiences,
+  });
 });
 
 export const getUserAdventureExperiences = asyncHandler(async (req, res) => {

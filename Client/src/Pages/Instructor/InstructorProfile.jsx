@@ -14,9 +14,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
+import { useDispatch } from "react-redux"
 import InstructorLayout from "./InstructorLayout"
 import { useAuth } from "../AuthProvider"
 import { getAdventure } from "../../Api/adventure.api"
+import { updateUserProfile } from "../../Api/user.api"
+import { setUser } from "../../Store/UserSlice"
 
 export const InstructorProfile = () => {
     const { t } = useTranslation()
@@ -27,6 +30,8 @@ export const InstructorProfile = () => {
     const [selectedMedia, setSelectedMedia] = useState(null)
     const [fetchedAdventure, setFetchedAdventure] = useState(null)
     const { user } = useAuth();
+    const dispatch = useDispatch();
+    const [isSaving, setIsSaving] = useState(false)
 
     // Helper function to construct proper image URLs
     const getImageUrl = (imagePath, fallback = "/placeholder.svg") => {
@@ -107,6 +112,9 @@ export const InstructorProfile = () => {
                     thumbnail: isVideoFile(mediaUrl) ? null : getImageUrl(mediaUrl)
                 }))
             }))
+
+            console.log(user);
+            console.log(fetchedAdventure);
         }
     }, [user, fetchedAdventure])
 
@@ -183,9 +191,40 @@ export const InstructorProfile = () => {
         })
     }
 
-    const handleSaveProfile = () => {
-        toast.success(t("instructor.profileUpdatedSuccessfully"))
-        setEditMode(false)
+    const handleSaveProfile = async () => {
+        try {
+            setIsSaving(true)
+
+            const payload = {
+                name: profileData.name ? profileData.name.trim() : "",
+                bio: profileData.bio ?? "",
+                languages: profileData.languages ?? [],
+            }
+
+            const updatedUser = await updateUserProfile(payload)
+            dispatch(setUser(updatedUser))
+
+            if (updatedUser) {
+                setProfileData((prev) => ({
+                    ...prev,
+                    name: updatedUser.name || prev.name,
+                    bio: updatedUser.instructor?.description?.join(", ") || "",
+                    languages: updatedUser.instructor?.languages || [],
+                }))
+            }
+
+            toast.success(t("instructor.profileUpdatedSuccessfully"))
+            setEditMode(false)
+        } catch (error) {
+            const errorMessage =
+                error?.response?.data?.message ||
+                error?.message ||
+                t("instructor.failedToUpdateProfile", { defaultValue: "Failed to update profile" })
+
+            toast.error(errorMessage)
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     const handleFileChange = (e, type) => {
@@ -304,9 +343,15 @@ export const InstructorProfile = () => {
                             {t("instructor.editProfile")}
                         </Button>
                     ) : (
-                        <Button onClick={handleSaveProfile} className="flex items-center gap-2 w-full sm:w-auto">
+                        <Button
+                            onClick={handleSaveProfile}
+                            disabled={isSaving}
+                            className="flex items-center gap-2 w-full sm:w-auto"
+                        >
                             <Save className="h-4 w-4" />
-                            {t("instructor.saveChanges")}
+                            {isSaving
+                                ? t("instructor.saving", { defaultValue: "Saving..." })
+                                : t("instructor.saveChanges")}
                         </Button>
                     )}
                 </div>
