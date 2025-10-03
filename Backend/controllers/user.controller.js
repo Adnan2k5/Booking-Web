@@ -4,6 +4,7 @@ import { Instructor } from "../models/instructor.model.js";
 import { UserAdventureExperience } from "../models/userAdventureExperience.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 
 export const getMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select("-password -refreshToken");
@@ -120,7 +121,7 @@ export const updateUser = asyncHandler(async (req, res) => {
 export const updateUserProfile = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
 
-  const { name, profilePicture, bio, languages } = req.body;
+  const { name, bio, languages } = req.body;
 
   const user = await User.findById(userId).populate("instructor");
 
@@ -131,9 +132,29 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
   if (typeof name === "string") {
     user.name = name.trim();
   }
+  console.log(req.headers['content-type']);
+  // Handle profile picture upload
+  if (req.file) {
+    // Upload new image to Cloudinary
+    const uploadResult = await uploadOnCloudinary(req.file.path);
+    
+    if (!uploadResult) {
+      throw new ApiError(500, "Failed to upload profile picture");
+    }
 
-  if (profilePicture !== undefined) {
-    user.profilePicture = profilePicture;
+    // Delete old profile picture from Cloudinary if it exists
+    if (user.profilePicture) {
+      // Extract public_id from the Cloudinary URL
+      const urlParts = user.profilePicture.split('/');
+      const publicIdWithExt = urlParts[urlParts.length - 1];
+      const publicId = publicIdWithExt.split('.')[0];
+      
+      // Delete old image
+      await deleteFromCloudinary(publicId);
+    }
+
+    // Update user with new Cloudinary URL
+    user.profilePicture = uploadResult.secure_url;
   }
 
   await user.save();
@@ -144,14 +165,25 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
     if (instructor) {
       if (bio !== undefined) {
         let bioArray;
+        
+        // Parse bio if it's a JSON string (from FormData)
+        let parsedBio = bio;
+        if (typeof bio === "string") {
+          try {
+            parsedBio = JSON.parse(bio);
+          } catch (e) {
+            // If parsing fails, treat as regular string
+            parsedBio = bio;
+          }
+        }
 
-        if (Array.isArray(bio)) {
-          bioArray = bio
+        if (Array.isArray(parsedBio)) {
+          bioArray = parsedBio
             .filter((entry) => typeof entry === "string")
             .map((entry) => entry.trim())
             .filter(Boolean);
-        } else if (typeof bio === "string") {
-          bioArray = bio
+        } else if (typeof parsedBio === "string") {
+          bioArray = parsedBio
             .split(/\r?\n/)
             .map((entry) => entry.trim())
             .filter(Boolean);
@@ -162,11 +194,24 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
         }
       }
 
-      if (Array.isArray(languages)) {
-        instructor.languages = languages
-          .filter((language) => typeof language === "string")
-          .map((language) => language.trim())
-          .filter(Boolean);
+      if (languages !== undefined) {
+        // Parse languages if it's a JSON string (from FormData)
+        let parsedLanguages = languages;
+        if (typeof languages === "string") {
+          try {
+            parsedLanguages = JSON.parse(languages);
+          } catch (e) {
+            // If parsing fails, ignore
+            parsedLanguages = [];
+          }
+        }
+        
+        if (Array.isArray(parsedLanguages)) {
+          instructor.languages = parsedLanguages
+            .filter((language) => typeof language === "string")
+            .map((language) => language.trim())
+            .filter(Boolean);
+        }
       }
 
       await instructor.save();

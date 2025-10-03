@@ -201,16 +201,29 @@ export const InstructorProfile = () => {
                 languages: profileData.languages ?? [],
             }
 
+            // If a new profile picture file is selected, add it to the payload
+            if (profileData.profilePictureFile) {
+                payload.profilePicture = profileData.profilePictureFile;
+            }
+
             const updatedUser = await updateUserProfile(payload)
             dispatch(setUser(updatedUser))
 
             if (updatedUser) {
-                setProfileData((prev) => ({
-                    ...prev,
-                    name: updatedUser.name || prev.name,
-                    bio: updatedUser.instructor?.description?.join(", ") || "",
-                    languages: updatedUser.instructor?.languages || [],
-                }))
+                setProfileData((prev) => {
+                    if (prev.profilePicture && prev.profilePicture.startsWith("blob:")) {
+                        URL.revokeObjectURL(prev.profilePicture)
+                    }
+
+                    return {
+                        ...prev,
+                        name: updatedUser.name || prev.name,
+                        bio: updatedUser.instructor?.description?.join(", ") || "",
+                        languages: updatedUser.instructor?.languages || [],
+                        profilePicture: updatedUser.profilePicture || prev.profilePicture,
+                        profilePictureFile: undefined, // clear after upload
+                    }
+                })
             }
 
             toast.success(t("instructor.profileUpdatedSuccessfully"))
@@ -242,6 +255,12 @@ export const InstructorProfile = () => {
                 file: file,
             }))
         } else if (type === "profile") {
+            // Store the file in profileData for later use
+            setProfileData((prev) => ({
+                ...prev,
+                profilePictureFile: file,
+                profilePicture: URL.createObjectURL(file), // for preview
+            }))
             toast.success(t("instructor.profilePhotoUpdated"))
         } else if (type === "gallery") {
             setNewMedia((prev) => ({
