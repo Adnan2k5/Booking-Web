@@ -19,6 +19,7 @@ import InstructorLayout from "./InstructorLayout"
 import { useAuth } from "../AuthProvider"
 import { getAdventure } from "../../Api/adventure.api"
 import { updateUserProfile } from "../../Api/user.api"
+import { uploadInstructorMedia, deleteInstructorMedia } from "../../Api/instructor.api"
 import { setUser } from "../../Store/UserSlice"
 
 export const InstructorProfile = () => {
@@ -32,6 +33,7 @@ export const InstructorProfile = () => {
     const { user } = useAuth();
     const dispatch = useDispatch();
     const [isSaving, setIsSaving] = useState(false)
+    const [mediaActionLoading, setMediaActionLoading] = useState(false)
 
     // Helper function to construct proper image URLs
     const getImageUrl = (imagePath, fallback = "/placeholder.svg") => {
@@ -54,6 +56,23 @@ export const InstructorProfile = () => {
         const videoExtensions = ['.mp4', '.webm', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.m4v'];
         return videoExtensions.some(ext => filename.toLowerCase().includes(ext));
     };
+
+    const formatGalleryItems = (medias = []) =>
+        medias
+            .filter(Boolean)
+            .map((mediaUrl, index) => {
+                const resolvedUrl = getImageUrl(mediaUrl);
+                const type = isVideoFile(mediaUrl) ? 'video' : 'image';
+
+                return {
+                    id: index + 1,
+                    rawUrl: mediaUrl,
+                    type,
+                    url: resolvedUrl,
+                    caption: `Media ${index + 1}`,
+                    thumbnail: type === 'video' ? null : resolvedUrl,
+                };
+            });
 
     const fetchAdventure = async (adventureId) => {
         try {
@@ -104,13 +123,7 @@ export const InstructorProfile = () => {
                         link: getImageUrl(user.user.instructor?.governmentId)
                     },
                 ],
-                gallery: (user.user.instructor?.portfolioMedias || []).map((mediaUrl, index) => ({
-                    id: index + 1,
-                    type: isVideoFile(mediaUrl) ? 'video' : 'image',
-                    url: getImageUrl(mediaUrl),
-                    caption: `Media ${index + 1}`,
-                    thumbnail: isVideoFile(mediaUrl) ? null : getImageUrl(mediaUrl)
-                }))
+                gallery: formatGalleryItems(user.user.instructor?.portfolioMedias || [])
             }))
 
             console.log(user);
@@ -142,13 +155,7 @@ export const InstructorProfile = () => {
                 link: getImageUrl(user?.user?.instructor?.governmentId)
             },
         ],
-        gallery: (user?.user?.instructor?.portfolioMedias || []).map((mediaUrl, index) => ({
-            id: index + 1,
-            type: isVideoFile(mediaUrl) ? 'video' : 'image',
-            url: getImageUrl(mediaUrl),
-            caption: `Media ${index + 1}`,
-            thumbnail: isVideoFile(mediaUrl) ? null : getImageUrl(mediaUrl)
-        }))
+        gallery: formatGalleryItems(user?.user?.instructor?.portfolioMedias || [])
     })
 
     const [newCertificate, setNewCertificate] = useState({
@@ -221,6 +228,9 @@ export const InstructorProfile = () => {
                         bio: updatedUser.instructor?.description?.join(", ") || "",
                         languages: updatedUser.instructor?.languages || [],
                         profilePicture: updatedUser.profilePicture || prev.profilePicture,
+                        gallery: updatedUser.instructor?.portfolioMedias
+                            ? formatGalleryItems(updatedUser.instructor.portfolioMedias)
+                            : prev.gallery,
                         profilePictureFile: undefined, // clear after upload
                     }
                 })
@@ -309,44 +319,88 @@ export const InstructorProfile = () => {
         toast.success(t("instructor.documentSubmittedForVerification"))
     }
 
-    const handleAddMedia = () => {
-        if (!newMedia.file || !newMedia.caption) {
-            toast.error("Please provide both a file and caption")
+    const handleAddMedia = async () => {
+        if (!newMedia.file) {
+            toast.error("Please choose a media file to upload")
             return
         }
 
-        const mediaUrl = URL.createObjectURL(newMedia.file)
+        if (!newMedia.caption) {
+            toast.error("Please provide a caption for this media")
+            return
+        }
 
-        setProfileData((prev) => ({
-            ...prev,
-            gallery: [
-                ...prev.gallery,
-                {
-                    id: prev.gallery.length + 1,
-                    type: newMedia.type,
-                    url: mediaUrl,
-                    thumbnail: newMedia.type === "video" ? mediaUrl : null,
-                    caption: newMedia.caption,
-                },
-            ],
-        }))
+        const formData = new FormData()
+        formData.append("media", newMedia.file)
+        formData.append("type", newMedia.type)
+        formData.append("caption", newMedia.caption)
 
-        setNewMedia({
-            type: "image",
-            file: null,
-            caption: "",
-        })
+        try {
+            setMediaActionLoading(true)
 
-        setGalleryUploadMode(false)
-        toast.success("Media added to gallery")
+            const response = await uploadInstructorMedia(formData)
+            const updatedMedias =
+                response?.data?.data?.portfolioMedias ||
+                response?.data?.portfolioMedias ||
+                []
+
+            setProfileData((prev) => ({
+                ...prev,
+                gallery: formatGalleryItems(updatedMedias),
+            }))
+
+            setNewMedia({
+                type: "image",
+                file: null,
+                caption: "",
+            })
+            setGalleryUploadMode(false)
+            toast.success("Media added to gallery")
+        } catch (error) {
+            const errorMessage =
+                error?.response?.data?.message ||
+                error?.message ||
+                "Failed to upload media"
+            toast.error(errorMessage)
+        } finally {
+            setMediaActionLoading(false)
+        }
     }
 
-    const handleRemoveMedia = (id) => {
-        setProfileData((prev) => ({
-            ...prev,
-            gallery: prev.gallery.filter((item) => item.id !== id),
-        }))
-        toast.success("Media removed from gallery")
+    const handleRemoveMedia = async (mediaItem) => {
+        if (!mediaItem?.rawUrl) {
+            toast.error("Unable to determine which media to delete")
+            return
+        }
+
+        try {
+            setMediaActionLoading(true)
+
+            const response = await deleteInstructorMedia(mediaItem.rawUrl)
+            const updatedMedias =
+                response?.data?.data?.portfolioMedias ||
+                response?.data?.portfolioMedias ||
+                []
+
+            setProfileData((prev) => ({
+                ...prev,
+                gallery: formatGalleryItems(updatedMedias),
+            }))
+
+            if (selectedMedia?.rawUrl === mediaItem.rawUrl) {
+                setSelectedMedia(null)
+            }
+
+            toast.success("Media removed from gallery")
+        } catch (error) {
+            const errorMessage =
+                error?.response?.data?.message ||
+                error?.message ||
+                "Failed to remove media"
+            toast.error(errorMessage)
+        } finally {
+            setMediaActionLoading(false)
+        }
     }
 
     const languages = ["English", "Spanish", "French", "German", "Italian", "Portuguese", "Chinese", "Japanese"]
@@ -765,9 +819,10 @@ export const InstructorProfile = () => {
                                             </div>
                                             <Button
                                                 onClick={handleAddMedia}
+                                                disabled={mediaActionLoading}
                                                 className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 w-full sm:w-auto"
                                             >
-                                                Add to Gallery
+                                                {mediaActionLoading ? "Processing..." : "Add to Gallery"}
                                             </Button>
                                         </div>
                                     </motion.div>
@@ -814,7 +869,12 @@ export const InstructorProfile = () => {
                                             </div>
                                             <button
                                                 className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                                onClick={() => handleRemoveMedia(item.id)}
+                                                onClick={(event) => {
+                                                    event.stopPropagation()
+                                                    handleRemoveMedia(item)
+                                                }}
+                                                disabled={mediaActionLoading}
+                                                aria-disabled={mediaActionLoading}
                                             >
                                                 <X className="h-4 w-4" />
                                             </button>

@@ -98,3 +98,31 @@ export const getInstructorSessionsWithBookings = async (queryParams = {}) => {
     throw error;
   }
 };
+
+export const uploadInstructorMedia = async (formData) => {
+  try {
+    const res = await axiosClient.post('/api/instructor/portfolio', formData, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res;
+  } catch (error) {
+    console.error('Error uploading instructor media:', error);
+    throw error;
+  }
+};
+
+export const deleteInstructorMedia = async (mediaUrl) => {
+  try {
+    const res = await axiosClient.delete('/api/instructor/portfolio', {
+      withCredentials: true,
+      data: { mediaUrl },
+    });
+    return res;
+  } catch (error) {
+    console.error('Error deleting instructor media:', error);
+    throw error;
+  }
+};
