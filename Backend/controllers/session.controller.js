@@ -329,7 +329,7 @@ export const getInstructorSessionsWithBookings = asyncHandler(async (req, res) =
     .limit(parseInt(limit))
     .populate({
       path: "adventureId",
-      select: "title description category difficulty thumbnail medias price"
+      select: "name description category difficulty thumbnail medias price"
     })
     .populate({
       path: "location",

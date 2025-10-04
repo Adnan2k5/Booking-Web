@@ -265,13 +265,13 @@ export const InstructorSession = () => {
                 return {
                     ...session,
                     _id: session._id,
-                    title: session.adventureId?.title || 'Unknown Adventure',
-                    adventure: session.adventureId?.title || 'Unknown Adventure',
+                    title: session.adventureId?.name || 'Unknown Adventure',
+                    adventure: session.adventureId?.name || 'Unknown Adventure',
                     location: session.location?.name || 'Unknown Location',
                     duration: formatDuration(session.startTime, session.expiresAt),
                     description: session.adventureId?.description || 'No description available',
-                    price: session.adventureId?.price || 0,
-                    priceType: "perPerson", // Default to per person
+                    price: session.price ?? 0,
+                    priceType: session.priceType || "perPerson",
                     startTime: session.startTime,
                     expiresAt: session.expiresAt,
                     capacity: session.capacity,
