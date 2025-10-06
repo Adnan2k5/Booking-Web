@@ -140,7 +140,7 @@ const App = () => {
                   </Route>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/auth/signInWithLinkedin" element={<LinkedInCallback />} />
-                  <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />                  
+                  <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
                   <Route path="/secret-nft-events" element={<SecretNftEvents />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/browse" element={<BrowsingPage />} />
