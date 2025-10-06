@@ -6,9 +6,44 @@ import { Award } from "lucide-react"
 import { Avatar, AvatarFallback } from "../../components/ui/avatar"
 import { Badge } from "../../components/ui/badge"
 import { useAuth } from '../AuthProvider'
+import { useEffect, useState } from 'react'
 
 export default function UserProfilePage() {
-    const { user } = useAuth();
+    const { user, token } = useAuth();
+    const [achievements, setAchievements] = useState([])
+    const [loadingAchievements, setLoadingAchievements] = useState(true)
+    const [achievementsError, setAchievementsError] = useState(null)
+
+    useEffect(() => {
+        let ignore = false
+        async function fetchAchievements() {
+            if (!token) return
+            try {
+                setLoadingAchievements(true)
+                const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/users/getUserAchievements`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                })
+                if (!res.ok) {
+                    throw new Error(`Failed to load achievements (${res.status})`)
+                }
+                const data = await res.json()
+                if (!ignore) {
+                    // Expecting data.data to be the userAchievement document
+                    const list = data?.data?.achievements || data?.data?.achievementList || []
+                    setAchievements(Array.isArray(list) ? list : [])
+                }
+            } catch (err) {
+                if (!ignore) setAchievementsError(err.message)
+            } finally {
+                if (!ignore) setLoadingAchievements(false)
+            }
+        }
+        fetchAchievements()
+        return () => { ignore = true }
+    }, [token])
     const userProfile = {
         name: user.user.name || "John Doe",
         email: user.user.email || "",
@@ -100,20 +135,30 @@ export default function UserProfilePage() {
 
                                         <div>
                                             <h4 className="font-medium mb-3">Achievements</h4>
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                                <div className="flex flex-col items-center p-3 bg-gray-50 rounded-2xl">
-                                                    <Award className="h-8 w-8 text-black mb-2" />
-                                                    <span className="text-sm font-medium">First Adventure</span>
-                                                </div>
-                                                <div className="flex flex-col items-center p-3 bg-gray-50 rounded-2xl">
-                                                    <Award className="h-8 w-8 text-black mb-2" />
-                                                    <span className="text-sm font-medium">Adventure Explorer</span>
-                                                </div>
-                                                <div className="flex flex-col items-center p-3 bg-gray-100 rounded-2xl opacity-50">
-                                                    <Award className="h-8 w-8 text-gray-400 mb-2" />
-                                                    <span className="text-sm font-medium">Adventure Master</span>
-                                                </div>
-                                            </div>
+                                            {loadingAchievements && (
+                                                <div className="text-sm text-gray-500">Loading achievements...</div>
+                                            )}
+                                            {achievementsError && (
+                                                <div className="text-sm text-red-500">{achievementsError}</div>
+                                            )}
+                                            {!loadingAchievements && !achievementsError && (
+                                                achievements.length > 0 ? (
+                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                                        {achievements.map((a, idx) => {
+                                                            const unlocked = a.unlocked ?? a.isUnlocked ?? a.completed ?? false
+                                                            const title = a.title || a.name || a.code || `Achievement ${idx + 1}`
+                                                            return (
+                                                                <div key={idx} className={`flex flex-col items-center p-3 rounded-2xl ${unlocked ? 'bg-gray-50' : 'bg-gray-100 opacity-60'}`}>
+                                                                    <Award className={`h-8 w-8 mb-2 ${unlocked ? 'text-black' : 'text-gray-400'}`} />
+                                                                    <span className="text-sm font-medium text-center">{title}</span>
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-sm text-gray-500">No achievements yet.</div>
+                                                )
+                                            )}
                                         </div>
                                     </div>
                                 </CardContent>
