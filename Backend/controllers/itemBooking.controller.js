@@ -211,7 +211,7 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
 export const setupWebhook = asyncHandler(async (req, res) => {
     try {
         const webhookUrl = process.env.NODE_ENV === 'production'
-            ? 'https://yourdomain.com/api/item-booking/webhook/payment-completed'
+            ? `${process.env.BACKEND_URL}/api/item-booking/webhook/payment-completed`
             : 'https://4f93-2405-201-a423-5801-702b-aa6e-bdc3-2a08.ngrok-free.app/api/item-booking/webhook/payment-completed';
 
         const data = JSON.stringify({
