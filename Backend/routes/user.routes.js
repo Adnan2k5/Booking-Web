@@ -1,5 +1,5 @@
 import express from "express";
-import { getUserAchievements } from "../controllers/Achievement.js";
+import { getUserAchievements } from "../controllers/acheivment.controller.js";
 import {
   deleteUser,
   getMe,
