@@ -19,7 +19,7 @@ export const createRevolutOrder = async (
 
     const redirectUrl =
       process.env.NODE_ENV === "production"
-        ? "https://yourdomain.com/cart/success"
+        ? `${process.env.FRONTEND_URL}/cart/success`
         : "https://4f93-2405-201-a423-5801-702b-aa6e-bdc3-2a08.ngrok-free.app/cart/success";
 
     const requestPayload = {

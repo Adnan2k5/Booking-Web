@@ -30,6 +30,7 @@ import websiteSettingsRouter from "./routes/websiteSettings.routes.js";
 import translationRouter from "./routes/translation.routes.js";
 import payoutRouter from "./routes/payout.routes.js";
 import transactionRouter from "./routes/transaction.routes.js";
+import sponsorRouter from "./routes/sponsor.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
 import { ensureDefaultDeclaration } from "./controllers/declaration.controller.js";
@@ -84,6 +85,7 @@ app.use("/api/sessionBooking", sessionBookingRouter);
 app.use("/api/translation", translationRouter);
 app.use("/api/payouts", payoutRouter);
 app.use("/api/transactions", transactionRouter);
+app.use("/api/sponsors", sponsorRouter);
 app.use(errorHandlingMiddleware); // middlware for handling error
 
 const PORT = process.env.PORT || 8080;

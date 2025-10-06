@@ -84,6 +84,7 @@ import CartSuccess from "./Pages/Shop/CartSuccess"
 import EventsPage from "./Pages/Admin/SubPages/Events"
 import WebsiteSettings from "./Pages/Admin/SubPages/WebsiteSettings"
 import { ChatLayout } from "./Pages/Chat/ChatLayout"
+import SponsorsPage from "./Pages/Admin/SubPages/Sponsors"
 
 // Initialize i18n with stored language
 const getInitialLanguage = () => {
@@ -139,7 +140,7 @@ const App = () => {
                   </Route>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/auth/signInWithLinkedin" element={<LinkedInCallback />} />
-                  <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />                  
+                  <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
                   <Route path="/secret-nft-events" element={<SecretNftEvents />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/browse" element={<BrowsingPage />} />
@@ -300,6 +301,7 @@ const App = () => {
                     <Route path="/admin/manager" element={<Managers />} />
                     <Route path="/admin/events" element={<EventsPage />} />
                     <Route path="/admin/website-settings" element={<WebsiteSettings />} />
+                    <Route path="/admin/sponsors" element={<SponsorsPage />} />
                   </Route>
                 </Routes>
               </Suspense>
