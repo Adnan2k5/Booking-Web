@@ -128,6 +128,16 @@
     @apply bg-background text-foreground;
   }
 
+  /* Hide scrollbar utility */
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Brand strip (scoped fallback if CSS import fails) */
+  .brand-marquee { width:100%; overflow:hidden; }
+  .brand-track { display:flex; width:max-content; align-items:center; gap:4rem; animation: brand-scroll 28s linear infinite; }
+  .brand-marquee:hover .brand-track { animation-play-state: paused; }
+  @keyframes brand-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
   /* ReactPlayer styling for full width */
   .player-wrapper {
     position: relative;

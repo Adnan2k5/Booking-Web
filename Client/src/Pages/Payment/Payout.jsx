@@ -146,11 +146,6 @@ export default function PayoutPage() {
       }
     };
 
-    const loadMockData = () => {
-      // Remove mock data - will be replaced with real data
-      console.log('Loading real data instead of mock data...');
-    };
-
     if (token) {
       checkLinkStatus();
       loadPayoutData();

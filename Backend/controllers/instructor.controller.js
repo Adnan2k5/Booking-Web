@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 
 export const getAllInstructors = asyncHandler(async (req, res) => {
   const { page, limit = 10, search = "" } = req.query;
@@ -146,4 +147,102 @@ export const getInstructorAchievements = asyncHandler(async (req, res) => {
         "User achievements retrieved successfully"
       )
     );
+});
+
+export const addPortfolioMedia = asyncHandler(async (req, res) => {
+  if (!req.user?.instructor) {
+    throw new ApiError(403, "Only instructors can upload media");
+  }
+
+  if (!req.file) {
+    throw new ApiError(400, "Media file is required");
+  }
+
+  const instructor = await Instructor.findById(req.user.instructor);
+
+  if (!instructor) {
+    throw new ApiError(404, "Instructor profile not found");
+  }
+
+  const uploadResult = await uploadOnCloudinary(req.file.path);
+
+  if (!uploadResult?.secure_url && !uploadResult?.url) {
+    throw new ApiError(500, "Failed to upload media");
+  }
+
+  const mediaUrl = uploadResult.secure_url || uploadResult.url;
+
+  instructor.portfolioMedias.push(mediaUrl);
+  await instructor.save();
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        mediaUrl,
+        portfolioMedias: instructor.portfolioMedias,
+      },
+      "Media added to portfolio successfully"
+    )
+  );
+});
+
+export const removePortfolioMedia = asyncHandler(async (req, res) => {
+  if (!req.user?.instructor) {
+    throw new ApiError(403, "Only instructors can remove media");
+  }
+
+  const { mediaUrl } = req.body;
+
+  if (!mediaUrl || typeof mediaUrl !== "string") {
+    throw new ApiError(400, "Media URL is required");
+  }
+
+  const instructor = await Instructor.findById(req.user.instructor);
+
+  if (!instructor) {
+    throw new ApiError(404, "Instructor profile not found");
+  }
+
+  const mediaIndex = instructor.portfolioMedias.findIndex(
+    (storedUrl) => storedUrl === mediaUrl
+  );
+
+  if (mediaIndex === -1) {
+    throw new ApiError(404, "Media not found in portfolio");
+  }
+
+  const [removedMedia] = instructor.portfolioMedias.splice(mediaIndex, 1);
+  await instructor.save();
+
+  if (removedMedia?.startsWith("http")) {
+    let publicId;
+
+    const uploadPath = removedMedia.split("/upload/")?.[1];
+    if (uploadPath) {
+      publicId = uploadPath
+        .replace(/\?.*$/, "")
+        .replace(/v\d+\//, "")
+        .replace(/\.[^/.]+$/, "");
+    } else {
+      const urlParts = removedMedia.split("/");
+      const publicIdWithExt = urlParts[urlParts.length - 1];
+      publicId = publicIdWithExt?.split(".")?.[0];
+    }
+
+    if (publicId) {
+      await deleteFromCloudinary(publicId);
+    }
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        removedMedia: mediaUrl,
+        portfolioMedias: instructor.portfolioMedias,
+      },
+      "Media removed from portfolio successfully"
+    )
+  );
 });

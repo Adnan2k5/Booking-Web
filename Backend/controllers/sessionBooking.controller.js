@@ -415,7 +415,7 @@ export const getAllSessionBookings = asyncHandler(async (req, res) => {
       populate: [
         {
           path: "adventureId",
-          select: "title description category difficulty",
+          select: "name description category difficulty",
         },
         { path: "instructorId", select: "name email phoneNumber" },
         { path: "location", select: "name address city state country" },
@@ -483,7 +483,7 @@ export const getSessionBookingsByUserId = asyncHandler(async (req, res) => {
       populate: [
         {
           path: "adventureId",
-          select: "title description category difficulty",
+          select: "name description category difficulty",
         },
         { path: "instructorId", select: "name email phoneNumber" },
         { path: "location", select: "name address city state country" },
@@ -539,7 +539,7 @@ export const getCurrentUserSessionBookings = asyncHandler(async (req, res) => {
       populate: [
         {
           path: "adventureId",
-          select: "title description category thumbnail medias",
+          select: "name description category thumbnail medias",
         },
         { path: "instructorId", select: "name email phoneNumber" },
         { path: "location", select: "name address city state country" },
@@ -577,7 +577,7 @@ export const getSessionBookingById = asyncHandler(async (req, res) => {
       populate: [
         {
           path: "adventureId",
-          select: "title description category difficulty",
+          select: "name description category difficulty",
         },
         { path: "instructorId", select: "name email phoneNumber" },
         { path: "location", select: "name address city state country" },
@@ -662,7 +662,7 @@ export const updateSessionBookingStatus = asyncHandler(async (req, res) => {
       populate: [
         {
           path: "adventureId",
-          select: "title description category difficulty",
+          select: "name description category difficulty",
         },
         { path: "instructorId", select: "name email phoneNumber" },
         { path: "location", select: "name address city state country" },
@@ -727,7 +727,7 @@ export const cancelSessionBooking = asyncHandler(async (req, res) => {
       populate: [
         {
           path: "adventureId",
-          select: "title description category difficulty",
+          select: "name description category difficulty",
         },
         { path: "instructorId", select: "name email phoneNumber" },
         { path: "location", select: "name address city state country" },
@@ -822,7 +822,7 @@ export const getSessionBookingsBySessionId = asyncHandler(async (req, res) => {
       populate: [
         {
           path: "adventureId",
-          select: "title description category difficulty",
+          select: "name description category difficulty",
         },
         { path: "instructorId", select: "name email phoneNumber" },
         { path: "location", select: "name address city state country" },

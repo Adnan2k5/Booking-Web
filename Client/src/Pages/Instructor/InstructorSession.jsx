@@ -13,9 +13,7 @@ import InstructorLayout from './InstructorLayout'
 import { fadeIn, staggerContainer } from '../../assets/Animations'
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthProvider'
-import { getInstructorSessions } from '../../Api/session.api'
-import { getAdventure } from '../../Api/adventure.api'
-import { fetchLocations } from '../../Api/location.api'
+import { getInstructorSessionsWithBookings } from '../../Api/session.api'
 import { getSessionBookingsBySessionId } from '../../Api/booking.api'
 
 // Loading skeleton component
@@ -252,93 +250,132 @@ export const InstructorSession = () => {
     const fetchInstructorSessions = async () => {
         setIsLoading(true);
         try {
-            const res = await getInstructorSessions(user.user._id);
-            const sessionsData = res.data || [];
+            const res = await getInstructorSessionsWithBookings({
+                page: 1,
+                limit: 100, // Get all sessions for now
+                sortBy: 'startTime',
+                sortOrder: 'asc'
+            });
+            
+            const sessionsData = res.data?.data?.sessions || [];
+            
+            // Transform the sessions to match the expected structure
+            const transformedSessions = sessionsData.map(session => {
+                
+                return {
+                    ...session,
+                    _id: session._id,
+                    title: session.adventureId?.name || 'Unknown Adventure',
+                    adventure: session.adventureId?.name || 'Unknown Adventure',
+                    location: session.location?.name || 'Unknown Location',
+                    duration: formatDuration(session.startTime, session.expiresAt),
+                    description: session.adventureId?.description || 'No description available',
+                    price: session.price ?? 0,
+                    priceType: session.priceType || "perPerson",
+                    startTime: session.startTime,
+                    expiresAt: session.expiresAt,
+                    capacity: session.capacity,
+                    bookedSeats: session.bookedSeats || 0,
+                    availableSeats: session.availableSeats || session.capacity,
+                    status: session.status,
+                    computedStatus: session.computedStatus,
+                    upcoming: [{
+                        date: session.startTime,
+                        time: formatTime(session.startTime),
+                        booked: session.bookedSeats || 0,
+                        available: session.availableSeats || session.capacity
+                    }]
+                };
+            });
 
-            // Fetch adventure and location details for each session
-            const enrichedSessions = await Promise.all(
-                sessionsData.map(async (session) => {
-                    try {
-                        const [adventureRes, locationsRes] = await Promise.all([
-                            getAdventure(session.adventureId),
-                            fetchLocations()
-                        ]);
-
-                        const adventure = adventureRes?.data;
-                        const allLocations = locationsRes?.data || [];
-                        const location = allLocations.find(loc => loc._id === session.location);
-
-                        return {
-                            ...session,
-                            adventureDetails: adventure,
-                            locationDetails: location,
-                            // Format the session data to match expected structure
-                            title: adventure?.name || 'Unknown Adventure',
-                            adventure: adventure?.name || 'Unknown Adventure',
-                            location: location?.name || 'Unknown Location',
-                            duration: formatDuration(session.startTime, session.expiresAt),
-                            description: adventure?.description || 'No description available',
-                            upcoming: [{
-                                date: session.startTime,
-                                time: formatTime(session.startTime),
-                                booked: 0, // This would need to come from booking data
-                                available: session.capacity
-                            }]
-                        };
-                    } catch (error) {
-                        console.error('Error fetching details for session:', session._id, error);
-                        return {
-                            ...session,
-                            title: 'Unknown Adventure',
-                            adventure: 'Unknown Adventure',
-                            location: 'Unknown Location',
-                            duration: formatDuration(session.startTime, session.expiresAt),
-                            description: 'No description available',
-                            upcoming: [{
-                                date: session.startTime,
-                                time: formatTime(session.startTime),
-                                booked: 0,
-                                available: session.capacity
-                            }]
-                        };
-                    }
-                })
-            );
-            setSessions(enrichedSessions);
+            setSessions(transformedSessions);
         } catch (error) {
             console.error("Error fetching instructor sessions:", error);
-            setSessions([]);
+            
+            // Show user-friendly error message
+            if (error.response?.status === 404) {
+                console.warn("No sessions found for instructor");
+                setSessions([]);
+            } else if (error.response?.status === 401) {
+                console.error("Authentication failed - redirecting to login");
+                // Could redirect to login here
+                setSessions([]);
+            } else {
+                console.error("Failed to fetch sessions:", error.message);
+                setSessions([]);
+            }
         } finally {
             setIsLoading(false);
         }
     }    // Filter sessions based on search term and tab
-    const filteredSessions = sessions.filter(session =>
-        session.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        session.adventure?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        session.location?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredSessions = sessions.filter(session => {
+        const title = session.title || '';
+        const adventure = session.adventure || '';
+        const location = session.location || '';
+        
+        return title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               adventure.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               location.toLowerCase().includes(searchTerm.toLowerCase());
+    });
 
     // Separate sessions into upcoming and completed based on session date
     const currentDate = new Date();
     const upcomingSessions = filteredSessions.filter(session => {
-        const sessionDate = new Date(session.startTime);
-        return sessionDate >= currentDate;
+        try {
+            const sessionDate = new Date(session.startTime);
+            // Check if date is valid
+            if (isNaN(sessionDate.getTime())) {
+                console.warn('Invalid session date:', session.startTime);
+                return false;
+            }
+            return sessionDate >= currentDate;
+        } catch (error) {
+            console.error('Error filtering upcoming sessions:', error);
+            return false;
+        }
     });
 
     const completedSessions = filteredSessions.filter(session => {
-        const sessionDate = new Date(session.startTime);
-        return sessionDate < currentDate;
+        try {
+            const sessionDate = new Date(session.startTime);
+            // Check if date is valid
+            if (isNaN(sessionDate.getTime())) {
+                console.warn('Invalid session date:', session.startTime);
+                return false;
+            }
+            return sessionDate < currentDate;
+        } catch (error) {
+            console.error('Error filtering completed sessions:', error);
+            return false;
+        }
     });
 
     // Fetch bookings for a specific session
     const fetchSessionBookings = async (sessionId) => {
+        if (!sessionId) {
+            console.error("Session ID is required to fetch bookings");
+            setSessionBookings([]);
+            return;
+        }
+
         setIsLoadingBookings(true);
         try {
             const res = await getSessionBookingsBySessionId(sessionId);
-            setSessionBookings(res.data?.data.bookings || []);
+            setSessionBookings(res.data?.data?.bookings || res.data || []);
         } catch (error) {
             console.error("Error fetching session bookings:", error);
-            setSessionBookings([]);
+            
+            // Handle different error scenarios
+            if (error.response?.status === 404) {
+                console.warn("No bookings found for this session");
+                setSessionBookings([]);
+            } else if (error.response?.status === 401) {
+                console.error("Authentication failed when fetching bookings");
+                setSessionBookings([]);
+            } else {
+                console.error("Failed to fetch session bookings:", error.message);
+                setSessionBookings([]);
+            }
         } finally {
             setIsLoadingBookings(false);
         }
@@ -354,8 +391,46 @@ export const InstructorSession = () => {
     useEffect(() => {
         if (user && user.user && user.user._id) {
             fetchInstructorSessions();
+        } else if (user === null) {
+            // User is explicitly not logged in
+            setSessions([]);
+            setIsLoading(false);
         }
+        // If user is undefined, we're still loading auth state, so do nothing
     }, [user]);
+
+    // Show loading while auth is being determined
+    if (user === undefined) {
+        return (
+            <InstructorLayout>
+                <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
+                    <div className="space-y-4 sm:space-y-6">
+                        <SessionSkeleton />
+                        <SessionSkeleton />
+                        <SessionSkeleton />
+                    </div>
+                </div>
+            </InstructorLayout>
+        );
+    }
+
+    // Show message if user is not logged in
+    if (user === null || !user.user || !user.user._id) {
+        return (
+            <InstructorLayout>
+                <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
+                    <div className="text-center py-12">
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            Authentication Required
+                        </h3>
+                        <p className="text-gray-500">
+                            Please log in to view your sessions.
+                        </p>
+                    </div>
+                </div>
+            </InstructorLayout>
+        );
+    }
 
     return (
         <InstructorLayout>
