@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { MapPin } from 'lucide-react'
+import { MapPin, Loader2 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 export const Footer = () => {
   const navigate = useNavigate()
@@ -9,51 +10,32 @@ export const Footer = () => {
     navigate('/secret-nft-events')
   }
 
-  // Placeholder partner / sponsor logos. Replace paths with real assets placed in `public/logos/`.
-  const partnerLogos = [
-    {
-      src: '/logos/padi.png',
-      name: 'PADI',
-      tier: 'Platinum Sponsor',
-      website: 'https://www.padi.com',
-      description: 'Global leader in scuba diving certification and ocean exploration advocacy.'
-    },
-    {
-      src: '/logos/natgeo.png',
-      name: 'National Geographic',
-      tier: 'Exploration Partner',
-      website: 'https://www.nationalgeographic.com',
-      description: 'Inspiring people to care about the planet through exploration, science, and storytelling.'
-    },
-    {
-      src: '/logos/redbull.png',
-      name: 'Red Bull',
-      tier: 'Energy Partner',
-      website: 'https://www.redbull.com',
-      description: 'Supporting extreme sports and pushing the limits of human adventure and performance.'
-    },
-    {
-      src: '/logos/thenorthface.png',
-      name: 'The North Face',
-      tier: 'Gear Partner',
-      website: 'https://www.thenorthface.com',
-      description: 'Innovative outdoor apparel and equipment enabling exploration of the wildest places.'
-    },
-    {
-      src: '/logos/patagonia.png',
-      name: 'Patagonia',
-      tier: 'Sustainability Ally',
-      website: 'https://www.patagonia.com',
-      description: 'Committed to saving our home planet through responsible manufacturing and activism.'
-    },
-    {
-      src: '/logos/gopro.png',
-      name: 'GoPro',
-      tier: 'Media Technology Sponsor',
-      website: 'https://gopro.com',
-      description: 'Action cameras and tools empowering adventurers to capture and share their experiences.'
+  // Dynamic sponsors fetched from backend
+  const [sponsors, setSponsors] = useState([])
+  const [loadingSponsors, setLoadingSponsors] = useState(true)
+  const [sponsorError, setSponsorError] = useState(null)
+
+  useEffect(() => {
+    let ignore = false
+    const fetchSponsors = async () => {
+      try {
+        setLoadingSponsors(true)
+        setSponsorError(null)
+        const base = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+        const res = await axios.get(`${base}/api/sponsors`)
+        if (!ignore) {
+          const data = Array.isArray(res.data?.data) ? res.data.data : []
+          setSponsors(data.filter(s => s.isActive !== false))
+        }
+      } catch (e) {
+        if (!ignore) setSponsorError('Failed to load sponsors')
+      } finally {
+        if (!ignore) setLoadingSponsors(false)
+      }
     }
-  ]
+    fetchSponsors()
+    return () => { ignore = true }
+  }, [])
 
   // Modal state
   const [selectedPartner, setSelectedPartner] = useState(null)
@@ -142,24 +124,37 @@ export const Footer = () => {
               <div className="absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-gray-900 to-transparent pointer-events-none z-10" />
               <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-gray-900 to-transparent pointer-events-none z-10" />
               <ul className="flex items-center gap-12 logo-marquee-track py-5 pl-6">
-                {partnerLogos.concat(partnerLogos).map((p, i) => (
-                  <li
-                    key={i}
-                    className="flex-shrink-0 opacity-80 hover:opacity-100 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/70 rounded"
-                    title={p.name}
-                    tabIndex={0}
-                    onClick={() => setSelectedPartner(p)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedPartner(p) } }}
-                  >
-                    <img
-                      src={p.src}
-                      alt={p.name + ' logo'}
-                      loading="lazy"
-                      className="h-12 w-auto object-contain drop-shadow-sm hover:drop-shadow"
-                      onError={(e) => { e.currentTarget.style.opacity = '0.25' }}
-                    />
+                {loadingSponsors && (
+                  <li className="flex items-center gap-2 text-xs text-gray-400">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading sponsors...
                   </li>
-                ))}
+                )}
+                {!loadingSponsors && sponsorError && (
+                  <li className="text-xs text-red-400">{sponsorError}</li>
+                )}
+                {!loadingSponsors && !sponsorError && sponsors.length === 0 && (
+                  <li className="text-xs text-gray-400">No sponsors yet</li>
+                )}
+                {!loadingSponsors && !sponsorError && sponsors.length > 0 && (
+                  sponsors.concat(sponsors).map((p, i) => (
+                    <li
+                      key={i}
+                      className="flex-shrink-0 opacity-80 hover:opacity-100 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/70 rounded"
+                      title={p.name}
+                      tabIndex={0}
+                      onClick={() => setSelectedPartner(p)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedPartner(p) } }}
+                    >
+                      <img
+                        src={p.logoUrl}
+                        alt={(p.name || 'Sponsor') + ' logo'}
+                        loading="lazy"
+                        className="h-12 w-auto object-contain drop-shadow-sm hover:drop-shadow"
+                        onError={(e) => { e.currentTarget.style.opacity = '0.25' }}
+                      />
+                    </li>
+                  ))
+                )}
               </ul>
             </div>
           </div>
@@ -210,29 +205,33 @@ export const Footer = () => {
               <div className="flex items-center gap-5">
                 <div className="shrink-0 bg-gray-800/60 rounded-lg p-4 border border-gray-700">
                   <img
-                    src={selectedPartner.src}
-                    alt={selectedPartner.name + ' logo large'}
+                    src={selectedPartner.logoUrl}
+                    alt={(selectedPartner.name || 'Sponsor') + ' logo large'}
                     className="h-20 w-auto object-contain"
                   />
                 </div>
                 <div className="space-y-1">
                   <h2 className="text-2xl font-bold tracking-wide text-white">{selectedPartner.name}</h2>
-                  <p className="text-sm font-medium text-blue-400 uppercase tracking-wide">{selectedPartner.tier}</p>
+                  {selectedPartner.tier && (
+                    <p className="text-sm font-medium text-blue-400 uppercase tracking-wide">{selectedPartner.tier}</p>
+                  )}
                 </div>
               </div>
               <p className="text-gray-300 leading-relaxed text-sm">
-                {selectedPartner.description}
+                {selectedPartner.description || 'No description provided.'}
               </p>
               <div className="flex items-center justify-between pt-2">
-                <a
-                  href={selectedPartner.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium group"
-                >
-                  Visit Website
-                  <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-                </a>
+                {selectedPartner.website ? (
+                  <a
+                    href={selectedPartner.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium group"
+                  >
+                    Visit Website
+                    <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                  </a>
+                ) : <span className="text-xs text-gray-500">No website</span>}
                 <button
                   onClick={closeModal}
                   className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-sm rounded-md border border-gray-700 text-gray-200 transition-colors"
