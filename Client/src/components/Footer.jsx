@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { MapPin } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -8,6 +8,79 @@ export const Footer = () => {
   const handleLogoClick = () => {
     navigate('/secret-nft-events')
   }
+
+  // Placeholder partner / sponsor logos. Replace paths with real assets placed in `public/logos/`.
+  const partnerLogos = [
+    {
+      src: '/logos/padi.png',
+      name: 'PADI',
+      tier: 'Platinum Sponsor',
+      website: 'https://www.padi.com',
+      description: 'Global leader in scuba diving certification and ocean exploration advocacy.'
+    },
+    {
+      src: '/logos/natgeo.png',
+      name: 'National Geographic',
+      tier: 'Exploration Partner',
+      website: 'https://www.nationalgeographic.com',
+      description: 'Inspiring people to care about the planet through exploration, science, and storytelling.'
+    },
+    {
+      src: '/logos/redbull.png',
+      name: 'Red Bull',
+      tier: 'Energy Partner',
+      website: 'https://www.redbull.com',
+      description: 'Supporting extreme sports and pushing the limits of human adventure and performance.'
+    },
+    {
+      src: '/logos/thenorthface.png',
+      name: 'The North Face',
+      tier: 'Gear Partner',
+      website: 'https://www.thenorthface.com',
+      description: 'Innovative outdoor apparel and equipment enabling exploration of the wildest places.'
+    },
+    {
+      src: '/logos/patagonia.png',
+      name: 'Patagonia',
+      tier: 'Sustainability Ally',
+      website: 'https://www.patagonia.com',
+      description: 'Committed to saving our home planet through responsible manufacturing and activism.'
+    },
+    {
+      src: '/logos/gopro.png',
+      name: 'GoPro',
+      tier: 'Media Technology Sponsor',
+      website: 'https://gopro.com',
+      description: 'Action cameras and tools empowering adventurers to capture and share their experiences.'
+    }
+  ]
+
+  // Modal state
+  const [selectedPartner, setSelectedPartner] = useState(null)
+  const closeButtonRef = useRef(null)
+
+  // Close modal helper
+  const closeModal = () => setSelectedPartner(null)
+
+  // Escape key handling & focus management
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'Escape') closeModal()
+    }
+    if (selectedPartner) {
+      window.addEventListener('keydown', onKey)
+      // Slight delay to ensure element rendered
+      setTimeout(() => closeButtonRef.current?.focus(), 30)
+      // Prevent background scroll
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [selectedPartner])
 
   return (
     <footer className="bg-gray-900 text-white mt-12 py-12 px-4">
@@ -52,17 +125,43 @@ export const Footer = () => {
             </div>
           </div>
 
-          {/* Right side - Logo */}
-          <div className="flex justify-center md:justify-end">
+          {/* Right side - Logo + Scrolling Partner Logos */}
+          <div className="flex flex-col items-center md:items-end gap-6">
             <button
               onClick={handleLogoClick}
-              className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 transition-all duration-300 px-6 py-3 rounded-lg group cursor-pointer"
+              className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 transition-all duration-300 px-6 py-3 rounded-lg group cursor-pointer shadow-lg shadow-blue-800/30"
             >
               <MapPin className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
-              <span className="text-xl font-bold text-white">
+              <span className="text-xl font-bold text-white tracking-wide">
                 Adventure Booking
               </span>
             </button>
+
+            {/* Scrolling logos */}
+            <div className="w-full md:w-[280px] relative overflow-hidden logo-marquee rounded-md border border-gray-700/60 bg-gray-800/50">
+              <div className="absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-gray-900 to-transparent pointer-events-none z-10" />
+              <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-gray-900 to-transparent pointer-events-none z-10" />
+              <ul className="flex items-center gap-12 logo-marquee-track py-5 pl-6">
+                {partnerLogos.concat(partnerLogos).map((p, i) => (
+                  <li
+                    key={i}
+                    className="flex-shrink-0 opacity-80 hover:opacity-100 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/70 rounded"
+                    title={p.name}
+                    tabIndex={0}
+                    onClick={() => setSelectedPartner(p)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedPartner(p) } }}
+                  >
+                    <img
+                      src={p.src}
+                      alt={p.name + ' logo'}
+                      loading="lazy"
+                      className="h-12 w-auto object-contain drop-shadow-sm hover:drop-shadow"
+                      onError={(e) => { e.currentTarget.style.opacity = '0.25' }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -73,6 +172,84 @@ export const Footer = () => {
           </p>
         </div>
       </div>
+      {/* Component-scoped styles for the scrolling marquee */}
+      <style>{`
+        .logo-marquee { --marquee-duration: 22s; }
+        .logo-marquee-track {
+          animation: marquee var(--marquee-duration) linear infinite;
+          width: max-content;
+        }
+        .logo-marquee:hover .logo-marquee-track { animation-play-state: paused; }
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .logo-marquee-track { animation: none; }
+        }
+      `}</style>
+
+      {selectedPartner && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true"
+          aria-label={selectedPartner.name + ' sponsor details'}
+        >
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" onClick={closeModal} />
+          <div className="relative w-full max-w-lg bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden animate-scale-in">
+            <div className="absolute top-2 right-2">
+              <button
+                ref={closeButtonRef}
+                onClick={closeModal}
+                className="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded p-2"
+                aria-label="Close sponsor details"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 space-y-5">
+              <div className="flex items-center gap-5">
+                <div className="shrink-0 bg-gray-800/60 rounded-lg p-4 border border-gray-700">
+                  <img
+                    src={selectedPartner.src}
+                    alt={selectedPartner.name + ' logo large'}
+                    className="h-20 w-auto object-contain"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <h2 className="text-2xl font-bold tracking-wide text-white">{selectedPartner.name}</h2>
+                  <p className="text-sm font-medium text-blue-400 uppercase tracking-wide">{selectedPartner.tier}</p>
+                </div>
+              </div>
+              <p className="text-gray-300 leading-relaxed text-sm">
+                {selectedPartner.description}
+              </p>
+              <div className="flex items-center justify-between pt-2">
+                <a
+                  href={selectedPartner.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium group"
+                >
+                  Visit Website
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                </a>
+                <button
+                  onClick={closeModal}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-sm rounded-md border border-gray-700 text-gray-200 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+          <style>{`
+            .animate-fade-in { animation: fadeIn .25s ease-out; }
+            .animate-scale-in { animation: scaleIn .25s ease-out; }
+            @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+            @keyframes scaleIn { from { opacity:0; transform: translateY(12px) scale(.96); } to { opacity:1; transform: translateY(0) scale(1); } }
+          `}</style>
+        </div>
+      )}
     </footer>
   )
 }
