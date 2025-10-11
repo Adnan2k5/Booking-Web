@@ -292,7 +292,11 @@ export default function HotelBrowsingPage() {
                                         <div className="flex items-center gap-1 text-sm text-gray-500 mb-3">
                                             <MapPin className="h-3 w-3" />
                                             <span className="line-clamp-1">
-                                                {hotel.location?.name || "Location not specified"}
+                                                {typeof hotel.location === 'object' && hotel.location?.name
+                                                    ? hotel.location.name
+                                                    : typeof hotel.location === 'string'
+                                                        ? hotel.location
+                                                        : "Location not specified"}
                                             </span>
                                         </div>
 
@@ -338,7 +342,11 @@ export default function HotelBrowsingPage() {
                                                 <div className="flex flex-wrap gap-1">
                                                     {hotel.amenities.slice(0, 3).map((amenity, index) => (
                                                         <Badge key={index} variant="outline" className="text-xs">
-                                                            {amenity}
+                                                            {typeof amenity === 'object' && amenity?.name
+                                                                ? amenity.name
+                                                                : typeof amenity === 'string'
+                                                                    ? amenity
+                                                                    : 'Amenity'}
                                                         </Badge>
                                                     ))}
                                                     {hotel.amenities.length > 3 && (

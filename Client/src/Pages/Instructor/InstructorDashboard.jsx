@@ -143,12 +143,9 @@ const InstructorDashboard = () => {
                 bookingIncrease: parseFloat(bookingIncrease),
                 revenueIncrease: 12.5 // This could be calculated similarly if historical revenue data is available
             })
-
             setUpcomingBookings(formattedUpcoming)
-
         } catch (error) {
-            console.error('Error fetching dashboard data:', error)
-            toast.error('Failed to load dashboard data')
+            toast.error('Dashboard data not found')
         } finally {
             setIsLoadingData(false)
         }

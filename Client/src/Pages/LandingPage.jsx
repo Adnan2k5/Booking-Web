@@ -1,10 +1,7 @@
-"use client"
-
 import { useState, useRef, useCallback, lazy, Suspense, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider"
-
 import { Users, UserPlus, UserX, ChevronLeft, ChevronRight, Star, MapPin } from "lucide-react"
 import { Button } from "../components/ui/button"
 import {
@@ -77,7 +74,7 @@ export default function LandingPage() {
   const handleNavigate = useCallback(() => {
     const validation = validateSearchForm({ location, date })
     if (!validation.isValid) {
-      toast.error(t("pleaseSelectLocationAndDate") || "Please select location and date")
+      toast.error(t("pleaseSelectLocationAndDate"))
       return
     }
 
@@ -179,7 +176,7 @@ export default function LandingPage() {
       {/* Main Content - First Section */}
       <section className="flex items-center h-screen justify-center">
         <motion.div
-          className="mx-auto px-4 sm:px-6 md:px-8 py-8 flex-col w-[90%] rounded-lg shadow-lg"
+          className="mx-auto px-4 sm:px-6 md:px-8 py-8 flex-col w-[90%]"
           variants={fadeIn}
           initial="hidden"
           animate="visible"
@@ -201,9 +198,6 @@ export default function LandingPage() {
       </section>
 
 
-
-
-
       {/* Featured Events Content */}
       <div className="w-full bg-gradient-to-br from-gray-50 to-white px-4 sm:px-6 md:px-8 py-20">
         <div className="max-w-7xl mx-auto">
@@ -215,9 +209,9 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Featured Events</h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{t("featuredEvents")}</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Discover amazing adventures across different countries
+              {t("discoverAmazingAdventures")}
             </p>
           </motion.div>
 
@@ -292,7 +286,7 @@ export default function LandingPage() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={countrySlider.currentCountryIndex}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -50 }}
@@ -301,6 +295,7 @@ export default function LandingPage() {
                 {countrySlider.currentCountry?.events.map((event, index) => (
                   <motion.div
                     key={event._id}
+                    className="h-full"
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -317,7 +312,7 @@ export default function LandingPage() {
           ) : (
             /* Show empty state when no events */
             <div className="col-span-full text-center py-20">
-              <p className="text-gray-500 text-lg">No events available at the moment.</p>
+              <p className="text-gray-500 text-lg">{t("noEventsAvailable")}</p>
             </div>
           )}
 
@@ -325,7 +320,7 @@ export default function LandingPage() {
           <Dialog open={eventBooking.bookingDialog} onOpenChange={eventBooking.setBookingDialog}>
             <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-gray-900">Book Your Event</DialogTitle>
+                <DialogTitle className="text-2xl font-bold text-gray-900">{t("bookYourEvent")}</DialogTitle>
                 <DialogDescription className="text-gray-600">
                   {eventBooking.selectedEvent?.title} in {eventBooking.selectedEvent?.city}, {eventBooking.selectedEvent?.country}
                 </DialogDescription>
@@ -363,7 +358,7 @@ export default function LandingPage() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="participants" className="text-sm font-medium text-gray-700">
-                      Number of Participants
+                      {t("numberOfParticipants")}
                     </Label>
                     <Input
                       id="participants"
@@ -379,7 +374,7 @@ export default function LandingPage() {
 
                   <div>
                     <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                      Email Address
+                      {t("emailAddress")}
                     </Label>
                     <Input
                       id="email"
@@ -393,7 +388,7 @@ export default function LandingPage() {
 
                   <div>
                     <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
-                      Phone Number
+                      {t("phoneNumber")}
                     </Label>
                     <Input
                       id="phone"
@@ -409,14 +404,14 @@ export default function LandingPage() {
 
               <DialogFooter className="space-x-3">
                 <Button variant="outline" onClick={eventBooking.closeDialogs} className="px-6">
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button
                   onClick={handleSubmitBooking}
                   className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-6"
                   disabled={!eventBooking.bookingForm.email || !eventBooking.bookingForm.phone}
                 >
-                  Continue to Payment
+                  {t("continueToPayment")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -451,7 +446,7 @@ export default function LandingPage() {
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2 text-gray-700">
                       <MapPin className="h-5 w-5" />
-                      <span className="font-semibold">Location Details</span>
+                      <span className="font-semibold">{t("locationDetails")}</span>
                     </div>
                     <div className="pl-7 space-y-1">
                       <p className="text-gray-900 font-medium">{eventBooking.selectedEvent?.city}, {eventBooking.selectedEvent?.country}</p>
@@ -464,7 +459,7 @@ export default function LandingPage() {
                   {/* Time & Date */}
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2 text-gray-700">
-                      <span className="font-semibold">Schedule</span>
+                      <span className="font-semibold">{t("schedule")}</span>
                     </div>
                     <div className="pl-7 space-y-1">
                       <p className="text-gray-900 font-medium">
@@ -481,7 +476,7 @@ export default function LandingPage() {
                 {eventBooking.selectedEvent?.adventures && eventBooking.selectedEvent.adventures.length > 0 && (
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2 text-gray-700">
-                      <span className="font-semibold">Adventures Included</span>
+                      <span className="font-semibold">{t("adventuresIncluded")}</span>
                     </div>
                     <div className="pl-7 space-y-2">
                       {eventBooking.selectedEvent.adventures.map((adventure, index) => (
@@ -516,20 +511,20 @@ export default function LandingPage() {
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2 text-gray-700">
                       <Star className="h-5 w-5 text-purple-600" />
-                      <span className="font-semibold">NFT Reward</span>
+                      <span className="font-semibold">{t("nftReward")}</span>
                     </div>
                     <div className="pl-7">
                       <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
                         <div className="flex items-center space-x-2 mb-2">
                           <Star className="h-4 w-4 text-purple-600" />
-                          <span className="font-medium text-purple-900">Exclusive NFT Available</span>
+                          <span className="font-medium text-purple-900">{t("exclusiveNftAvailable")}</span>
                         </div>
                         <p className="text-sm text-purple-700">
-                          Complete all adventures in this event to earn an exclusive NFT reward!
+                          {t("completeAllAdventures")}
                         </p>
                         {eventBooking.selectedEvent.nftReward?.nftName && (
                           <div className="mt-3 space-y-1">
-                            <p className="text-sm font-medium text-purple-900">NFT: {eventBooking.selectedEvent.nftReward.nftName}</p>
+                            <p className="text-sm font-medium text-purple-900">{t("nft")} {eventBooking.selectedEvent.nftReward.nftName}</p>
                             {eventBooking.selectedEvent.nftReward.nftDescription && (
                               <p className="text-xs text-purple-700">{eventBooking.selectedEvent.nftReward.nftDescription}</p>
                             )}
@@ -543,7 +538,7 @@ export default function LandingPage() {
                 {/* Full Description */}
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2 text-gray-700">
-                    <span className="font-semibold">About This Event</span>
+                    <span className="font-semibold">{t("aboutThisEvent")}</span>
                   </div>
                   <div className="pl-7">
                     <p className="text-gray-700 leading-relaxed whitespace-pre-line">
@@ -555,23 +550,23 @@ export default function LandingPage() {
                 {/* Additional Event Info (if available) */}
                 {(eventBooking.selectedEvent?.price || eventBooking.selectedEvent?.maxParticipants || eventBooking.selectedEvent?.difficulty) && (
                   <div className="bg-gray-50 rounded-xl p-4">
-                    <h4 className="font-semibold text-gray-900 mb-3">Event Information</h4>
+                    <h4 className="font-semibold text-gray-900 mb-3">{t("eventInformation")}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                       {eventBooking.selectedEvent?.price && (
                         <div>
-                          <span className="text-gray-600">Price:</span>
+                          <span className="text-gray-600">{t("price")}</span>
                           <p className="font-medium text-gray-900">${eventBooking.selectedEvent.price}</p>
                         </div>
                       )}
                       {eventBooking.selectedEvent?.maxParticipants && (
                         <div>
-                          <span className="text-gray-600">Max Participants:</span>
+                          <span className="text-gray-600">{t("maxParticipants")}</span>
                           <p className="font-medium text-gray-900">{eventBooking.selectedEvent.maxParticipants}</p>
                         </div>
                       )}
                       {eventBooking.selectedEvent?.difficulty && (
                         <div>
-                          <span className="text-gray-600">Difficulty:</span>
+                          <span className="text-gray-600">{t("difficulty")}</span>
                           <p className="font-medium text-gray-900">{eventBooking.selectedEvent.difficulty}</p>
                         </div>
                       )}
@@ -582,7 +577,7 @@ export default function LandingPage() {
 
               <DialogFooter className="space-x-3">
                 <Button variant="outline" onClick={eventBooking.closeDialogs} className="px-6">
-                  Close
+                  {t("close")}
                 </Button>
                 <Button
                   onClick={() => {
@@ -592,7 +587,7 @@ export default function LandingPage() {
                   className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-6"
                 >
                   <Users className="h-5 w-5 mr-2" />
-                  Book Your Spot
+                  {t("bookYourSpot")}
                 </Button>
               </DialogFooter>
             </DialogContent>

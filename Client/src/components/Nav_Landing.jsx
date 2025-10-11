@@ -1,12 +1,15 @@
 "use client"
-
 import { useState } from "react"
 import { Loader } from "../components/Loader"
 import { Settings, LogOut, User, TicketIcon } from 'lucide-react'
 import { AnimatePresence, motion } from "framer-motion"
 import { MdLanguage, MdMenu, MdClose } from "react-icons/md"
 import { IoIosLogIn } from "react-icons/io"
+import { MdOutlineExplore } from "react-icons/md";
 import { useTranslation } from "react-i18next"
+import { CiShop } from "react-icons/ci";
+import { FiTarget } from "react-icons/fi";
+import { LiaHotelSolid } from "react-icons/lia";
 import { useAuth } from "../Pages/AuthProvider"
 import { useWebsiteSettings } from "../contexts/WebsiteSettingsContext"
 import { useNavigate } from "react-router-dom"
@@ -25,7 +28,6 @@ import LanguageSelector from "./LanguageSelector"
 import { useDispatch } from "react-redux";
 import { updateLanguageHeaders } from "../Api/language.api.js"
 import { userLogout } from "../Auth/UserAuth.js"
-import { set } from "date-fns"
 import { toast } from "sonner"
 import { Link } from "react-router-dom"
 
@@ -108,19 +110,19 @@ export const Nav_Landing = () => {
                     <div className="hidden lg:flex links gap-5 xl:gap-10 items-center">
                         <ul className="flex space-x-3 xl:space-x-5 items-center text-base xl:text-lg">
                             <motion.li
-                                className="cursor-pointer hover:text-emerald-400 transition-colors"
+                                className="flex items-center cursor-pointer gap-2 hover:text-emerald-400 transition-colors"
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
                             >
-                                {t("explore")}
+                                {t("explore")} <MdOutlineExplore />
                             </motion.li>
                             {isShopEnabled && (
                                 <motion.li
-                                    className="cursor-pointer hover:text-emerald-400 transition-colors"
+                                    className="cursor-pointer  hover:text-emerald-400 transition-colors"
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
-                                    <Link to="/shop">{t("shop")}</Link>
+                                    <Link className="flex items-center gap-2" to="/shop">{t("shop")} <CiShop /> </Link>
                                 </motion.li>
                             )}
                             {isHotelsEnabled && (
@@ -129,7 +131,7 @@ export const Nav_Landing = () => {
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
-                                    <a href="/book-hotel">{t("hotels")}</a>
+                                    <Link className="flex items-center gap-2" to="/book-hotel">{t("hotels")} <LiaHotelSolid /></Link>
                                 </motion.li>
                             )}
                             <motion.li
@@ -137,7 +139,7 @@ export const Nav_Landing = () => {
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
                             >
-                                {t("mission")}
+                                <Link className="flex items-center gap-2" to="/mission">{t("mission")} <FiTarget /></Link>
                             </motion.li>
                             <motion.li className="cursor-pointer hover:text-emerald-400 transition-colors">
                                 <LanguageSelector />
