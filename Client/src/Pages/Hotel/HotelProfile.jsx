@@ -8,7 +8,7 @@ import { Separator } from '../../components/ui/separator';
 import { Button } from '../../components/ui/button';
 import { Loader } from '../../components/Loader';
 import { HotelUpdateModal } from '../../components/HotelUpdateModal';
-import { MapPin, Phone, Home, Users, PocketIcon as Pool, Award, FileText, Shield, Star, DollarSign, Edit } from 'lucide-react';
+import { MapPin, Phone, Home, Users, PocketIcon as Pool, Award, FileText, Shield, Edit, Euro } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const HotelProfile = () => {
@@ -119,7 +119,13 @@ export const HotelProfile = () => {
                                         <CardTitle className="text-2xl">{hotel.name}</CardTitle>
                                         <div className="flex items-center gap-2 mt-1">
                                             <MapPin className="h-4 w-4 text-muted-foreground" />
-                                            <CardDescription>{formatDisplay(hotel.location)}</CardDescription>
+                                            <CardDescription>
+                                                {typeof hotel.location === 'object' && hotel.location?.name
+                                                    ? hotel.location.name
+                                                    : typeof hotel.location === 'string'
+                                                        ? hotel.location
+                                                        : "Location not specified"}
+                                            </CardDescription>
                                         </div>
                                     </div>
                                 </div>
@@ -142,30 +148,13 @@ export const HotelProfile = () => {
                                                 <span>Rooms: {hotel.noRoom}</span>
                                             </li>                                            <li className="flex items-center gap-2 justify-between">
                                                 <div className="flex items-center gap-2">
-                                                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                                    <span>Base Price: ${hotel.price}</span>
+                                                    <Euro className="h-4 w-4 text-muted-foreground" />
+                                                    <span>Price: €{hotel.price}</span>
                                                 </div>
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
                                                     onClick={() => openUpdateModal('price')}
-                                                >
-                                                    <Edit className="h-3 w-3" />
-                                                </Button>
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                                <span>Price per Night: ${hotel.pricePerNight || hotel.price}</span>
-                                            </li>
-                                            <li className="flex items-center gap-2 justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <Star className="h-4 w-4 text-muted-foreground" />
-                                                    <span>Rating: {hotel.rating || 0}/5</span>
-                                                </div>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => openUpdateModal('rating')}
                                                 >
                                                     <Edit className="h-3 w-3" />
                                                 </Button>
@@ -181,8 +170,12 @@ export const HotelProfile = () => {
                                         <div className="flex flex-wrap gap-2">
                                             {hotel.amenities && hotel.amenities.map((amenity, index) => (
                                                 <Badge key={index} variant="outline" className="flex items-center gap-1">
-                                                    {amenity === 'Pool' && <Pool className="h-3 w-3" />}
-                                                    {amenity}
+                                                    {(typeof amenity === 'object' && amenity?.name ? amenity.name : amenity) === 'Pool' && <Pool className="h-3 w-3" />}
+                                                    {typeof amenity === 'object' && amenity?.name
+                                                        ? amenity.name
+                                                        : typeof amenity === 'string'
+                                                            ? amenity
+                                                            : 'Amenity'}
                                                 </Badge>
                                             ))}
                                         </div>

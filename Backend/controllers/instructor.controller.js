@@ -4,7 +4,10 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
+import {
+  uploadOnCloudinary,
+  deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 
 export const getAllInstructors = asyncHandler(async (req, res) => {
   const { page, limit = 10, search = "" } = req.query;
@@ -135,7 +138,7 @@ export const getInstructorAchievements = asyncHandler(async (req, res) => {
     instructorId: userId,
   });
   if (!instructorAchievement) {
-    throw new ApiError(404, "Instructor achievements not found");
+    throw new ApiError(204, "Instructor achievements not found");
   }
 
   res
