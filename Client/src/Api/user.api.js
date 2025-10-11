@@ -85,3 +85,59 @@ export const getCurrentUser = async () => {
   }
 };
 
+// Get the current user's achievements
+export const getUserAchievements = async () => {
+  try {
+    const { data } = await axiosClient.get('/api/user/getUserAchievements', {
+      withCredentials: true,
+    });
+    return data; // ApiResponse shape: { success, statusCode, message, data }
+  } catch (error) {
+    // Surface a friendly error while preserving original for debugging
+    const payload = error?.response?.data || { message: error.message };
+    console.error('Failed to fetch user achievements:', payload);
+    throw error;
+  }
+};
+
+// Admin: create a new achievement rule
+export const createAchievementRule = async (payload) => {
+  const { data } = await axiosClient.post('/api/achievement-rules', payload, {
+    withCredentials: true,
+  });
+  return data;
+};
+
+// Admin: update a rule
+export const updateAchievementRule = async (id, payload) => {
+  const { data } = await axiosClient.put(`/api/achievement-rules/${id}`, payload, {
+    withCredentials: true,
+  });
+  return data;
+};
+
+// Admin: delete a rule
+export const deleteAchievementRule = async (id) => {
+  const { data } = await axiosClient.delete(`/api/achievement-rules/${id}`, {
+    withCredentials: true,
+  });
+  return data;
+};
+
+// List rules (authed)
+export const listAchievementRules = async (params = {}) => {
+  const { data } = await axiosClient.get('/api/achievement-rules', {
+    params,
+    withCredentials: true,
+  });
+  return data;
+};
+
+// Evaluate my achievements now
+export const evaluateMyAchievements = async () => {
+  const { data } = await axiosClient.post('/api/achievement-rules/evaluate', {}, {
+    withCredentials: true,
+  });
+  return data;
+};
+
