@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { MapPin, Loader2 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 
 export const Footer = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   const handleLogoClick = () => {
@@ -28,7 +30,7 @@ export const Footer = () => {
           setSponsors(data.filter(s => s.isActive !== false))
         }
       } catch (e) {
-        if (!ignore) setSponsorError('Failed to load sponsors')
+        if (!ignore) setSponsorError('FAILED_TO_LOAD_SPONSORS')
       } finally {
         if (!ignore) setLoadingSponsors(false)
       }
@@ -70,10 +72,9 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
           {/* Left side - About Website */}
           <div className="space-y-4">
-            <h3 className="text-xl font-bold text-blue-400">About Adventure Booking</h3>
+            <h3 className="text-xl font-bold text-blue-400">{t("aboutAdventureBooking")}</h3>
             <p className="text-gray-300 leading-relaxed">
-              Your gateway to extraordinary adventures around the world. We connect thrill-seekers with unforgettable experiences,
-              from mountain climbing to deep-sea diving. Join thousands of adventurers who have discovered their passion through our platform.
+              {t("footerDescription")}
             </p>
           </div>
 
@@ -84,25 +85,25 @@ export const Footer = () => {
                 to="/terms"
                 className="text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium"
               >
-                Terms & Conditions
+                {t("termsConditions")}
               </Link>
               <Link
                 to="/privacy"
                 className="text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium"
               >
-                Privacy Policy
+                {t("privacyPolicy")}
               </Link>
               <Link
                 to="/support"
                 className="text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium"
               >
-                Customer Support
+                {t("customerSupport")}
               </Link>
               <Link
                 to="/faq"
                 className="text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium"
               >
-                FAQ
+                {t("faq")}
               </Link>
             </div>
           </div>
@@ -115,25 +116,25 @@ export const Footer = () => {
             >
               <MapPin className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
               <span className="text-xl font-bold text-white tracking-wide">
-                Adventure Booking
+                {t("adventureBooking")}
               </span>
             </button>
 
             {/* Scrolling logos */}
-            <div className="w-full md:w-[280px] relative overflow-hidden logo-marquee rounded-md border border-gray-700/60 bg-gray-800/50">
+            <div className="w-full md:w-[280px] mt-5 relative overflow-hidden logo-marquee rounded-md border border-gray-700/60 bg-gray-800/50">
               <div className="absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-gray-900 to-transparent pointer-events-none z-10" />
               <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-gray-900 to-transparent pointer-events-none z-10" />
               <ul className="flex items-center gap-12 logo-marquee-track py-5 pl-6">
                 {loadingSponsors && (
                   <li className="flex items-center gap-2 text-xs text-gray-400">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Loading sponsors...
+                    <Loader2 className="h-4 w-4 animate-spin" /> {t("loadingSponsors")}
                   </li>
                 )}
                 {!loadingSponsors && sponsorError && (
-                  <li className="text-xs text-red-400">{sponsorError}</li>
+                  <li className="text-xs text-red-400">{sponsorError === 'FAILED_TO_LOAD_SPONSORS' ? t("failedToLoadSponsors") : sponsorError}</li>
                 )}
                 {!loadingSponsors && !sponsorError && sponsors.length === 0 && (
-                  <li className="text-xs text-gray-400">No sponsors yet</li>
+                  <li className="text-xs text-gray-400">{t("noSponsorsYet")}</li>
                 )}
                 {!loadingSponsors && !sponsorError && sponsors.length > 0 && (
                   sponsors.concat(sponsors).map((p, i) => (
@@ -163,7 +164,7 @@ export const Footer = () => {
         {/* Bottom section */}
         <div className="mt-8 pt-8 border-t border-gray-700 text-center">
           <p className="text-gray-400">
-            © 2025 Adventure Booking. All rights reserved. | Made with ❤️ for adventurers worldwide
+            {t("copyrightText")}
           </p>
         </div>
       </div>
@@ -187,7 +188,7 @@ export const Footer = () => {
       {selectedPartner && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true"
-          aria-label={selectedPartner.name + ' sponsor details'}
+          aria-label={selectedPartner.name + ' ' + t("sponsorDetails")}
         >
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" onClick={closeModal} />
           <div className="relative w-full max-w-lg bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden animate-scale-in">
@@ -196,7 +197,7 @@ export const Footer = () => {
                 ref={closeButtonRef}
                 onClick={closeModal}
                 className="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded p-2"
-                aria-label="Close sponsor details"
+                aria-label={t("closeSponsorDetails")}
               >
                 ✕
               </button>
@@ -218,7 +219,7 @@ export const Footer = () => {
                 </div>
               </div>
               <p className="text-gray-300 leading-relaxed text-sm">
-                {selectedPartner.description || 'No description provided.'}
+                {selectedPartner.description || t("noDescriptionProvided")}
               </p>
               <div className="flex items-center justify-between pt-2">
                 {selectedPartner.website ? (
@@ -228,15 +229,15 @@ export const Footer = () => {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium group"
                   >
-                    Visit Website
+                    {t("visitWebsite")}
                     <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
                   </a>
-                ) : <span className="text-xs text-gray-500">No website</span>}
+                ) : <span className="text-xs text-gray-500">{t("noWebsite")}</span>}
                 <button
                   onClick={closeModal}
                   className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-sm rounded-md border border-gray-700 text-gray-200 transition-colors"
                 >
-                  Close
+                  {t("close")}
                 </button>
               </div>
             </div>

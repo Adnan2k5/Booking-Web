@@ -346,7 +346,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 relative">
-      <div className="login relative bg-gradient-to-b from-[#CEF2FF] to-white rounded-xl shadow-lg flex flex-col items-center justify-items-end md:py-8 md:px-10 lg:w-1/2 py-4">
+      <div className="login relative bg-gradient-to-b from-[#CEF2FF] to-white rounded-xl shadow-lg flex flex-col items-center justify-items-end md:py-6 md:px-2 lg:w-1/2 max-w-lg py-4">
         <Modal open={openOtp} footer={null} onCancel={cancel}>
           <div className="space-y-2 flex flex-col items-center gap-4">
             <h1 className="text-lg font-semibold text-center">

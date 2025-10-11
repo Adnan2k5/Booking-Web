@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
-import { MapPin, Calendar, Clock, Star, Award, Gem, Sparkles, ArrowLeft } from "lucide-react"
+import { MapPin, Calendar, Clock, Star, Award, Sparkles, ArrowLeft } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { Badge } from "../components/ui/badge"
 import { getEvents } from "../Api/event.api"
@@ -132,9 +132,8 @@ const SecretNftEvents = () => {
                         transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
                         className="flex items-center justify-center gap-3 mb-6 flex-wrap"
                     >
-                        <Gem className="w-8 h-8 sm:w-12 sm:h-12 text-yellow-400" />
+
                         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white text-center">Secret NFT Events</h1>
-                        <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 text-purple-400" />
                     </motion.div>
 
                     <motion.p
@@ -156,7 +155,7 @@ const SecretNftEvents = () => {
 
                 {nftEvents.length === 0 && !error && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-gray-300 py-20">
-                        <Gem className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+
                         <p className="text-xl">No NFT events available at the moment.</p>
                         <p className="text-gray-400 mt-2">Check back later for exclusive NFT adventures!</p>
                     </motion.div>
@@ -186,7 +185,7 @@ const SecretNftEvents = () => {
                             >
                                 {/* NFT Badge */}
                                 <div className="absolute top-4 right-4 z-20">
-                                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold text-xs">
+                                    <Badge className="bg-white text-black font-bold text-xs">
                                         <Award className="w-3 h-3 mr-1" />
                                         NFT Reward
                                     </Badge>
@@ -200,27 +199,11 @@ const SecretNftEvents = () => {
                                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-
-                                    {/* Floating NFT elements */}
-                                    <motion.div
-                                        animate={{
-                                            y: [0, -10, 0],
-                                            rotate: [0, 5, 0],
-                                        }}
-                                        transition={{
-                                            duration: 3,
-                                            repeat: Number.POSITIVE_INFINITY,
-                                            repeatType: "reverse",
-                                        }}
-                                        className="absolute top-4 left-4"
-                                    >
-                                        <Sparkles className="w-6 h-6 text-yellow-400" />
-                                    </motion.div>
                                 </div>
 
                                 {/* Event Details */}
                                 <div className="p-4 sm:p-6 space-y-4">
-                                    <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-yellow-400 transition-colors line-clamp-2">
+                                    <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-white transition-colors line-clamp-2">
                                         {event.title}
                                     </h3>
 
@@ -250,15 +233,15 @@ const SecretNftEvents = () => {
 
                                     {/* NFT Reward Info */}
                                     {event.nftReward && event.nftReward.enabled && (
-                                        <div className="bg-gradient-to-r from-yellow-400/20 to-orange-500/20 p-3 rounded-lg border border-yellow-400/30">
+                                        <div className="bg-white/20 p-3 rounded-lg border border-white/30">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <Gem className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-                                                <span className="text-yellow-400 font-semibold text-sm truncate">
+
+                                                <span className="text-white font-semibold text-sm truncate">
                                                     {event.nftReward.nftName || "Exclusive NFT"}
                                                 </span>
                                             </div>
                                             {event.nftReward.nftDescription && (
-                                                <p className="text-gray-300 text-xs line-clamp-2">{event.nftReward.nftDescription}</p>
+                                                <p className="text-gray-800 text-xs line-clamp-2">{event.nftReward.nftDescription}</p>
                                             )}
                                         </div>
                                     )}
@@ -269,13 +252,13 @@ const SecretNftEvents = () => {
                                             {[...Array(5)].map((_, i) => (
                                                 <Star
                                                     key={i}
-                                                    className={`w-4 h-4 ${i < event.level ? "text-yellow-400 fill-yellow-400" : "text-gray-600"}`}
+                                                    className={`w-4 h-4 ${i < event.level ? "text-white fill-white" : "text-gray-600"}`}
                                                 />
                                             ))}
                                             <span className="text-gray-300 text-xs ml-2">Level {event.level}</span>
                                         </div>
 
-                                        <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.5 }} className="text-yellow-400">
+                                        <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.5 }} className="text-white">
                                             <Sparkles className="w-5 h-5" />
                                         </motion.div>
                                     </div>
