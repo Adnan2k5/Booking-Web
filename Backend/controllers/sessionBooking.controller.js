@@ -287,7 +287,6 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
 
 
     let paymentData;
-    console.log("Mode of Payment:", modeOfPayment);
     if (modeOfPayment === "revolut") {
       // Create payment order with complete total price
       paymentData = await createRevolutOrder(totalPrice, "GBP", "Session Booking Payment");

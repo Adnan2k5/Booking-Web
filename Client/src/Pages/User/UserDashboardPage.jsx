@@ -13,7 +13,7 @@ import { Separator } from "../../components/ui/separator"
 import { Link } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { getCurrentUserSessionBookings } from "../../Api/booking.api"
-import { getUserAdventureExperiences, getUserAdventures } from "../../Api/user.api"
+import { getUserAdventureExperiences, getUserAdventures, getUserAchievements, evaluateMyAchievements } from "../../Api/user.api"
 
 export default function UserDashboardPage() {
     const { user } = useAuth();
@@ -29,6 +29,8 @@ export default function UserDashboardPage() {
     const [loading, setLoading] = useState(true);
     const [experienceLoading, setExperienceLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [achievementsLoading, setAchievementsLoading] = useState(true);
+    const [userAchievements, setUserAchievements] = useState(null);
 
     // Fetch bookings and adventure experiences on component mount
     useEffect(() => {
@@ -75,6 +77,7 @@ export default function UserDashboardPage() {
             try {
                 setLoading(true);
                 setExperienceLoading(true);
+                setAchievementsLoading(true);
                 setError(null);
 
                 // Fetch bookings
@@ -98,6 +101,24 @@ export default function UserDashboardPage() {
                         adventureCount: 0
                     });
                 }
+
+                // First, evaluate achievements based on latest data
+                try {
+                    await evaluateMyAchievements();
+                } catch (err) {
+                    console.warn('Achievement evaluation skipped:', err?.response?.data?.message || err.message);
+                }
+
+                // Fetch user achievements (levels, badges, stats) after evaluation
+                try {
+                    const achievementsResponse = await getUserAchievements();
+                    console.log(achievementsResponse);
+                    if (achievementsResponse?.success) {
+                        setUserAchievements(achievementsResponse.data);
+                    }
+                } catch (err) {
+                    console.warn('Could not load achievements:', err?.response?.data?.message || err.message);
+                }
             } catch (error) {
                 console.error("Error fetching data:", error);
                 setError("Failed to load dashboard data");
@@ -106,9 +127,11 @@ export default function UserDashboardPage() {
             } finally {
                 setLoading(false);
                 setExperienceLoading(false);
+                setAchievementsLoading(false);
             }
         };
-
+        
+        console.log("Fetching dashboard data...");
         fetchData();
     }, []);
 
@@ -166,6 +189,7 @@ export default function UserDashboardPage() {
     const progressPercentage = userProfile.experience > 0 ?
         ((userProfile.experience % 100) / 100) * 100 : 0;
 
+    // Static achievement templates retained for UI, will be enhanced by backend data when present
     const achievementData = [
         {
             category: "Skiing",
@@ -712,6 +736,34 @@ export default function UserDashboardPage() {
 
                                         <Separator />
                                         <h4 className="text-lg font-medium">Achievements</h4>
+
+                                        {/* Backend achievements summary (badges and stats) */}
+                                        {achievementsLoading ? (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {[1, 2, 3, 4].map(i => (
+                                                    <div key={i} className="h-14 bg-gray-200 rounded-xl animate-pulse" />
+                                                ))}
+                                            </div>
+                                        ) : userAchievements ? (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                                <div className="p-4 rounded-xl bg-gray-50">
+                                                    <div className="text-sm text-gray-600">Total Completed Adventures</div>
+                                                    <div className="text-2xl font-semibold text-gray-900">{userAchievements.totalCompletedAdventures || 0}</div>
+                                                </div>
+                                                <div className="p-4 rounded-xl bg-gray-50">
+                                                    <div className="text-sm text-gray-600">Overall Level</div>
+                                                    <div className="text-2xl font-semibold text-gray-900">{userAchievements.level || 0}</div>
+                                                </div>
+                                                <div className="p-4 rounded-xl bg-gray-50">
+                                                    <div className="text-sm text-gray-600">Total XP</div>
+                                                    <div className="text-2xl font-semibold text-gray-900">{userAchievements.totalExperiencePoints || 0}</div>
+                                                </div>
+                                                <div className="p-4 rounded-xl bg-gray-50">
+                                                    <div className="text-sm text-gray-600">Unique Categories</div>
+                                                    <div className="text-2xl font-semibold text-gray-900">{userAchievements?.adventureStats?.uniqueCategories || 0}</div>
+                                                </div>
+                                            </div>
+                                        ) : null}
 
                                         {achievementData.map((section, index) => {
                                             const matchedAdventure = adventureStats.find(

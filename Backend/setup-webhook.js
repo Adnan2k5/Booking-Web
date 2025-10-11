@@ -7,7 +7,7 @@ dotenv.config();
 async function setupWebhook() {
     try {
         // Replace with your actual webhook URL
-        const webhookUrl = 'https://79cc-2405-201-a423-5801-bd61-a10f-8a44-5862.ngrok-free.app/api/itemBooking/webhook/payment-completed';
+        const webhookUrl = 'https://booking-web-vvw8.onrender.com/api/itemBooking/webhook/payment-completed';
 
         const data = JSON.stringify({
             "url": webhookUrl,
@@ -30,6 +30,8 @@ async function setupWebhook() {
         };
 
         const response = await axios(config);
+
+        console.log('Webhook setup response:', response.data);
     } catch (error) {
         console.error('Webhook setup error:', error.response?.data || error.message);
     }

@@ -15,7 +15,7 @@ import {
   SidebarGroupContent,
 } from '../../components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
-import { BarChart3, BookOpen, ClipboardCheck, Compass, FileCheck, Hotel, LogOut, Mountain, Settings, Store, TicketCheck, User } from 'lucide-react';
+import { BarChart3, BookOpen, ClipboardCheck, Compass, FileCheck, Hotel, LogOut, Mountain, Settings, Store, TicketCheck, User, Award } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { useDispatch } from 'react-redux';
 import { userLogout } from '../../Auth/UserAuth.js';
@@ -167,6 +167,14 @@ function AdminSidebar({ pathname }) {
                   <Link to="/admin/events">
                     <Hotel className="h-4 w-4" />
                     <span>Events</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin/achievement-rules"}>
+                  <Link to="/admin/achievement-rules">
+                    <Award className="h-4 w-4" />
+                    <span>Achievement Rules</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -85,6 +85,7 @@ import EventsPage from "./Pages/Admin/SubPages/Events"
 import WebsiteSettings from "./Pages/Admin/SubPages/WebsiteSettings"
 import { ChatLayout } from "./Pages/Chat/ChatLayout"
 import SponsorsPage from "./Pages/Admin/SubPages/Sponsors"
+import AchievementRulesPage from "./Pages/Admin/SubPages/AchievementRules"
 
 // Initialize i18n with stored language
 const getInitialLanguage = () => {
@@ -302,6 +303,7 @@ const App = () => {
                     <Route path="/admin/events" element={<EventsPage />} />
                     <Route path="/admin/website-settings" element={<WebsiteSettings />} />
                     <Route path="/admin/sponsors" element={<SponsorsPage />} />
+                    <Route path="/admin/achievement-rules" element={<AchievementRulesPage />} />
                   </Route>
                 </Routes>
               </Suspense>

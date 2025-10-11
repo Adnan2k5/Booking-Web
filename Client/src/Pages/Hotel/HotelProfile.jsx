@@ -53,6 +53,25 @@ export const HotelProfile = () => {
         fetchHotel();
     }, []);
 
+    // Helper: React error #31 occurs when an object is rendered directly in JSX.
+    // Some relations (e.g., location) may be populated as an object with keys {_id, name}.
+    // This formatter ensures we never pass a raw object as a child.
+    const formatDisplay = (value) => {
+        if (value == null) return '';
+        if (typeof value === 'object') {
+            // Prefer common readable keys
+            if (Object.prototype.hasOwnProperty.call(value, 'name')) return value.name;
+            if (Object.prototype.hasOwnProperty.call(value, 'title')) return value.title;
+            // Fallback: stringify safely (avoid circular refs)
+            try {
+                return JSON.stringify(value);
+            } catch {
+                return '';
+            }
+        }
+        return value;
+    };
+
     if (loading) {
         return <div className="flex justify-center items-center min-h-screen">
             <Loader />
