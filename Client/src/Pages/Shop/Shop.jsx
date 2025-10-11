@@ -38,7 +38,7 @@ export default function AdventureShop() {
 
   return (
     <div className="w-full font-sans bg-neutral-50 text-neutral-900">
-      <AnnouncementBar />
+      {/* <AnnouncementBar /> */}
       <MainHeader categories={categories} onSearch={handleSearch} />
       <HeroCarousel />
       <CategoryFeatureGrid />
