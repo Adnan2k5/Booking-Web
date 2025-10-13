@@ -31,6 +31,7 @@ export default function UserDashboardPage() {
     const [error, setError] = useState(null);
     const [achievementsLoading, setAchievementsLoading] = useState(true);
     const [userAchievements, setUserAchievements] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
 
     // Fetch bookings and adventure experiences on component mount
     useEffect(() => {
@@ -51,26 +52,6 @@ export default function UserDashboardPage() {
                 console.error("Error fetching user adventures:", error);
             }
         };
-
-        async function loadUserAdventureData() {
-            try {
-                const response = await getUserAdventureExperiences();
-
-                const adventureData = response?.data?.data;
-                if (!adventureData) {
-                    console.warn("No adventure data found");
-                    return;
-                }
-
-                const { levelData, adventureExperiences } = adventureData;
-                setLevelData(levelData || { level: 1, progress: 0 });
-                setCompletedAdventures(adventureExperiences?.length || 0);
-            } catch (error) {
-                console.error('Error fetching user adventure experiences:', error);
-            }
-        }
-
-        loadUserAdventureData();
         fetchUserAdventures();
 
         const fetchData = async () => {
@@ -112,7 +93,6 @@ export default function UserDashboardPage() {
                 // Fetch user achievements (levels, badges, stats) after evaluation
                 try {
                     const achievementsResponse = await getUserAchievements();
-                    console.log(achievementsResponse);
                     if (achievementsResponse?.success) {
                         setUserAchievements(achievementsResponse.data);
                     }
@@ -130,10 +110,24 @@ export default function UserDashboardPage() {
                 setAchievementsLoading(false);
             }
         };
-        
-        console.log("Fetching dashboard data...");
+
         fetchData();
     }, []);
+
+    const handleRefreshAchievements = async () => {
+        try {
+            setRefreshing(true);
+            await evaluateMyAchievements();
+            const achievementsResponse = await getUserAchievements();
+            if (achievementsResponse?.success) {
+                setUserAchievements(achievementsResponse.data);
+            }
+        } catch (err) {
+            console.warn('Refresh achievements failed:', err?.response?.data?.message || err.message);
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     // Process bookings to get adventure statistics
     const processBookingStats = () => {
@@ -174,19 +168,36 @@ export default function UserDashboardPage() {
         }
     };
 
+    // Normalize experience/level from the most authoritative source available
+    const xpFromAchievements = Number.isFinite(userAchievements?.totalExperiencePoints)
+        ? userAchievements.totalExperiencePoints
+        : 0;
+    const xpFromLevelData = Number.isFinite(levelData?.totalExperience)
+        ? levelData.totalExperience
+        : 0;
+    // Prefer the highest known XP to avoid stale zeros overriding real values
+    const totalXP = Math.max(xpFromAchievements, xpFromLevelData);
+    const levelFromXP = Math.floor(totalXP / 100);
+    const apiLevel = Number.isFinite(userAchievements?.level) ? userAchievements.level : null;
+    const normalizedLevel = apiLevel !== null ? Math.max(apiLevel, levelFromXP) : levelFromXP;
+    const nextLevelXP = (normalizedLevel + 1) * 100;
+    const adventureCountNormalized = Math.max(
+        Number.isFinite(levelData?.adventureCount) ? levelData.adventureCount : 0,
+        Array.isArray(adventureExperiences) ? adventureExperiences.length : 0
+    );
+
     const userProfile = {
         name: user.user.name || "John Doe",
         email: user.user.email || "",
-        level: Math.floor((levelData.totalExperience || 0) / 100), // Level increases every 100 XP
+        level: normalizedLevel,
         joinDate: user.user.joinDate || "2023-01-01",
         completedAdventures,
-        experience: levelData.totalExperience || 0,
-        nextLevel: (Math.floor((levelData.totalExperience || 0) / 100) + 1) * 100, // Next 100 XP milestone
+        experience: totalXP,
+        nextLevel: nextLevelXP, // Next 100 XP milestone
         upcomingAdventures,
-        adventureCount: levelData.adventureCount || 0,
+        adventureCount: adventureCountNormalized,
     }
-    const progressPercentage = userProfile.experience > 0 ?
-        ((userProfile.experience % 100) / 100) * 100 : 0;
+    const progressPercentage = totalXP > 0 ? ((totalXP % 100) / 100) * 100 : 0;
 
     // Static achievement templates retained for UI, will be enhanced by backend data when present
     const achievementData = [
@@ -734,7 +745,16 @@ export default function UserDashboardPage() {
                                         </div>
 
                                         <Separator />
-                                        <h4 className="text-lg font-medium">Achievements</h4>
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="text-lg font-medium">Achievements</h4>
+                                            <button
+                                                onClick={handleRefreshAchievements}
+                                                disabled={refreshing}
+                                                className="text-sm px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+                                            >
+                                                {refreshing ? 'Refreshing...' : 'Refresh'}
+                                            </button>
+                                        </div>
 
                                         {/* Backend achievements summary (badges and stats) */}
                                         {achievementsLoading ? (
@@ -751,11 +771,11 @@ export default function UserDashboardPage() {
                                                 </div>
                                                 <div className="p-4 rounded-xl bg-gray-50">
                                                     <div className="text-sm text-gray-600">Overall Level</div>
-                                                    <div className="text-2xl font-semibold text-gray-900">{userAchievements.level || 0}</div>
+                                                    <div className="text-2xl font-semibold text-gray-900">{normalizedLevel}</div>
                                                 </div>
                                                 <div className="p-4 rounded-xl bg-gray-50">
                                                     <div className="text-sm text-gray-600">Total XP</div>
-                                                    <div className="text-2xl font-semibold text-gray-900">{userAchievements.totalExperiencePoints || 0}</div>
+                                                    <div className="text-2xl font-semibold text-gray-900">{totalXP}</div>
                                                 </div>
                                                 <div className="p-4 rounded-xl bg-gray-50">
                                                     <div className="text-sm text-gray-600">Unique Categories</div>
@@ -764,7 +784,42 @@ export default function UserDashboardPage() {
                                             </div>
                                         ) : null}
 
-                                        {achievementData.map((section, index) => {
+                                        {/* Dynamic earned achievements from backend */}
+                                        {userAchievements?.achievements?.length > 0 && (
+                                            <div className="mb-8">
+                                                <h5 className="font-semibold mb-3">Your earned badges</h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    {Object.entries(
+                                                        userAchievements.achievements.reduce((acc, a) => {
+                                                            const cat = a.category || 'General';
+                                                            acc[cat] = acc[cat] || [];
+                                                            acc[cat].push(a);
+                                                            return acc;
+                                                        }, {})
+                                                    ).map(([cat, list]) => (
+                                                        <div key={cat} className="p-4 rounded-xl bg-gray-50">
+                                                            <div className="font-medium text-gray-900 mb-2">{cat}</div>
+                                                            <div className="flex flex-col gap-2">
+                                                                {list.map((a, idx) => (
+                                                                    <div key={idx} className="flex items-center gap-3">
+                                                                        <Award className="h-5 w-5 text-gray-800" />
+                                                                        <div>
+                                                                            <div className="text-sm font-medium text-gray-800">{a.name}</div>
+                                                                            {a.description && (
+                                                                                <div className="text-xs text-gray-500">{a.description}</div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Fallback/static templates if no backend achievements yet */}
+                                        {(!userAchievements?.achievements || userAchievements.achievements.length === 0) && achievementData.map((section, index) => {
                                             const matchedAdventure = adventureStats.find(
                                                 (adv) => adv.name.toLowerCase() === section.category.toLowerCase()
                                             );
