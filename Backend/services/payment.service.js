@@ -3,6 +3,7 @@ import { Cart } from "../models/cart.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { updateInstructorAchievement } from "../utils/updateInstructorAchievement.js";
 import { updateUserAchievement } from "../utils/updateUserAchievement.js";
+import { UserAdventureExperience } from "../models/userAdventureExperience.model.js";
 
 export class PaymentService {
   itemBooking = async (order_id, event, booking) => {
@@ -112,13 +113,27 @@ export class PaymentService {
 
       // For session bookings, we only update the status since there's no paymentStatus field
       if (event === "ORDER_COMPLETED" || event === "ORDER_AUTHORISED") {
-        // Todo funcion chalana h
-        await updateUserAchievement(booking.user._id);
-
         const populatedBooking = await Booking.findById(booking._id).populate({
           path: "session",
-          select: "instructorId",
+          populate: {
+            path: "adventureId",
+            select: "exp"
+          },
+          select: "instructorId adventureId",
         });
+
+        // Add experience for the adventure
+        if (populatedBooking?.session?.adventureId) {
+          const expAmount = populatedBooking.session.adventureId.exp || 50; // Default 50 if no exp defined
+          await UserAdventureExperience.addExperience(
+            booking.user._id,
+            populatedBooking.session.adventureId._id,
+            expAmount
+          );
+        }
+
+        // Update achievements after adding experience
+        await updateUserAchievement(booking.user._id);
 
         await updateInstructorAchievement(
           populatedBooking?.session?.instructorId

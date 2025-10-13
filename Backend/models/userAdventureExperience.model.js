@@ -54,7 +54,7 @@ userAdventureExperienceSchema.statics.calculateOverallLevel = async function (
     0
   );
   const averageLevel = Math.floor(totalExperience / experiences.length);
-  const overallLevel = Math.floor(totalExperience / 100); // Every 100 exp = 1 level
+  const overallLevel = Math.floor(totalExperience / 1000); // Every 1000 exp = 1 level
 
   return {
     overallLevel,

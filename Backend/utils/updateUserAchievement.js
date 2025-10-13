@@ -26,7 +26,7 @@ export const updateUserAchievement = asyncHandler(async (userId) => {
   }
 
   // Compute derived level
-  const level = Math.floor(totalXP / 100);
+  const level = Math.floor(totalXP / 1000);
 
   // Compute unique categories statistics if category exists in Adventure later
   const uniqueCategories = 0;
