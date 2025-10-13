@@ -167,6 +167,7 @@ export default function UserDashboardPage() {
             return "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"; // Max 3 per row for 4+ cards
         }
     };
+    console.log(user);
 
     // Normalize experience/level from the most authoritative source available
     const xpFromAchievements = Number.isFinite(userAchievements?.totalExperiencePoints)
