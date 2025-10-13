@@ -31,6 +31,7 @@ export default function UserDashboardPage() {
     const [error, setError] = useState(null);
     const [achievementsLoading, setAchievementsLoading] = useState(true);
     const [userAchievements, setUserAchievements] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
 
     // Fetch bookings and adventure experiences on component mount
     useEffect(() => {
@@ -51,26 +52,6 @@ export default function UserDashboardPage() {
                 console.error("Error fetching user adventures:", error);
             }
         };
-
-        async function loadUserAdventureData() {
-            try {
-                const response = await getUserAdventureExperiences();
-
-                const adventureData = response?.data?.data;
-                if (!adventureData) {
-                    console.warn("No adventure data found");
-                    return;
-                }
-
-                const { levelData, adventureExperiences } = adventureData;
-                setLevelData(levelData || { level: 1, progress: 0 });
-                setCompletedAdventures(adventureExperiences?.length || 0);
-            } catch (error) {
-                console.error('Error fetching user adventure experiences:', error);
-            }
-        }
-
-        loadUserAdventureData();
         fetchUserAdventures();
 
         const fetchData = async () => {
@@ -112,7 +93,6 @@ export default function UserDashboardPage() {
                 // Fetch user achievements (levels, badges, stats) after evaluation
                 try {
                     const achievementsResponse = await getUserAchievements();
-                    console.log(achievementsResponse);
                     if (achievementsResponse?.success) {
                         setUserAchievements(achievementsResponse.data);
                     }
@@ -130,10 +110,24 @@ export default function UserDashboardPage() {
                 setAchievementsLoading(false);
             }
         };
-        
-        console.log("Fetching dashboard data...");
+
         fetchData();
     }, []);
+
+    const handleRefreshAchievements = async () => {
+        try {
+            setRefreshing(true);
+            await evaluateMyAchievements();
+            const achievementsResponse = await getUserAchievements();
+            if (achievementsResponse?.success) {
+                setUserAchievements(achievementsResponse.data);
+            }
+        } catch (err) {
+            console.warn('Refresh achievements failed:', err?.response?.data?.message || err.message);
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     // Process bookings to get adventure statistics
     const processBookingStats = () => {
@@ -175,328 +169,39 @@ export default function UserDashboardPage() {
     };
     console.log(user);
 
+    // Normalize experience/level from the most authoritative source available
+    const xpFromAchievements = Number.isFinite(userAchievements?.totalExperiencePoints)
+        ? userAchievements.totalExperiencePoints
+        : 0;
+    const xpFromLevelData = Number.isFinite(levelData?.totalExperience)
+        ? levelData.totalExperience
+        : 0;
+    // Prefer the highest known XP to avoid stale zeros overriding real values
+    const totalXP = Math.max(xpFromAchievements, xpFromLevelData);
+    const levelFromXP = Math.floor(totalXP / 100);
+    const apiLevel = Number.isFinite(userAchievements?.level) ? userAchievements.level : null;
+    const normalizedLevel = apiLevel !== null ? Math.max(apiLevel, levelFromXP) : levelFromXP;
+    const nextLevelXP = (normalizedLevel + 1) * 100;
+    const adventureCountNormalized = Math.max(
+        Number.isFinite(levelData?.adventureCount) ? levelData.adventureCount : 0,
+        Array.isArray(adventureExperiences) ? adventureExperiences.length : 0
+    );
+
     const userProfile = {
         name: user.user.name || "John Doe",
         email: user.user.email || "",
-        level: Math.floor((levelData.totalExperience || 0) / 100), // Level increases every 100 XP
+        level: normalizedLevel,
         joinDate: user.user.joinDate || "2023-01-01",
         completedAdventures,
-        experience: levelData.totalExperience || 0,
-        nextLevel: (Math.floor((levelData.totalExperience || 0) / 100) + 1) * 100, // Next 100 XP milestone
+        experience: totalXP,
+        nextLevel: nextLevelXP, // Next 100 XP milestone
         upcomingAdventures,
-        adventureCount: levelData.adventureCount || 0,
+        adventureCount: adventureCountNormalized,
     }
-    const progressPercentage = userProfile.experience > 0 ?
-        ((userProfile.experience % 100) / 100) * 100 : 0;
+    const progressPercentage = totalXP > 0 ? ((totalXP % 100) / 100) * 100 : 0;
 
     // Static achievement templates retained for UI, will be enhanced by backend data when present
     const achievementData = [
-        {
-            category: "Skiing",
-            achievements: [
-                { title: "First Adventure", description: "First Descent" },
-                { title: "Adventure Explorer", description: "Complete 10 Sessions" },
-                { title: "Adventure Master", description: "Master a Difficult Slope" },
-                { title: "Adventure Legend", description: "Season Rider (20+ sessions)" },
-            ],
-        },
-        {
-            category: "Snowshoe Hiking",
-            achievements: [
-                { title: "First Adventure", description: "First Hike" },
-                { title: "Adventure Explorer", description: "Complete 5 Winter Hikes" },
-                { title: "Adventure Master", description: "Conquer a Tough Trail" },
-                { title: "Adventure Legend", description: "Winter Challenge Explorer" },
-            ],
-        },
-        {
-            category: "Ski Touring",
-            achievements: [
-                { title: "First Adventure", description: "First Tour" },
-                { title: "Adventure Explorer", description: "Complete 10 Tours" },
-                { title: "Adventure Master", description: "Reach a High Peak" },
-                { title: "Adventure Legend", description: "Conquer a Technical Route" },
-            ],
-        },
-        {
-            category: "Mountain Biking",
-            achievements: [
-                { title: "First Adventure", description: "First Ride" },
-                { title: "Adventure Explorer", description: "Complete 10 Rides" },
-                { title: "Adventure Master", description: "Master a Technical Trail" },
-                { title: "Adventure Legend", description: "Longest Distance Rider" },
-            ],
-        },
-        {
-            category: "Mountain Hiking",
-            achievements: [
-                { title: "First Adventure", description: "First Hike" },
-                { title: "Adventure Explorer", description: "Complete 5 Hikes" },
-                { title: "Adventure Master", description: "Conquer a Challenging Route" },
-                { title: "Adventure Legend", description: "Weekend Expedition Finisher" },
-            ],
-        },
-        {
-            category: "Paragliding",
-            achievements: [
-                { title: "First Adventure", description: "First Flight" },
-                { title: "Adventure Explorer", description: "Complete 5 Flights in a Season" },
-                { title: "Adventure Master", description: "Fly in Tough Weather" },
-                { title: "Adventure Legend", description: "Tandem Pro Recommendation" },
-            ],
-        },
-        {
-            category: "Ziplining",
-            achievements: [
-                { title: "First Adventure", description: "First Zipline Ride" },
-                { title: "Adventure Explorer", description: "Complete 10 Ziplines" },
-                { title: "Adventure Master", description: "Conquer an Extreme Course" },
-                { title: "Adventure Legend", description: "Zipline Master" },
-            ],
-        },
-        {
-            category: "Canyoning",
-            achievements: [
-                { title: "First Adventure", description: "First Canyon Adventure" },
-                { title: "Adventure Explorer", description: "Complete 5 Canyon Routes" },
-                { title: "Adventure Master", description: "Conquer a Technical Canyon" },
-                { title: "Adventure Legend", description: "Expedition Member" },
-            ],
-        },
-        {
-            category: "Rafting",
-            achievements: [
-                { title: "First Adventure", description: "First Whitewater Ride" },
-                { title: "Adventure Explorer", description: "Complete 10 Rafting Trips" },
-                { title: "Adventure Master", description: "Master a Challenging Section" },
-                { title: "Adventure Legend", description: "Team Leader" },
-            ],
-        },
-        {
-            category: "Kitesurfing",
-            achievements: [
-                { title: "First Adventure", description: "First Ride" },
-                { title: "Adventure Explorer", description: "Complete 10 Lessons" },
-                { title: "Adventure Master", description: "Wind Master" },
-                { title: "Adventure Legend", description: "Competition Participant" },
-            ],
-        },
-        {
-            category: "Windsurfing",
-            achievements: [
-                { title: "First Adventure", description: "First Windsurf" },
-                { title: "Adventure Explorer", description: "Complete 10 Sessions" },
-                { title: "Adventure Master", description: "Master Strong Winds" },
-                { title: "Adventure Legend", description: "Wind Champion" },
-            ],
-        },
-        {
-            category: "Scuba Diving",
-            achievements: [
-                { title: "First Adventure", description: "First Dive" },
-                { title: "Adventure Explorer", description: "Complete 10 Dives" },
-                { title: "Adventure Master", description: "Explore a Challenging Site" },
-                { title: "Adventure Legend", description: "Certified Explorer" },
-            ],
-        },
-        {
-            category: "Stand-Up Paddle (SUP)",
-            achievements: [
-                { title: "First Adventure", description: "First SUP Ride" },
-                { title: "Adventure Explorer", description: "Complete 10 Rides" },
-                { title: "Adventure Master", description: "Longest Distance Achieved" },
-                { title: "Adventure Legend", description: "SUP Champion" },
-            ],
-        },
-        {
-            category: "Snorkeling",
-            achievements: [
-                { title: "First Adventure", description: "First Snorkeling Session" },
-                { title: "Adventure Explorer", description: "Complete 10 Sessions" },
-                { title: "Adventure Master", description: "Night Snorkeling" },
-                { title: "Adventure Legend", description: "Underwater Photography Expert" },
-            ],
-        },
-        {
-            category: "Camping",
-            achievements: [
-                { title: "First Adventure", description: "First Camping Trip" },
-                { title: "Adventure Explorer", description: "Complete 5 Trips per Year" },
-                { title: "Adventure Master", description: "Survival Skills Certified" },
-                { title: "Adventure Legend", description: "Extreme Camping Hero" },
-            ],
-        },
-        {
-            category: "Winter Survival Courses",
-            achievements: [
-                { title: "First Adventure", description: "First Survival Course" },
-                { title: "Adventure Explorer", description: "Complete 3 Courses" },
-                { title: "Adventure Master", description: "Survive Extreme Weather" },
-                { title: "Adventure Legend", description: "Instructor’s Choice Award" },
-            ],
-        },
-        {
-            category: "Snowmobile Safari",
-            achievements: [
-                { title: "First Adventure", description: "First Safari" },
-                { title: "Adventure Explorer", description: "Complete 5 Safaris" },
-                { title: "Adventure Master", description: "Master a Challenging Route" },
-                { title: "Adventure Legend", description: "Safari Leader" },
-            ],
-        },
-        {
-            category: "Bouldering",
-            achievements: [
-                { title: "First Adventure", description: "First Climb" },
-                { title: "Adventure Explorer", description: "Complete 10 Climbs" },
-                { title: "Adventure Master", description: "Conquer a Difficult Wall" },
-                { title: "Adventure Legend", description: "Competition Participant" },
-            ],
-        },
-        {
-            category: "Orienteering",
-            achievements: [
-                { title: "First Adventure", description: "First Course" },
-                { title: "Adventure Explorer", description: "Complete 5 Courses" },
-                { title: "Adventure Master", description: "Conquer a Difficult Terrain" },
-                { title: "Adventure Legend", description: "Orienteering Champion" },
-            ],
-        },
-        {
-            category: "Trail Running",
-            achievements: [
-                { title: "First Adventure", description: "First Trail Run" },
-                { title: "Adventure Explorer", description: "Complete 10 Runs" },
-                { title: "Adventure Master", description: "Conquer a Challenging Trail" },
-                { title: "Adventure Legend", description: "Race Participant" },
-            ],
-        },
-        {
-            category: "Tree Climbing",
-            achievements: [
-                { title: "First Adventure", description: "First Climb" },
-                { title: "Adventure Explorer", description: "Complete 10 Climbs" },
-                { title: "Adventure Master", description: "Conquer an Advanced Tree Route" },
-                { title: "Adventure Legend", description: "Tree Master" },
-            ],
-        },
-        {
-            category: "Photography Expeditions",
-            achievements: [
-                { title: "First Adventure", description: "First Photography Trip" },
-                { title: "Adventure Explorer", description: "Complete 5 Trips" },
-                { title: "Adventure Master", description: "Capture Rare Shots" },
-                { title: "Adventure Legend", description: "Professional Photographer" },
-            ],
-        },
-        {
-            category: "Hot Air Balloon Rides",
-            achievements: [
-                { title: "First Adventure", description: "First Balloon Ride" },
-                { title: "Adventure Explorer", description: "Complete 5 Flights" },
-                { title: "Adventure Master", description: "Fly in Challenging Conditions" },
-                { title: "Adventure Legend", description: "Sky Explorer" },
-            ],
-        },
-        {
-            category: "Horseback Riding",
-            achievements: [
-                { title: "First Adventure", description: "First Ride" },
-                { title: "Adventure Explorer", description: "Complete 10 Rides" },
-                { title: "Adventure Master", description: "Conquer a Challenging Route" },
-                { title: "Adventure Legend", description: "Horse Master" },
-            ],
-        },
-        {
-            category: "Slackline",
-            achievements: [
-                { title: "First Adventure", description: "First Balance Attempt" },
-                { title: "Adventure Explorer", description: "Complete 10 Sessions" },
-                { title: "Adventure Master", description: "Longest Balance Record" },
-                { title: "Adventure Legend", description: "Slackline Champion" },
-            ],
-        },
-        {
-            category: "OCR Training",
-            achievements: [
-                { title: "First Adventure", description: "First OCR Race" },
-                { title: "Adventure Explorer", description: "Complete 10 Courses" },
-                { title: "Adventure Master", description: "Conquer a Difficult Obstacle" },
-                { title: "Adventure Legend", description: "OCR Champion" },
-            ],
-        },
-        {
-            category: "Adventure Camps",
-            achievements: [
-                { title: "First Adventure", description: "First Participation" },
-                { title: "Adventure Explorer", description: "Attend 5 Camps" },
-                { title: "Adventure Master", description: "Instructor’s Recommendation" },
-                { title: "Adventure Legend", description: "Camp Leader" },
-            ],
-        },
-        {
-            category: "Longboarding",
-            achievements: [
-                { title: "First Adventure", description: "First Ride" },
-                { title: "Adventure Explorer", description: "Complete 10 Sessions" },
-                { title: "Adventure Master", description: "Perform a Difficult Trick" },
-                { title: "Adventure Legend", description: "Competition Rider" },
-            ],
-        },
-        {
-            category: "Off-road Motorbike Tours",
-            achievements: [
-                { title: "First Adventure", description: "First Ride" },
-                { title: "Adventure Explorer", description: "Complete 5 Tours" },
-                { title: "Adventure Master", description: "Master a Tough Track" },
-                { title: "Adventure Legend", description: "Tour Leader" },
-            ],
-        },
-        {
-            category: "Birdwatching",
-            achievements: [
-                { title: "First Adventure", description: "First Observation" },
-                { title: "Adventure Explorer", description: "Identify 50 Species" },
-                { title: "Adventure Master", description: "Spot a Rare Bird" },
-                { title: "Adventure Legend", description: "Birding Expert" },
-            ],
-        },
-        {
-            category: "Night Hiking",
-            achievements: [
-                { title: "First Adventure", description: "First Night Hike" },
-                { title: "Adventure Explorer", description: "Complete 5 Hikes" },
-                { title: "Adventure Master", description: "Conquer Difficult Conditions" },
-                { title: "Adventure Legend", description: "Night Explorer" },
-            ],
-        },
-        {
-            category: "Forest Therapy",
-            achievements: [
-                { title: "First Adventure", description: "First Session" },
-                { title: "Adventure Explorer", description: "Complete 10 Sessions" },
-                { title: "Adventure Master", description: "Group Leader" },
-                { title: "Adventure Legend", description: "Forest Guru" },
-            ],
-        },
-        {
-            category: "Archery",
-            achievements: [
-                { title: "First Adventure", description: "First Bullseye Shot" },
-                { title: "Adventure Explorer", description: "Complete 10 Trainings" },
-                { title: "Adventure Master", description: "Competition Participant" },
-                { title: "Adventure Legend", description: "Archery Master" },
-            ],
-        },
-        {
-            category: "Multi-Adventure Tours",
-            achievements: [
-                { title: "First Adventure", description: "First Adventure Tour" },
-                { title: "Adventure Explorer", description: "Complete 5 Tours" },
-                { title: "Adventure Master", description: "Conquer a Tough Route" },
-                { title: "Adventure Legend", description: "Multi-Adventure Leader" },
-            ],
-        },
         {
             category: "Wakeboarding",
             achievements: [
@@ -735,7 +440,16 @@ export default function UserDashboardPage() {
                                         </div>
 
                                         <Separator />
-                                        <h4 className="text-lg font-medium">Achievements</h4>
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="text-lg font-medium">Achievements</h4>
+                                            <button
+                                                onClick={handleRefreshAchievements}
+                                                disabled={refreshing}
+                                                className="text-sm px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+                                            >
+                                                {refreshing ? 'Refreshing...' : 'Refresh'}
+                                            </button>
+                                        </div>
 
                                         {/* Backend achievements summary (badges and stats) */}
                                         {achievementsLoading ? (
@@ -752,11 +466,11 @@ export default function UserDashboardPage() {
                                                 </div>
                                                 <div className="p-4 rounded-xl bg-gray-50">
                                                     <div className="text-sm text-gray-600">Overall Level</div>
-                                                    <div className="text-2xl font-semibold text-gray-900">{userAchievements.level || 0}</div>
+                                                    <div className="text-2xl font-semibold text-gray-900">{normalizedLevel}</div>
                                                 </div>
                                                 <div className="p-4 rounded-xl bg-gray-50">
                                                     <div className="text-sm text-gray-600">Total XP</div>
-                                                    <div className="text-2xl font-semibold text-gray-900">{userAchievements.totalExperiencePoints || 0}</div>
+                                                    <div className="text-2xl font-semibold text-gray-900">{totalXP}</div>
                                                 </div>
                                                 <div className="p-4 rounded-xl bg-gray-50">
                                                     <div className="text-sm text-gray-600">Unique Categories</div>
@@ -765,7 +479,42 @@ export default function UserDashboardPage() {
                                             </div>
                                         ) : null}
 
-                                        {achievementData.map((section, index) => {
+                                        {/* Dynamic earned achievements from backend */}
+                                        {userAchievements?.achievements?.length > 0 && (
+                                            <div className="mb-8">
+                                                <h5 className="font-semibold mb-3">Your earned badges</h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    {Object.entries(
+                                                        userAchievements.achievements.reduce((acc, a) => {
+                                                            const cat = a.category || 'General';
+                                                            acc[cat] = acc[cat] || [];
+                                                            acc[cat].push(a);
+                                                            return acc;
+                                                        }, {})
+                                                    ).map(([cat, list]) => (
+                                                        <div key={cat} className="p-4 rounded-xl bg-gray-50">
+                                                            <div className="font-medium text-gray-900 mb-2">{cat}</div>
+                                                            <div className="flex flex-col gap-2">
+                                                                {list.map((a, idx) => (
+                                                                    <div key={idx} className="flex items-center gap-3">
+                                                                        <Award className="h-5 w-5 text-gray-800" />
+                                                                        <div>
+                                                                            <div className="text-sm font-medium text-gray-800">{a.name}</div>
+                                                                            {a.description && (
+                                                                                <div className="text-xs text-gray-500">{a.description}</div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Fallback/static templates if no backend achievements yet */}
+                                        {(!userAchievements?.achievements || userAchievements.achievements.length === 0) && achievementData.map((section, index) => {
                                             const matchedAdventure = adventureStats.find(
                                                 (adv) => adv.name.toLowerCase() === section.category.toLowerCase()
                                             );
