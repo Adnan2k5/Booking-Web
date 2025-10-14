@@ -5,7 +5,6 @@ import {
   changeDocumentStatusById,
   deleteInstructor,
   getAllInstructors,
-  getInstructorAchievements,
   getInstructorById,
   addPortfolioMedia,
   removePortfolioMedia,
@@ -19,7 +18,6 @@ router.use(verifyJWT);
 
 // Route to get all instructors
 router.get("/", getAllInstructors);
-router.get("/instructorAchievement", verifyJWT, getInstructorAchievements);
 router.post("/portfolio", upload.single("media"), addPortfolioMedia);
 router.delete("/portfolio", removePortfolioMedia);
 router.get("/:id", getInstructorById);

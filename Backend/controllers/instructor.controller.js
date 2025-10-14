@@ -1,5 +1,4 @@
 import { Instructor } from "../models/instructor.model.js";
-import { InstructorAchievement } from "../models/instructorAchievement.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
@@ -128,26 +127,6 @@ export const changeDocumentStatusById = asyncHandler(async (req, res) => {
         200,
         null,
         "Instructor document status updated successfully"
-      )
-    );
-});
-
-export const getInstructorAchievements = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
-  const instructorAchievement = await InstructorAchievement.findOne({
-    instructorId: userId,
-  });
-  if (!instructorAchievement) {
-    throw new ApiError(204, "Instructor achievements not found");
-  }
-
-  res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        instructorAchievement,
-        "User achievements retrieved successfully"
       )
     );
 });

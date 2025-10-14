@@ -1,6 +1,5 @@
 import axios from "axios";
 import { Booking } from "../models/booking.model.js";
-import { updateInstructorAchievement } from "../utils/updateInstructorAchievement.js";
 import { updateUserAchievement } from "../utils/updateUserAchievement.js";
 
 export default class PayPalService {
@@ -215,7 +214,6 @@ export default class PayPalService {
 
           if (booking && booking.user) {
             await updateUserAchievement(booking.user._id);
-            await updateInstructorAchievement(booking?.session?.instructorId);
             console.log("Achievement updated for user:", booking.user._id);
           } else {
             console.error("No booking found for transactionId:", orderId);
