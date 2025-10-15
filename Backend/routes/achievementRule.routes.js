@@ -33,21 +33,22 @@ router.get("/", verifyJWT, listRules);
 // Evaluate my achievements now
 router.post("/evaluate", verifyJWT, evaluateMyAchievements);
 
-// =================== INSTRUCTOR ACHIEVEMENT RULES ===================
 // Admin endpoints for instructor achievement rules
 router.post("/instructor", verifyJWT, verifyAdmin, createInstructorRule);
 router.get("/instructor", verifyJWT, verifyAdmin, listInstructorRules);
-router.get("/instructor/:id", verifyJWT, verifyAdmin, getInstructorRule);
-router.put("/instructor/:id", verifyJWT, verifyAdmin, updateInstructorRule);
-router.delete("/instructor/:id", verifyJWT, verifyAdmin, deleteInstructorRule);
 
-// Instructor achievement evaluation endpoints
+// Instructor achievement evaluation endpoints (place before parameterized routes)
 router.post("/instructor/evaluate", verifyJWT, evaluateInstructorAchievements);
 router.post("/instructor/evaluate/:instructorId", verifyJWT, verifyAdmin, evaluateSpecificInstructor);
 router.post("/instructor/evaluate-all", verifyJWT, verifyAdmin, evaluateAllInstructors);
 
-// Get instructor achievements
+// Get instructor achievements (place before parameterized routes)
 router.get("/instructor/achievements", verifyJWT, getInstructorAchievements);
-router.get("/instructor/achievements/:instructorId", verifyJWT, verifyAdmin, getInstructorAchievements);
+router.get("/instructor/achievements/:instructorId", verifyJWT, getInstructorAchievements);
+
+// Parameterized routes must come last to avoid conflicts
+router.get("/instructor/:id", verifyJWT, getInstructorRule);
+router.put("/instructor/:id", verifyJWT, verifyAdmin, updateInstructorRule);
+router.delete("/instructor/:id", verifyJWT, verifyAdmin, deleteInstructorRule);
 
 export default router;
