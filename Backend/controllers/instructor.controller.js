@@ -62,7 +62,10 @@ export const getAllInstructors = asyncHandler(async (req, res) => {
 
 export const getInstructorById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const instructor = await User.find({ role: "instructor", instructor: id })
+  const instructor = await User.findOne({ 
+    role: "instructor", 
+    instructor: id 
+  })
     .populate({
       path: "instructor",
       populate: [

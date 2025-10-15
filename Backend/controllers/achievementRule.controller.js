@@ -402,12 +402,34 @@ export const evaluateAllInstructors = asyncHandler(async (req, res) => {
 export const getInstructorAchievements = asyncHandler(async (req, res) => {
   const { instructorId } = req.params;
   
-  const achievements = await InstructorAchievement.findOne({ 
-    instructorId: instructorId || req.user._id 
+  let achievements = await InstructorAchievement.findOne({ 
+    instructorId: instructorId || req.user._id
   });
 
   if (!achievements) {
-    throw new ApiError(404, "Instructor achievements not found");
+    // Return empty achievement structure instead of error
+    const user = await User.findById(instructorId || req.user._id);
+    if (!user) {
+      throw new ApiError(404, "Instructor not found");
+    }
+    
+    achievements = {
+      instructorId: user._id,
+      email: user.email,
+      name: user.name,
+      level: 0,
+      currentRating: 0,
+      totalBookingsReceived: 0,
+      monthsSinceJoining: 0,
+      totalExperiencePoints: 0,
+      achievements: [],
+      badges: [],
+      stats: {
+        totalAchievements: 0,
+        lastEvaluated: null,
+        streak: 0
+      }
+    };
   }
 
   res
