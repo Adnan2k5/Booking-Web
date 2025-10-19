@@ -36,6 +36,10 @@ const instructorSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    reviewCount: {
+      type: Number,
+      default: 0,
+    },
     portfolioMedias: [
       {
         type: String,
