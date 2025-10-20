@@ -51,6 +51,8 @@ export const Cart = () => {
             toast.error("Failed to update cart")
         } finally {
             setLoadingItems(prev => ({ ...prev, [itemId]: false }))
+            // Sync cart in background
+            setTimeout(() => { fetchCart(); }, 0)
         }
     }
 

@@ -45,9 +45,13 @@ export default function UserBookingsPage() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {list.map(b => {
-          const priceValue = (b.session.price ?? b.amount ?? 0)
+          // Safely get price depending on booking type
+          let priceValue = 0
+          if (b.session && typeof b.session.price !== 'undefined') priceValue = b.session.price
+          else if (b.hotel && typeof b.hotel.price !== 'undefined') priceValue = b.hotel.price
+          else if (typeof b.amount !== 'undefined') priceValue = b.amount
           const priceDisplay = typeof priceValue === 'number' ? priceValue.toFixed(2) : String(priceValue)
-          const statusLabel = b.status.toUpperCase()
+          const statusLabel = b.status?.toUpperCase() || 'UNKNOWN'
 
           return (
             <Card key={b._id} className="rounded-2xl">
