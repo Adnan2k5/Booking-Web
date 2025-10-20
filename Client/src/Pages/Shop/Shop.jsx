@@ -75,7 +75,7 @@ export default function AdventureShop() {
     const params = new URLSearchParams();
     if (q) params.set('search', q);
     if (selectedCategory) params.set('category', selectedCategory);
-    navigate(`/search?${params.toString()}`);
+  navigate(`/shop/search?${params.toString()}`);
     // Also fetch immediately so UI updates when staying on the same page
     fetchItems(q, selectedCategory);
     setSearchQuery(q);
@@ -105,14 +105,14 @@ export default function AdventureShop() {
   const removeFilter = (filter) => {
     if (filter === 'category') {
       setSelectedCategory("");
-      navigate('/all-products');
+  navigate('/shop/all-products');
       fetchItems(searchQuery || "", "");
     }
     if (filter === 'search') {
       setSearchQuery("");
       const params = new URLSearchParams();
       if (selectedCategory) params.set('category', selectedCategory);
-      navigate(`${selectedCategory ? `/category/${selectedCategory.toLowerCase()}` : '/all-products'}${params.toString() ? `?${params.toString()}` : ''}`);
+  navigate(`${selectedCategory ? `/shop/category/${selectedCategory.toLowerCase()}` : '/shop/all-products'}${params.toString() ? `?${params.toString()}` : ''}`);
       fetchItems("", selectedCategory);
     }
   };
@@ -120,7 +120,7 @@ export default function AdventureShop() {
   const clearFilters = () => {
     setSelectedCategory("");
     setSearchQuery("");
-    navigate('/all-products');
+  navigate('/shop/all-products');
     fetchItems("", "");
   };
 
