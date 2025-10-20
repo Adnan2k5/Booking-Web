@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { MapPin, Loader2 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import axios from 'axios'
+import { axiosClient } from '../AxiosClient/axios'
 
 export const Footer = () => {
   const { t } = useTranslation()
@@ -24,7 +24,7 @@ export const Footer = () => {
         setLoadingSponsors(true)
         setSponsorError(null)
         const base = import.meta.env.VITE_API_URL || 'http://localhost:8080'
-        const res = await axios.get(`${base}/api/sponsors`)
+        const res = await axiosClient.get(`/api/sponsors`)
         if (!ignore) {
           const data = Array.isArray(res.data?.data) ? res.data.data : []
           setSponsors(data.filter(s => s.isActive !== false))
