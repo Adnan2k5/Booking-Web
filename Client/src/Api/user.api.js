@@ -141,3 +141,80 @@ export const evaluateMyAchievements = async () => {
   return data;
 };
 
+// Admin: create a new instructor achievement rule
+export const createInstructorAchievementRule = async (payload) => {
+  const { data } = await axiosClient.post('/api/achievement-rules/instructor', payload, {
+    withCredentials: true,
+  });
+  return data;
+};
+
+// Admin: update instructor achievement rule
+export const updateInstructorAchievementRule = async (id, payload) => {
+  const { data } = await axiosClient.put(`/api/achievement-rules/instructor/${id}`, payload, {
+    withCredentials: true,
+  });
+  return data;
+};
+
+// Admin: delete instructor achievement rule
+export const deleteInstructorAchievementRule = async (id) => {
+  const { data } = await axiosClient.delete(`/api/achievement-rules/instructor/${id}`, {
+    withCredentials: true,
+  });
+  return data;
+};
+
+// Admin: list instructor achievement rules
+export const listInstructorAchievementRules = async (params = {}) => {
+  const { data } = await axiosClient.get('/api/achievement-rules/instructor', {
+    params,
+    withCredentials: true,
+  });
+  return data;
+};
+
+// Admin: get single instructor achievement rule
+export const getInstructorAchievementRule = async (id) => {
+  const { data } = await axiosClient.get(`/api/achievement-rules/instructor/${id}`, {
+    withCredentials: true,
+  });
+  return data;
+};
+
+// Admin: evaluate specific instructor
+export const evaluateSpecificInstructor = async (instructorId) => {
+  const { data } = await axiosClient.post(`/api/achievement-rules/instructor/evaluate/${instructorId}`, {}, {
+    withCredentials: true,
+  });
+  return data;
+};
+
+// Admin: evaluate all instructors
+export const evaluateAllInstructors = async () => {
+  const { data } = await axiosClient.post('/api/achievement-rules/instructor/evaluate-all', {}, {
+    withCredentials: true,
+  });
+  return data;
+};
+
+// Instructor: evaluate my achievements
+export const evaluateMyInstructorAchievements = async () => {
+  const { data } = await axiosClient.post('/api/achievement-rules/instructor/evaluate', {}, {
+    withCredentials: true,
+  });
+  return data;
+};
+
+// Get instructor achievements (both admin and instructor endpoints)
+export const getInstructorAchievements = async (instructorId = null) => {
+  const endpoint = instructorId 
+    ? `/api/achievement-rules/instructor/achievements/${instructorId}`
+    : '/api/achievement-rules/instructor/achievements';
+  
+  const { data } = await axiosClient.get(endpoint, {
+    withCredentials: true,
+  });
+  return data;
+};
+

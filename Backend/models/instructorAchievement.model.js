@@ -4,12 +4,13 @@ const instructorAchievementSchema = new mongoose.Schema(
   {
     instructorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Since instructors are Users with role "instructor"
+      ref: "User", // References the user who has instructor role
       required: true,
-      unique: true,
+      unique: true, // One achievement record per instructor
       index: true,
     },
 
+    // Instructor basic info (for quick access without populate)
     email: {
       type: String,
       required: true,
@@ -29,87 +30,108 @@ const instructorAchievementSchema = new mongoose.Schema(
       min: 0,
     },
 
-    // Session completion metrics
-    totalCompletedSessions: {
+    // Current instructor metrics
+    currentRating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+
+    totalBookingsReceived: {
       type: Number,
       default: 0,
       min: 0,
     },
 
-    totalUniqueCustomerServed: {
-      // ✅ Matches your field name
+    monthsSinceJoining: {
       type: Number,
       default: 0,
       min: 0,
     },
 
-    // Sessions grouped by category
-    sessionsByCategory: {
-      type: Map,
-      of: Number,
-      default: new Map(),
-    },
-
-    // Experience points system
+    // Experience points system for instructors
     totalExperiencePoints: {
       type: Number,
       default: 0,
       min: 0,
     },
 
-    experienceByCategory: {
-      type: Map,
-      of: Number,
-      default: new Map(),
-    },
+    // Array of earned achievements
+    achievements: [
+      {
+        name: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        description: {
+          type: String,
+          default: "",
+        },
+        category: {
+          type: String,
+          default: "general",
+          trim: true,
+        },
+        level: {
+          type: Number,
+          default: 1,
+          min: 1,
+        },
+        earnedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        icon: {
+          type: String,
+          default: "",
+        },
+        // Criteria that led to this achievement
+        criteria: {
+          rating: Number,
+          monthsSinceJoining: Number,
+          bookingCount: Number,
+        },
+      },
+    ],
 
-    // Financial metrics
-    totalEarnings: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
+    // Performance badges
+    badges: [
+      {
+        type: {
+          type: String,
+          enum: ["rating", "experience", "popularity", "loyalty"],
+          required: true,
+        },
+        level: {
+          type: String,
+          enum: ["bronze", "silver", "gold", "platinum"],
+          required: true,
+        },
+        earnedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
 
-    // Instructor performance statistics
-    instructorStats: {
-      uniqueCategories: {
+    // Statistics
+    stats: {
+      totalAchievements: {
         type: Number,
         default: 0,
         min: 0,
       },
-      totalSessions: {
+      lastEvaluated: {
+        type: Date,
+        default: Date.now,
+      },
+      streak: {
         type: Number,
         default: 0,
         min: 0,
       },
-      activeSessions: {
-        type: Number,
-        default: 0,
-        min: 0,
-      },
-      completionRate: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 100,
-      },
-    },
-
-    // Additional fields from instructor profile
-    documentVerified: {
-      type: String,
-      enum: ["pending", "verified", "rejected"],
-      default: "pending",
-    },
-
-    lastUpdated: {
-      type: Date,
-      default: Date.now,
-    },
-
-    calculatedAt: {
-      type: Date,
-      default: Date.now,
     },
   },
   {
@@ -117,30 +139,30 @@ const instructorAchievementSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for performance
-instructorAchievementSchema.index({ instructorId: 1 });
+// Indexes for efficient queries
 instructorAchievementSchema.index({ level: -1 });
-instructorAchievementSchema.index({ totalEarnings: -1 });
-instructorAchievementSchema.index({ "instructorStats.completionRate": -1 });
+instructorAchievementSchema.index({ totalExperiencePoints: -1 });
+instructorAchievementSchema.index({ currentRating: -1 });
+instructorAchievementSchema.index({ "achievements.earnedAt": -1 });
 
-// Static method to create or update achievement
-instructorAchievementSchema.statics.createOrUpdate = async function (
-  achievementData
-) {
-  const { instructorId, ...updateData } = achievementData;
+// Virtual for achievement count
+instructorAchievementSchema.virtual("achievementCount").get(function () {
+  return this.achievements.length;
+});
 
-  return await this.findOneAndUpdate(
-    { instructorId },
-    {
-      ...updateData,
-      calculatedAt: new Date(),
-    },
-    {
-      upsert: true,
-      new: true,
-      runValidators: true,
-    }
-  );
+// Method to add achievement
+instructorAchievementSchema.methods.addAchievement = function (achievement) {
+  this.achievements.push(achievement);
+  this.stats.totalAchievements = this.achievements.length;
+  this.stats.lastEvaluated = new Date();
+  return this.save();
+};
+
+// Method to calculate level based on experience points
+instructorAchievementSchema.methods.calculateLevel = function () {
+  // Simple level calculation: level = floor(experiencePoints / 100)
+  this.level = Math.floor(this.totalExperiencePoints / 100);
+  return this.level;
 };
 
 export const InstructorAchievement = mongoose.model(

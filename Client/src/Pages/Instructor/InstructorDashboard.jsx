@@ -14,11 +14,12 @@ import UpcomingBookingsCard from "../../components/UpcomingBookingsCard"
 import { getAdventure } from "../../Api/adventure.api"
 import { getInstructorSessions } from "../../Api/session.api"
 import { staggerContainer, fadeIn } from "../../assets/Animations"
-import { getInstructorBadge } from '../../Api/instructorAchievement.api'
+import { getInstructorAchievements, evaluateMyInstructorAchievements } from '../../Api/user.api'
 import { axiosClient } from '../../AxiosClient/axios'
 
 const InstructorDashboard = () => {
-    const [instructorBadge, setInstructorBadge] = useState(null);
+    const [instructorAchievements, setInstructorAchievements] = useState(null);
+    const [achievementsLoading, setAchievementsLoading] = useState(false);
     const navigate = useNavigate()
     const { user } = useAuth()
     const { t } = useTranslation()
@@ -200,6 +201,25 @@ const InstructorDashboard = () => {
         }
     }
 
+    const fetchInstructorAchievements = async () => {
+        if (!user?.user?._id) return;
+
+        setAchievementsLoading(true);
+        try {
+            // First try to evaluate achievements to ensure they're up to date
+            await evaluateMyInstructorAchievements();
+            
+            // Then fetch the current achievements
+            const res = await getInstructorAchievements();
+            setInstructorAchievements(res?.data);
+        } catch (error) {
+            console.error('Failed to fetch instructor achievements:', error);
+            // Don't show error toast as this is not critical for dashboard function
+        } finally {
+            setAchievementsLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (!user.user) {
             toast.error("Please login to access the instructor dashboard")
@@ -222,46 +242,9 @@ const InstructorDashboard = () => {
         // Fetch real dashboard data instead of just upcoming sessions
         fetchDashboardData()
         fetchUpcomingSessions()
-
-        const fetchBadge = async () => {
-            try {
-                const res = await getInstructorBadge(user?.user?.instructor?._id);
-                setInstructorBadge(res.data);
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
-        if (user?.user?.instructor?._id) {
-            fetchBadge(user.user.instructor._id);
-        }
+        fetchInstructorAchievements()
     }, [user, navigate])
 
-    const achievementData = [
-        {
-            title: "Starter Badge",
-            description: "“New Adventurer” – Complete first 5 bookings"
-        },
-        {
-            title: "Rising Star Badge",
-            description: "“Rising Star” – 10 bookings completed"
-        },
-        {
-            title: "Trusted Pro Badge",
-            description: "“Trusted Pro” – 50 successful bookings, 6+ months active"
-        },
-        {
-            title: "Elite Instructor Badge",
-            description: "“Elite Instructor” – 150 successful bookings, 1+ year active"
-        },
-        {
-            title: "Full Send Legend Badge",
-            description: "“Full Send Legend” – 250+ bookings, 2+ years active, contributed to community content or events"
-        },
-    ]
-    const currentIndex = achievementData.findIndex(
-        (ach) => ach.title === instructorBadge?.badge
-    );
     return (
         <InstructorLayout>
             <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
@@ -386,30 +369,155 @@ const InstructorDashboard = () => {
 
                         {/* Achievements Section */}
                         <Separator />
-                        <h4 className="text-lg font-medium mb-4">{t("Achievements")}</h4>
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-lg font-medium">{t("Achievements")}</h4>
+                            {achievementsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                        </div>
 
-                        <div className="flex flex-col gap-4">
-                            {achievementData.map((ach, index) => {
-                                const unlocked = index <= currentIndex && currentIndex !== -1;
+                        {instructorAchievements ? (
+                            <div className="space-y-6">
+                                {/* Achievement Summary */}
+                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                                    <Card>
+                                        <CardContent className="p-4">
+                                            <div className="text-center">
+                                                <div className="text-2xl font-bold text-blue-600">
+                                                    {instructorAchievements.level || 0}
+                                                </div>
+                                                <div className="text-sm text-muted-foreground">Level</div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardContent className="p-4">
+                                            <div className="text-center">
+                                                <div className="text-2xl font-bold text-green-600">
+                                                    {instructorAchievements.achievements?.length || 0}
+                                                </div>
+                                                <div className="text-sm text-muted-foreground">Achievements</div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardContent className="p-4">
+                                            <div className="text-center">
+                                                <div className="text-2xl font-bold text-yellow-600">
+                                                    {instructorAchievements.currentRating?.toFixed(1) || "0.0"}
+                                                </div>
+                                                <div className="text-sm text-muted-foreground">Rating</div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardContent className="p-4">
+                                            <div className="text-center">
+                                                <div className="text-2xl font-bold text-purple-600">
+                                                    {instructorAchievements.totalExperiencePoints || 0}
+                                                </div>
+                                                <div className="text-sm text-muted-foreground">XP</div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
 
-                                return (
-                                    <div
-                                        key={ach.title}
-                                        className={`flex items-center gap-4 p-4 rounded-2xl bg-gray-100 transition-opacity duration-300 ${unlocked ? "opacity-100" : "opacity-50"
-                                            }`}
-                                    >
-                                        <Award
-                                            className={`h-8 w-8 ${unlocked ? "text-yellow-500" : "text-gray-400"
-                                                }`}
-                                        />
-                                        <div>
-                                            <span className="text-sm font-medium">{ach.title}</span>
-                                            <p className="text-xs text-gray-600">{ach.description}</p>
+                                {/* Earned Achievements */}
+                                {instructorAchievements.achievements && instructorAchievements.achievements.length > 0 ? (
+                                    <div>
+                                        <h5 className="text-md font-medium mb-3">Earned Achievements</h5>
+                                        <div className="grid gap-3 md:grid-cols-2">
+                                            {instructorAchievements.achievements.map((achievement, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200"
+                                                >
+                                                    <div className="text-2xl">
+                                                        {achievement.icon || "🏆"}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="font-medium text-yellow-800">
+                                                            {achievement.name}
+                                                        </div>
+                                                        <div className="text-sm text-yellow-600">
+                                                            {achievement.description}
+                                                        </div>
+                                                        <div className="text-xs text-yellow-500 mt-1">
+                                                            Earned: {new Date(achievement.earnedAt).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-sm font-medium text-yellow-700">
+                                                            Level {achievement.level}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <Award className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                                        <p className="text-gray-500">No achievements earned yet</p>
+                                        <p className="text-sm text-gray-400 mt-1">Keep instructing to unlock achievements!</p>
+                                    </div>
+                                )}
+
+                                {/* Performance Badges */}
+                                {instructorAchievements.badges && instructorAchievements.badges.length > 0 && (
+                                    <div>
+                                        <h5 className="text-md font-medium mb-3">Performance Badges</h5>
+                                        <div className="flex flex-wrap gap-2">
+                                            {instructorAchievements.badges.map((badge, index) => (
+                                                <div
+                                                    key={index}
+                                                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                                        badge.level === 'platinum' ? 'bg-gray-200 text-gray-800' :
+                                                        badge.level === 'gold' ? 'bg-yellow-200 text-yellow-800' :
+                                                        badge.level === 'silver' ? 'bg-gray-100 text-gray-700' :
+                                                        'bg-orange-200 text-orange-800'
+                                                    }`}
+                                                >
+                                                    {badge.type} - {badge.level}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Statistics */}
+                                <div className="pt-4 border-t">
+                                    <div className="grid gap-4 md:grid-cols-3 text-sm">
+                                        <div>
+                                            <span className="text-muted-foreground">Total Bookings:</span>
+                                            <span className="ml-2 font-medium">{instructorAchievements.totalBookingsReceived || 0}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-muted-foreground">Experience:</span>
+                                            <span className="ml-2 font-medium">{instructorAchievements.monthsSinceJoining || 0} months</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-muted-foreground">Last Evaluated:</span>
+                                            <span className="ml-2 font-medium">
+                                                {instructorAchievements.stats?.lastEvaluated 
+                                                    ? new Date(instructorAchievements.stats.lastEvaluated).toLocaleDateString()
+                                                    : 'Never'
+                                                }
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : achievementsLoading ? (
+                            <div className="text-center py-8">
+                                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                                <p className="text-gray-500">Loading achievements...</p>
+                            </div>
+                        ) : (
+                            <div className="text-center py-8">
+                                <Award className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                                <p className="text-gray-500">No achievement data available</p>
+                                <p className="text-sm text-gray-400 mt-1">Complete some bookings to start earning achievements!</p>
+                            </div>
+                        )}
 
                     </div>
                 </div>

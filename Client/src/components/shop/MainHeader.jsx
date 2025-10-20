@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Search, ShoppingCart, Heart, User, Menu, X } from "lucide-react";
-import { Button } from "../../components/ui/button";
+import { Search, ShoppingCart, Heart, User, Menu, X, GitCompare } from "lucide-react";
 
-export default function MainHeader({ categories = [], onSearch }) {
+export default function MainHeader({ categories = [], onSearch, onCategorySelect, selectedCategory }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -22,7 +21,19 @@ export default function MainHeader({ categories = [], onSearch }) {
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-6 text-sm">
           {categories.map(c => (
-            <Link key={c} to={`/category/${c.toLowerCase()}`} className="hover:text-orange-400 transition-colors font-medium">
+            <Link
+              key={c}
+              to={`/shop/category/${c.toLowerCase()}`}
+              onClick={(e) => {
+                // Prevent default navigation when using category filter from header
+                if (onCategorySelect) {
+                  e.preventDefault();
+                  onCategorySelect(c);
+                }
+              }}
+              aria-current={selectedCategory === c ? 'page' : undefined}
+              className={`transition-colors font-medium ${selectedCategory === c ? 'text-orange-400 font-semibold underline underline-offset-4' : 'hover:text-orange-400'}`}
+            >
               {c}
             </Link>
           ))}
@@ -36,7 +47,7 @@ export default function MainHeader({ categories = [], onSearch }) {
             </button>
           </form>
           <Link to="/favorites" className="hover:text-orange-400"><Heart className="h-5 w-5" /></Link>
-          <Link to="/account" className="hover:text-orange-400"><User className="h-5 w-5" /></Link>
+          <Link to="/shop/comparison" className="hover:text-orange-400"><GitCompare className="h-5 w-5" /></Link>
           <Link to="/cart" className="relative hover:text-orange-400">
             <ShoppingCart className="h-5 w-5" />
             <span className="absolute -top-2 -right-2 bg-orange-500 text-[10px] leading-none rounded-full h-5 w-5 flex items-center justify-center font-semibold">0</span>
@@ -57,13 +68,26 @@ export default function MainHeader({ categories = [], onSearch }) {
           </form>
           <div className="grid gap-2">
             {categories.map(c => (
-              <Link key={c} to={`/category/${c.toLowerCase()}`} onClick={()=>setMobileOpen(false)} className="py-2 border-b border-neutral-800 text-sm font-medium tracking-wide">
+              <Link
+                key={c}
+                to={`/shop/category/${c.toLowerCase()}`}
+                onClick={(e) => {
+                  if (onCategorySelect) {
+                    e.preventDefault();
+                    onCategorySelect(c);
+                  }
+                  setMobileOpen(false);
+                }}
+                aria-current={selectedCategory === c ? 'page' : undefined}
+                className={`py-2 border-b border-neutral-800 text-sm font-medium tracking-wide ${selectedCategory === c ? 'text-orange-400 font-semibold underline underline-offset-4' : ''}`}
+              >
                 {c}
               </Link>
             ))}
           </div>
           <div className="flex gap-6 pt-2 text-sm">
             <Link to="/favorites" onClick={()=>setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><Heart className="h-4 w-4" /> Favorites</Link>
+            <Link to="/shop/comparison" onClick={()=>setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><GitCompare className="h-4 w-4" /> Compare</Link>
             <Link to="/account" onClick={()=>setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><User className="h-4 w-4" /> Account</Link>
             <Link to="/cart" onClick={()=>setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><ShoppingCart className="h-4 w-4" /> Cart</Link>
           </div>

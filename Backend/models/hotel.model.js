@@ -89,6 +89,14 @@ const HotelSchema = new mongoose.Schema(
     insurance: {
       type: String,
     },
+    avgReview: {
+      type: Number,
+      default: 0,
+    },
+    reviewCount: {
+      type: Number,
+      default: 0,
+    },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

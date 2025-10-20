@@ -1,7 +1,6 @@
 import { Booking } from "../models/booking.model.js";
 import { Cart } from "../models/cart.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { updateInstructorAchievement } from "../utils/updateInstructorAchievement.js";
 import { updateUserAchievement } from "../utils/updateUserAchievement.js";
 import { UserAdventureExperience } from "../models/userAdventureExperience.model.js";
 
@@ -135,9 +134,6 @@ export class PaymentService {
         // Update achievements after adding experience
         await updateUserAchievement(booking.user._id);
 
-        await updateInstructorAchievement(
-          populatedBooking?.session?.instructorId
-        );
         booking.status = "confirmed";
       }
 

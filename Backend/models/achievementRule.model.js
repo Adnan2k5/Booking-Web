@@ -21,15 +21,43 @@ const achievementRuleSchema = new mongoose.Schema(
       index: true,
     },
 
+    // Target audience for the achievement rule
+    targetType: {
+      type: String,
+      enum: ["user", "instructor"],
+      default: "user",
+      index: true,
+    },
+
     // Metric to evaluate for threshold.
     metric: {
       type: String,
-      enum: ["completedSessions", "confirmedBookings"],
+      enum: ["completedSessions", "confirmedBookings", "rating", "joiningDate", "bookingCount"],
       default: "completedSessions",
     },
 
     // Threshold for the metric. e.g., 1, 5, 10
     threshold: { type: Number, required: true, min: 1 },
+
+    // Additional criteria for instructor achievements
+    instructorCriteria: {
+      // Minimum rating threshold (for instructor achievements)
+      minRating: {
+        type: Number,
+        min: 0,
+        max: 5,
+      },
+      // Minimum months since joining (for instructor achievements)
+      minMonthsSinceJoining: {
+        type: Number,
+        min: 0,
+      },
+      // Minimum number of bookings received (for instructor achievements)
+      minBookings: {
+        type: Number,
+        min: 0,
+      },
+    },
 
     // Optional visual/icon tag for frontend badges
     icon: { type: String, default: "" },
@@ -40,8 +68,8 @@ const achievementRuleSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Prevent duplicate names for the same adventure to keep UX clean
-achievementRuleSchema.index({ adventure: 1, name: 1 }, { unique: true, sparse: true });
+// Prevent duplicate names for the same adventure and target type to keep UX clean
+achievementRuleSchema.index({ adventure: 1, name: 1, targetType: 1 }, { unique: true, sparse: true });
 
 export const AchievementRule = mongoose.model(
   "AchievementRule",
