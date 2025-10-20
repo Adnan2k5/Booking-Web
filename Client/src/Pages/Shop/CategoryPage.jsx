@@ -1,23 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
-import { ChevronRight, Filter, Grid, List } from 'lucide-react';
+import { ChevronRight, Filter, Grid, List, GitCompare, Heart } from 'lucide-react';
 import { getAllItems } from '../../Api/item.api';
 import MainHeader from '../../components/shop/MainHeader';
 import Footer from '../../components/shop/Footer';
-import RecommendedSlider from '../../components/shop/RecommendedSlider';
+
 import { useContext } from 'react';
 import { CartContext } from '../Cart/CartContext';
+import { useComparison } from '../../contexts/ComparisonContext';
+import { useFavorites } from '../../contexts/FavoritesContext';
 
 export default function CategoryPage() {
   const { slug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const { addToCart } = useContext(CartContext);
+  const { addToComparison, removeFromComparison, isInComparison } = useComparison();
+  const { addToFavorites, removeFromFavorites, isInFavorites } = useFavorites();
   
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
   const [viewMode, setViewMode] = useState('grid');
   
   const categories = ['Camping', 'Clothing', 'Footwear', 'Accessories', 'Equipment'];
@@ -29,7 +35,16 @@ export default function CategoryPage() {
   const fetchItems = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await getAllItems(page, limit, searchQuery, category);
+      const params = {
+        page,
+        limit,
+        search: searchQuery,
+        category,
+        sortBy,
+        sortOrder
+      };
+      
+      const response = await getAllItems(params.page, params.limit, params.search, params.category);
       
       if (response.success) {
         setItems(response.message || []);
@@ -47,7 +62,7 @@ export default function CategoryPage() {
 
   useEffect(() => {
     fetchItems(currentPage);
-  }, [slug, searchQuery, currentPage]);
+  }, [slug, searchQuery, currentPage, sortBy, sortOrder]);
 
   const handleSearch = (query) => {
     const params = new URLSearchParams();
@@ -111,21 +126,41 @@ export default function CategoryPage() {
             </p>
           </div>
           
-          {/* View Toggle */}
-          <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded ${viewMode === 'grid' ? 'bg-neutral-900 text-white' : 'text-neutral-600 hover:text-neutral-900'}`}
-            >
-              <Grid className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded ${viewMode === 'list' ? 'bg-neutral-900 text-white' : 'text-neutral-600 hover:text-neutral-900'}`}
-            >
-              <List className="h-4 w-4" />
-            </button>
-          </div>
+          <div className="flex items-center gap-4">
+                {/* Sorting */}
+                <select
+                  value={`${sortBy}-${sortOrder}`}
+                  onChange={(e) => {
+                    const [field, order] = e.target.value.split('-');
+                    setSortBy(field);
+                    setSortOrder(order);
+                  }}
+                  className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="name-asc">Name (A-Z)</option>
+                  <option value="name-desc">Name (Z-A)</option>
+                  <option value="price-asc">Price (Low to High)</option>
+                  <option value="price-desc">Price (High to Low)</option>
+                  <option value="createdAt-desc">Newest First</option>
+                  <option value="createdAt-asc">Oldest First</option>
+                </select>
+
+                {/* View Toggle */}
+                <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded ${viewMode === 'grid' ? 'bg-neutral-900 text-white' : 'text-neutral-600 hover:text-neutral-900'}`}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded ${viewMode === 'list' ? 'bg-neutral-900 text-white' : 'text-neutral-600 hover:text-neutral-900'}`}
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
         </div>
 
         {/* Products Grid */}
@@ -166,12 +201,50 @@ export default function CategoryPage() {
                       )}
                     </div>
                     
-                    <button
-                      onClick={() => addToCart(item)}
-                      className="bg-neutral-900 hover:bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
-                    >
-                      Add to Cart
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (isInFavorites(item._id)) {
+                            removeFromFavorites(item._id);
+                          } else {
+                            addToFavorites(item);
+                          }
+                        }}
+                        className={`p-2 rounded-full text-sm font-medium transition-colors ${
+                          isInFavorites(item._id)
+                            ? 'bg-red-500 text-white hover:bg-red-600'
+                            : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                        }`}
+                        title={isInFavorites(item._id) ? 'Remove from favorites' : 'Add to favorites'}
+                      >
+                        <Heart size={16} fill={isInFavorites(item._id) ? 'currentColor' : 'none'} />
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          if (isInComparison(item._id)) {
+                            removeFromComparison(item._id);
+                          } else {
+                            addToComparison(item);
+                          }
+                        }}
+                        className={`p-2 rounded-full text-sm font-medium transition-colors ${
+                          isInComparison(item._id)
+                            ? 'bg-orange-500 text-white hover:bg-orange-600'
+                            : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                        }`}
+                        title={isInComparison(item._id) ? 'Remove from comparison' : 'Add to comparison'}
+                      >
+                        <GitCompare size={16} />
+                      </button>
+                      
+                      <button
+                        onClick={() => addToCart(item)}
+                        className="bg-neutral-900 hover:bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                      >
+                        Add to Cart
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { Search, ChevronRight, Filter, X } from 'lucide-react';
+import { Search, ChevronRight, Filter, X, GitCompare, Heart } from 'lucide-react';
 import { getAllItems } from '../../Api/item.api';
 import MainHeader from '../../components/shop/MainHeader';
 import Footer from '../../components/shop/Footer';
 import { useContext } from 'react';
 import { CartContext } from '../Cart/CartContext';
+import { useComparison } from '../../contexts/ComparisonContext';
+import { useFavorites } from '../../contexts/FavoritesContext';
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { addToCart } = useContext(CartContext);
+  const { addToComparison, removeFromComparison, isInComparison } = useComparison();
+  const { addToFavorites, removeFromFavorites, isInFavorites } = useFavorites();
   
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -277,12 +281,50 @@ export default function SearchPage() {
                         )}
                       </div>
                       
-                      <button
-                        onClick={() => addToCart(item)}
-                        className="bg-neutral-900 hover:bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
-                      >
-                        Add to Cart
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            if (isInFavorites(item._id)) {
+                              removeFromFavorites(item._id);
+                            } else {
+                              addToFavorites(item);
+                            }
+                          }}
+                          className={`p-2 rounded-full text-sm font-medium transition-colors ${
+                            isInFavorites(item._id)
+                              ? 'bg-red-500 text-white hover:bg-red-600'
+                              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                          }`}
+                          title={isInFavorites(item._id) ? 'Remove from favorites' : 'Add to favorites'}
+                        >
+                          <Heart size={16} fill={isInFavorites(item._id) ? 'currentColor' : 'none'} />
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            if (isInComparison(item._id)) {
+                              removeFromComparison(item._id);
+                            } else {
+                              addToComparison(item);
+                            }
+                          }}
+                          className={`p-2 rounded-full text-sm font-medium transition-colors ${
+                            isInComparison(item._id)
+                              ? 'bg-orange-500 text-white hover:bg-orange-600'
+                              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                          }`}
+                          title={isInComparison(item._id) ? 'Remove from comparison' : 'Add to comparison'}
+                        >
+                          <GitCompare size={16} />
+                        </button>
+                        
+                        <button
+                          onClick={() => addToCart(item)}
+                          className="bg-neutral-900 hover:bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                        >
+                          Add to Cart
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

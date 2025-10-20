@@ -42,6 +42,8 @@ const Shop = lazy(() => import("./Pages/Shop/Shop"))
 const CategoryPage = lazy(() => import("./Pages/Shop/CategoryPage"))
 const SearchPage = lazy(() => import("./Pages/Shop/SearchPage"))
 const AllProductsPage = lazy(() => import("./Pages/Shop/AllProductsPage"))
+const ComparisonPage = lazy(() => import("./Pages/Shop/ComparisonPage"))
+const FavoritesPage = lazy(() => import("./Pages/Shop/FavoritesPage"))
 const Hotel = lazy(() => import("./Pages/Hotel/Hotel"))
 const HotelCheckout = lazy(() => import("./Pages/Hotel/HotelCheckout"))
 const HotelBookingSuccess = lazy(() => import("./Pages/Hotel/HotelBookingSuccess"))
@@ -73,6 +75,8 @@ import { InstructorProfile } from "./Pages/Instructor/InstructorProfile"
 import InstructorSettings from "./Pages/Instructor/InstructorSettings"
 import InstructorTickets from "./Pages/Instructor/InstructorTickets"
 import { CartProvider } from "./Pages/Cart/CartContext"
+import { ComparisonProvider } from "./contexts/ComparisonContext"
+import { FavoritesProvider } from "./contexts/FavoritesContext"
 import InstructorPendingReview from "./Pages/Instructor/InstructorPendingReview"
 import { WebsiteSettingsProvider } from "./contexts/WebsiteSettingsContext"
 import InstructorsPage from "./Pages/Admin/SubPages/InstructorsVerification"
@@ -131,7 +135,9 @@ const App = () => {
       <AuthProvider>
         <WebsiteSettingsProvider>
           <CartProvider>
-            <LanguageInitializer />
+            <ComparisonProvider>
+              <FavoritesProvider>
+                <LanguageInitializer />
             <BrowserRouter>
               <ChatWidget />
               <Suspense fallback={<Loader />}>
@@ -179,6 +185,16 @@ const App = () => {
                   <Route path="/shop/search" element={
                     <FeatureRoute feature="shop">
                       <SearchPage />
+                    </FeatureRoute>
+                  } />
+                  <Route path="/shop/comparison" element={
+                    <FeatureRoute feature="shop">
+                      <ComparisonPage />
+                    </FeatureRoute>
+                  } />
+                  <Route path="/favorites" element={
+                    <FeatureRoute feature="shop">
+                      <FavoritesPage />
                     </FeatureRoute>
                   } />
                   <Route path="/book-hotel" element={
@@ -326,6 +342,8 @@ const App = () => {
                 </Routes>
               </Suspense>
             </BrowserRouter>
+            </FavoritesProvider>
+            </ComparisonProvider>
           </CartProvider>
         </WebsiteSettingsProvider>
       </AuthProvider>

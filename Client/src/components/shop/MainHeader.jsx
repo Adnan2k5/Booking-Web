@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Search, ShoppingCart, Heart, User, Menu, X } from "lucide-react";
+import { Search, ShoppingCart, Heart, User, Menu, X, GitCompare } from "lucide-react";
 
 export default function MainHeader({ categories = [], onSearch, onCategorySelect, selectedCategory }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -47,6 +47,7 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
             </button>
           </form>
           <Link to="/favorites" className="hover:text-orange-400"><Heart className="h-5 w-5" /></Link>
+          <Link to="/shop/comparison" className="hover:text-orange-400"><GitCompare className="h-5 w-5" /></Link>
           <Link to="/account" className="hover:text-orange-400"><User className="h-5 w-5" /></Link>
           <Link to="/cart" className="relative hover:text-orange-400">
             <ShoppingCart className="h-5 w-5" />
@@ -87,6 +88,7 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
           </div>
           <div className="flex gap-6 pt-2 text-sm">
             <Link to="/favorites" onClick={()=>setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><Heart className="h-4 w-4" /> Favorites</Link>
+            <Link to="/shop/comparison" onClick={()=>setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><GitCompare className="h-4 w-4" /> Compare</Link>
             <Link to="/account" onClick={()=>setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><User className="h-4 w-4" /> Account</Link>
             <Link to="/cart" onClick={()=>setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><ShoppingCart className="h-4 w-4" /> Cart</Link>
           </div>
