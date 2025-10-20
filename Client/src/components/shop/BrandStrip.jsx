@@ -1,6 +1,6 @@
+import { axiosClient } from '../../AxiosClient/axios';
 import './brandstrip.css';
 import { useEffect, useState, useMemo, useRef } from 'react';
-import axios from 'axios';
 
 export default function BrandStrip() {
   const [sponsors, setSponsors] = useState([]);
@@ -15,8 +15,7 @@ export default function BrandStrip() {
     const fetchSponsors = async () => {
       try {
         setLoading(true);
-        const base = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-        const res = await axios.get(`${base}/api/sponsors`);
+        const res = await axiosClient.get(`/api/sponsors`);
         if (!ignore) {
           const data = Array.isArray(res.data?.data) ? res.data.data : [];
             // filter active and with some visual asset or name

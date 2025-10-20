@@ -40,7 +40,9 @@ export default function RecommendedSlider({ items = [], addToCart }) {
                 </Link>
                 <div className="flex items-center justify-between pt-1">
                   <p className="font-bold text-neutral-900">€{item.price}</p>
-                  <Button onClick={() => addToCart?.(item)} size="sm" className="bg-black hover:bg-orange-500 text-white rounded-full h-8 px-3 text-xs font-medium">
+                  <Button onClick={() => {
+                    addToCart(item)
+                  }} size="sm" className="bg-black hover:bg-orange-500 text-white rounded-full h-8 px-3 text-xs font-medium">
                     <ShoppingCart className="h-4 w-4 mr-1" /> Add
                   </Button>
                 </div>
