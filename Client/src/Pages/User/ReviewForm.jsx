@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { Button } from '../../components/ui/button'
 import { Star } from 'lucide-react'
 import { postReview, updateReview, deleteReview } from '../../Api/reviews.api'
+import { toast } from 'sonner'
 
 export default function ReviewForm({ selectedBooking, existingReview, onSuccess, onCancel }) {
   const [rating, setRating] = useState(existingReview?.rating || 5)
   const [comment, setComment] = useState(existingReview?.comment || '')
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [serverError, setServerError] = useState(null)
 
   useEffect(() => {
     setRating(existingReview?.rating || 5)
@@ -29,15 +31,23 @@ export default function ReviewForm({ selectedBooking, existingReview, onSuccess,
     try {
       setSubmitting(true)
       const payload = buildPayload()
+      const toastId = toast.loading(existingReview ? 'Updating review...' : 'Submitting review...')
       if (existingReview && existingReview._id) {
         await updateReview(existingReview._id, payload)
+        toast.success('Review updated', { id: toastId })
       } else {
         await postReview(payload)
+        toast.success('Review submitted', { id: toastId })
       }
       setSubmitting(false)
+      setServerError(null)
       onSuccess && onSuccess()
     } catch (err) {
       console.error('Failed to submit review', err)
+      // prefer server error message when available
+      const msg = err?.response?.data?.message || err?.message || 'Failed to submit review'
+      setServerError(msg)
+      toast.error(msg)
       setSubmitting(false)
     }
   }
@@ -46,11 +56,17 @@ export default function ReviewForm({ selectedBooking, existingReview, onSuccess,
     if (!existingReview || !existingReview._id) return
     try {
       setDeleting(true)
+      const toastId = toast.loading('Deleting review...')
       await deleteReview(existingReview._id)
+      toast.success('Review deleted', { id: toastId })
       setDeleting(false)
+      setServerError(null)
       onSuccess && onSuccess()
     } catch (err) {
       console.error('Failed to delete review', err)
+      const msg = err?.response?.data?.message || err?.message || 'Failed to delete review'
+      setServerError(msg)
+      toast.error(msg)
       setDeleting(false)
     }
   }
@@ -78,6 +94,8 @@ export default function ReviewForm({ selectedBooking, existingReview, onSuccess,
           placeholder="Write a short review (optional)"
           className="w-full p-2 border rounded-md h-24"
         />
+
+        {serverError && <div className="text-sm text-red-600">{serverError}</div>}
 
         <div className="flex gap-2">
           <Button onClick={handleSubmit} disabled={submitting}>

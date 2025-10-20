@@ -42,27 +42,32 @@ export default function UserBookingsPage() {
     const list = bookings[type] || []
     if (loading[type]) return <div className="py-8 text-center"><Loader2 className="animate-spin mx-auto" /></div>
     if (!list.length) return <div className="py-8 text-center text-gray-500">No {type} bookings found</div>
-    
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {list.map(b => (
-          <Card key={b._id} className="rounded-2xl">
-            <div className="h-40 w-full relative">
-              <img src={b.session?.adventureId?.medias?.[0] || b.hotel?.medias?.[0] || "/placeholder.svg?height=200&width=300"} alt="media" className="w-full h-full object-cover" />
-              <Badge className="absolute top-2 right-2">{new Date(b.startTime) > new Date() ? 'Upcoming' : 'Completed'}</Badge>
-            </div>
-            <CardHeader className="pt-4">
-              <CardTitle>{b.session?.adventureId?.name || b.hotel?.name || 'Booking'}</CardTitle>
-              <CardDescription className="text-sm text-gray-600">{b.session?.location?.name || b.hotel?.location || ''}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <div className="text-sm">${b.amount || 0}</div>
-                <Button variant="outline" onClick={() => handleViewDetails(b)}>View Details</Button>
+        {list.map(b => {
+          const priceValue = (b.session.price ?? b.amount ?? 0)
+          const priceDisplay = typeof priceValue === 'number' ? priceValue.toFixed(2) : String(priceValue)
+          const statusLabel = b.status.toUpperCase()
+
+          return (
+            <Card key={b._id} className="rounded-2xl">
+              <div className="h-40 w-full relative">
+                <img src={b.session?.adventureId?.medias?.[0] || b.hotel?.medias?.[0] || "/placeholder.svg?height=200&width=300"} alt="media" className="w-full h-full object-cover" />
+                <Badge className="absolute top-2 right-2">{statusLabel}</Badge>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              <CardHeader className="pt-4">
+                <CardTitle>{b.session?.adventureId?.name || b.hotel?.name || 'Booking'}</CardTitle>
+                <CardDescription className="text-sm text-gray-600">{b.session?.location?.name || b.hotel?.location || ''}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm">${priceDisplay}</div>
+                  <Button variant="outline" onClick={() => handleViewDetails(b)}>View Details</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     )
   }

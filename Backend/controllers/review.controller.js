@@ -1,5 +1,6 @@
 import { Review } from "../models/review.model.js";
 import { Instructor } from "../models/instructor.model.js";
+import { User } from "../models/user.model.js";
 import { Hotel } from "../models/hotel.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -7,7 +8,7 @@ import mongoose from "mongoose";
 
 async function recalcForInstructor(instructorId) {
   const res = await Review.aggregate([
-    { $match: { instructor: mongoose.Types.ObjectId(instructorId) } },
+    { $match: { instructor: new mongoose.Types.ObjectId(instructorId) } },
     {
       $group: {
         _id: "$instructor",
@@ -32,7 +33,7 @@ async function recalcForInstructor(instructorId) {
 
 async function recalcForHotel(hotelId) {
   const res = await Review.aggregate([
-    { $match: { hotel: mongoose.Types.ObjectId(hotelId) } },
+    { $match: { hotel: new mongoose.Types.ObjectId(hotelId) } },
     {
       $group: {
         _id: "$hotel",
@@ -62,6 +63,8 @@ export const createReview = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Rating must be between 1 and 5");
   }
 
+  console.log(req.body);
+
   if (!instructorId && !hotelId) {
     throw new ApiError(400, "Target (instructorId or hotelId) is required");
   }
@@ -73,9 +76,13 @@ export const createReview = asyncHandler(async (req, res) => {
   };
 
   if (instructorId) {
-    const instructor = await Instructor.findById(instructorId);
-    if (!instructor) throw new ApiError(404, "Instructor not found");
-    reviewData.instructor = instructorId;
+    // We expect a User id for the instructor (user._id). Resolve to the Instructor document via User.instructor
+    const user = await User.findById(instructorId);
+    if (!user || !user.instructor) {
+      throw new ApiError(404, "Instructor not found for provided user id");
+    }
+    // user.instructor may be populated or an ObjectId
+    reviewData.instructor = user.instructor._id ? user.instructor._id : user.instructor;
   }
 
   if (hotelId) {
@@ -142,7 +149,15 @@ export const deleteReview = asyncHandler(async (req, res) => {
 export const getReviews = asyncHandler(async (req, res) => {
   const { instructorId, hotelId, page = 1, limit = 20 } = req.query;
   const filter = {};
-  if (instructorId) filter.instructor = instructorId;
+  if (instructorId) {
+    // instructorId is a User id; resolve to Instructor id
+    const user = await User.findById(instructorId);
+    if (!user || !user.instructor) {
+      // no instructor found for this user — return empty list
+      return res.json([]);
+    }
+    filter.instructor = user.instructor._id ? user.instructor._id : user.instructor;
+  }
   if (hotelId) filter.hotel = hotelId;
 
   const skip = (Number(page) - 1) * Number(limit);
