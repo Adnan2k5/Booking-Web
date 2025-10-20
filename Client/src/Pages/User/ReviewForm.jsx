@@ -24,6 +24,10 @@ export default function ReviewForm({ selectedBooking, existingReview, onSuccess,
     if (selectedBooking?.hotel) {
       payload.hotelId = selectedBooking.hotel._id || selectedBooking.hotel
     }
+    // For item bookings, extract itemId from items array
+    if (selectedBooking?.items && Array.isArray(selectedBooking.items) && selectedBooking.items.length > 0) {
+      payload.itemId = selectedBooking.items[0].item._id || selectedBooking.items[0].item
+    }
     return payload
   }
 
@@ -31,6 +35,7 @@ export default function ReviewForm({ selectedBooking, existingReview, onSuccess,
     try {
       setSubmitting(true)
       const payload = buildPayload()
+      console.log('Review payload:', payload)
       const toastId = toast.loading(existingReview ? 'Updating review...' : 'Submitting review...')
       if (existingReview && existingReview._id) {
         await updateReview(existingReview._id, payload)

@@ -7,7 +7,8 @@ import { fetchReviews } from '../../Api/reviews.api'
 import { toast } from 'sonner'
 
 export default function BookingDetailsDialog({ isOpen, onOpenChange, selectedBooking, onReviewSuccess }) {
-  if (!selectedBooking) return null
+  // Instead of returning null directly, render an empty fragment
+  if (!selectedBooking) return <div style={{ display: 'none' }} />
 
   const [existingReview, setExistingReview] = useState(null)
   const [loadingReview, setLoadingReview] = useState(false)
@@ -23,6 +24,10 @@ export default function BookingDetailsDialog({ isOpen, onOpenChange, selectedBoo
       const params = {}
       if (selectedBooking.session?.instructorId) params.instructorId = selectedBooking.session.instructorId._id || selectedBooking.session.instructorId
       if (selectedBooking.hotel) params.hotelId = selectedBooking.hotel._id || selectedBooking.hotel
+      // For item bookings, extract itemId from items array
+      if (selectedBooking.items && Array.isArray(selectedBooking.items) && selectedBooking.items.length > 0) {
+        params.itemId = selectedBooking.items[0].item._id || selectedBooking.items[0].item
+      }
       const res = await fetchReviews(params)
       const reviews = res?.data || res?.reviews || res || []
       const first = Array.isArray(reviews) ? reviews[0] : (reviews?.data?.[0])
@@ -38,7 +43,7 @@ export default function BookingDetailsDialog({ isOpen, onOpenChange, selectedBoo
   }
 
   useEffect(() => {
-    if (isOpen && (selectedBooking.session?.instructorId || selectedBooking.hotel)) {
+  if (isOpen && (selectedBooking.session?.instructorId || selectedBooking.hotel || (selectedBooking.items && selectedBooking.items.length > 0))) {
       loadReview()
     } else {
       setExistingReview(null)
@@ -50,7 +55,10 @@ export default function BookingDetailsDialog({ isOpen, onOpenChange, selectedBoo
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            {selectedBooking.session?.adventureId?.name || selectedBooking.hotel?.name || 'Booking Details'}
+            {selectedBooking.session?.adventureId?.name
+              || selectedBooking.hotel?.name
+              || (selectedBooking.items && selectedBooking.items.length > 0 && (selectedBooking.items[0].item?.name || selectedBooking.items[0].itemName))
+              || 'Booking Details'}
           </DialogTitle>
           <DialogDescription>Booking ID: {selectedBooking._id}</DialogDescription>
         </DialogHeader>
@@ -58,8 +66,17 @@ export default function BookingDetailsDialog({ isOpen, onOpenChange, selectedBoo
         <div className="space-y-6">
           <div className="relative h-48 rounded-lg overflow-hidden">
             <img
-              src={selectedBooking.session?.adventureId?.medias?.[0] || selectedBooking.session?.adventureId?.thumbnail || selectedBooking.hotel?.medias?.[0] || '/placeholder.svg?height=200&width=400'}
-              alt={selectedBooking.session?.adventureId?.name || selectedBooking.hotel?.name || 'Booking'}
+              src={
+                selectedBooking.session?.adventureId?.medias?.[0]
+                || selectedBooking.session?.adventureId?.thumbnail
+                || selectedBooking.hotel?.medias?.[0]
+                || (selectedBooking.items && selectedBooking.items.length > 0 && (selectedBooking.items[0].item?.images?.[0] || selectedBooking.items[0].itemImage))
+                || '/placeholder.svg?height=200&width=400'
+              }
+              alt={selectedBooking.session?.adventureId?.name
+                || selectedBooking.hotel?.name
+                || (selectedBooking.items && selectedBooking.items.length > 0 && (selectedBooking.items[0].item?.name || selectedBooking.items[0].itemName))
+                || 'Booking'}
               className="w-full h-full object-cover"
             />
             <Badge className={`absolute top-4 right-4 ${getStatusBadgeClass(selectedBooking.status)}`}>
