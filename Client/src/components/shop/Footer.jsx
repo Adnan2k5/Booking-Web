@@ -16,7 +16,7 @@ export default function Footer({ categories = [] }) {
         <div>
           <h4 className="font-semibold mb-4 tracking-wide">Shop</h4>
           <ul className="space-y-2 text-sm text-neutral-400">
-            {categories.map(c => <li key={c}><a href={`/category/${c.toLowerCase()}`} className="hover:text-orange-400 transition-colors">{c}</a></li>)}
+            {categories.map(c => <li key={c}><a href={`/shop/category/${c.toLowerCase()}`} className="hover:text-orange-400 transition-colors">{c}</a></li>)}
             <li><a href="/new-arrivals" className="hover:text-orange-400 transition-colors">New Arrivals</a></li>
             <li><a href="/sale" className="hover:text-orange-400 transition-colors">Sale Items</a></li>
           </ul>
@@ -43,9 +43,6 @@ export default function Footer({ categories = [] }) {
       <div className="border-t border-neutral-900">
         <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-neutral-600 text-xs">© 2025 Adventure Shop. All rights reserved.</p>
-          <div className="flex items-center gap-4 opacity-70">
-            {['Visa','MC','Amex','PayPal'].map(p => <img key={p} src={`https://placehold.co/40x25?text=${p}`} alt={p} className="h-6" />)}
-          </div>
         </div>
       </div>
     </footer>

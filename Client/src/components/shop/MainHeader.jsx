@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Search, ShoppingCart, Heart, User, Menu, X } from "lucide-react";
-import { Button } from "../../components/ui/button";
 
-export default function MainHeader({ categories = [], onSearch }) {
+export default function MainHeader({ categories = [], onSearch, onCategorySelect, selectedCategory }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -22,7 +21,19 @@ export default function MainHeader({ categories = [], onSearch }) {
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-6 text-sm">
           {categories.map(c => (
-            <Link key={c} to={`/category/${c.toLowerCase()}`} className="hover:text-orange-400 transition-colors font-medium">
+            <Link
+              key={c}
+              to={`/shop/category/${c.toLowerCase()}`}
+              onClick={(e) => {
+                // Prevent default navigation when using category filter from header
+                if (onCategorySelect) {
+                  e.preventDefault();
+                  onCategorySelect(c);
+                }
+              }}
+              aria-current={selectedCategory === c ? 'page' : undefined}
+              className={`transition-colors font-medium ${selectedCategory === c ? 'text-orange-400 font-semibold underline underline-offset-4' : 'hover:text-orange-400'}`}
+            >
               {c}
             </Link>
           ))}
@@ -57,7 +68,19 @@ export default function MainHeader({ categories = [], onSearch }) {
           </form>
           <div className="grid gap-2">
             {categories.map(c => (
-              <Link key={c} to={`/category/${c.toLowerCase()}`} onClick={()=>setMobileOpen(false)} className="py-2 border-b border-neutral-800 text-sm font-medium tracking-wide">
+              <Link
+                key={c}
+                to={`/shop/category/${c.toLowerCase()}`}
+                onClick={(e) => {
+                  if (onCategorySelect) {
+                    e.preventDefault();
+                    onCategorySelect(c);
+                  }
+                  setMobileOpen(false);
+                }}
+                aria-current={selectedCategory === c ? 'page' : undefined}
+                className={`py-2 border-b border-neutral-800 text-sm font-medium tracking-wide ${selectedCategory === c ? 'text-orange-400 font-semibold underline underline-offset-4' : ''}`}
+              >
                 {c}
               </Link>
             ))}
