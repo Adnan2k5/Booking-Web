@@ -17,11 +17,16 @@ const SecretNftEvents = () => {
         const fetchNftEvents = async () => {
             try {
                 setIsLoading(true)
-                const response = await getEvents({ limit: 10 })
-                const eventsWithNfts = response.data.filter(
-                    (event) => event.isNftEvent || (event.nftReward && event.nftReward.enabled),
-                )
-                setNftEvents(eventsWithNfts)
+                    const response = await getEvents({ limit: 10 })
+                    if (response && Array.isArray(response.data)) {
+                        const eventsWithNfts = response.data.filter(
+                            (event) => event.isNftEvent || (event.nftReward && event.nftReward.enabled),
+                        )
+                        setNftEvents(eventsWithNfts)
+                    } else {
+                        setError("No event data received from server.")
+                        setNftEvents([])
+                    }
 
             } catch (err) {
                 console.error("Error fetching NFT events:", err)
