@@ -2,6 +2,31 @@ import { Review } from "../models/review.model.js";
 import { Instructor } from "../models/instructor.model.js";
 import { User } from "../models/user.model.js";
 import { Hotel } from "../models/hotel.model.js";
+import { Item } from "../models/item.model.js";
+async function recalcForItem(itemId) {
+  const res = await Review.aggregate([
+    { $match: { item: new mongoose.Types.ObjectId(itemId) } },
+    {
+      $group: {
+        _id: "$item",
+        avg: { $avg: "$rating" },
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  if (res.length) {
+    await Item.findByIdAndUpdate(itemId, {
+      avgRating: res[0].avg,
+      totalReviews: res[0].count,
+    });
+  } else {
+    await Item.findByIdAndUpdate(itemId, {
+      avgRating: 0,
+      totalReviews: 0,
+    });
+  }
+}
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
@@ -57,16 +82,14 @@ async function recalcForHotel(hotelId) {
 }
 
 export const createReview = asyncHandler(async (req, res) => {
-  const { instructorId, hotelId, rating, comment } = req.body;
+  const { instructorId, hotelId, itemId, rating, comment } = req.body;
 
   if (!rating || (rating < 1 || rating > 5)) {
     throw new ApiError(400, "Rating must be between 1 and 5");
   }
 
-  console.log(req.body);
-
-  if (!instructorId && !hotelId) {
-    throw new ApiError(400, "Target (instructorId or hotelId) is required");
+  if (!instructorId && !hotelId && !itemId) {
+    throw new ApiError(400, "Target (instructorId, hotelId, or itemId) is required");
   }
 
   const reviewData = {
@@ -76,12 +99,10 @@ export const createReview = asyncHandler(async (req, res) => {
   };
 
   if (instructorId) {
-    // We expect a User id for the instructor (user._id). Resolve to the Instructor document via User.instructor
     const user = await User.findById(instructorId);
     if (!user || !user.instructor) {
       throw new ApiError(404, "Instructor not found for provided user id");
     }
-    // user.instructor may be populated or an ObjectId
     reviewData.instructor = user.instructor._id ? user.instructor._id : user.instructor;
   }
 
@@ -91,19 +112,26 @@ export const createReview = asyncHandler(async (req, res) => {
     reviewData.hotel = hotelId;
   }
 
+  if (itemId) {
+    const item = await Item.findById(itemId);
+    if (!item) throw new ApiError(404, "Item not found");
+    reviewData.item = itemId;
+  }
+
   // Prevent duplicate review by same user for same target
   const existing = await Review.findOne({
     user: req.user._id,
     instructor: reviewData.instructor || undefined,
     hotel: reviewData.hotel || undefined,
+    item: reviewData.item || undefined,
   });
   if (existing) throw new ApiError(409, "User has already reviewed this item");
 
   const review = await Review.create(reviewData);
 
-  // Recalculate averages
   if (review.instructor) await recalcForInstructor(review.instructor);
   if (review.hotel) await recalcForHotel(review.hotel);
+  if (review.item) await recalcForItem(review.item);
 
   res.status(201).json(review);
 });
@@ -127,6 +155,7 @@ export const updateReview = asyncHandler(async (req, res) => {
 
   if (review.instructor) await recalcForInstructor(review.instructor);
   if (review.hotel) await recalcForHotel(review.hotel);
+  if (review.item) await recalcForItem(review.item);
 
   res.json(review);
 });
@@ -142,23 +171,23 @@ export const deleteReview = asyncHandler(async (req, res) => {
 
   if (review.instructor) await recalcForInstructor(review.instructor);
   if (review.hotel) await recalcForHotel(review.hotel);
+  if (review.item) await recalcForItem(review.item);
 
   res.json({ success: true });
 });
 
 export const getReviews = asyncHandler(async (req, res) => {
-  const { instructorId, hotelId, page = 1, limit = 20 } = req.query;
+  const { instructorId, hotelId, itemId, page = 1, limit = 20 } = req.query;
   const filter = {};
   if (instructorId) {
-    // instructorId is a User id; resolve to Instructor id
     const user = await User.findById(instructorId);
     if (!user || !user.instructor) {
-      // no instructor found for this user — return empty list
       return res.json([]);
     }
     filter.instructor = user.instructor._id ? user.instructor._id : user.instructor;
   }
   if (hotelId) filter.hotel = hotelId;
+  if (itemId) filter.item = itemId;
 
   const skip = (Number(page) - 1) * Number(limit);
   const reviews = await Review.find(filter)

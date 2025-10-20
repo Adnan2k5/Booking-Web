@@ -45,19 +45,35 @@ export default function UserBookingsPage() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {list.map(b => {
-          const priceValue = (b.session.price ?? b.amount ?? 0)
+          // Safely get price depending on booking type
+          let priceValue = 0
+          if (b.session && typeof b.session.price !== 'undefined') priceValue = b.session.price
+          else if (b.hotel && typeof b.hotel.price !== 'undefined') priceValue = b.hotel.price
+          else if (typeof b.amount !== 'undefined') priceValue = b.amount
           const priceDisplay = typeof priceValue === 'number' ? priceValue.toFixed(2) : String(priceValue)
-          const statusLabel = b.status.toUpperCase()
+          const statusLabel = b.status?.toUpperCase() || 'UNKNOWN'
 
+          let imageSrc = b.session?.adventureId?.medias?.[0]
+            || b.hotel?.medias?.[0]
+            || (b.items && b.items.length > 0 && (b.items[0].item?.images?.[0] || b.items[0].itemImage))
+            || "/placeholder.svg?height=200&width=300"
+          let title = b.session?.adventureId?.name
+            || b.hotel?.name
+            || (b.items && b.items.length > 0 && (b.items[0].item?.name || b.items[0].itemName))
+            || 'Booking'
+          let description = b.session?.location?.name
+            || b.hotel?.location
+            || (b.items && b.items.length > 0 && (b.items[0].item?.description || b.items[0].itemDescription))
+            || ''
           return (
             <Card key={b._id} className="rounded-2xl">
               <div className="h-40 w-full relative">
-                <img src={b.session?.adventureId?.medias?.[0] || b.hotel?.medias?.[0] || "/placeholder.svg?height=200&width=300"} alt="media" className="w-full h-full object-cover" />
+                <img src={imageSrc} alt="media" className="w-full h-full object-cover" />
                 <Badge className="absolute top-2 right-2">{statusLabel}</Badge>
               </div>
               <CardHeader className="pt-4">
-                <CardTitle>{b.session?.adventureId?.name || b.hotel?.name || 'Booking'}</CardTitle>
-                <CardDescription className="text-sm text-gray-600">{b.session?.location?.name || b.hotel?.location || ''}</CardDescription>
+                <CardTitle>{title}</CardTitle>
+                <CardDescription className="text-sm text-gray-600">{description}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between items-center">

@@ -34,6 +34,10 @@ export const createEventBooking = asyncHandler(async (req, res) => {
   if (!eventExists) {
     throw new ApiError(404, "Event not found");
   }
+  // Validate event has city and country
+  if (!eventExists.city || !eventExists.country) {
+    throw new ApiError(400, "Event is missing required location fields: city and country");
+  }
 
   // Validate adventure instructors if provided
   if (adventureInstructors && eventExists.adventures.length > 0) {

@@ -97,14 +97,13 @@ export default function Dash_Bookings() {
       }
       
       const response = await getAllSessionBookings(params)
-      
-      const bookingsData = response?.data?.data || []
+      // Backend returns { bookings, total, page, totalPages } inside response.data.data
+      const bookingsData = response?.data?.data?.bookings || []
       const meta = {
-        total: response?.data?.total || 0,
-        totalPages: response?.data?.totalPages || 0,
-        currentPage: response?.data?.page || 1
+        total: response?.data?.data?.total || 0,
+        totalPages: response?.data?.data?.totalPages || 0,
+        currentPage: response?.data?.data?.page || 1
       }
-      
       setSessionBookings(Array.isArray(bookingsData) ? bookingsData : [])
       setPaginationMeta(prev => ({ ...prev, sessions: meta }))
     } catch (error) {
@@ -373,6 +372,7 @@ function BookingsTable({ bookings, loading, type }) {
     } else if (type === "session") {
       return [
         <TableHead key="session">Session</TableHead>,
+        <TableHead key="sessionId">Session ID</TableHead>,
         ...commonHeaders,
         <TableHead key="participants">Participants</TableHead>
       ]
@@ -441,10 +441,18 @@ function BookingsTable({ bookings, loading, type }) {
       )
     } else if (type === "session") {
       const sessionTitle = booking.session?.title || 'N/A'
+      // Fallback: if session._id is missing, show booking.session (ObjectId)
+      let sessionId = 'N/A';
+      if (booking.session && typeof booking.session === 'object' && booking.session._id) {
+        sessionId = booking.session._id;
+      } else if (booking.session && typeof booking.session === 'string') {
+        sessionId = booking.session;
+      }
       const participants = booking.participants || booking.bookedSeats || 1
       return (
         <TableRow key={booking._id || booking.id}>
           <TableCell>{sessionTitle}</TableCell>
+          <TableCell>{sessionId}</TableCell>
           {commonCells}
           <TableCell>{participants}</TableCell>
         </TableRow>
@@ -558,21 +566,23 @@ function PaginationControls({ currentPage, totalPages, onPageChange, totalItems,
         {/* Page numbers */}
         <div className="flex items-center space-x-1">
           {getPageNumbers().map((page, index) => (
-            page === '...' ? (
-              <span key={index} className="px-2 text-muted-foreground">
-                ...
-              </span>
-            ) : (
-              <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
-                size="sm"
-                onClick={() => onPageChange(page)}
-                className="h-8 w-8 p-0"
-              >
-                {page}
-              </Button>
-            )
+            page === '...'
+              ? (
+                  <span key={`ellipsis-${index}`} className="px-2 text-muted-foreground">
+                    ...
+                  </span>
+                )
+              : (
+                  <Button
+                    key={`page-${page}`}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => onPageChange(page)}
+                    className="h-8 w-8 p-0"
+                  >
+                    {page}
+                  </Button>
+                )
           ))}
         </div>
         

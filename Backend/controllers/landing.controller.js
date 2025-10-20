@@ -39,8 +39,8 @@ export const createEvents = asyncHandler(async (req, res, next) => {
     });
   }
 
-  // Extract city and country from coordinates
-  const { city, country } = await reverseGeocode(latitude, longitude);
+  // Get city and country directly from frontend
+  const { city, country } = req.body;
 
   let medias = [];
   let image = null;
@@ -266,15 +266,18 @@ export const updateEvent = asyncHandler(async (req, res, next) => {
     };
   }
 
-  // Update coordinates and extract city/country if provided
+  // Update coordinates and use city/country from frontend if provided
   if (latitude && longitude) {
-    const { city, country } = await reverseGeocode(latitude, longitude);
     updateData.coordinates = {
       latitude: parseFloat(latitude),
       longitude: parseFloat(longitude),
     };
-    updateData.city = city;
-    updateData.country = country;
+  }
+  if (req.body.city) {
+    updateData.city = req.body.city;
+  }
+  if (req.body.country) {
+    updateData.country = req.body.country;
   }
 
   // Handle media uploads

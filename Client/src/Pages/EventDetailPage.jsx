@@ -50,6 +50,7 @@ export default function EventDetailPage() {
     };
 
     const formatDisplayTime = (timeString) => {
+        if (!timeString) return "";
         return new Date(`1970-01-01T${timeString}`).toLocaleTimeString("en-US", {
             hour: "2-digit",
             minute: "2-digit",
@@ -209,7 +210,10 @@ export default function EventDetailPage() {
                                             <Clock className="h-5 w-5 text-gray-400" />
                                             <div>
                                                 <p className="text-sm text-gray-500">Time</p>
-                                                <p className="font-medium">{formatDisplayTime(event.time)}</p>
+                                                <p className="font-medium">
+                                                    {formatDisplayTime(event.startTime)}
+                                                    {event.endTime ? ` - ${formatDisplayTime(event.endTime)}` : ""}
+                                                </p>
                                             </div>
                                         </div>
 
@@ -280,7 +284,10 @@ export default function EventDetailPage() {
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-gray-600">Time</span>
-                                    <span className="font-medium">{formatDisplayTime(event.time)}</span>
+                                    <span className="font-medium">
+                                        {formatDisplayTime(event.startTime)}
+                                        {event.endTime ? ` - ${formatDisplayTime(event.endTime)}` : ""}
+                                    </span>
                                 </div>
                             </CardContent>
                         </Card>
