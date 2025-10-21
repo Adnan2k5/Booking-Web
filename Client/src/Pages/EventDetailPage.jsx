@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Badge } from "../components/ui/badge";
 import { toast } from "sonner";
 import { getEventById } from "../Api/event.api";
+import { createEventBooking } from "../Api/eventBooking.api";
 import { useAuth } from "./AuthProvider";
 
 export default function EventDetailPage() {
@@ -57,7 +58,7 @@ export default function EventDetailPage() {
         });
     };
 
-    const handleBooking = () => {
+    const handleBooking = async () => {
         if (!user?.user) {
             // Store current URL to redirect back after login
             localStorage.setItem("redirectAfterLogin", window.location.pathname);
@@ -74,8 +75,93 @@ export default function EventDetailPage() {
             return;
         }
 
-        // Here you would implement the actual booking logic
-        toast.success("Booking feature will be implemented soon!");
+
+        // Collect booking info from user
+        let email = user.user.email || "";
+        let phone = user.user.phone || "";
+        if (!email) {
+            email = prompt("Enter your email for booking:", email);
+            if (!email) {
+                toast.error("Email is required for booking.");
+                return;
+            }
+        }
+        if (!phone) {
+            phone = prompt("Enter your phone number for booking:", phone);
+            if (!phone) {
+                toast.error("Phone number is required for booking.");
+                return;
+            }
+        }
+
+        // Ask for number of participants (default 1)
+        let participants = 1;
+        const maxParticipants = event.maxParticipants || 20;
+        if (maxParticipants > 1) {
+            const input = prompt(`How many participants? (1-${maxParticipants})`, "1");
+            const parsed = parseInt(input, 10);
+            if (!isNaN(parsed) && parsed >= 1 && parsed <= maxParticipants) {
+                participants = parsed;
+            }
+        }
+
+        // Calculate amount (if event has price)
+        let price = event.price || 0;
+        let amount = price * participants;
+        if (isNaN(amount) || amount < 0) amount = 0;
+
+
+        // Prepare booking data (ensure all required fields are present and valid)
+        // Try to send all possible event IDs for backend compatibility
+        const eventId = event._id || event.id || event.eventId || id;
+        const safeParticipants = Number(participants) > 0 ? Number(participants) : 1;
+        const safeAmount = Number(amount) >= 0 ? Number(amount) : 0;
+        const safeEmail = String(email).trim();
+        const safePhone = String(phone).trim();
+        const bookingData = {
+            event: eventId,
+            participants: safeParticipants,
+            contactInfo: { email: safeEmail, phone: safePhone },
+            amount: safeAmount,
+            paymentMethod: "revolut", // default for now
+        };
+
+        // Debug: log bookingData before sending
+        // eslint-disable-next-line no-console
+        console.log("Booking Data:", bookingData, { event, id });
+
+        // Validate all required fields before sending
+        if (!bookingData.event || !bookingData.participants || !bookingData.contactInfo.email || !bookingData.contactInfo.phone || isNaN(bookingData.amount)) {
+            toast.error("Missing required booking fields. Please check your input.");
+            return;
+        }
+
+        try {
+            toast.loading("Creating your booking...");
+            const response = await createEventBooking(bookingData);
+            toast.dismiss();
+            // Debug: log API response
+            // eslint-disable-next-line no-console
+            console.log("Booking API response:", response);
+            if (response && response.data && response.data.paymentOrder && response.data.paymentOrder.checkout_url) {
+                toast.success("Booking created! Redirecting to payment...");
+                // Redirect to payment checkout page
+                window.location.href = response.data.paymentOrder.checkout_url;
+            } else {
+                toast.success("Booking created! Please check your bookings.");
+                navigate("/my-bookings");
+            }
+        } catch (err) {
+            toast.dismiss();
+            // Debug: log error
+            // eslint-disable-next-line no-console
+            console.error("Booking error:", err);
+            if (err.response && err.response.data && err.response.data.message) {
+                toast.error(err.response.data.message);
+            } else {
+                toast.error("Failed to create booking. Please try again.");
+            }
+        }
     };
 
     const canBook = () => {

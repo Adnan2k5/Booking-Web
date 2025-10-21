@@ -18,13 +18,13 @@ export const createEventBooking = asyncHandler(async (req, res) => {
     adventureInstructors,
   } = req.body;
 
+
   // Validate required fields
   if (
     !event ||
     !participants ||
     !contactInfo?.email ||
-    !contactInfo?.phone ||
-    !amount
+    !contactInfo?.phone
   ) {
     throw new ApiError(400, "All required fields must be provided");
   }
@@ -85,7 +85,7 @@ export const createEventBooking = asyncHandler(async (req, res) => {
 
   // Create Revolut payment order
   const revolutOrder = await createRevolutOrder(
-    amount,
+    ,
     "GBP",
     `Event Booking - ${eventExists.title} - User: ${
       req.user.name || req.user.email

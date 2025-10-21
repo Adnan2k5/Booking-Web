@@ -93,6 +93,10 @@ const eventSchema = new mongoose.Schema(
         type: String,
         required: false,
       },
+      price: {
+        type: Number,
+        required: false,
+      }
     },
   },
   { timestamps: true }
