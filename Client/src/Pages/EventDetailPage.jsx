@@ -17,6 +17,7 @@ export default function EventDetailPage() {
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [paymentMethod, setPaymentMethod] = useState("revolut");
 
     useEffect(() => {
         const fetchEvent = async () => {
@@ -75,7 +76,6 @@ export default function EventDetailPage() {
             return;
         }
 
-
         // Collect booking info from user
         let email = user.user.email || "";
         let phone = user.user.phone || "";
@@ -110,7 +110,6 @@ export default function EventDetailPage() {
         let amount = price * participants;
         if (isNaN(amount) || amount < 0) amount = 0;
 
-
         // Prepare booking data (ensure all required fields are present and valid)
         // Try to send all possible event IDs for backend compatibility
         const eventId = event._id || event.id || event.eventId || id;
@@ -123,7 +122,7 @@ export default function EventDetailPage() {
             participants: safeParticipants,
             contactInfo: { email: safeEmail, phone: safePhone },
             amount: safeAmount,
-            paymentMethod: "revolut", // default for now
+            paymentMethod: paymentMethod, // Use selected payment method
         };
 
         // Debug: log bookingData before sending
@@ -137,18 +136,77 @@ export default function EventDetailPage() {
         }
 
         try {
-            toast.loading("Creating your booking...");
+            // Check if event is free
+            const isFreeEvent = safeAmount === 0;
+            const messageText = isFreeEvent ? "Confirming your free event booking..." : "Creating your booking...";
+            toast.loading(messageText);
+
             const response = await createEventBooking(bookingData);
             toast.dismiss();
-            // Debug: log API response
+            
+            // Debug: log API response - Check response structure
             // eslint-disable-next-line no-console
-            console.log("Booking API response:", response);
-            if (response && response.data && response.data.paymentOrder && response.data.paymentOrder.checkout_url) {
-                toast.success("Booking created! Redirecting to payment...");
-                // Redirect to payment checkout page
-                window.location.href = response.data.paymentOrder.checkout_url;
+            console.log("🔵 Full API Response:", response);
+            console.log("🔵 Response.data:", response?.data);
+            console.log("🔵 Response.data.paymentMethod:", response?.data?.paymentMethod);
+            console.log("🔵 Response.data.paymentOrder:", response?.data?.paymentOrder);
+            console.log("🔵 isFreeEvent:", isFreeEvent);
+
+            // Check payment method FIRST before checking for checkout_url
+            if (isFreeEvent) {
+                // Free event - no payment needed
+                toast.success("Booking confirmed! Check your bookings.");
+                navigate("/my-bookings");
+            } else if (response?.data?.paymentMethod === "paypal") {
+                // For PayPal, redirect to PayPal approval URL
+                const paymentOrder = response?.data?.paymentOrder;
+                let approvalUrl = null;
+
+                // Debug log to see response structure
+                console.log("🔵 PayPal Order Response:", paymentOrder);
+
+                // Try to find approval link
+                if (paymentOrder?.links && Array.isArray(paymentOrder.links)) {
+                    // Look for "approve" link
+                    const approveLink = paymentOrder.links.find(
+                        link => link.rel === "approve"
+                    );
+                    approvalUrl = approveLink?.href;
+                    console.log("🔵 Found approve link href:", approvalUrl);
+                }
+
+                // Fallback to approve_url if links not found (older API versions)
+                if (!approvalUrl && paymentOrder?.approve_url) {
+                    approvalUrl = paymentOrder.approve_url;
+                }
+
+                console.log("🔵 Final approval URL:", approvalUrl);
+
+                if (approvalUrl) {
+                    console.log("🔵 🔵 🔵 REDIRECTING TO PAYPAL:", approvalUrl);
+                    toast.success("Booking created! Redirecting to PayPal...");
+                    // Use a small delay to ensure toast is shown
+                    setTimeout(() => {
+                        window.location.href = approvalUrl;
+                    }, 500);
+                } else {
+                    console.error("❌ No approval URL found!");
+                    console.error("❌ PayPal response links:", paymentOrder?.links);
+                    console.error("❌ Full PayPal response:", paymentOrder);
+                    toast.error("Failed to get PayPal checkout URL. Order ID: " + paymentOrder?.id);
+                }
+            } else if (response?.data?.paymentMethod === "revolut" || response?.data?.paymentOrder?.checkout_url) {
+                // For Revolut, redirect to Revolut checkout
+                const checkoutUrl = response?.data?.paymentOrder?.checkout_url;
+                console.log("🔴 Redirecting to Revolut:", checkoutUrl);
+                toast.success("Booking created! Redirecting to Revolut...");
+                setTimeout(() => {
+                    window.location.href = checkoutUrl;
+                }, 500);
             } else {
-                toast.success("Booking created! Please check your bookings.");
+                // No payment method detected, assume booking confirmed
+                console.warn("⚠️ Unexpected state - paymentMethod:", response?.data?.paymentMethod);
+                toast.success("Booking created! Check your bookings.");
                 navigate("/my-bookings");
             }
         } catch (err) {
@@ -174,7 +232,12 @@ export default function EventDetailPage() {
     const getBookingButtonText = () => {
         if (!user?.user) return "Login to Book";
         if (!canBook()) return `Level ${event?.level || 1} Required`;
-        return "Book Now";
+        
+        const price = event?.price || 0;
+        if (price === 0) {
+            return "Book Now - FREE";
+        }
+        return `Book Now - £${price.toFixed(2)}`;
     };
 
     if (loading) {
@@ -328,6 +391,57 @@ export default function EventDetailPage() {
                                     <div className="p-3 bg-gray-50 rounded-lg">
                                         <p className="text-sm text-gray-600">Your Level: {user.user.level || 1}</p>
                                         <p className="text-sm text-gray-600">Required Level: {event.level || 1}</p>
+                                    </div>
+                                )}
+
+                                {/* Price Display */}
+                                <div className={`p-3 rounded-lg ${event.price && event.price > 0 ? 'bg-blue-50 border border-blue-200' : 'bg-green-50 border border-green-200'}`}>
+                                    {event.price && event.price > 0 ? (
+                                        <p className="text-sm font-semibold text-blue-900">
+                                            Price: <span className="text-xl">£{event.price.toFixed(2)}</span> per person
+                                        </p>
+                                    ) : (
+                                        <p className="text-sm font-semibold text-green-900">
+                                            ✓ This event is FREE
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Payment Method Selection (only for paid events) */}
+                                {event.price && event.price > 0 && (
+                                    <div className="space-y-3">
+                                        <p className="text-sm font-semibold text-gray-700">Select Payment Method:</p>
+                                        <div className="space-y-2">
+                                            <label className="flex items-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors" style={{borderColor: paymentMethod === 'revolut' ? '#0066ff' : '#e5e7eb'}}>
+                                                <input
+                                                    type="radio"
+                                                    name="paymentMethod"
+                                                    value="revolut"
+                                                    checked={paymentMethod === 'revolut'}
+                                                    onChange={(e) => setPaymentMethod(e.target.value)}
+                                                    className="w-4 h-4 cursor-pointer"
+                                                />
+                                                <div className="ml-3">
+                                                    <p className="font-medium text-gray-900">Revolut</p>
+                                                    <p className="text-xs text-gray-500">Fast and secure payment</p>
+                                                </div>
+                                            </label>
+
+                                            <label className="flex items-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors" style={{borderColor: paymentMethod === 'paypal' ? '#003087' : '#e5e7eb'}}>
+                                                <input
+                                                    type="radio"
+                                                    name="paymentMethod"
+                                                    value="paypal"
+                                                    checked={paymentMethod === 'paypal'}
+                                                    onChange={(e) => setPaymentMethod(e.target.value)}
+                                                    className="w-4 h-4 cursor-pointer"
+                                                />
+                                                <div className="ml-3">
+                                                    <p className="font-medium text-gray-900">PayPal</p>
+                                                    <p className="text-xs text-gray-500">Trusted payment platform</p>
+                                                </div>
+                                            </label>
+                                        </div>
                                     </div>
                                 )}
 

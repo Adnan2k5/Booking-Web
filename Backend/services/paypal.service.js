@@ -95,6 +95,8 @@ export default class PayPalService {
           },
         }
       );
+      console.log("✅ PayPal API Response Status:", response.status);
+      console.log("✅ PayPal API Response Data:", JSON.stringify(response.data, null, 2));
       return response.data;
     } catch (error) {
       console.error(

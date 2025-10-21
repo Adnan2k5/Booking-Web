@@ -22,6 +22,7 @@ export const createEvents = asyncHandler(async (req, res, next) => {
     adventures,
     isNftEvent,
     nftReward,
+    price,
   } = req.body;
 
   if (
@@ -103,6 +104,7 @@ export const createEvents = asyncHandler(async (req, res, next) => {
     country,
     adventures: adventureIds || [],
     isNftEvent: isNftEvent === "true" || isNftEvent === true || false,
+    price: price ? parseFloat(price) : 0,
     nftReward: {
       enabled: isNftEvent === "true" || isNftEvent === true || false,
       nftName: nftRewardSettings.nftName || "",
@@ -214,6 +216,7 @@ export const updateEvent = asyncHandler(async (req, res, next) => {
     adventures,
     isNftEvent,
     nftReward,
+    price,
   } = req.body;
 
   const updateData = {
@@ -264,6 +267,11 @@ export const updateEvent = asyncHandler(async (req, res, next) => {
       nftDescription: nftRewardSettings.nftDescription || "",
       nftImage: nftRewardSettings.nftImage || "",
     };
+  }
+
+  // Update price if provided
+  if (price !== undefined) {
+    updateData.price = price ? parseFloat(price) : 0;
   }
 
   // Update coordinates and use city/country from frontend if provided

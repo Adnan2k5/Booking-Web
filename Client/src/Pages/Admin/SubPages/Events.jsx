@@ -46,6 +46,7 @@ export default function EventsPage() {
         },
         mapEmbedUrl: "",
         level: 1,
+        price: 0,
         images: [],
         adventures: [], // Array of adventure IDs
         isNftEvent: false,
@@ -97,6 +98,7 @@ export default function EventsPage() {
             },
             mapEmbedUrl: "",
             level: 1,
+            price: 0,
             images: [],
             adventures: [],
             isNftEvent: false,
@@ -285,6 +287,7 @@ export default function EventsPage() {
             },
             mapEmbedUrl: event.mapEmbedUrl || "",
             level: event.level || 1,
+            price: event.price || 0,
             images: [], // Reset images array for new uploads
             adventures: event.adventures?.map(a => a._id || a) || [],
             isNftEvent: event.isNftEvent || false,
@@ -824,6 +827,25 @@ export default function EventsPage() {
                         </div>
 
                         <div>
+                            <Label htmlFor="price" className="text-sm font-medium">
+                                Event Price (£) - Optional
+                            </Label>
+                            <Input
+                                id="price"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={formData.price}
+                                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                                placeholder="Enter event price (0 for free)"
+                                className="mt-1"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Set 0 or leave empty for free events
+                            </p>
+                        </div>
+
+                        <div>
                             <Label htmlFor="images" className="text-sm font-medium">
                                 Event Images
                             </Label>
@@ -1002,6 +1024,25 @@ export default function EventsPage() {
                             />
                             <p className="text-xs text-muted-foreground mt-1">
                                 Users must have this level or higher to book this event
+                            </p>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="edit-price" className="text-sm font-medium">
+                                Event Price (£) - Optional
+                            </Label>
+                            <Input
+                                id="edit-price"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={formData.price}
+                                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                                placeholder="Enter event price (0 for free)"
+                                className="mt-1"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Set 0 or leave empty for free events
                             </p>
                         </div>
 

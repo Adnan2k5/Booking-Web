@@ -2,6 +2,7 @@ import express from "express";
 import {
   createEventBooking,
   handleEventBookingWebhook,
+  handlePayPalEventBookingWebhook,
   getEventBookingById,
   getMyEventBookings,
   cancelEventBooking,
@@ -19,8 +20,9 @@ import { verifyAdmin, verifyInstructor } from "../middlewares/admin.middleware.j
 
 const router = express.Router();
 
-// Public routes
-router.post("/webhook", handleEventBookingWebhook); // Webhook for payment updates
+// Public routes (webhooks)
+router.post("/webhook", handleEventBookingWebhook); // Webhook for Revolut payment updates
+router.post("/webhook/paypal", handlePayPalEventBookingWebhook); // Webhook for PayPal payment updates
 
 // Protected routes (require authentication)
 router.use(verifyJWT);
