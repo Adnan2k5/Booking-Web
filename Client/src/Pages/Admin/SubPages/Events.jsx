@@ -213,6 +213,11 @@ export default function EventsPage() {
 
     const handleCreateEvent = async (e) => {
         e.preventDefault()
+        // Ensure at least one adventure selected
+        if (!formData.adventures || formData.adventures.length === 0) {
+            toast.error("Please select at least one adventure for this event.")
+            return
+        }
         setIsSubmitting(true)
         try {
             await createEvent(formData)
@@ -230,6 +235,11 @@ export default function EventsPage() {
 
     const handleUpdateEvent = async (e) => {
         e.preventDefault()
+        // Ensure at least one adventure selected
+        if (!formData.adventures || formData.adventures.length === 0) {
+            toast.error("Please select at least one adventure for this event.")
+            return
+        }
         setIsSubmitting(true)
         try {
             await updateEvent(selectedEvent._id, formData)
@@ -673,7 +683,7 @@ export default function EventsPage() {
                         {/* Adventures Selection */}
                         <div>
                             <Label className="text-sm font-medium">
-                                Adventures (Optional)
+                                Adventures *
                             </Label>
                             <div className="mt-2 space-y-2">
                                 <Button
@@ -998,7 +1008,7 @@ export default function EventsPage() {
                         {/* Adventures Selection */}
                         <div>
                             <Label className="text-sm font-medium">
-                                Adventures (Optional)
+                                Adventures *
                             </Label>
                             <div className="mt-2 space-y-2">
                                 <Button

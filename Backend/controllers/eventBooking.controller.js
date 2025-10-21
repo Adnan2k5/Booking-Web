@@ -19,16 +19,10 @@ export const createEventBooking = asyncHandler(async (req, res) => {
   } = req.body;
 
 
-  // Validate required fields
-  if (
-    !event ||
-    !participants ||
-    !contactInfo?.email ||
-    !contactInfo?.phone
-  ) {
+  // Validate required fields (amount is optional; will be derived from event if missing)
+  if (!event || !participants || !contactInfo?.email || !contactInfo?.phone) {
     throw new ApiError(400, "All required fields must be provided");
   }
-
   // Check if event exists and populate adventures
   const eventExists = await Event.findById(event).populate("adventures");
   if (!eventExists) {
@@ -83,9 +77,58 @@ export const createEventBooking = asyncHandler(async (req, res) => {
     // Continue with the process even if cleanup fails
   }
 
-  // Create Revolut payment order
+  // Determine final amount (if amount not provided or zero, use event price)
+  let finalAmount = Number(amount);
+  if (isNaN(finalAmount) || finalAmount <= 0) {
+    finalAmount = Number(eventExists.price) || 0;
+  }
+
+  // If amount is zero (free event), create confirmed booking without payment order
+  if (finalAmount <= 0) {
+    const booking = await EventBooking.create({
+      user: req.user._id,
+      event,
+      participants,
+      contactInfo,
+      amount: 0,
+      paymentMethod: paymentMethod || "none",
+      paymentOrderId: null,
+      paymentStatus: "completed",
+      status: "confirmed",
+      adventureInstructors: adventureInstructors || [],
+      adventureCompletionStatus: eventExists.adventures.map((adventure) => ({
+        adventure: adventure._id,
+        completed: false,
+      })),
+      nftEligible: eventExists.isNftEvent || false,
+      paymentCompletedAt: new Date(),
+    });
+
+    const populatedBooking = await EventBooking.findById(booking._id)
+      .populate(
+        "event",
+        "title description date startTime endTime location city country image adventures isNftEvent"
+      )
+      .populate("user", "name email")
+      .populate("adventureInstructors.adventure", "name description")
+      .populate("adventureInstructors.instructor", "name email")
+      .populate("adventureCompletionStatus.adventure", "name description");
+
+    return res.status(201).json(
+      new ApiResponse(
+        201,
+        {
+          booking: populatedBooking,
+          paymentOrder: null,
+        },
+        "Event Booking Created (free event)"
+      )
+    );
+  }
+
+  // Create Revolut payment order for paid events
   const revolutOrder = await createRevolutOrder(
-    ,
+    finalAmount,
     "GBP",
     `Event Booking - ${eventExists.title} - User: ${
       req.user.name || req.user.email
@@ -100,7 +143,7 @@ export const createEventBooking = asyncHandler(async (req, res) => {
     event,
     participants,
     contactInfo,
-    amount,
+    amount: finalAmount,
     paymentMethod: paymentMethod || "revolut",
     paymentOrderId: revolutOrder.id, // Store Revolut order ID for reference
     paymentStatus: "pending",
