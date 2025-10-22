@@ -38,12 +38,10 @@ export const InstructorProfile = () => {
     // Helper function to construct proper image URLs
     const getImageUrl = (imagePath, fallback = "/placeholder.svg") => {
         if (!imagePath) return fallback;
-        
         // If it's already a full URL, return as is
         if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('/')) {
             return imagePath;
         }
-        
         // If it's a relative path, construct the full URL
         // Adjust this base URL according to your backend configuration
         const baseUrl = process.env.REACT_APP_BASE_URL || 'http://localhost:5000';
@@ -56,7 +54,6 @@ export const InstructorProfile = () => {
         const videoExtensions = ['.mp4', '.webm', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.m4v'];
         return videoExtensions.some(ext => filename.toLowerCase().includes(ext));
     };
-
     const formatGalleryItems = (medias = []) =>
         medias
             .filter(Boolean)
@@ -445,8 +442,8 @@ export const InstructorProfile = () => {
                                     <div className="lg:w-1/3 flex flex-col items-center">
                                         <div className="relative mb-4">
                                             <Avatar className="h-24 w-24 sm:h-32 sm:w-32">
-                                                <AvatarImage 
-                                                    src={profileData.profilePicture || "/placeholder.svg"} 
+                                                <AvatarImage
+                                                    src={profileData.profilePicture || "/placeholder.svg"}
                                                     alt={profileData.name}
                                                     onError={(e) => {
                                                         e.target.src = "/placeholder.svg";
@@ -923,9 +920,9 @@ export const InstructorProfile = () => {
                                         }}
                                     />
                                 ) : (
-                                    <video 
-                                        src={selectedMedia.url} 
-                                        controls 
+                                    <video
+                                        src={selectedMedia.url}
+                                        controls
                                         className="w-full max-h-[70vh]"
                                         onError={(e) => {
                                             console.error("Video failed to load:", selectedMedia.url);
