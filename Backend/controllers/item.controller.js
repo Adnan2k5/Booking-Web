@@ -39,7 +39,19 @@ export const getItemById = asyncHandler(async (req, res) => {
 });
 
 export const discoverItems = asyncHandler(async (req, res) => {
-  const { category, search, limit = 10, page = 1, advenureId } = req.query;
+  const {
+    category,
+    search,
+    limit = 10,
+    page = 1,
+    advenureId,
+    priceMin,
+    priceMax,
+    availability,
+    minRating,
+    brand,
+    sortBy,
+  } = req.query;
   const language = getLanguage(req); // Get language from middleware
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -56,11 +68,45 @@ export const discoverItems = asyncHandler(async (req, res) => {
     queryObj.adventures = advenureId; // Filter by adventure ID
   }
 
-  // Only fetch items that are available for rent or purchase
-  queryObj.$or = [{ rentalStock: { $gt: 0 } }, { purchaseStock: { $gt: 0 } }];
+  // Price range
+  if (priceMin !== undefined || priceMax !== undefined) {
+    queryObj.price = {};
+    if (priceMin !== undefined && priceMin !== "") queryObj.price.$gte = parseFloat(priceMin);
+    if (priceMax !== undefined && priceMax !== "") queryObj.price.$lte = parseFloat(priceMax);
+  }
+
+  // Brand (partial, case-insensitive)
+  if (brand) {
+    queryObj.brand = { $regex: brand, $options: "i" };
+  }
+
+  // Rating
+  if (minRating !== undefined && minRating !== "") {
+    queryObj.avgRating = { $gte: parseFloat(minRating) };
+  }
+
+  // Availability filter: purchase / rent / any
+  if (availability === 'purchase') {
+    queryObj.purchase = true;
+    queryObj.purchaseStock = { $gt: 0 };
+  } else if (availability === 'rent') {
+    queryObj.rent = true;
+    queryObj.rentalStock = { $gt: 0 };
+  } else {
+    // Default: Only fetch items that are available for rent or purchase
+    queryObj.$or = [{ rentalStock: { $gt: 0 } }, { purchaseStock: { $gt: 0 } }];
+  }
+
+  // Build sort
+  let sortObj = {};
+  if (sortBy === 'price-asc') sortObj.price = 1;
+  else if (sortBy === 'price-desc') sortObj.price = -1;
+  else if (sortBy === 'rating-desc') sortObj.avgRating = -1;
+  else sortObj.createdAt = -1;
 
   const items = await Item.find(queryObj)
     .populate("adventures", "name")
+    .sort(sortObj)
     .skip(skip)
     .limit(parseInt(limit));
 
@@ -73,15 +119,9 @@ export const discoverItems = asyncHandler(async (req, res) => {
     language
   );
 
-  res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        { items: translatedItems, total },
-        "Items fetched successfully"
-      )
-    );
+  // Return items in the message field for compatibility with some frontend usages,
+  // and include total in data.
+  res.status(200).json(new ApiResponse(200, { total }, translatedItems));
 });
 
 export const createItem = asyncHandler(async (req, res) => {
@@ -211,7 +251,18 @@ export const deleteItem = asyncHandler(async (req, res) => {
 });
 
 export const getAllItems = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, search, category } = req.query;
+  const {
+    page = 1,
+    limit = 10,
+    search,
+    category,
+    priceMin,
+    priceMax,
+    availability,
+    minRating,
+    brand,
+    sortBy,
+  } = req.query;
   const language = getLanguage(req); // Get language from middleware
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -225,8 +276,40 @@ export const getAllItems = asyncHandler(async (req, res) => {
     queryObj.category = category;
   }
 
+  if (priceMin !== undefined || priceMax !== undefined) {
+    queryObj.price = {};
+    if (priceMin !== undefined && priceMin !== "") queryObj.price.$gte = parseFloat(priceMin);
+    if (priceMax !== undefined && priceMax !== "") queryObj.price.$lte = parseFloat(priceMax);
+  }
+
+  if (brand) {
+    queryObj.brand = { $regex: brand, $options: "i" };
+  }
+
+  if (minRating !== undefined && minRating !== "") {
+    queryObj.avgRating = { $gte: parseFloat(minRating) };
+  }
+
+  if (availability === 'purchase') {
+    queryObj.purchase = true;
+    queryObj.purchaseStock = { $gt: 0 };
+  } else if (availability === 'rent') {
+    queryObj.rent = true;
+    queryObj.rentalStock = { $gt: 0 };
+  } else {
+    // default: items with stock
+    queryObj.$or = [{ rentalStock: { $gt: 0 } }, { purchaseStock: { $gt: 0 } }];
+  }
+
+  let sortObj = {};
+  if (sortBy === 'price-asc') sortObj.price = 1;
+  else if (sortBy === 'price-desc') sortObj.price = -1;
+  else if (sortBy === 'rating-desc') sortObj.avgRating = -1;
+  else sortObj.createdAt = -1;
+
   const items = await Item.find(queryObj)
     .populate("adventures", "name")
+    .sort(sortObj)
     .skip(skip)
     .limit(parseInt(limit));
 
@@ -239,7 +322,6 @@ export const getAllItems = asyncHandler(async (req, res) => {
     language
   );
 
-  res.json(
-    new ApiResponse(200, "Items fetched successfully", translatedItems, total)
-  );
+  // Keep compatibility: return items in message and total in data
+  res.json(new ApiResponse(200, { total }, translatedItems));
 });

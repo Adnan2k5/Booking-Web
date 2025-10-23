@@ -5,7 +5,7 @@ import MainHeader from "../../components/shop/MainHeader";
 import FilterBar from "../../components/shop/FilterBar";
 import HeroCarousel from "../../components/shop/HeroCarousel";
 import CategoryFeatureGrid from "../../components/shop/CategoryFeatureGrid";
-import RecommendedSlider from "../../components/shop/RecommendedSlider";
+import ProductsGrid from "../../components/shop/ProductsGrid";
 import PromoBanners from "../../components/shop/PromoBanners";
 import BrandStrip from "../../components/shop/BrandStrip";
 import NewsletterSection from "../../components/shop/NewsletterSection";
@@ -17,28 +17,42 @@ export default function AdventureShop() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const { addToCart } = useContext(CartContext);
-  const navigate = useNavigate();
   const location = useLocation();
 
   const baseUrl = import.meta.env.VITE_SERVER_URL;
 
-  // Fetch items
-  const fetchItems = async (query = "", category = "") => {
+  // Fetch items (supports extended filters)
+  const fetchItems = async (filters = {}) => {
     try {
       const params = new URLSearchParams();
-      if (query) params.append('search', query);
-      if (category) params.append('category', category);
+      if (typeof filters === 'string') {
+        if (filters) params.append('search', filters);
+      } else {
+        const { search, category, page, limit, priceMin, priceMax, availability, minRating, brand, sortBy } = filters;
+        if (search) params.append('search', search);
+        if (category) params.append('category', category);
+        if (page) params.append('page', page);
+        if (limit) params.append('limit', limit);
+        if (priceMin !== undefined && priceMin !== '') params.append('priceMin', priceMin);
+        if (priceMax !== undefined && priceMax !== '') params.append('priceMax', priceMax);
+        if (availability) params.append('availability', availability);
+        if (minRating !== undefined && minRating !== '') params.append('minRating', minRating);
+        if (brand) params.append('brand', brand);
+        if (sortBy) params.append('sortBy', sortBy);
+      }
+
       const url = `${baseUrl}api/items${params.toString() ? `?${params.toString()}` : ''}`;
 
       const response = await fetch(url);
       const data = await response.json();
+      // Backend returns items in `message` for compatibility
       setItems(data.message || []);
     } catch (error) {
       console.error("Error fetching items:", error);
     }
   };
 
-  useEffect(() => { fetchItems(undefined, selectedCategory); }, [selectedCategory]);
+  useEffect(() => { fetchItems({ category: selectedCategory }); }, [selectedCategory]);
 
   // On mount, read URL to set initial category/search state (supports direct navigation)
   useEffect(() => {
@@ -55,64 +69,46 @@ export default function AdventureShop() {
       const found = categories.find(c => c.toLowerCase() === slug.toLowerCase());
       if (found) {
         setSelectedCategory(found);
-        fetchItems(q, found);
+        fetchItems({ search: q, category: found });
         return;
       }
     }
 
     // If path is /shop/search, fetch with search query
     if (path.startsWith('/shop/search')) {
-      fetchItems(q, selectedCategory);
+      fetchItems({ search: q, category: selectedCategory });
       return;
     }
 
     // Default: fetch items (maybe with search)
-    fetchItems(q, selectedCategory);
+    fetchItems({ search: q, category: selectedCategory });
   }, []);
 
   const handleSearch = (q) => {
-    // Navigate to search page and include category if present
-    const params = new URLSearchParams();
-    if (q) params.set('search', q);
-    if (selectedCategory) params.set('category', selectedCategory);
-  navigate(`/shop/search?${params.toString()}`);
-    // Also fetch immediately so UI updates when staying on the same page
-    fetchItems(q, selectedCategory);
+    // Do not redirect. Update local state and fetch items from server (search + category)
     setSearchQuery(q);
+    fetchItems({ search: q, category: selectedCategory });
   };
 
   const handleCategorySelect = (category) => {
-    // Read current search query from URL if present
-    const currentSearch = new URLSearchParams(location.search).get('search');
-
+    // Do not redirect. Toggle selection and fetch items accordingly.
+    const currentSearch = searchQuery || new URLSearchParams(location.search).get('search') || "";
     if (selectedCategory === category) {
-      // Deselect -> go to all-products (keeping search if any)
-      const params = new URLSearchParams();
-      if (currentSearch) params.set('search', currentSearch);
-      navigate(`/shop/all-products${params.toString() ? `?${params.toString()}` : ''}`);
       setSelectedCategory("");
-      fetchItems(currentSearch || "", "");
+      fetchItems({ search: currentSearch });
     } else {
-      const slug = category.toLowerCase();
-      const params = new URLSearchParams();
-      if (currentSearch) params.set('search', currentSearch);
-      navigate(`/shop/category/${slug}${params.toString() ? `?${params.toString()}` : ''}`);
       setSelectedCategory(category);
-      fetchItems(currentSearch || "", category);
+      fetchItems({ search: currentSearch, category });
     }
   };
 
   const removeFilter = (filter) => {
     if (filter === 'category') {
       setSelectedCategory("");
-  navigate('/shop/all-products');
       fetchItems(searchQuery || "", "");
     }
     if (filter === 'search') {
       setSearchQuery("");
-      const params = new URLSearchParams();
-      if (selectedCategory) params.set('category', selectedCategory);
-  navigate(`${selectedCategory ? `/shop/category/${selectedCategory.toLowerCase()}` : '/shop/all-products'}${params.toString() ? `?${params.toString()}` : ''}`);
       fetchItems("", selectedCategory);
     }
   };
@@ -120,18 +116,18 @@ export default function AdventureShop() {
   const clearFilters = () => {
     setSelectedCategory("");
     setSearchQuery("");
-  navigate('/shop/all-products');
     fetchItems("", "");
   };
 
   return (
     <div className="w-full font-sans bg-neutral-50 text-neutral-900">
       {/* <AnnouncementBar /> */}
-  <MainHeader categories={categories} onSearch={handleSearch} onCategorySelect={handleCategorySelect} selectedCategory={selectedCategory} />
-  <FilterBar search={searchQuery} category={selectedCategory} onClear={clearFilters} onRemoveFilter={removeFilter} />
-  <HeroCarousel />
+      <MainHeader categories={categories} onSearch={handleSearch} onCategorySelect={handleCategorySelect} selectedCategory={selectedCategory} />
+      <FilterBar search={searchQuery} category={selectedCategory} onClear={clearFilters} onRemoveFilter={removeFilter} />
+      <HeroCarousel />
       <CategoryFeatureGrid />
-      <RecommendedSlider items={items} addToCart={addToCart} />
+      {/* Products grid: replaces separate product page navigation; shows all products with left filters */}
+      <ProductsGrid items={items} categories={categories} selectedCategory={selectedCategory} search={searchQuery} addToCart={addToCart} onCategorySelect={handleCategorySelect} onSearch={handleSearch} onFilterChange={fetchItems} />
       <PromoBanners />
       <BrandStrip />
       <NewsletterSection />

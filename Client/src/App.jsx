@@ -41,7 +41,6 @@ const BrowsingPage = lazy(() => import("./Pages/Browsing/BrowsingPage"))
 const Shop = lazy(() => import("./Pages/Shop/Shop"))
 const CategoryPage = lazy(() => import("./Pages/Shop/CategoryPage"))
 const SearchPage = lazy(() => import("./Pages/Shop/SearchPage"))
-const AllProductsPage = lazy(() => import("./Pages/Shop/AllProductsPage"))
 const ComparisonPage = lazy(() => import("./Pages/Shop/ComparisonPage"))
 const FavoritesPage = lazy(() => import("./Pages/Shop/FavoritesPage"))
 const Hotel = lazy(() => import("./Pages/Hotel/Hotel"))
@@ -170,11 +169,6 @@ const App = () => {
                   <Route path="/shop" element={
                     <FeatureRoute feature="shop">
                       <Shop />
-                    </FeatureRoute>
-                  } />
-                  <Route path="/shop/all-products" element={
-                    <FeatureRoute feature="shop">
-                      <AllProductsPage />
                     </FeatureRoute>
                   } />
                   <Route path="/shop/category/:slug" element={

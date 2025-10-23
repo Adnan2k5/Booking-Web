@@ -50,7 +50,6 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
           <Link to="/shop/comparison" className="hover:text-orange-400"><GitCompare className="h-5 w-5" /></Link>
           <Link to="/cart" className="relative hover:text-orange-400">
             <ShoppingCart className="h-5 w-5" />
-            <span className="absolute -top-2 -right-2 bg-orange-500 text-[10px] leading-none rounded-full h-5 w-5 flex items-center justify-center font-semibold">0</span>
           </Link>
         </div>
         {/* Mobile toggle */}
