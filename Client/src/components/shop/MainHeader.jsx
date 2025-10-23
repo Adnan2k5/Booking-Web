@@ -1,14 +1,20 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Search, ShoppingCart, Heart, User, Menu, X, GitCompare } from "lucide-react";
 
 export default function MainHeader({ categories = [], onSearch, onCategorySelect, selectedCategory }) {
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
 
   const submit = (e) => {
     e.preventDefault();
-    onSearch?.(query);
+    if (onSearch) {
+      onSearch(query);
+    } else {
+      // fallback: navigate to the shared nav-results page so the nav-bar search uses the same Filters/Product grid
+      navigate(`/shop/nav?search=${encodeURIComponent(query)}`);
+    }
     if (mobileOpen) setMobileOpen(false);
   };
 
@@ -25,10 +31,12 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
               key={c}
               to={`/shop/category/${c.toLowerCase()}`}
               onClick={(e) => {
-                // Prevent default navigation when using category filter from header
+                // Always prevent default and either call the handler or navigate to the nav results page
+                e.preventDefault();
                 if (onCategorySelect) {
-                  e.preventDefault();
                   onCategorySelect(c);
+                } else {
+                  navigate(`/shop/nav?category=${encodeURIComponent(c)}`);
                 }
               }}
               aria-current={selectedCategory === c ? 'page' : undefined}

@@ -21,7 +21,6 @@ export default function AdventureShop() {
 
   const baseUrl = import.meta.env.VITE_SERVER_URL;
   const productsRef = useRef(null);
-  const [showTopSections, setShowTopSections] = useState(true);
 
   // Fetch items (supports extended filters)
   const fetchItems = async (filters = {}) => {
@@ -97,11 +96,9 @@ export default function AdventureShop() {
     const currentSearch = searchQuery || new URLSearchParams(location.search).get('search') || "";
     if (selectedCategory === category) {
       setSelectedCategory("");
-      setShowTopSections(true);
       fetchItems({ search: currentSearch });
     } else {
       setSelectedCategory(category);
-      setShowTopSections(false);
       fetchItems({ search: currentSearch, category });
       // scroll to products area after layout updates
       setTimeout(() => {
@@ -140,14 +137,12 @@ export default function AdventureShop() {
   return (
     <div className="w-full font-sans bg-neutral-50 text-neutral-900">
       {/* <AnnouncementBar /> */}
-      <MainHeader categories={categories} onSearch={handleSearch} onCategorySelect={handleCategorySelect} selectedCategory={selectedCategory} />
+      <MainHeader categories={categories} selectedCategory={selectedCategory} />
       <FilterBar search={searchQuery} category={selectedCategory} onClear={clearFilters} onRemoveFilter={removeFilter} />
-      {showTopSections && <HeroCarousel />}
-      {showTopSections && <CategoryFeatureGrid />}
+      <HeroCarousel />
+      <CategoryFeatureGrid />
       {/* Products grid: replaces separate product page navigation; shows all products with left filters */}
-      <div ref={productsRef}>
-        <ProductsGrid items={items} categories={categories} selectedCategory={selectedCategory} search={searchQuery} addToCart={addToCart} onCategorySelect={handleCategorySelect} onSearch={handleSearch} onFilterChange={fetchItems} />
-      </div>
+      <ProductsGrid items={items} categories={categories} selectedCategory={selectedCategory} search={searchQuery} addToCart={addToCart} onCategorySelect={handleCategorySelect} onSearch={handleSearch} onFilterChange={fetchItems} />
       <PromoBanners />
       <BrandStrip />
       <NewsletterSection />
