@@ -42,7 +42,6 @@ import { formatDateWithWeekday } from "../utils/dateUtils"
 const ReactPlayer = lazy(() => import("react-player"))
 
 
-
 export default function LandingPage() {
   const navigate = useNavigate()
   const { user, loading } = useAuth()

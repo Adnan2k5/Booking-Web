@@ -17,6 +17,8 @@ export const Navbar = () => {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  // Today's date for explore quick search
+  const todayISO = new Date().toISOString().split('T')[0]
 
   const handleLogout = () => {
     logout()
@@ -47,9 +49,19 @@ export const Navbar = () => {
               <ul className="flex space-x-6 items-center">
                 {menuItems.map((item) => (
                   <li key={item.label}>
-                    <Link to={item.path} className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
-                      {item.label}
-                    </Link>
+                    {item.path === "/browse" ? (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/browse?date=${todayISO}&q=adventure`)}
+                        className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                      >
+                        {item.label}
+                      </button>
+                    ) : (
+                      <Link to={item.path} className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+                        {item.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -97,13 +109,26 @@ export const Navbar = () => {
               <ul className="space-y-4">
                 {menuItems.map((item) => (
                   <li key={item.label}>
-                    <Link
-                      to={item.path}
-                      className="block py-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
+                    {item.path === "/browse" ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigate(`/browse?date=${todayISO}&q=adventure`)
+                          setIsMenuOpen(false)
+                        }}
+                        className="block w-full text-left py-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                      >
+                        {item.label}
+                      </button>
+                    ) : (
+                      <Link
+                        to={item.path}
+                        className="block py-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
