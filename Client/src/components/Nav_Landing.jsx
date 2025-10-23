@@ -39,6 +39,8 @@ export const Nav_Landing = () => {
     const { isShopEnabled, isHotelsEnabled } = useWebsiteSettings()
     const navigate = useNavigate()
 
+    const todayISO = new Date().toISOString().split('T')[0]
+
     const dispatch = useDispatch();
 
     const handleLogout = async () => {
@@ -113,6 +115,8 @@ export const Nav_Landing = () => {
                                 className="flex items-center cursor-pointer gap-2 hover:text-emerald-400 transition-colors"
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
+                                onClick={() => navigate(`/browse?date=${todayISO}&q=adventure`)}
+                                style={{ cursor: "pointer" }}
                             >
                                 {t("explore")} <MdOutlineExplore />
                             </motion.li>
@@ -215,6 +219,11 @@ export const Nav_Landing = () => {
                                 <motion.li
                                     className="cursor-pointer hover:text-emerald-400 transition-colors text-sm sm:text-base"
                                     whileTap={{ scale: 0.97 }}
+                                    onClick={() => {
+                                        navigate(`/browse?date=${todayISO}&q=adventure`)
+                                        setMobileMenuOpen(false)
+                                    }}
+                                    style={{ cursor: "pointer" }}
                                 >{t("explore")}</motion.li>
 
                                 {isShopEnabled && (

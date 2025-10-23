@@ -112,7 +112,10 @@ export default function HotelBrowsingPage() {
             <Navbar />
 
             {/* HERO */}
-            <header className="relative bg-[url('/hotel-hero.jpg')] bg-cover bg-center h-[520px] sm:h-[600px] rounded-b-3xl overflow-hidden shadow-inner z-10">
+            <header
+                className="relative bg-cover bg-center h-[520px] sm:h-[600px] rounded-b-3xl overflow-hidden shadow-inner z-10"
+                style={{ backgroundImage: `url('https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1632')` }}
+            >
                 <div className="absolute inset-0 bg-black/45 backdrop-blur-sm z-10"></div>
                 <div className="absolute inset-0 max-w-7xl mx-auto px-6 sm:px-8 flex flex-col justify-center z-20">
                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
@@ -121,7 +124,7 @@ export default function HotelBrowsingPage() {
                     </motion.div>
 
                     {/* Booking Form (overlay) */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 max-w-4xl z-30">
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 max-w-4xl z-30">
                         <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-2xl border border-white/40">
                             <form className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end" onSubmit={handleBookingSearch}>
                                 <div className="sm:col-span-2">
@@ -245,49 +248,11 @@ export default function HotelBrowsingPage() {
                                 </ul>
                             </motion.div>
 
-                            <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100">
-                                <h3 className="text-lg font-semibold mb-3">Popular Experiences</h3>
-                                <div className="space-y-3">
-                                    {['City Walks', 'Local Eats', 'Sunset Trips'].map((exp, i) => (
-                                        <div key={i} className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 text-white flex items-center justify-center font-bold">{exp.split(' ').map(x=>x[0]).join('')}</div>
-                                            <div>
-                                                <div className="font-medium">{exp}</div>
-                                                <div className="text-xs text-gray-500">Handpicked local activity</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </motion.div>
+                            
                         </aside>
                     </div>
                 </section>
-
-                {/* Testimonials + Map */}
-                <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-                    <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                        <h3 className="text-2xl font-bold mb-4">Traveler Stories</h3>
-                        <div className="space-y-4">
-                            {[1,2,3].map((i)=> (
-                                <motion.div key={i} initial={{ opacity: 0, y: 6 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="p-4 rounded-xl border border-gray-100 bg-gray-50">
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-12 h-12 rounded-full bg-rose-500 text-white flex items-center justify-center font-semibold">JS</div>
-                                        <div>
-                                            <div className="font-semibold">Jane S.</div>
-                                            <div className="text-xs text-gray-500">Stayed in Bali • 5 days ago</div>
-                                            <p className="mt-2 text-sm text-gray-700">Amazing stay, friendly hosts and great location. Would book again!</p>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <aside className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                        <h3 className="text-lg font-semibold mb-3">Explore on map</h3>
-                        <div className="h-72 bg-gradient-to-br from-gray-100 to-white rounded-lg flex items-center justify-center text-gray-400">Map placeholder (integrate map component)</div>
-                    </aside>
-                </section>
+            
 
                 {/* CTA */}
                 <section className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-8 text-white mb-16 shadow-2xl">
@@ -297,7 +262,7 @@ export default function HotelBrowsingPage() {
                             <p className="mt-2 text-white/90">Find unique stays and unforgettable experiences. Book now & get exclusive member discounts.</p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <Button onClick={()=> navigate('/signup')} className="bg-white text-rose-600 px-6 py-3 rounded-xl font-semibold">Join & Save</Button>
+                            <Button onClick={()=> navigate('/login')} className="bg-white text-rose-600 px-6 py-3 rounded-xl font-semibold">Join & Save</Button>
                             <Button onClick={()=> window.scrollTo({top: 400, behavior:'smooth'})} className="bg-white/20 border border-white text-white px-5 py-3 rounded-xl">Browse Stays</Button>
                         </div>
                     </div>
