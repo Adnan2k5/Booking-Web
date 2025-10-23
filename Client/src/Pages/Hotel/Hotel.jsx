@@ -2,439 +2,310 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Filter, ChevronDown, MapPin, Star, Building, Grid, List, ChevronLeftIcon, Hotel as HotelIcon } from "lucide-react"
+import {
+    MapPin,
+    Star,
+    Hotel as HotelIcon,
+    Wifi,
+    UtensilsCrossed,
+    Waves,
+    Wind,
+    Zap,
+    Users,
+    Award,
+} from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Card, CardContent } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu"
 import { Link, useSearchParams, useNavigate } from "react-router-dom"
 import { useHotels } from "../../hooks/useHotel"
 import { Navbar } from "../../components/Navbar"
 import { fetchLocations } from "../../Api/location.api"
 import { useTranslation } from "react-i18next"
 
+// Lightweight amenity icon detection (keeps previous behavior)
+const amenityIcons = {
+    "wifi": Wifi,
+    "wifi-free": Wifi,
+    "free-wifi": Wifi,
+    "restaurant": UtensilsCrossed,
+    "pool": Waves,
+    "ac": Wind,
+    "air-conditioning": Wind,
+    "parking": HotelIcon,
+    "gym": Zap,
+    "fitness": Zap,
+}
+
+const getAmenityIcon = (amenityName) => {
+    const name = amenityName?.toLowerCase() || ""
+    for (const [key, icon] of Object.entries(amenityIcons)) {
+        if (name.includes(key)) return icon
+    }
+    return HotelIcon
+}
+
 export default function HotelBrowsingPage() {
     const { t } = useTranslation()
     const [searchParams, setSearchParams] = useSearchParams()
     const navigate = useNavigate()
 
-    // Extract filters from URL params or set defaults
+    // keep basic filter state for search integration
     const [filters, setFilters] = useState({
         location: searchParams.get('location') || "",
-        minPrice: searchParams.get('minPrice') || "",
-        maxPrice: searchParams.get('maxPrice') || "",
-        minRating: searchParams.get('minRating') || "",
-        status: "", // Only show approved hotels
-        page: parseInt(searchParams.get('page') || '1'),
-        sortBy: searchParams.get('sortBy') || "createdAt",
-        sortOrder: searchParams.get('sortOrder') || "desc"
+        checkIn: searchParams.get('checkin') || "",
+        checkOut: searchParams.get('checkout') || "",
+        guests: parseInt(searchParams.get('guests') || '1'),
+        page: parseInt(searchParams.get('page') || '1')
     })
 
     const [locations, setLocations] = useState([])
     const [limit] = useState(12)
 
-    // Use the hotel hook with current filters
     const { hotels, isLoading, error, total, totalPages } = useHotels({
         page: filters.page,
         limit,
-        status: filters.status,
-        location: filters.location || null,
-        minPrice: filters.minPrice || null,
-        maxPrice: filters.maxPrice || null,
-        minRating: filters.minRating || null,
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder
+        location: filters.location || null
     })
 
-    // Fetch locations for filter dropdown
     useEffect(() => {
         const getLocations = async () => {
             try {
                 const res = await fetchLocations()
                 setLocations(res.data || [])
-            } catch (error) {
-                console.error("Error fetching locations:", error)
+            } catch (err) {
+                console.error(err)
             }
         }
         getLocations()
     }, [])
 
-    // Update URL params when filters change
     useEffect(() => {
-        const newParams = new URLSearchParams()
-        Object.entries(filters).forEach(([key, value]) => {
-            if (value && value !== "") {
-                newParams.set(key, value.toString())
-            }
-        })
-        setSearchParams(newParams)
+        const params = new URLSearchParams()
+        if (filters.location) params.set('location', filters.location)
+        if (filters.checkIn) params.set('checkin', filters.checkIn)
+        if (filters.checkOut) params.set('checkout', filters.checkOut)
+        if (filters.guests) params.set('guests', filters.guests.toString())
+        params.set('page', filters.page.toString())
+        setSearchParams(params)
     }, [filters, setSearchParams])
 
-    // Handle filter changes
-    const updateFilter = (key, value) => {
-        setFilters(prev => ({
-            ...prev,
-            [key]: value,
-            page: 1 // Reset to first page when filters change
-        }))
-    }
+    const updateFilter = (key, value) => setFilters(prev => ({ ...prev, [key]: value, page: 1 }))
 
-    // Handle page change
-    const handlePageChange = (newPage) => {
-        setFilters(prev => ({ ...prev, page: newPage }))
-    }
+    const clearFilters = () => setFilters({ location: '', checkIn: '', checkOut: '', guests: 1, page: 1 })
 
-    // Clear all filters
-    const clearFilters = () => {
-        setFilters({
-            location: "",
-            minPrice: "",
-            maxPrice: "",
-            minRating: "",
-            status: "",
-            page: 1,
-            sortBy: "createdAt",
-            sortOrder: "desc"
-        })
-    }
+    // Simple helpers for date defaults
+    const todayISO = new Date().toISOString().split('T')[0]
+    const tomorrowISO = new Date(Date.now() + 86400000).toISOString().split('T')[0]
 
-    if (error) {
-        return (
-            <div className="min-h-screen bg-white">
-                <Navbar />
-                <div className="pt-20 max-w-7xl mx-auto px-4 py-8">
-                    <div className="text-center">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Hotels</h2>
-                        <p className="text-gray-600 mb-4">There was an error loading the hotels. Please try again.</p>
-                        <Button onClick={() => window.location.reload()}>Retry</Button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
+
+    // Handler for booking/search form submit
+    const handleBookingSearch = (e) => {
+        e.preventDefault();
+        // Always reset to first page on new search
+        setFilters(prev => ({ ...prev, page: 1 }));
+    };
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pt-20">
             <Navbar />
 
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="pt-20 max-w-7xl mx-auto px-4 py-8"
-            >
-                {/* Back navigation */}
-                <div className="flex items-center mb-6">
-                    <Link className="flex items-center text-gray-600 hover:text-gray-900" to="/">
-                        <ChevronLeftIcon className="h-4 w-4 mr-1" />
-                        Back to Home
-                    </Link>
-                </div>
+            {/* HERO */}
+            <header className="relative bg-[url('/hotel-hero.jpg')] bg-cover bg-center h-[520px] sm:h-[600px] rounded-b-3xl overflow-hidden shadow-inner z-10">
+                <div className="absolute inset-0 bg-black/45 backdrop-blur-sm z-10"></div>
+                <div className="absolute inset-0 max-w-7xl mx-auto px-6 sm:px-8 flex flex-col justify-center z-20">
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-lg">Find your perfect stay</h1>
+                        <p className="mt-3 text-lg sm:text-xl text-white/90 max-w-2xl">Handpicked hostels, boutique stays and cozy hotels for every kind of traveler. Explore exclusive offers and flexible bookings.</p>
+                    </motion.div>
 
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                            <HotelIcon className="h-8 w-8 text-blue-600" />
-                            Browse Hotels
-                        </h1>
-                        <p className="text-gray-600 mt-1">
-                            {total > 0 ? `Found ${total} hotels` : "No hotels found"}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Filters */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                        {/* Location Filter */}
-                        <div>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-between">
-                                        {filters.location || "All Locations"}
-                                        <ChevronDown className="ml-2 h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" className="w-[200px]">
-                                    <DropdownMenuItem onClick={() => updateFilter('location', '')}>
-                                        All Locations
-                                    </DropdownMenuItem>
-                                    {locations.map((location) => (
-                                        <DropdownMenuItem
-                                            key={location._id}
-                                            onClick={() => updateFilter('location', location.name)}
+                    {/* Booking Form (overlay) */}
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 max-w-4xl z-30">
+                        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-2xl border border-white/40">
+                            <form className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end" onSubmit={handleBookingSearch}>
+                                <div className="sm:col-span-2">
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1">Destination</label>
+                                    <div className="relative">
+                                        <select
+                                            value={filters.location}
+                                            onChange={e => updateFilter('location', e.target.value)}
+                                            className="h-12 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-400 px-3 pr-8 text-gray-700 bg-white appearance-none"
                                         >
-                                            {location.name}
-                                        </DropdownMenuItem>
-                                    ))}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-
-                        {/* Price Range */}
-                        <div>
-                            <Input
-                                type="number"
-                                placeholder="Min price"
-                                value={filters.minPrice}
-                                onChange={(e) => updateFilter('minPrice', e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <Input
-                                type="number"
-                                placeholder="Max price"
-                                value={filters.maxPrice}
-                                onChange={(e) => updateFilter('maxPrice', e.target.value)}
-                            />
-                        </div>
-
-                        {/* Rating Filter */}
-                        <div>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-between">
-                                        {filters.minRating ? `${filters.minRating}+ Stars` : "All Ratings"}
-                                        <ChevronDown className="ml-2 h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start">
-                                    <DropdownMenuItem onClick={() => updateFilter('minRating', '')}>
-                                        All Ratings
-                                    </DropdownMenuItem>
-                                    {[4, 3, 2, 1].map((rating) => (
-                                        <DropdownMenuItem
-                                            key={rating}
-                                            onClick={() => updateFilter('minRating', rating.toString())}
-                                        >
-                                            {rating}+ Stars
-                                        </DropdownMenuItem>
-                                    ))}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                    </div>
-
-                    {/* Clear Filters */}
-                    {(filters.location || filters.minPrice || filters.maxPrice || filters.minRating) && (
-                        <div className="mt-4 flex justify-end">
-                            <Button variant="outline" size="sm" onClick={clearFilters}>
-                                Clear All Filters
-                            </Button>
-                        </div>
-                    )}
-                </div>
-
-                {/* Loading State */}
-                {isLoading && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {[...Array(8)].map((_, i) => (
-                            <Card key={i} className="overflow-hidden">
-                                <div className="animate-pulse">
-                                    <div className="aspect-video bg-gray-200"></div>
-                                    <CardContent className="p-4">
-                                        <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                                        <div className="h-3 bg-gray-200 rounded mb-2 w-3/4"></div>
-                                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                                    </CardContent>
+                                            <option value="">All Locations</option>
+                                            {locations.map(loc => (
+                                                <option key={loc._id} value={loc.name}>{loc.name}</option>
+                                            ))}
+                                        </select>
+                                        <MapPin className="w-4 h-4 text-gray-400 absolute right-3 top-3 pointer-events-none" />
+                                    </div>
                                 </div>
-                            </Card>
-                        ))}
-                    </div>
-                )}
 
-                {/* Hotels Grid */}
-                {!isLoading && hotels.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {hotels.map((hotel) => (
-                            <motion.div
-                                key={hotel._id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg group">
-                                    {/* Hotel Image */}
-                                    <div className="aspect-video relative overflow-hidden">
-                                        <img
-                                            src={hotel.logo || hotel.medias?.[0] || "/placeholder.svg"}
-                                            alt={hotel.name}
-                                            className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-                                        />
-                                        <div className="absolute top-2 right-2">
-                                            <Badge
-                                                variant={hotel.verified === "approved" ? "success" : "secondary"}
-                                                className="bg-white/90 text-black"
-                                            >
-                                                {hotel.category}
-                                            </Badge>
-                                        </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1">Check-in</label>
+                                    <Input type="date" value={filters.checkIn || todayISO} onChange={(e) => updateFilter('checkIn', e.target.value)} className="h-12" />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1">Check-out</label>
+                                    <Input type="date" value={filters.checkOut || tomorrowISO} onChange={(e) => updateFilter('checkOut', e.target.value)} className="h-12" />
+                                </div>
+
+                                <div className="sm:col-span-1 flex items-center gap-3">
+                                    <div className="w-full">
+                                        <label className="block text-xs font-semibold text-gray-600 mb-1">Guests</label>
+                                        <Input type="number" min={1} value={filters.guests} onChange={(e) => updateFilter('guests', parseInt(e.target.value || '1'))} className="h-12" />
                                     </div>
 
-                                    {/* Hotel Details */}
-                                    <CardContent className="p-4">
-                                        <div className="flex items-start justify-between mb-2">
-                                            <h3 className="font-semibold text-lg line-clamp-1">{hotel.name}</h3>
-                                            <div className="flex items-center gap-1 shrink-0 ml-2">
-                                                <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                                                <span className="text-sm font-medium">{hotel.rating || 0}</span>
-                                            </div>
-                                        </div>
+                                    <div>
+                                        <Button type="submit" className="h-12 px-6 bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-xl shadow-lg">Search</Button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </motion.div>
+                </div>
+            </header>
 
-                                        <div className="flex items-center gap-1 text-sm text-gray-500 mb-3">
-                                            <MapPin className="h-3 w-3" />
-                                            <span className="line-clamp-1">
-                                                {typeof hotel.location === 'object' && hotel.location?.name
-                                                    ? hotel.location.name
-                                                    : typeof hotel.location === 'string'
-                                                        ? hotel.location
-                                                        : "Location not specified"}
-                                            </span>
-                                        </div>
+            <main className="max-w-7xl mx-auto px-6 sm:px-8 mt-8">
+                <section className="mb-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2">
+                            <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-2xl font-bold text-gray-900">Featured Stays</h2>
+                                    <p className="text-sm text-gray-500">Curated picks for comfort & value</p>
+                                </div>
 
-                                        {hotel.description && (
-                                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                                                {hotel.description}
-                                            </p>
-                                        )}
-
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex flex-col">
-                                                <span className="font-bold text-lg">
-                                                    ${hotel.pricePerNight || hotel.price || 0}
-                                                    <span className="text-sm font-normal text-gray-500">/night</span>
-                                                </span>
-                                                {hotel.noRoom && (
-                                                    <span className="text-xs text-gray-500">
-                                                        {hotel.noRoom} rooms available
-                                                    </span>
-                                                )}
-                                            </div>                                            <Button
-                                                size="sm"
-                                                className="bg-blue-600 hover:bg-blue-700"
-                                                onClick={() => {
-                                                    navigate("/hotel/checkout", {
-                                                        state: {
-                                                            hotel,
-                                                            checkInDate: new Date().toISOString().split("T")[0],
-                                                            checkOutDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-                                                            rooms: 1,
-                                                            guests: { adults: 1, children: 0 }
-                                                        }
-                                                    });
-                                                }}
-                                            >
-                                                Book Now
-                                            </Button>
-                                        </div>
-
-                                        {/* Amenities */}
-                                        {hotel.amenities && hotel.amenities.length > 0 && (
-                                            <div className="mt-3 pt-3 border-t">
-                                                <div className="flex flex-wrap gap-1">
-                                                    {hotel.amenities.slice(0, 3).map((amenity, index) => (
-                                                        <Badge key={index} variant="outline" className="text-xs">
-                                                            {typeof amenity === 'object' && amenity?.name
-                                                                ? amenity.name
-                                                                : typeof amenity === 'string'
-                                                                    ? amenity
-                                                                    : 'Amenity'}
-                                                        </Badge>
-                                                    ))}
-                                                    {hotel.amenities.length > 3 && (
-                                                        <Badge variant="outline" className="text-xs">
-                                                            +{hotel.amenities.length - 3} more
-                                                        </Badge>
-                                                    )}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {isLoading ? (
+                                        [...Array(3)].map((_, i) => (
+                                            <div key={i} className="h-44 bg-gray-100 rounded-lg animate-pulse" />
+                                        ))
+                                    ) : (
+                                        (hotels.slice(0, 6)).map((hotel) => (
+                                            <Card key={hotel._id} className="overflow-hidden rounded-xl hover:shadow-2xl transition-all">
+                                                <div className="aspect-video bg-gray-50 relative">
+                                                    <img src={hotel.logo || hotel.medias?.[0] || '/placeholder.svg'} alt={hotel.name} className="w-full h-full object-cover" />
+                                                    <div className="absolute top-3 left-3">
+                                                        <Badge className="bg-gradient-to-r from-rose-500 to-pink-500 text-white capitalize">{hotel.category}</Badge>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
+                                                <CardContent>
+                                                    <h3 className="font-semibold text-lg line-clamp-2">{hotel.name}</h3>
+                                                    <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                                                        <MapPin className="w-3.5 h-3.5 text-rose-600" />
+                                                        <span>{typeof hotel.location === 'object' ? hotel.location?.name : hotel.location}</span>
+                                                    </div>
+                                                    {hotel.website && (
+                                                        <div className="mt-1 text-xs text-blue-600 underline"><a href={hotel.website} target="_blank" rel="noopener noreferrer">{hotel.website}</a></div>
+                                                    )}
+                                                    {hotel.socials && hotel.socials.length > 0 && (
+                                                        <div className="mt-1 flex gap-2 flex-wrap">
+                                                            {hotel.socials.map((s, i) => (
+                                                                <a key={i} href={s} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 underline">{s}</a>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    <div className="flex items-center justify-between mt-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="flex">{[...Array(5)].map((_,i)=> <Star key={i} className={`w-4 h-4 ${i < Math.floor(hotel.rating||0) ? 'text-yellow-400' : 'text-gray-200'}`} />)}</div>
+                                                            <span className="text-sm text-gray-600">{(hotel.rating||0).toFixed(1)}</span>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-sm text-gray-500">From</div>
+                                                            <div className="text-lg font-bold text-gray-900">${hotel.pricePerNight || hotel.price || 0}</div>
+                                                        </div>
+                                                    </div>
+                                                    {hotel.amenities && hotel.amenities.length > 0 && (
+                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                            {hotel.amenities.map((amenity, idx) => {
+                                                                const IconComponent = getAmenityIcon(amenity)
+                                                                return (
+                                                                    <span key={idx} className="flex items-center gap-1 bg-rose-50 px-2 py-1 rounded-full text-xs text-rose-700"><IconComponent className="h-3 w-3 text-rose-600" />{amenity}</span>
+                                                                )
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </CardContent>
+                                            </Card>
+                                        ))
+                                    )}
+                                </div>
                             </motion.div>
-                        ))}
+                        </div>
+
+                        <aside className="space-y-6">
+                            <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100">
+                                <h3 className="text-lg font-semibold mb-2">Why book with us?</h3>
+                                <ul className="space-y-3 text-sm text-gray-600">
+                                    <li className="flex items-start gap-3"><span className="text-rose-600 mt-1"><Users className="w-5 h-5" /></span><div><strong>Trusted hosts</strong><div className="text-xs">Verified stays & 24/7 support</div></div></li>
+                                    <li className="flex items-start gap-3"><span className="text-rose-600 mt-1"><Award className="w-5 h-5" /></span><div><strong>Best prices</strong><div className="text-xs">Exclusive offers & deals</div></div></li>
+                                    <li className="flex items-start gap-3"><span className="text-rose-600 mt-1"><Zap className="w-5 h-5" /></span><div><strong>Easy bookings</strong><div className="text-xs">Instant confirmation & flexible dates</div></div></li>
+                                </ul>
+                            </motion.div>
+
+                            <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100">
+                                <h3 className="text-lg font-semibold mb-3">Popular Experiences</h3>
+                                <div className="space-y-3">
+                                    {['City Walks', 'Local Eats', 'Sunset Trips'].map((exp, i) => (
+                                        <div key={i} className="flex items-center gap-3">
+                                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 text-white flex items-center justify-center font-bold">{exp.split(' ').map(x=>x[0]).join('')}</div>
+                                            <div>
+                                                <div className="font-medium">{exp}</div>
+                                                <div className="text-xs text-gray-500">Handpicked local activity</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </aside>
                     </div>
-                )}
+                </section>
 
-                {/* Empty State */}
-                {!isLoading && hotels.length === 0 && (
-                    <div className="text-center py-12">
-                        <HotelIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No Hotels Found</h3>
-                        <p className="text-gray-600 mb-6">
-                            {filters.location || filters.minPrice || filters.maxPrice || filters.minRating
-                                ? "Try adjusting your filters to see more results."
-                                : "No hotels are currently available."}
-                        </p>
-                        {(filters.location || filters.minPrice || filters.maxPrice || filters.minRating) && (
-                            <Button onClick={clearFilters} variant="outline">
-                                Clear All Filters
-                            </Button>
-                        )}
+                {/* Testimonials + Map */}
+                <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                        <h3 className="text-2xl font-bold mb-4">Traveler Stories</h3>
+                        <div className="space-y-4">
+                            {[1,2,3].map((i)=> (
+                                <motion.div key={i} initial={{ opacity: 0, y: 6 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="p-4 rounded-xl border border-gray-100 bg-gray-50">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-12 h-12 rounded-full bg-rose-500 text-white flex items-center justify-center font-semibold">JS</div>
+                                        <div>
+                                            <div className="font-semibold">Jane S.</div>
+                                            <div className="text-xs text-gray-500">Stayed in Bali • 5 days ago</div>
+                                            <p className="mt-2 text-sm text-gray-700">Amazing stay, friendly hosts and great location. Would book again!</p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
                     </div>
-                )}
 
-                {/* Pagination */}
-                {!isLoading && hotels.length > 0 && totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-2 mt-8">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={filters.page <= 1}
-                            onClick={() => handlePageChange(filters.page - 1)}
-                        >
-                            Previous
-                        </Button>
+                    <aside className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                        <h3 className="text-lg font-semibold mb-3">Explore on map</h3>
+                        <div className="h-72 bg-gradient-to-br from-gray-100 to-white rounded-lg flex items-center justify-center text-gray-400">Map placeholder (integrate map component)</div>
+                    </aside>
+                </section>
 
-                        {[...Array(totalPages)].map((_, idx) => {
-                            const pageNum = idx + 1
-                            const isCurrentPage = pageNum === filters.page
-
-                            // Show first page, last page, current page, and pages around current
-                            if (
-                                pageNum === 1 ||
-                                pageNum === totalPages ||
-                                (pageNum >= filters.page - 1 && pageNum <= filters.page + 1)
-                            ) {
-                                return (
-                                    <Button
-                                        key={pageNum}
-                                        variant={isCurrentPage ? "default" : "outline"}
-                                        size="sm"
-                                        onClick={() => handlePageChange(pageNum)}
-                                    >
-                                        {pageNum}
-                                    </Button>
-                                )
-                            }
-
-                            // Show ellipsis
-                            if (pageNum === filters.page - 2 || pageNum === filters.page + 2) {
-                                return <span key={pageNum} className="px-2">...</span>
-                            }
-
-                            return null
-                        })}
-
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={filters.page >= totalPages}
-                            onClick={() => handlePageChange(filters.page + 1)}
-                        >
-                            Next
-                        </Button>
+                {/* CTA */}
+                <section className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-8 text-white mb-16 shadow-2xl">
+                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div>
+                            <h3 className="text-3xl font-extrabold">Ready for your next trip?</h3>
+                            <p className="mt-2 text-white/90">Find unique stays and unforgettable experiences. Book now & get exclusive member discounts.</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button onClick={()=> navigate('/signup')} className="bg-white text-rose-600 px-6 py-3 rounded-xl font-semibold">Join & Save</Button>
+                            <Button onClick={()=> window.scrollTo({top: 400, behavior:'smooth'})} className="bg-white/20 border border-white text-white px-5 py-3 rounded-xl">Browse Stays</Button>
+                        </div>
                     </div>
-                )}
-            </motion.div>
+                </section>
+
+                {/* Footer spacing */}
+                <div className="h-24" />
+            </main>
         </div>
     )
 }
