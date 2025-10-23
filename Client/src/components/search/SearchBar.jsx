@@ -3,6 +3,7 @@ import { motion } from "framer-motion"
 import { Compass, MapPin, Calendar, Users, Search } from "lucide-react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
+import LocationAutocomplete from "../ui/LocationAutocomplete"
 import { staggerContainer } from "../../assets/Animations"
 
 const SearchBar = memo(({
@@ -16,7 +17,9 @@ const SearchBar = memo(({
   groupMembers,
   onShowGroupDialog,
   onNavigate,
-  t
+  t,
+  locationsList,
+  locationsLoading
 }) => (
   <motion.div
     className="search-bar w-full max-w-5xl mx-auto"
@@ -32,33 +35,31 @@ const SearchBar = memo(({
           <div className="flex items-center pl-3">
             <Compass className="h-5 w-5 text-gray-400" />
           </div>
-          <select
-            onChange={(e) => onAdventureChange?.(e.target.value)}
-            className="pl-2 py-4 text-base border-0 focus:ring-0 flex-1 bg-transparent h-full"
-            value={adventure}
-          >
-            <option value="all">{t("selectAdventure")}</option>
-            {adventures.map((adventure, index) => (
-              <option key={index} value={adventure.name}>
-                {adventure.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex-1">
+            <LocationAutocomplete
+              locations={(adventures || []).map((a) => a.name || a)}
+              value={adventure}
+              onChange={onAdventureChange}
+              placeholder={t("selectAdventure")}
+              className="pl-2 py-4 text-base border-0 focus:ring-0 flex-1 bg-transparent h-full"
+            />
+          </div>
         </div>
 
-        {/* Location input */}
-        <div className="flex-1 flex items-center bg-white h-16  border-gray-200">
+        {/* Location input with autocomplete */}
+        <div className="flex-1 flex items-center bg-white h-16">
           <div className="flex items-center pl-3">
             <MapPin className="h-5 w-5 text-gray-400" />
           </div>
-          <Input
-            onChange={(e) => onLocationChange?.(e.target.value)}
-            className="pl-2 py-4 text-base border-0 focus:ring-0 flex-1 h-full"
-            type="text"
-            placeholder={t("searchLocation")}
-            value={location}
-            required
-          />
+          <div className="flex-1">
+            <LocationAutocomplete
+              locations={locationsList || []}
+              value={location}
+              onChange={onLocationChange}
+              placeholder={t("searchLocation")}
+              className="pl-2 py-4 text-base border-0 focus:ring-0 flex-1 bg-transparent h-full"
+            />
+          </div>
         </div>
 
         {/* Date input */}

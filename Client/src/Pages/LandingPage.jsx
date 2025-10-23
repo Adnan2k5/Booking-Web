@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import { useAdventures } from "../hooks/useAdventure"
+import { useLocations } from "../hooks/useLocation"
 import { Nav_Landing } from "../components/Nav_Landing"
 import { Footer } from "../components/Footer"
 import { fadeIn } from "../assets/Animations"
@@ -63,6 +64,7 @@ export default function LandingPage() {
   })
 
   const { adventures, loading: adventureLoading } = useAdventures()
+  const { locations: allLocations, isLoading: locationsLoading } = useLocations()
 
   const eventBooking = useEventBooking()
 
@@ -193,6 +195,8 @@ export default function LandingPage() {
             onShowGroupDialog={groupManagement.setShowGroupDialog}
             onNavigate={handleNavigate}
             t={t}
+            locationsList={allLocations?.map(l => l.name) || []}
+            locationsLoading={locationsLoading}
           />
         </motion.div>
       </section>

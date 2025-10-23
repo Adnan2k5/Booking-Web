@@ -5,6 +5,7 @@ import { EventBooking } from "../models/eventBooking.model.js";
 import { Event } from "../models/events.model.js";
 import { Adventure } from "../models/adventure.model.js";
 import { PaymentService } from "../services/payment.service.js";
+import PayPalService from "../services/paypal.service.js";
 import axios from "axios";
 import { createRevolutOrder } from "../utils/revolut.js";
 
@@ -18,17 +19,11 @@ export const createEventBooking = asyncHandler(async (req, res) => {
     adventureInstructors,
   } = req.body;
 
-  // Validate required fields
-  if (
-    !event ||
-    !participants ||
-    !contactInfo?.email ||
-    !contactInfo?.phone ||
-    !amount
-  ) {
+
+  // Validate required fields (amount is optional; will be derived from event if missing)
+  if (!event || !participants || !contactInfo?.email || !contactInfo?.phone) {
     throw new ApiError(400, "All required fields must be provided");
   }
-
   // Check if event exists and populate adventures
   const eventExists = await Event.findById(event).populate("adventures");
   if (!eventExists) {
@@ -83,26 +78,92 @@ export const createEventBooking = asyncHandler(async (req, res) => {
     // Continue with the process even if cleanup fails
   }
 
-  // Create Revolut payment order
-  const revolutOrder = await createRevolutOrder(
-    amount,
-    "GBP",
-    `Event Booking - ${eventExists.title} - User: ${
-      req.user.name || req.user.email
-    }`,
-    process.env.NODE_ENV === "production"
-      ? `${process.env.CLIENT_URL}/event-booking-confirmation`
-      : `http://localhost:5173/event-booking-confirmation`
-  );
+  // Determine final amount (if amount not provided or zero, use event price)
+  let finalAmount = Number(amount);
+  if (isNaN(finalAmount) || finalAmount <= 0) {
+    finalAmount = Number(eventExists.price) || 0;
+  }
+
+  // If amount is zero (free event), create confirmed booking without payment order
+  if (finalAmount <= 0) {
+    const booking = await EventBooking.create({
+      user: req.user._id,
+      event,
+      participants,
+      contactInfo,
+      amount: 0,
+      paymentMethod: paymentMethod || "none",
+      paymentOrderId: null,
+      paymentStatus: "completed",
+      status: "confirmed",
+      adventureInstructors: adventureInstructors || [],
+      adventureCompletionStatus: eventExists.adventures.map((adventure) => ({
+        adventure: adventure._id,
+        completed: false,
+      })),
+      nftEligible: eventExists.isNftEvent || false,
+      paymentCompletedAt: new Date(),
+    });
+
+    const populatedBooking = await EventBooking.findById(booking._id)
+      .populate(
+        "event",
+        "title description date startTime endTime location city country image adventures isNftEvent"
+      )
+      .populate("user", "name email")
+      .populate("adventureInstructors.adventure", "name description")
+      .populate("adventureInstructors.instructor", "name email")
+      .populate("adventureCompletionStatus.adventure", "name description");
+
+    return res.status(201).json(
+      new ApiResponse(
+        201,
+        {
+          booking: populatedBooking,
+          paymentOrder: null,
+        },
+        "Event Booking Created (free event)"
+      )
+    );
+  }
+
+  // Create payment order based on payment method
+  let paymentOrder;
+  const finalPaymentMethod = paymentMethod || "revolut";
+
+  if (finalPaymentMethod === "paypal") {
+    // Create PayPal order
+    try {
+      const paypalService = new PayPalService();
+      paymentOrder = await paypalService.createOrder(finalAmount, "GBP");
+      console.log("✅ PayPal Order Created:", JSON.stringify(paymentOrder, null, 2));
+    } catch (paypalError) {
+      console.error("❌ PayPal order creation failed:", paypalError);
+      throw new ApiError(500, "Failed to create PayPal payment order");
+    }
+  } else {
+    // Create Revolut order (default)
+    paymentOrder = await createRevolutOrder(
+      finalAmount,
+      "GBP",
+      `Event Booking - ${eventExists.title} - User: ${
+        req.user.name || req.user.email
+      }`,
+      process.env.NODE_ENV === "production"
+        ? `${process.env.CLIENT_URL}/event-booking-confirmation`
+        : `http://localhost:5173/event-booking-confirmation`
+    );
+    console.log("✅ Revolut Order Created:", JSON.stringify(paymentOrder, null, 2));
+  }
 
   const booking = await EventBooking.create({
     user: req.user._id,
     event,
     participants,
     contactInfo,
-    amount,
-    paymentMethod: paymentMethod || "revolut",
-    paymentOrderId: revolutOrder.id, // Store Revolut order ID for reference
+    amount: finalAmount,
+    paymentMethod: finalPaymentMethod,
+    paymentOrderId: finalPaymentMethod === "paypal" ? paymentOrder.id : paymentOrder.id,
     paymentStatus: "pending",
     status: "pending",
     adventureInstructors: adventureInstructors || [],
@@ -129,9 +190,10 @@ export const createEventBooking = asyncHandler(async (req, res) => {
       201,
       {
         booking: populatedBooking,
-        paymentOrder: revolutOrder,
+        paymentOrder: paymentOrder,
+        paymentMethod: finalPaymentMethod,
       },
-      "Event Booking Created with Payment Order"
+      `Event Booking Created with ${finalPaymentMethod === "paypal" ? "PayPal" : "Revolut"} Payment Order`
     )
   );
 });
@@ -170,6 +232,44 @@ export const handleEventBookingWebhook = asyncHandler(async (req, res) => {
   } catch (error) {
     console.error("Webhook error:", error);
     res.status(200).json({ message: "Webhook received with errors" });
+  }
+});
+
+// Function to handle PayPal webhook
+export const handlePayPalEventBookingWebhook = asyncHandler(async (req, res) => {
+  try {
+    const { id, status } = req.body;
+
+    if (!id || !status) {
+      throw new ApiError(400, "Invalid PayPal webhook payload");
+    }
+
+    // Find booking by PayPal order ID
+    const booking = await EventBooking.findOne({
+      paymentOrderId: id,
+    }).populate("user", "name email");
+
+    const paymentService = new PaymentService();
+    if (booking) {
+      const result = await paymentService.eventBookingPayPal(
+        id,
+        status,
+        booking
+      );
+      console.log("PayPal Payment result:", result);
+      res
+        .status(result.status)
+        .json(new ApiResponse(result.status, result.booking, result.message));
+      return;
+    }
+
+    // If no event booking found, return success to prevent webhook retries
+    res
+      .status(200)
+      .json({ message: "PayPal webhook received - no event booking found" });
+  } catch (error) {
+    console.error("PayPal Webhook error:", error);
+    res.status(200).json({ message: "PayPal webhook received with errors" });
   }
 });
 

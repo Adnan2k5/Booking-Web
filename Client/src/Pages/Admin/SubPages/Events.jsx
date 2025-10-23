@@ -46,6 +46,7 @@ export default function EventsPage() {
         },
         mapEmbedUrl: "",
         level: 1,
+        price: 0,
         images: [],
         adventures: [], // Array of adventure IDs
         isNftEvent: false,
@@ -97,6 +98,7 @@ export default function EventsPage() {
             },
             mapEmbedUrl: "",
             level: 1,
+            price: 0,
             images: [],
             adventures: [],
             isNftEvent: false,
@@ -213,6 +215,11 @@ export default function EventsPage() {
 
     const handleCreateEvent = async (e) => {
         e.preventDefault()
+        // Ensure at least one adventure selected
+        if (!formData.adventures || formData.adventures.length === 0) {
+            toast.error("Please select at least one adventure for this event.")
+            return
+        }
         setIsSubmitting(true)
         try {
             await createEvent(formData)
@@ -230,6 +237,11 @@ export default function EventsPage() {
 
     const handleUpdateEvent = async (e) => {
         e.preventDefault()
+        // Ensure at least one adventure selected
+        if (!formData.adventures || formData.adventures.length === 0) {
+            toast.error("Please select at least one adventure for this event.")
+            return
+        }
         setIsSubmitting(true)
         try {
             await updateEvent(selectedEvent._id, formData)
@@ -275,6 +287,7 @@ export default function EventsPage() {
             },
             mapEmbedUrl: event.mapEmbedUrl || "",
             level: event.level || 1,
+            price: event.price || 0,
             images: [], // Reset images array for new uploads
             adventures: event.adventures?.map(a => a._id || a) || [],
             isNftEvent: event.isNftEvent || false,
@@ -673,7 +686,7 @@ export default function EventsPage() {
                         {/* Adventures Selection */}
                         <div>
                             <Label className="text-sm font-medium">
-                                Adventures (Optional)
+                                Adventures *
                             </Label>
                             <div className="mt-2 space-y-2">
                                 <Button
@@ -810,6 +823,25 @@ export default function EventsPage() {
                             />
                             <p className="text-xs text-muted-foreground mt-1">
                                 Users must have this level or higher to book this event
+                            </p>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="price" className="text-sm font-medium">
+                                Event Price (£) - Optional
+                            </Label>
+                            <Input
+                                id="price"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={formData.price}
+                                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                                placeholder="Enter event price (0 for free)"
+                                className="mt-1"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Set 0 or leave empty for free events
                             </p>
                         </div>
 
@@ -995,10 +1027,29 @@ export default function EventsPage() {
                             </p>
                         </div>
 
+                        <div>
+                            <Label htmlFor="edit-price" className="text-sm font-medium">
+                                Event Price (£) - Optional
+                            </Label>
+                            <Input
+                                id="edit-price"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={formData.price}
+                                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                                placeholder="Enter event price (0 for free)"
+                                className="mt-1"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Set 0 or leave empty for free events
+                            </p>
+                        </div>
+
                         {/* Adventures Selection */}
                         <div>
                             <Label className="text-sm font-medium">
-                                Adventures (Optional)
+                                Adventures *
                             </Label>
                             <div className="mt-2 space-y-2">
                                 <Button

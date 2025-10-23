@@ -148,4 +148,39 @@ export class PaymentService {
       throw new ApiError(400, `Unsupported event type: ${event}`);
     }
   };
+
+  // Handle PayPal webhook for event bookings
+  eventBookingPayPal = async (orderId, paypalStatus, booking) => {
+    // PayPal status values: APPROVED, VOIDED, COMPLETED, PAYER_ACTION_REQUIRED
+    if (paypalStatus === "APPROVED" || paypalStatus === "COMPLETED") {
+      if (!booking) {
+        return { status: 200, message: "Webhook received" };
+      }
+
+      booking.paymentStatus = "completed";
+      booking.status = "confirmed";
+      booking.paymentCompletedAt = new Date();
+      await booking.save();
+
+      return {
+        status: 200,
+        message: "PayPal payment completed successfully",
+        booking: booking,
+      };
+    } else if (paypalStatus === "VOIDED") {
+      if (booking) {
+        booking.paymentStatus = "failed";
+        booking.status = "failed";
+        await booking.save();
+      }
+
+      return {
+        status: 200,
+        message: "PayPal payment failed",
+        booking: booking,
+      };
+    }
+
+    return { status: 200, message: "Webhook received" };
+  };
 }

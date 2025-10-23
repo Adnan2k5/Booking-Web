@@ -1,14 +1,20 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Search, ShoppingCart, Heart, User, Menu, X, GitCompare } from "lucide-react";
 
 export default function MainHeader({ categories = [], onSearch, onCategorySelect, selectedCategory }) {
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
 
   const submit = (e) => {
     e.preventDefault();
-    onSearch?.(query);
+    if (onSearch) {
+      onSearch(query);
+    } else {
+      // fallback: navigate to the shared nav-results page so the nav-bar search uses the same Filters/Product grid
+      navigate(`/shop/nav?search=${encodeURIComponent(query)}`);
+    }
     if (mobileOpen) setMobileOpen(false);
   };
 
@@ -25,10 +31,12 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
               key={c}
               to={`/shop/category/${c.toLowerCase()}`}
               onClick={(e) => {
-                // Prevent default navigation when using category filter from header
+                // Always prevent default and either call the handler or navigate to the nav results page
+                e.preventDefault();
                 if (onCategorySelect) {
-                  e.preventDefault();
                   onCategorySelect(c);
+                } else {
+                  navigate(`/shop/nav?category=${encodeURIComponent(c)}`);
                 }
               }}
               aria-current={selectedCategory === c ? 'page' : undefined}
@@ -50,7 +58,6 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
           <Link to="/shop/comparison" className="hover:text-orange-400"><GitCompare className="h-5 w-5" /></Link>
           <Link to="/cart" className="relative hover:text-orange-400">
             <ShoppingCart className="h-5 w-5" />
-            <span className="absolute -top-2 -right-2 bg-orange-500 text-[10px] leading-none rounded-full h-5 w-5 flex items-center justify-center font-semibold">0</span>
           </Link>
         </div>
         {/* Mobile toggle */}

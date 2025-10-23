@@ -251,6 +251,23 @@ const SecretNftEvents = () => {
                                         </div>
                                     )}
 
+                                    {/* Price Display */}
+                                    {event.price > 0 && (
+                                        <div className="bg-blue-500/20 p-3 rounded-lg border border-blue-400/30">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-blue-200 text-xs font-semibold">Price:</span>
+                                                <span className="text-white font-bold">£{event.price.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Free Event Badge */}
+                                    {event.price === 0 && (
+                                        <div className="bg-green-500/20 p-3 rounded-lg border border-green-400/30">
+                                            <span className="text-green-200 text-xs font-semibold">FREE EVENT</span>
+                                        </div>
+                                    )}
+
                                     {/* Level indicator */}
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-1">

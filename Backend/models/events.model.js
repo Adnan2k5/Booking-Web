@@ -65,13 +65,21 @@ const eventSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    adventures: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Adventure",
-        required: false,
+    adventures: {
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Adventure",
+        },
+      ],
+      required: [true, "At least one adventure is required"],
+      validate: {
+        validator: function (v) {
+          return Array.isArray(v) && v.length > 0;
+        },
+        message: "At least one adventure is required",
       },
-    ],
+    },
     isNftEvent: {
       type: Boolean,
       default: false,
@@ -93,6 +101,12 @@ const eventSchema = new mongoose.Schema(
         type: String,
         required: false,
       },
+    },
+    price: {
+      type: Number,
+      required: false,
+      default: 0,
+      min: 0,
     },
   },
   { timestamps: true }
