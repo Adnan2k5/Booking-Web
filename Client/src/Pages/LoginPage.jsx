@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { Eye, EyeClosed, Facebook, Linkedin, Lock, LogInIcon, Phone, User } from "lucide-react";
+import { Eye, EyeClosed, Lock, LogInIcon, Phone, User } from "lucide-react";
 import { MdEmail } from "react-icons/md";
 import { useForm } from "react-hook-form";
 import { GoogleLoginSuccess, ResendOtp, UserLogin, UserRegister, VerifyUser } from "../Auth/UserAuth";
@@ -12,7 +12,8 @@ import {
 } from "../components/ui/input-otp";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
+import { FaGoogle, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
 import { useAuth } from "./AuthProvider";
 import { Loader } from "../components/Loader";
 
@@ -344,9 +345,34 @@ export default function LoginPage() {
   }
     , [user, loading, Navigate])
 
+  // Custom Google button component uses the provider hook to trigger the OAuth flow
+  function GoogleButton({ onSuccess }) {
+    const login = useGoogleLogin({
+      onSuccess,
+      onError: (err) => {
+        console.error("Google login failed", err);
+        toast.error("Google login failed. Please try again.");
+      },
+    });
+
+    return (
+      <button
+        type="button"
+        onClick={() => login()}
+        className="w-full sm:flex-1 flex items-center gap-3 justify-start bg-white/90 border border-gray-200 rounded-3xl px-4 py-3 shadow-sm hover:shadow-md transition min-w-0"
+        aria-label="Sign in with Google"
+      >
+        <span className="bg-white rounded-full p-2 flex items-center justify-center shadow-sm flex-shrink-0">
+          <FaGoogle className="text-red-500 w-4 h-4" />
+        </span>
+        <span className="flex-1 text-sm font-medium text-center truncate">Continue with Google</span>
+      </button>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 relative">
-      <div className="login relative bg-gradient-to-b from-[#CEF2FF] to-white rounded-xl shadow-lg flex flex-col items-center justify-items-end md:py-6 md:px-2 lg:w-1/2 max-w-lg py-4">
+      <div className="login relative bg-gradient-to-b from-white/80 to-white rounded-2xl shadow-2xl flex flex-col items-center md:py-8 md:px-6 lg:w-1/2 max-w-lg py-6 border border-white/40 backdrop-blur-sm">
         <Modal open={openOtp} footer={null} onCancel={cancel}>
           <div className="space-y-2 flex flex-col items-center gap-4">
             <h1 className="text-lg font-semibold text-center">
@@ -391,8 +417,8 @@ export default function LoginPage() {
         </Modal>
         <div className="form w-full flex flex-col">
           <div className="header flex flex-col items-center gap-4">
-            <div className="icon bg-white rounded-2xl shadow-[#a4e0f6] shadow-lg p-4">
-              <LogInIcon className="text-black" />
+            <div className="icon p-4 rounded-3xl shadow-lg" style={{ background: 'linear-gradient(90deg,#06b6d4,#60a5fa)' }}>
+              <LogInIcon className="text-white" />
             </div>
             <h1 className="text-2xl font-semibold w-full text-center ">
               {signup ? "Sign Up" : "Sign In"}
@@ -402,10 +428,10 @@ export default function LoginPage() {
             onSubmit={handleSubmit(onSubmit)}
             className="Form md:px-12 px-5 py-4 gap-2 flex flex-col mt-5"
           >
-            <div className="email px-4 md:py-5 py-3 bg-gray-200 flex gap-6 items-center rounded-2xl">
+            <div className="email px-4 md:py-5 py-3 bg-white/80 border border-gray-200 flex gap-6 items-center rounded-2xl focus-within:ring-2 focus-within:ring-cyan-200 transition-shadow">
               {usingPhone ? (
                 <div className="flex gap-6 items-center">
-                  <Phone className="text-gray-600 text-2xl" />
+                  <Phone className="text-cyan-600 text-2xl" />
                   <input
                     type="number"
                     placeholder="Phone Number"
@@ -415,7 +441,7 @@ export default function LoginPage() {
                 </div>
               ) : (
                 <div className="flex gap-6 items-center w-full">
-                  <MdEmail className="text-gray-600 text-2xl" />
+                  <MdEmail className="text-cyan-600 text-2xl" />
                   <input
                     type="email"
                     placeholder="Email"
@@ -427,7 +453,7 @@ export default function LoginPage() {
                       }
                     })}
                     autoComplete="off"
-                    className="w-full bg-transparent outline-none border-none"
+                    className="w-full bg-transparent outline-none border-none placeholder-gray-500"
                   />
                 </div>
               )}
@@ -440,8 +466,8 @@ export default function LoginPage() {
               {usingPhone ? "Use Email instead" : "Use Phone instead"}
             </button>
             {signup && (
-              <div className="name px-4 md:py-5 py-3 bg-gray-200 flex gap-6 items-center rounded-2xl">
-                <User className="text-gray-600 text-2xl" />
+              <div className="name px-4 md:py-5 py-3 bg-white/80 border border-gray-200 flex gap-6 items-center rounded-2xl transition-shadow">
+                <User className="text-cyan-600 text-2xl" />
                 <input
                   type="text"
                   placeholder="Full Name"
@@ -456,8 +482,8 @@ export default function LoginPage() {
                 />
               </div>
             )}
-            <div className="password px-4 md:py-5 py-3 bg-gray-200 flex gap-6 items-center rounded-2xl">
-              <Lock className="text-gray-600 text-2xl" />
+            <div className="password px-4 md:py-5 py-3 bg-white/80 border border-gray-200 flex gap-6 items-center rounded-2xl transition-shadow">
+              <Lock className="text-cyan-600 text-2xl" />
               <input
                 type={viewPassword ? "text" : "password"}
                 placeholder="Password"
@@ -472,19 +498,19 @@ export default function LoginPage() {
               />
               {!viewPassword ? (
                 <EyeClosed
-                  className="text-gray-600 text-2xl cursor-pointer"
+                  className="text-cyan-600 text-2xl cursor-pointer"
                   onClick={() => setViewPassword(true)}
                 />
               ) : (
                 <Eye
-                  className="text-gray-600 text-2xl cursor-pointer"
+                  className="text-cyan-600 text-2xl cursor-pointer"
                   onClick={() => setViewPassword(false)}
                 />
               )}
             </div>
             {signup && (
-              <div className="password px-4 md:py-5 py-3 bg-gray-200 flex gap-6 items-center rounded-2xl">
-                <Lock className="text-gray-600 text-2xl" />
+              <div className="password px-4 md:py-5 py-3 bg-white/80 border border-gray-200 flex gap-6 items-center rounded-2xl transition-shadow">
+                <Lock className="text-cyan-600 text-2xl" />
                 <input
                   type={viewPassword ? "text" : "password"}
                   placeholder="Confirm Password"
@@ -538,21 +564,21 @@ export default function LoginPage() {
               )}
             </div>
             {signup ? (
-              <div className="button w-full bg-black rounded-2xl">
+              <div className="button w-full">
                 <button
                   type="submit"
                   disabled={loader}
-                  className="w-full text-white cursor-pointer py-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="w-full bg-black text-white py-3 rounded-3xl font-semibold shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {loader ? <Loader btn={true} /> : "Sign Up"}
                 </button>
               </div>
             ) : (
-              <div className="button w-full bg-black rounded-2xl">
+              <div className="button w-full">
                 <button
                   type="submit"
                   disabled={loader}
-                  className="w-full cursor-pointer text-white py-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="w-full bg-black text-white cursor-pointer py-3 rounded-3xl font-semibold shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {loader ? <Loader btn={true} /> : "Sign In"}
                 </button>
@@ -560,19 +586,35 @@ export default function LoginPage() {
             )}
           </form>
         </div>
-        <div className="alternate ">
+        <div className="alternate w-full md:px-12 px-5 mt-6">
           <p className="text-gray-500 text-sm text-center">
-            {signup ? "Or Sign Up with" : "Or Sign In with"}
+            {signup ? "Or sign up with" : "Or sign in with"}
           </p>
-          <div className="google flex gap-5 md:mt-3">
-            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-              <GoogleLogin onSuccess={onGoogleLoginSucces} />
-            </GoogleOAuthProvider>
-            <div className="flex gap-2 items-center border px-3 rounded-[5px]" onClick={linkedInLogin}>
-              <Linkedin />
+          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+            <div className="google w-full md:mt-6">
+              {/* Google full-width row */}
+              <div className="w-full">
+                <GoogleButton onSuccess={onGoogleLoginSucces} />
+              </div>
+
+              {/* LinkedIn and Facebook share the next row; stack on very small screens */}
+              <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                <button onClick={linkedInLogin} className="w-full sm:flex-1 flex items-center gap-3 justify-start bg-white/90 border border-gray-200 rounded-3xl px-4 py-3 shadow-sm hover:shadow-md transition min-w-0">
+                  <span className="bg-white rounded-full p-2 flex items-center justify-center shadow-sm flex-shrink-0">
+                    <FaLinkedinIn className="text-blue-700 w-4 h-4" />
+                  </span>
+                  <span className="flex-1 text-sm font-medium text-center truncate">LinkedIn</span>
+                </button>
+
+                <button onClick={facebookLogin} className="w-full sm:flex-1 flex items-center gap-3 justify-start bg-white/90 border border-gray-200 rounded-3xl px-4 py-3 shadow-sm hover:shadow-md transition min-w-0">
+                  <span className="bg-white rounded-full p-2 flex items-center justify-center shadow-sm flex-shrink-0">
+                    <FaFacebookF className="text-blue-600 w-4 h-4" />
+                  </span>
+                  <span className="flex-1 text-sm font-medium text-center truncate">Facebook</span>
+                </button>
+              </div>
             </div>
-            <div className="flex gap-2 items-center border px-3 rounded-[5px]" onClick={facebookLogin}><Facebook /></div>
-          </div>
+          </GoogleOAuthProvider>
         </div>
       </div>
     </div>
