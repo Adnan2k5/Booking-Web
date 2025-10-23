@@ -35,22 +35,19 @@ const SearchBar = memo(({
           <div className="flex items-center pl-3">
             <Compass className="h-5 w-5 text-gray-400" />
           </div>
-          <select
-            onChange={(e) => onAdventureChange?.(e.target.value)}
-            className="pl-2 py-4 text-base border-0 focus:ring-0 flex-1 bg-transparent h-full"
-            value={adventure}
-          >
-            <option value="all">{t("selectAdventure")}</option>
-            {adventures.map((adventure, index) => (
-              <option key={index} value={adventure.name}>
-                {adventure.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex-1">
+            <LocationAutocomplete
+              locations={(adventures || []).map((a) => a.name || a)}
+              value={adventure}
+              onChange={onAdventureChange}
+              placeholder={t("selectAdventure")}
+              className="pl-2 py-4 text-base border-0 focus:ring-0 flex-1 bg-transparent h-full"
+            />
+          </div>
         </div>
 
         {/* Location input with autocomplete */}
-        <div className="flex-1 flex items-center bg-white h-16 border-gray-200">
+        <div className="flex-1 flex items-center bg-white h-16">
           <div className="flex items-center pl-3">
             <MapPin className="h-5 w-5 text-gray-400" />
           </div>
@@ -60,6 +57,7 @@ const SearchBar = memo(({
               value={location}
               onChange={onLocationChange}
               placeholder={t("searchLocation")}
+              className="pl-2 py-4 text-base border-0 focus:ring-0 flex-1 bg-transparent h-full"
             />
           </div>
         </div>

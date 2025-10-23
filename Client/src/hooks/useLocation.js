@@ -13,7 +13,7 @@ export function useLocations() {
     setIsLoading(true);
     try {
       const res = await fetchLocations();
-      setLocations(Array.isArray(res) ? res : []);
+      setLocations(Array.isArray(res) ? res : res.data || []);
     } catch (err) {
       setLocations([]);
     } finally {
