@@ -45,6 +45,7 @@ export default function BrandStrip() {
     // Use a microtask to allow DOM update
     const rAF = requestAnimationFrame(() => {
       try {
+        if (!measureRef.current || !trackRef.current) return;
         const containerWidth = measureRef.current.offsetWidth;
         // Approx width per item: take first image element
         const itemEls = trackRef.current.querySelectorAll('.brand-item');
@@ -67,16 +68,21 @@ export default function BrandStrip() {
     if (!measureRef.current) return;
     const ro = new ResizeObserver(() => {
       if (sponsors.length === 0) return;
-      const containerWidth = measureRef.current.offsetWidth;
-      const itemEls = trackRef.current?.querySelectorAll('.brand-item') || [];
-      if (!itemEls.length) return;
-      const firstWidth = itemEls[0].offsetWidth || 150;
-      const baseTrackWidth = firstWidth * sponsors.length;
-      const required = containerWidth * 2;
-      const neededFactor = Math.ceil(required / baseTrackWidth);
-      setDupCount(Math.max(2, neededFactor));
+      if (!measureRef.current || !trackRef.current) return;
+      try {
+        const containerWidth = measureRef.current.offsetWidth;
+        const itemEls = trackRef.current.querySelectorAll('.brand-item') || [];
+        if (!itemEls.length) return;
+        const firstWidth = itemEls[0].offsetWidth || 150;
+        const baseTrackWidth = firstWidth * sponsors.length;
+        const required = containerWidth * 2;
+        const neededFactor = Math.ceil(required / baseTrackWidth);
+        setDupCount(Math.max(2, neededFactor));
+      } catch (e) {
+        // ignore measurement errors
+      }
     });
-    ro.observe(measureRef.current);
+    if (measureRef.current) ro.observe(measureRef.current);
     return () => ro.disconnect();
   }, [sponsors]);
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { toast } from 'sonner';
@@ -6,6 +7,7 @@ import { useFavorites } from '../../contexts/FavoritesContext';
 
 // Simple left-filter + product grid component
 export default function ProductsGrid({ items = [], categories = [], selectedCategory = '', search = '', addToCart, onCategorySelect, onSearch, onFilterChange }) {
+  const navigate = useNavigate();
   const [localCategory, setLocalCategory] = useState(selectedCategory || '');
   const [localSearch, setLocalSearch] = useState(search || '');
   const [priceMin, setPriceMin] = useState('');
@@ -117,7 +119,7 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
         <div className="col-span-1 md:col-span-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((item, i) => (
-              <div key={item._id || i} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200">
+              <div key={item._id || i} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer" onClick={() => { if (item._id) navigate(`/product/${item._id}`); }}>
                 <div className="h-56 bg-neutral-100 overflow-hidden flex items-center justify-center">
                   {item.images?.[0] ? (
                     <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
@@ -127,7 +129,7 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
                 </div>
                 <div className="p-4 space-y-2">
                   <p className="text-xs uppercase text-neutral-500">{item.brand}</p>
-                  <h3 className="text-sm font-medium">{item.name}</h3>
+                    <h3 className="text-sm font-medium">{item.name}</h3>
                   <div className="flex items-center justify-between">
                     <p className="font-bold">€{item.price}</p>
                     <div className="flex items-center gap-2">
