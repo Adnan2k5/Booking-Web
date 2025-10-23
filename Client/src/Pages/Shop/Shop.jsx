@@ -1,6 +1,6 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useRef } from "react";
 import { CartContext } from "../Cart/CartContext";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import MainHeader from "../../components/shop/MainHeader";
 import FilterBar from "../../components/shop/FilterBar";
 import HeroCarousel from "../../components/shop/HeroCarousel";
@@ -20,6 +20,8 @@ export default function AdventureShop() {
   const location = useLocation();
 
   const baseUrl = import.meta.env.VITE_SERVER_URL;
+  const productsRef = useRef(null);
+  const [showTopSections, setShowTopSections] = useState(true);
 
   // Fetch items (supports extended filters)
   const fetchItems = async (filters = {}) => {
@@ -95,10 +97,26 @@ export default function AdventureShop() {
     const currentSearch = searchQuery || new URLSearchParams(location.search).get('search') || "";
     if (selectedCategory === category) {
       setSelectedCategory("");
+      setShowTopSections(true);
       fetchItems({ search: currentSearch });
     } else {
       setSelectedCategory(category);
+      setShowTopSections(false);
       fetchItems({ search: currentSearch, category });
+      // scroll to products area after layout updates
+      setTimeout(() => {
+        try {
+          const el = productsRef.current;
+          if (!el) return;
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // adjust for sticky header if present
+          const header = document.querySelector('header');
+          const headerHeight = header ? header.clientHeight : 80;
+          window.scrollBy({ top: -headerHeight + 8, behavior: 'smooth' });
+        } catch (err) {
+          // ignore
+        }
+      }, 100);
     }
   };
 
@@ -124,10 +142,12 @@ export default function AdventureShop() {
       {/* <AnnouncementBar /> */}
       <MainHeader categories={categories} onSearch={handleSearch} onCategorySelect={handleCategorySelect} selectedCategory={selectedCategory} />
       <FilterBar search={searchQuery} category={selectedCategory} onClear={clearFilters} onRemoveFilter={removeFilter} />
-      <HeroCarousel />
-      <CategoryFeatureGrid />
+      {showTopSections && <HeroCarousel />}
+      {showTopSections && <CategoryFeatureGrid />}
       {/* Products grid: replaces separate product page navigation; shows all products with left filters */}
-      <ProductsGrid items={items} categories={categories} selectedCategory={selectedCategory} search={searchQuery} addToCart={addToCart} onCategorySelect={handleCategorySelect} onSearch={handleSearch} onFilterChange={fetchItems} />
+      <div ref={productsRef}>
+        <ProductsGrid items={items} categories={categories} selectedCategory={selectedCategory} search={searchQuery} addToCart={addToCart} onCategorySelect={handleCategorySelect} onSearch={handleSearch} onFilterChange={fetchItems} />
+      </div>
       <PromoBanners />
       <BrandStrip />
       <NewsletterSection />

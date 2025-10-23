@@ -1,21 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
-import { ChevronRight, Filter, Grid, List, GitCompare, Heart } from 'lucide-react';
-import { getAllItems } from '../../Api/item.api';
+import { ChevronRight } from 'lucide-react';
+import ProductsGrid from '../../components/shop/ProductsGrid';
 import MainHeader from '../../components/shop/MainHeader';
 import Footer from '../../components/shop/Footer';
 
 import { useContext } from 'react';
 import { CartContext } from '../Cart/CartContext';
-import { useComparison } from '../../contexts/ComparisonContext';
-import { useFavorites } from '../../contexts/FavoritesContext';
 
 export default function CategoryPage() {
   const { slug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const { addToCart } = useContext(CartContext);
-  const { addToComparison, removeFromComparison, isInComparison } = useComparison();
-  const { addToFavorites, removeFromFavorites, isInFavorites } = useFavorites();
   
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,44 +20,48 @@ export default function CategoryPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
-  const [viewMode, setViewMode] = useState('grid');
   
   const categories = ['Camping', 'Clothing', 'Footwear', 'Accessories', 'Equipment'];
   const category = categories.find(c => c.toLowerCase() === slug?.toLowerCase()) || '';
   const searchQuery = searchParams.get('search') || '';
   
   const limit = 12;
-
-  const fetchItems = async (page = 1) => {
+  // Use ProductsGrid for listing and filters. Provide server-side fetch handler.
+  const fetchItems = async (filters = {}) => {
     try {
       setLoading(true);
-      const params = {
-        page,
-        limit,
-        search: searchQuery,
-        category,
-        sortBy,
-        sortOrder
-      };
-      
-      const response = await getAllItems(params.page, params.limit, params.search, params.category);
-      
-      if (response.success) {
-        setItems(response.message || []);
-        setTotalPages(Math.ceil((response.total || 0) / limit));
+      const params = new URLSearchParams();
+      if (filters.search) params.set('search', filters.search);
+      if (filters.category) params.set('category', filters.category);
+      if (filters.page) params.set('page', filters.page);
+      if (filters.limit) params.set('limit', filters.limit);
+      if (filters.priceMin !== undefined && filters.priceMin !== '') params.set('priceMin', filters.priceMin);
+      if (filters.priceMax !== undefined && filters.priceMax !== '') params.set('priceMax', filters.priceMax);
+      if (filters.availability) params.set('availability', filters.availability);
+      if (filters.minRating !== undefined && filters.minRating !== '') params.set('minRating', filters.minRating);
+      if (filters.brand) params.set('brand', filters.brand);
+      if (filters.sortBy) params.set('sortBy', filters.sortBy);
+
+      const url = `/api/items${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data && data.message) {
+        setItems(data.message || []);
+        setTotalPages(Math.ceil((data.data?.total || 0) / limit));
       } else {
-        setError('Failed to fetch items');
+        setItems([]);
       }
     } catch (err) {
-      setError('Error loading products');
       console.error('Error fetching items:', err);
+      setError('Error loading products');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchItems(currentPage);
+    // initial load for category page
+    fetchItems({ page: currentPage, limit, search: searchQuery, category, sortBy });
   }, [slug, searchQuery, currentPage, sortBy, sortOrder]);
 
   const handleSearch = (query) => {
@@ -121,143 +121,12 @@ export default function CategoryPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-neutral-900 mb-2">{category}</h1>
-            <p className="text-neutral-600">
-              {searchQuery ? `${items.length} results for "${searchQuery}" in ${category}` : `${items.length} products in ${category}`}
-            </p>
+            <p className="text-neutral-600">{searchQuery ? `${items.length} results for "${searchQuery}" in ${category}` : `${items.length} products in ${category}`}</p>
           </div>
-          
-          <div className="flex items-center gap-4">
-                {/* Sorting */}
-                <select
-                  value={`${sortBy}-${sortOrder}`}
-                  onChange={(e) => {
-                    const [field, order] = e.target.value.split('-');
-                    setSortBy(field);
-                    setSortOrder(order);
-                  }}
-                  className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                >
-                  <option value="name-asc">Name (A-Z)</option>
-                  <option value="name-desc">Name (Z-A)</option>
-                  <option value="price-asc">Price (Low to High)</option>
-                  <option value="price-desc">Price (High to Low)</option>
-                  <option value="createdAt-desc">Newest First</option>
-                  <option value="createdAt-asc">Oldest First</option>
-                </select>
-
-                {/* View Toggle */}
-                <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded ${viewMode === 'grid' ? 'bg-neutral-900 text-white' : 'text-neutral-600 hover:text-neutral-900'}`}
-                  >
-                    <Grid className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded ${viewMode === 'list' ? 'bg-neutral-900 text-white' : 'text-neutral-600 hover:text-neutral-900'}`}
-                  >
-                    <List className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
         </div>
 
-        {/* Products Grid */}
-        {items.length > 0 ? (
-          <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'}`}>
-            {items.map((item) => (
-              <div key={item._id} className={`bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group ${viewMode === 'list' ? 'flex' : ''}`}>
-                <Link to={`/product/${item._id}`} className={`block relative overflow-hidden ${viewMode === 'list' ? 'w-48 h-48' : 'h-64'}`}>
-                  {item.images?.[0] ? (
-                    <img 
-                      src={item.images[0]} 
-                      alt={item.name} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-neutral-100 flex items-center justify-center text-neutral-500">
-                      No Image
-                    </div>
-                  )}
-                </Link>
-                
-                <div className={`p-4 ${viewMode === 'list' ? 'flex-1' : ''}`}>
-                  <Link to={`/product/${item._id}`}>
-                    <h3 className="font-medium text-neutral-900 mb-2 group-hover:text-orange-500 transition-colors line-clamp-2">
-                      {item.name}
-                    </h3>
-                  </Link>
-                  
-                  <p className="text-sm text-neutral-600 mb-3 line-clamp-2">{item.description}</p>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      {item.price > 0 && (
-                        <p className="font-bold text-neutral-900">€{item.price}</p>
-                      )}
-                      {item.rentalPrice > 0 && (
-                        <p className="text-sm text-neutral-600">Rent: €{item.rentalPrice}/day</p>
-                      )}
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          if (isInFavorites(item._id)) {
-                            removeFromFavorites(item._id);
-                          } else {
-                            addToFavorites(item);
-                          }
-                        }}
-                        className={`p-2 rounded-full text-sm font-medium transition-colors ${
-                          isInFavorites(item._id)
-                            ? 'bg-red-500 text-white hover:bg-red-600'
-                            : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                        }`}
-                        title={isInFavorites(item._id) ? 'Remove from favorites' : 'Add to favorites'}
-                      >
-                        <Heart size={16} fill={isInFavorites(item._id) ? 'currentColor' : 'none'} />
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          if (isInComparison(item._id)) {
-                            removeFromComparison(item._id);
-                          } else {
-                            addToComparison(item);
-                          }
-                        }}
-                        className={`p-2 rounded-full text-sm font-medium transition-colors ${
-                          isInComparison(item._id)
-                            ? 'bg-orange-500 text-white hover:bg-orange-600'
-                            : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                        }`}
-                        title={isInComparison(item._id) ? 'Remove from comparison' : 'Add to comparison'}
-                      >
-                        <GitCompare size={16} />
-                      </button>
-                      
-                      <button
-                        onClick={() => addToCart(item)}
-                        className="bg-neutral-900 hover:bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
-                      >
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <div className="text-neutral-600 mb-4">No products found in this category</div>
-            <Link to="/shop" className="text-orange-500 hover:text-orange-600 font-medium">
-              Browse all products →
-            </Link>
-          </div>
-        )}
+        {/* Use ProductsGrid (it includes filters + grid) */}
+        <ProductsGrid items={items} categories={categories} selectedCategory={category} search={searchQuery} addToCart={addToCart} onCategorySelect={(c) => fetchItems({ category: c })} onSearch={(q) => fetchItems({ search: q })} onFilterChange={(f) => fetchItems({ ...f, category })} />
 
         {/* Pagination */}
         {totalPages > 1 && (

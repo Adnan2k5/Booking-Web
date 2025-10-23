@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { Search, ChevronRight, Filter, X, GitCompare, Heart } from 'lucide-react';
-import { getAllItems } from '../../Api/item.api';
+import { Search, ChevronRight, Filter, X } from 'lucide-react';
+import ProductsGrid from '../../components/shop/ProductsGrid';
 import MainHeader from '../../components/shop/MainHeader';
 import Footer from '../../components/shop/Footer';
 import { useContext } from 'react';
@@ -35,20 +35,34 @@ export default function SearchPage() {
     setSelectedCategory(categoryParam);
   }, [searchQuery, categoryParam]);
 
-  const fetchItems = async (page = 1) => {
+  // Shared fetch that ProductsGrid will call via onFilterChange
+  const fetchItems = async (filters = {}) => {
     try {
       setLoading(true);
-      const response = await getAllItems(page, limit, searchQuery, categoryParam);
-      
-      if (response.success) {
-        setItems(response.message || []);
-        setTotalPages(Math.ceil((response.total || 0) / limit));
+      const params = new URLSearchParams();
+      if (filters.search) params.set('search', filters.search);
+      if (filters.category) params.set('category', filters.category);
+      if (filters.page) params.set('page', filters.page);
+      if (filters.limit) params.set('limit', filters.limit);
+      if (filters.priceMin !== undefined && filters.priceMin !== '') params.set('priceMin', filters.priceMin);
+      if (filters.priceMax !== undefined && filters.priceMax !== '') params.set('priceMax', filters.priceMax);
+      if (filters.availability) params.set('availability', filters.availability);
+      if (filters.minRating !== undefined && filters.minRating !== '') params.set('minRating', filters.minRating);
+      if (filters.brand) params.set('brand', filters.brand);
+      if (filters.sortBy) params.set('sortBy', filters.sortBy);
+
+      const url = `/api/items${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data && data.message) {
+        setItems(data.message || []);
+        setTotalPages(Math.ceil((data.data?.total || 0) / limit));
       } else {
-        setError('Failed to fetch search results');
+        setItems([]);
       }
     } catch (err) {
-      setError('Error loading search results');
       console.error('Error fetching items:', err);
+      setError('Error loading search results');
     } finally {
       setLoading(false);
     }
@@ -197,9 +211,7 @@ export default function SearchPage() {
 
           {/* Results Summary */}
           {searchQuery && (
-            <p className="text-neutral-600">
-              {loading ? 'Searching...' : `${items.length} results for "${searchQuery}"${categoryParam ? ` in ${categoryParam}` : ''}`}
-            </p>
+            <p className="text-neutral-600">{loading ? 'Searching...' : `${items.length} results for "${searchQuery}"${categoryParam ? ` in ${categoryParam}` : ''}`}</p>
           )}
         </div>
 
@@ -242,133 +254,8 @@ export default function SearchPage() {
           </div>
         )}
 
-        {/* Search Results */}
-        {!loading && !error && items.length > 0 && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {items.map((item) => (
-                <div key={item._id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
-                  <Link to={`/product/${item._id}`} className="block h-64 relative overflow-hidden">
-                    {item.images?.[0] ? (
-                      <img 
-                        src={item.images[0]} 
-                        alt={item.name} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-neutral-100 flex items-center justify-center text-neutral-500">
-                        No Image
-                      </div>
-                    )}
-                  </Link>
-                  
-                  <div className="p-4">
-                    <Link to={`/product/${item._id}`}>
-                      <h3 className="font-medium text-neutral-900 mb-2 group-hover:text-orange-500 transition-colors line-clamp-2">
-                        {item.name}
-                      </h3>
-                    </Link>
-                    
-                    <p className="text-sm text-neutral-600 mb-3 line-clamp-2">{item.description}</p>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        {item.price > 0 && (
-                          <p className="font-bold text-neutral-900">€{item.price}</p>
-                        )}
-                        {item.rentalPrice > 0 && (
-                          <p className="text-sm text-neutral-600">Rent: €{item.rentalPrice}/day</p>
-                        )}
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            if (isInFavorites(item._id)) {
-                              removeFromFavorites(item._id);
-                            } else {
-                              addToFavorites(item);
-                            }
-                          }}
-                          className={`p-2 rounded-full text-sm font-medium transition-colors ${
-                            isInFavorites(item._id)
-                              ? 'bg-red-500 text-white hover:bg-red-600'
-                              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                          }`}
-                          title={isInFavorites(item._id) ? 'Remove from favorites' : 'Add to favorites'}
-                        >
-                          <Heart size={16} fill={isInFavorites(item._id) ? 'currentColor' : 'none'} />
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            if (isInComparison(item._id)) {
-                              removeFromComparison(item._id);
-                            } else {
-                              addToComparison(item);
-                            }
-                          }}
-                          className={`p-2 rounded-full text-sm font-medium transition-colors ${
-                            isInComparison(item._id)
-                              ? 'bg-orange-500 text-white hover:bg-orange-600'
-                              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                          }`}
-                          title={isInComparison(item._id) ? 'Remove from comparison' : 'Add to comparison'}
-                        >
-                          <GitCompare size={16} />
-                        </button>
-                        
-                        <button
-                          onClick={() => addToCart(item)}
-                          className="bg-neutral-900 hover:bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
-                        >
-                          Add to Cart
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center mt-12">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 rounded-lg border border-neutral-300 text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </button>
-                  
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i + 1}
-                      onClick={() => handlePageChange(i + 1)}
-                      className={`px-4 py-2 rounded-lg ${
-                        currentPage === i + 1
-                          ? 'bg-neutral-900 text-white'
-                          : 'border border-neutral-300 text-neutral-700 hover:bg-neutral-50'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                  
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 rounded-lg border border-neutral-300 text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+        {/* Use ProductsGrid for search results and filters */}
+        <ProductsGrid items={items} categories={categories} selectedCategory={categoryParam} search={searchQuery} addToCart={addToCart} onCategorySelect={(c) => fetchItems({ category: c })} onSearch={(q) => fetchItems({ search: q })} onFilterChange={(f) => fetchItems({ ...f, search: searchQuery })} />
       </div>
 
       <Footer categories={categories} />
