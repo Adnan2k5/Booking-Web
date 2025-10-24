@@ -30,7 +30,7 @@ export const Navbar = () => {
     { label: t("explore"), path: "/browse" },
     ...(isShopEnabled ? [{ label: t("shop"), path: "/shop" }] : []),
     ...(isHotelsEnabled ? [{ label: t("hotels"), path: "/book-hotel" }] : []),
-    { label: t("mission"), path: "#mission" },
+    { label: t("mission"), path: "/mission" },
   ]
 
   return (

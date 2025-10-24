@@ -58,6 +58,7 @@ const PayPalSuccess = lazy(() => import("./Pages/Payment/PayPalSuccess"))
 const PayPalError = lazy(() => import("./Pages/Payment/PayPalError"))
 const EventBookingConfirmation = lazy(() => import("./Pages/Payment/EventBookingConfirmation"))
 const SecretNftEvents = lazy(() => import("./Pages/SecretNftEvents"))
+const Mission = lazy(() => import("./Pages/Mission"))
 
 // i18n
 import { I18nextProvider } from "react-i18next"
@@ -153,6 +154,7 @@ const App = () => {
                   <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
                   <Route path="/secret-nft-events" element={<SecretNftEvents />} />
                   <Route path="/terms" element={<Terms />} />
+                  <Route path="/mission" element={<Mission />} />
                   <Route path="/browse" element={<BrowsingPage />} />
                   <Route path="/event/:id" element={<EventDetailPage />} />
                   <Route path="/booking" element={<Booking />} />
