@@ -38,6 +38,7 @@ import EventDetailPage from "./Pages/EventDetailPage"
 // Lazy loaded components
 const LoginPage = lazy(() => import("./Pages/LoginPage"))
 const LandingPage = lazy(() => import("./Pages/LandingPage"))
+const FAQ = lazy(() => import("./Pages/FAQ"))
 const BrowsingPage = lazy(() => import("./Pages/Browsing/BrowsingPage"))
 const Shop = lazy(() => import("./Pages/Shop/Shop"))
 const CategoryPage = lazy(() => import("./Pages/Shop/CategoryPage"))
@@ -51,6 +52,7 @@ const HotelBookingSuccess = lazy(() => import("./Pages/Hotel/HotelBookingSuccess
 const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
 const AuthLayout = lazy(() => import("./Pages/Auth/AuthLayout"))
 const Terms = lazy(() => import("./Pages/Terms"))
+const PrivacyPolicy = lazy(() => import("./Pages/PrivacyPolicy"))
 const PaymentPage = lazy(() => import("./Pages/Payment/PaymentPage"))
 const PaymentApprove = lazy(() => import("./Pages/Payment/PaymentApprove"))
 const PaymentCancel = lazy(() => import("./Pages/Payment/PaymentCancel"))
@@ -155,6 +157,8 @@ const App = () => {
                   <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
                   <Route path="/secret-nft-events" element={<SecretNftEvents />} />
                   <Route path="/terms" element={<Terms />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/faq" element={<FAQ />} />
                   <Route path="/mission" element={<Mission />} />
                   <Route path="/browse" element={<BrowsingPage />} />
                   <Route path="/event/:id" element={<EventDetailPage />} />

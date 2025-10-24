@@ -1,12 +1,14 @@
 import React from 'react'
 import { Footer } from '../components/Footer'
+import { Nav_Landing } from '../components/Nav_Landing'
 
 export default function PrivacyPolicy() {
   const effectiveDate = 'October 25, 2025'
 
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="max-w-5xl mx-auto px-4 py-16">
+      <Nav_Landing />
+  <div className="max-w-5xl mx-auto px-4 pt-24 pb-16">
         <h1 className="text-4xl font-bold mb-4">Privacy Policy</h1>
         <p className="text-gray-600 mb-6">Effective date: {effectiveDate}</p>
 
