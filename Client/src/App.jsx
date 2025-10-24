@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { lazy, Suspense } from "react"
 import { Toaster } from "sonner"
 import Booking from "./Pages/BookingSteps/Booking"
@@ -13,6 +13,7 @@ import UserFriendsPage from "./Pages/User/UserFriendsPage"
 import UserTicketsPage from "./Pages/User/UserTicketsPage"
 import UserProfilePage from "./Pages/User/UserProfilePage"
 import UserSettingsPage from "./Pages/User/UserSettingsPage"
+import DashboardLayout from "./Pages/User/DashboardLayout"
 import InstructorDashboard from "./Pages/Instructor/InstructorDashboard"
 import SessionForm from "./Pages/Instructor/SessionForm"
 import ConfirmationPage from "./Pages/ConfirmationPage/Confirmation"
@@ -219,14 +220,17 @@ const App = () => {
                     </FeatureRoute>
                   } />
                   <Route path="/reset" element={<ResetPass />} />
+                  <Route path="/support" element={<Navigate to="/dashboard/tickets" replace />} />
                   <Route path="/instructor/register" element={<InstructorRegister />} />
                   <Route path="/instructor/pending-review" element={<InstructorPendingReview />} />
-                  <Route path="/dashboard" element={<UserDashboardPage />} />
-                  <Route path="/dashboard/bookings" element={<UserBookingsPage />} />
-                  <Route path="/dashboard/friends" element={<UserFriendsPage />} />
-                  <Route path="/dashboard/tickets" element={<UserTicketsPage />} />
-                  <Route path="/dashboard/profile" element={<UserProfilePage />} />
-                  <Route path="/dashboard/settings" element={<UserSettingsPage />} />
+                  <Route path="/dashboard" element={<DashboardLayout />}>
+                    <Route index element={<UserDashboardPage />} />
+                    <Route path="bookings" element={<UserBookingsPage />} />
+                    <Route path="friends" element={<UserFriendsPage />} />
+                    <Route path="tickets" element={<UserTicketsPage />} />
+                    <Route path="profile" element={<UserProfilePage />} />
+                    <Route path="settings" element={<UserSettingsPage />} />
+                  </Route>
                   <Route path="/hotel" element={
                     <FeatureRoute feature="hotels">
                       <HotelProfile />
