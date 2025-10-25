@@ -17,15 +17,11 @@ export default function Footer({ categories = [] }) {
           <h4 className="font-semibold mb-4 tracking-wide">Shop</h4>
           <ul className="space-y-2 text-sm text-neutral-400">
             {categories.map(c => <li key={c}><a href={`/shop/category/${c.toLowerCase()}`} className="hover:text-orange-400 transition-colors">{c}</a></li>)}
-            <li><a href="/new-arrivals" className="hover:text-orange-400 transition-colors">New Arrivals</a></li>
-            <li><a href="/sale" className="hover:text-orange-400 transition-colors">Sale Items</a></li>
           </ul>
         </div>
         <div>
           <h4 className="font-semibold mb-4 tracking-wide">Information</h4>
           <ul className="space-y-2 text-sm text-neutral-400">
-            <li><a href="/about" className="hover:text-orange-400">About Us</a></li>
-            <li><a href="/shipping" className="hover:text-orange-400">Shipping & Returns</a></li>
             <li><a href="/faq" className="hover:text-orange-400">FAQ</a></li>
             <li><a href="/terms" className="hover:text-orange-400">Terms & Conditions</a></li>
             <li><a href="/privacy" className="hover:text-orange-400">Privacy Policy</a></li>

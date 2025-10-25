@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { lazy, Suspense } from "react"
 import { Toaster } from "sonner"
 import Booking from "./Pages/BookingSteps/Booking"
@@ -13,6 +13,7 @@ import UserFriendsPage from "./Pages/User/UserFriendsPage"
 import UserTicketsPage from "./Pages/User/UserTicketsPage"
 import UserProfilePage from "./Pages/User/UserProfilePage"
 import UserSettingsPage from "./Pages/User/UserSettingsPage"
+import DashboardLayout from "./Pages/User/DashboardLayout"
 import InstructorDashboard from "./Pages/Instructor/InstructorDashboard"
 import SessionForm from "./Pages/Instructor/SessionForm"
 import ConfirmationPage from "./Pages/ConfirmationPage/Confirmation"
@@ -37,6 +38,7 @@ import EventDetailPage from "./Pages/EventDetailPage"
 // Lazy loaded components
 const LoginPage = lazy(() => import("./Pages/LoginPage"))
 const LandingPage = lazy(() => import("./Pages/LandingPage"))
+const FAQ = lazy(() => import("./Pages/FAQ"))
 const BrowsingPage = lazy(() => import("./Pages/Browsing/BrowsingPage"))
 const Shop = lazy(() => import("./Pages/Shop/Shop"))
 const CategoryPage = lazy(() => import("./Pages/Shop/CategoryPage"))
@@ -50,6 +52,7 @@ const HotelBookingSuccess = lazy(() => import("./Pages/Hotel/HotelBookingSuccess
 const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
 const AuthLayout = lazy(() => import("./Pages/Auth/AuthLayout"))
 const Terms = lazy(() => import("./Pages/Terms"))
+const PrivacyPolicy = lazy(() => import("./Pages/PrivacyPolicy"))
 const PaymentPage = lazy(() => import("./Pages/Payment/PaymentPage"))
 const PaymentApprove = lazy(() => import("./Pages/Payment/PaymentApprove"))
 const PaymentCancel = lazy(() => import("./Pages/Payment/PaymentCancel"))
@@ -58,6 +61,7 @@ const PayPalSuccess = lazy(() => import("./Pages/Payment/PayPalSuccess"))
 const PayPalError = lazy(() => import("./Pages/Payment/PayPalError"))
 const EventBookingConfirmation = lazy(() => import("./Pages/Payment/EventBookingConfirmation"))
 const SecretNftEvents = lazy(() => import("./Pages/SecretNftEvents"))
+const Mission = lazy(() => import("./Pages/Mission"))
 
 // i18n
 import { I18nextProvider } from "react-i18next"
@@ -153,6 +157,9 @@ const App = () => {
                   <Route path="/auth/signInWithFacebook" element={<FacebookCallback />} />
                   <Route path="/secret-nft-events" element={<SecretNftEvents />} />
                   <Route path="/terms" element={<Terms />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/mission" element={<Mission />} />
                   <Route path="/browse" element={<BrowsingPage />} />
                   <Route path="/event/:id" element={<EventDetailPage />} />
                   <Route path="/booking" element={<Booking />} />
@@ -217,14 +224,17 @@ const App = () => {
                     </FeatureRoute>
                   } />
                   <Route path="/reset" element={<ResetPass />} />
+                  <Route path="/support" element={<Navigate to="/dashboard/tickets" replace />} />
                   <Route path="/instructor/register" element={<InstructorRegister />} />
                   <Route path="/instructor/pending-review" element={<InstructorPendingReview />} />
-                  <Route path="/dashboard" element={<UserDashboardPage />} />
-                  <Route path="/dashboard/bookings" element={<UserBookingsPage />} />
-                  <Route path="/dashboard/friends" element={<UserFriendsPage />} />
-                  <Route path="/dashboard/tickets" element={<UserTicketsPage />} />
-                  <Route path="/dashboard/profile" element={<UserProfilePage />} />
-                  <Route path="/dashboard/settings" element={<UserSettingsPage />} />
+                  <Route path="/dashboard" element={<DashboardLayout />}>
+                    <Route index element={<UserDashboardPage />} />
+                    <Route path="bookings" element={<UserBookingsPage />} />
+                    <Route path="friends" element={<UserFriendsPage />} />
+                    <Route path="tickets" element={<UserTicketsPage />} />
+                    <Route path="profile" element={<UserProfilePage />} />
+                    <Route path="settings" element={<UserSettingsPage />} />
+                  </Route>
                   <Route path="/hotel" element={
                     <FeatureRoute feature="hotels">
                       <HotelProfile />

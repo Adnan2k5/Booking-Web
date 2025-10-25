@@ -12,7 +12,7 @@ import {
 } from "../components/ui/input-otp";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { FaGoogle, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
 import { useAuth } from "./AuthProvider";
 import { Loader } from "../components/Loader";
@@ -345,30 +345,7 @@ export default function LoginPage() {
   }
     , [user, loading, Navigate])
 
-  // Custom Google button component uses the provider hook to trigger the OAuth flow
-  function GoogleButton({ onSuccess }) {
-    const login = useGoogleLogin({
-      onSuccess,
-      onError: (err) => {
-        console.error("Google login failed", err);
-        toast.error("Google login failed. Please try again.");
-      },
-    });
-
-    return (
-      <button
-        type="button"
-        onClick={() => login()}
-        className="w-full sm:flex-1 flex items-center gap-3 justify-start bg-white/90 border border-gray-200 rounded-3xl px-4 py-3 shadow-sm hover:shadow-md transition min-w-0"
-        aria-label="Sign in with Google"
-      >
-        <span className="bg-white rounded-full p-2 flex items-center justify-center shadow-sm flex-shrink-0">
-          <FaGoogle className="text-red-500 w-4 h-4" />
-        </span>
-        <span className="flex-1 text-sm font-medium text-center truncate">Continue with Google</span>
-      </button>
-    );
-  }
+  // Use the official GoogleLogin component (returns a credential via response.credential)
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 relative">
@@ -594,7 +571,31 @@ export default function LoginPage() {
             <div className="google w-full md:mt-6">
               {/* Google full-width row */}
               <div className="w-full">
-                <GoogleButton onSuccess={onGoogleLoginSucces} />
+                {/* Custom themed Google button (visual) with an invisible GoogleLogin overlay to preserve functionality */}
+                <div className="relative w-full">
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-3 justify-start bg-white/90 border border-gray-200 rounded-3xl px-4 py-3 shadow-sm hover:shadow-md transition min-w-0"
+                    aria-label="Sign in with Google"
+                  >
+                    <span className="bg-white rounded-full p-2 flex items-center justify-center shadow-sm flex-shrink-0">
+                      <FaGoogle className="text-red-500 w-4 h-4" />
+                    </span>
+                    <span className="flex-1 text-sm font-medium text-center truncate">Continue with Google</span>
+                  </button>
+
+                  {/* Invisible overlay from GoogleLogin — captures clicks and runs the official flow */}
+                  <div className="absolute inset-0">
+                    <GoogleLogin
+                      onSuccess={onGoogleLoginSucces}
+                      onError={(err) => {
+                        console.error("Google login failed", err);
+                        toast.error("Google login failed. Please try again.");
+                      }}
+                      containerProps={{ style: { width: '100%', height: '100%', position: 'absolute', inset: 0, opacity: 0 } }}
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* LinkedIn and Facebook share the next row; stack on very small screens */}
