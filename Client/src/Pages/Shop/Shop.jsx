@@ -8,7 +8,6 @@ import CategoryFeatureGrid from "../../components/shop/CategoryFeatureGrid";
 import ProductsGrid from "../../components/shop/ProductsGrid";
 import PromoBanners from "../../components/shop/PromoBanners";
 import BrandStrip from "../../components/shop/BrandStrip";
-import NewsletterSection from "../../components/shop/NewsletterSection";
 import Footer from "../../components/shop/Footer";
 
 export default function AdventureShop() {
@@ -145,7 +144,6 @@ export default function AdventureShop() {
       <ProductsGrid items={items} categories={categories} selectedCategory={selectedCategory} search={searchQuery} addToCart={addToCart} onCategorySelect={handleCategorySelect} onSearch={handleSearch} onFilterChange={fetchItems} />
       <PromoBanners />
       <BrandStrip />
-      <NewsletterSection />
       <Footer categories={categories} />
     </div>
   );
