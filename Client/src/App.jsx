@@ -163,7 +163,6 @@ const App = () => {
                   <Route path="/browse" element={<BrowsingPage />} />
                   <Route path="/event/:id" element={<EventDetailPage />} />
                   <Route path="/booking" element={<Booking />} />
-                  <Route path="/payment" element={<PaymentPage />} />
                   <Route path="/payment/approve" element={<PaymentApprove />} />
                   <Route path="/payment/cancel" element={<PaymentCancel />} />
                   <Route path="/instructor/payout" element={<Payout />} />
