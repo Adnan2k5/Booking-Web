@@ -41,6 +41,15 @@ export const getMyEventBookings = async (params = {}) => {
   }
 };
 
+// Admin: Get all event bookings
+export const getAllEventBookings = async (queryParams = {}) => {
+  const params = new URLSearchParams(queryParams).toString();
+  const res = await axiosClient.get(`/api/event-bookings${params ? `?${params}` : ''}`, {
+    withCredentials: true,
+  });
+  return res;
+};
+
 // Get payment status
 export const getPaymentStatus = async (bookingId) => {
   try {

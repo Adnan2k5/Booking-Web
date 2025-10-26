@@ -307,10 +307,7 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
       .select("amount createdAt hotel"),
   ]);
 
-  const bookingTotalsSummary = summariseAggregate(bookingTotals);
-  const eventTotalsSummary = summariseAggregate(eventTotals);
-  const itemTotalsSummary = summariseAggregate(itemTotals);
-  const hotelTotalsSummary = summariseAggregate(hotelTotals);
+
   const bookingCurrentSummary = summariseAggregate(bookingCurrent);
   const bookingPreviousSummary = summariseAggregate(bookingPrevious);
   const eventCurrentSummary = summariseAggregate(eventCurrent);
