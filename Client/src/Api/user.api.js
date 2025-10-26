@@ -100,6 +100,14 @@ export const getUserAchievements = async () => {
   }
 };
 
+// Admin: update any user's top-level role or other fields (admin-only route)
+export const updateUser = async (id, payload) => {
+  const { data } = await axiosClient.put(`/api/user/${id}`, payload, {
+    withCredentials: true,
+  });
+  return data;
+};
+
 // Admin: create a new achievement rule
 export const createAchievementRule = async (payload) => {
   const { data } = await axiosClient.post('/api/achievement-rules', payload, {

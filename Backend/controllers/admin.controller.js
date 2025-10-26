@@ -453,16 +453,95 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
 });
 
 export const getAllAdmins = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 10, search = '', role, adminRole } = req.query;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  const admins = await User.find({ role: "admin" })
-    .populate("admin", "adminRole")
+  // Build base query. If role is provided and not 'all', filter by it.
+  // If role is missing or 'all', don't filter by role (return all users matching search).
+  const query = {};
+  if (role && String(role).toLowerCase() !== 'all') {
+    query.role = role;
+  }
+
+  // If search provided, match name or email (case-insensitive)
+  if (search && String(search).trim() !== '') {
+    const s = String(search).trim();
+    query.$or = [
+      { name: { $regex: s, $options: 'i' } },
+      { email: { $regex: s, $options: 'i' } },
+    ];
+  }
+
+  // If adminRole filter provided, we need to lookup the Admin document and filter by admin.adminRole
+  if (adminRole && String(adminRole).trim() !== '') {
+    // ensure we're looking at admin users
+    if (!query.role) query.role = 'admin';
+
+    // Build aggregation pipeline: match users, lookup admin doc, filter by adminRole, then paginate
+    const matchStage = { $match: query };
+    const lookupStage = {
+      $lookup: {
+        from: 'admins',
+        localField: 'admin',
+        foreignField: '_id',
+        as: 'adminDoc',
+      },
+    };
+    const unwindStage = { $unwind: '$adminDoc' };
+    // When filtering for the special 'Admin' adminRole we treat empty adminRole arrays
+    // as super-admins and include them in the results. For other adminRole values
+    // match documents where the adminRole array contains the requested value.
+    let matchAdminRoleStage;
+    if (String(adminRole) === 'Admin') {
+      matchAdminRoleStage = {
+        $match: {
+          $or: [
+            { 'adminDoc.adminRole': adminRole },
+            // include admins with an empty adminRole array (super-admins)
+            { $expr: { $eq: [{ $size: '$adminDoc.adminRole' }, 0] } },
+          ],
+        },
+      };
+    } else {
+      matchAdminRoleStage = { $match: { 'adminDoc.adminRole': adminRole } };
+    }
+
+    // For total count we run the pipeline without skip/limit
+    const countPipeline = [matchStage, lookupStage, unwindStage, matchAdminRoleStage, { $count: 'count' }];
+    const countRes = await User.aggregate(countPipeline);
+    const total = countRes[0]?.count ?? 0;
+
+    // For results include pagination and project admin as the populated doc
+    const projStage = {
+      $project: {
+        _id: 1,
+        name: 1,
+        email: 1,
+        role: 1,
+        admin: '$adminDoc',
+        createdAt: 1,
+      },
+    };
+
+    const pipeline = [matchStage, lookupStage, unwindStage, matchAdminRoleStage, projStage, { $skip: skip }, { $limit: parseInt(limit) }];
+    const admins = await User.aggregate(pipeline);
+
+    res.status(200).json({
+      admins,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+    });
+    return;
+  }
+
+  const admins = await User.find(query)
+    .populate('admin', 'adminRole')
     .skip(skip)
     .limit(parseInt(limit))
-    .select("_id name email role admin createdAt");
+    .select('_id name email role admin createdAt');
 
-  const total = await User.countDocuments({ role: "admin" });
+  const total = await User.countDocuments(query);
   res.status(200).json({
     admins,
     total,

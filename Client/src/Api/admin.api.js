@@ -5,8 +5,10 @@ export const createAdmin = async (adminData) => {
   return res.data;
 };
 
-export const fetchAdmins = async ({ search = '', page = 1, limit = 10 }) => {
+export const fetchAdmins = async ({ search = '', page = 1, limit = 10, role, adminRole } = {}) => {
   const params = { search, page, limit };
+  if (role !== undefined && role !== null) params.role = role;
+  if (adminRole !== undefined && adminRole !== null) params.adminRole = adminRole;
   const { data } = await axiosClient.get('/api/admin', { params });
   return data;
 };
