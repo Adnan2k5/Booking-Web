@@ -5,7 +5,7 @@ const adminSchema = new mongoose.Schema({
     type: [
       {
         type: String,
-        enum: ["Hotel", "Instructor", "User"],
+        enum: ["Hotel", "Instructor", "User", "Admin"],
       },
     ],
     required: true,

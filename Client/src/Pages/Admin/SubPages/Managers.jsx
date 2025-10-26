@@ -19,8 +19,8 @@ import {
     DialogTitle,
     DialogDescription,
 } from "../../../components/ui/dialog"
-import { fetchUsers } from "../../../Api/user.api"
 import { createAdmin, deleteAdmin, fetchAdmins, updateAdmin } from "../../../Api/admin.api"
+import { updateUser } from "../../../Api/user.api"
 import { format } from "date-fns"
 import { toast } from "sonner"
 
@@ -31,7 +31,10 @@ const deleteUser = async (userId) => {
 
 export default function Managers() {
     const [searchTerm, setSearchTerm] = useState("")
-    const [roleFilter, setRoleFilter] = useState("all")
+    const [debouncedSearch, setDebouncedSearch] = useState("")
+    // Default to showing admins when opening managers page
+    const [roleFilter, setRoleFilter] = useState("admin")
+    const [adminRoleFilter, setAdminRoleFilter] = useState("all")
     const [users, setUsers] = useState([])
     const [page, setPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
@@ -47,14 +50,34 @@ export default function Managers() {
     const [addAdminError, setAddAdminError] = useState("")
     const [isEdit, setIsEdit] = useState(false);
 
-    // Available roles
-    const availableRoles = ["Instructor", "User", "Hotel"]
+    // Admin-role options (value = stored enum, label = UI text)
+    const adminRoles = [
+        { value: 'Hotel', label: 'Hotel Admin' },
+        { value: 'Instructor', label: 'Instructor Admin' },
+        { value: 'User', label: 'User Admin' },
+        { value: 'Admin', label: 'Admin' },
+    ]
 
-    // Fetch users function
+    const getAdminRoleLabel = (val) => {
+        const found = adminRoles.find((r) => r.value === val)
+        return found ? found.label : val
+    }
+
+    // Debounce search input to avoid spamming API
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(searchTerm), 400)
+        return () => clearTimeout(t)
+    }, [searchTerm])
+
+    // Fetch users function (uses debouncedSearch)
     const getUsers = useCallback(async () => {
         setLoading(true)
         try {
-            const res = await fetchAdmins({ search: searchTerm, role: "admin", page })
+            // Only send top-level role param if a specific role is selected; pass undefined for 'all'
+            const roleParam = roleFilter && roleFilter !== 'all' ? roleFilter : undefined
+            // Only send adminRole param when filtering admins specifically and a specific admin role is selected
+            const adminRoleParam = roleFilter === 'admin' && adminRoleFilter && adminRoleFilter !== 'all' ? adminRoleFilter : undefined
+            const res = await fetchAdmins({ search: debouncedSearch, role: roleParam, adminRole: adminRoleParam, page })
             setUsers(res.admins)
             setTotalPages(res.totalPages)
         } catch (e) {
@@ -62,11 +85,23 @@ export default function Managers() {
             setTotalPages(1)
         }
         setLoading(false)
-    }, [searchTerm, page])
+    }, [debouncedSearch, page, roleFilter, adminRoleFilter])
 
     useEffect(() => {
         getUsers()
     }, [getUsers])
+
+    // Reset to page 1 when the user starts a new search (immediate)
+    useEffect(() => {
+        setPage(1)
+    }, [searchTerm])
+
+    // Reset adminRoleFilter when switching away from admin top-level filter
+    useEffect(() => {
+        if (roleFilter !== 'admin') {
+            setAdminRoleFilter('all')
+        }
+    }, [roleFilter])
 
     // Delete user handler
     const handleDeleteUser = async (userId) => {
@@ -78,6 +113,19 @@ export default function Managers() {
         } catch (error) {
             console.error("Error deleting user:", error)
             toast.error("Error deleting user", { id: toastId })
+        }
+    }
+
+    // Promote a top-level user to admin
+    const handlePromoteUser = async (userId) => {
+        const toastId = toast.loading("Promoting user to admin...")
+        try {
+            await updateUser(userId, { role: 'admin' })
+            await getUsers()
+            toast.success("User promoted to admin", { id: toastId })
+        } catch (error) {
+            console.error("Error promoting user:", error)
+            toast.error("Failed to promote user", { id: toastId })
         }
     }
 
@@ -208,6 +256,20 @@ export default function Managers() {
                         </DropdownMenuContent>
                     </DropdownMenu>
 
+                    {/* When 'Admins' is selected, show a secondary filter for admin.adminRole */}
+                    {roleFilter === 'admin' && (
+                        <select
+                            value={adminRoleFilter}
+                            onChange={(e) => setAdminRoleFilter(e.target.value)}
+                            className="border rounded px-2 py-1 text-sm"
+                        >
+                            <option value="all">All Admin Roles</option>
+                            {adminRoles.map((r) => (
+                                <option key={r.value} value={r.value}>{r.label}</option>
+                            ))}
+                        </select>
+                    )}
+
                     <Button variant="outline" size="sm">
                         <Download className="mr-2 h-4 w-4" />
                         Export
@@ -246,29 +308,47 @@ export default function Managers() {
                                         <TableCell className="font-medium">{user.name}</TableCell>
                                         <TableCell>{user.email}</TableCell>
                                         <TableCell>
-                                            {Array.isArray(user.admin?.adminRole) && user.admin?.adminRole.length > 0 ? (
-                                                user.admin.adminRole.map((role) => (
-                                                    <Badge key={role} variant="outline" className="mr-1">
-                                                        {role}
-                                                    </Badge>
-                                                ))
+                                            {user?.role === 'admin' ? (
+                                                Array.isArray(user.admin?.adminRole) && user.admin?.adminRole.length > 0 ? (
+                                                    user.admin.adminRole.map((role) => (
+                                                        <Badge key={role} variant="outline" className="mr-1">
+                                                            {getAdminRoleLabel(role)}
+                                                        </Badge>
+                                                    ))
+                                                ) : (
+                                                    // admin with no specific adminRole -> super-admin/admin
+                                                    <Badge variant="outline">Admin</Badge>
+                                                )
                                             ) : (
-                                                <Badge variant="outline">Admin</Badge>
-                                            )}                                        </TableCell>
+                                                // non-admin users: show their top-level role (capitalized)
+                                                <Badge variant="outline">
+                                                    {user?.role ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)}` : 'User'}
+                                                </Badge>
+                                            )}
+                                        </TableCell>
                                         <TableCell>
-                                            {user?.createdAt && new Date(user.createdAt).getTime() 
-                                                ? format(new Date(user.createdAt), 'dd/MM/yyyy') 
+                                            {user?.createdAt && new Date(user.createdAt).getTime()
+                                                ? format(new Date(user.createdAt), 'dd/MM/yyyy')
                                                 : 'N/A'
                                             }
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end space-x-2">
-                                                <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user?._id)}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                {user?.role === 'admin' ? (
+                                                    <>
+                                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user?._id)}>
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </>
+                                                ) : (
+                                                    // For non-admin users, allow quick promotion to admin
+                                                    <Button variant="ghost" size="icon" onClick={() => handlePromoteUser(user?._id)} title="Promote to Admin">
+                                                        <UserPlus className="h-4 w-4" />
+                                                    </Button>
+                                                )}
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -333,14 +413,14 @@ export default function Managers() {
                         <div>
                             <Label>Assign Roles</Label>
                             <div className="flex flex-col gap-2 mt-2">
-                                {availableRoles.map((role) => (
-                                    <div key={role} className="flex items-center space-x-2">
+                                {adminRoles.map((r) => (
+                                    <div key={r.value} className="flex items-center space-x-2">
                                         <Checkbox
-                                            id={`role-${role}`}
-                                            checked={addAdminForm.adminRoles.includes(role)}
-                                            onCheckedChange={(checked) => handleRoleChange(role, checked)}
+                                            id={`role-${r.value}`}
+                                            checked={addAdminForm.adminRoles.includes(r.value)}
+                                            onCheckedChange={(checked) => handleRoleChange(r.value, checked)}
                                         />
-                                        <Label htmlFor={`role-${role}`}>{role}</Label>
+                                        <Label htmlFor={`role-${r.value}`}>{r.label}</Label>
                                     </div>
                                 ))}
                             </div>

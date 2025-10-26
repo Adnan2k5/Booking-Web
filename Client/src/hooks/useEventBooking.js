@@ -34,13 +34,19 @@ export const useEventBooking = () => {
       return { success: false, message: 'Please fill in all required fields' }
     }
 
-    // Navigate to payment page with booking data
-    navigate('/payment', {
-      state: {
-        bookingData: bookingForm,
-        selectedEvent: selectedEvent
-      }
-    })
+    // Navigate to event payment route with booking data
+    // Use the event id in the URL (e.g. /event/68f7df866f87079162372f8f)
+    if (selectedEvent && selectedEvent._id) {
+      navigate(`/event/${selectedEvent._id}`, {
+        state: {
+          bookingData: bookingForm,
+          selectedEvent: selectedEvent
+        }
+      })
+    } else {
+      // Fallback: navigate to root if we don't have an event id
+      navigate('/', { replace: true })
+    }
 
     // Close the booking dialog and reset form
     setBookingDialog(false)

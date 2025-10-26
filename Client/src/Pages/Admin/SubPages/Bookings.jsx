@@ -17,8 +17,8 @@ import {
   getAllSessionBookings,
   getAllHotelBookings,
   getAllItemBookings,
-  getCurrentUserItemBookings,
 } from "../../../Api/booking.api"
+import { getAllEventBookings } from "../../../Api/eventBooking.api"
 
 export default function Dash_Bookings() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -29,26 +29,63 @@ export default function Dash_Bookings() {
   const [currentPage, setCurrentPage] = useState({
     items: 1,
     sessions: 1,
-    hotels: 1
+    hotels: 1,
+    events: 1
   })
   const [itemsPerPage] = useState(10)
     // State for different booking types
   const [itemBookings, setItemBookings] = useState([])
   const [sessionBookings, setSessionBookings] = useState([])
   const [hotelBookings, setHotelBookings] = useState([])
+  const [eventBookings, setEventBookings] = useState([])
   
   // Pagination metadata from backend
   const [paginationMeta, setPaginationMeta] = useState({
     items: { total: 0, totalPages: 0, currentPage: 1 },
     sessions: { total: 0, totalPages: 0, currentPage: 1 },
     hotels: { total: 0, totalPages: 0, currentPage: 1 }
+    , events: { total: 0, totalPages: 0, currentPage: 1 }
   })
   
   const [loading, setLoading] = useState({
     items: false,
     sessions: false,
-    hotels: false
+    hotels: false,
+    events: false
   })  // Fetch bookings data with pagination
+  const fetchEventBookings = async (page = 1) => {
+    setLoading(prev => ({ ...prev, events: true }))
+    try {
+      const params = {
+        page: page.toString(),
+        limit: itemsPerPage.toString(),
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      }
+
+      if (statusFilter !== 'all') {
+        params.status = statusFilter
+      }
+
+      const response = await getAllEventBookings(params)
+
+      // Backend returns { data: bookings, total, page, totalPages } inside response.data.data
+      const bookingsData = response?.data?.data?.data || response?.data?.data?.bookings || []
+      const meta = {
+        total: response?.data?.data?.total || 0,
+        totalPages: response?.data?.data?.totalPages || 0,
+        currentPage: response?.data?.data?.page || 1
+      }
+
+      setEventBookings(Array.isArray(bookingsData) ? bookingsData : [])
+      setPaginationMeta(prev => ({ ...prev, events: meta }))
+    } catch (error) {
+      setEventBookings([])
+      setPaginationMeta(prev => ({ ...prev, events: { total: 0, totalPages: 0, currentPage: 1 } }))
+    } finally {
+      setLoading(prev => ({ ...prev, events: false }))
+    }
+  }
   const fetchItemBookings = async (page = 1) => {
     setLoading(prev => ({ ...prev, items: true }))
     try {
@@ -153,6 +190,7 @@ export default function Dash_Bookings() {
     fetchItemBookings(currentPage.items)
     fetchSessionBookings(currentPage.sessions)
     fetchHotelBookings(currentPage.hotels)
+    fetchEventBookings(currentPage.events)
   }, [])  // Refetch data when filters change
 
 
@@ -160,7 +198,8 @@ export default function Dash_Bookings() {
     fetchItemBookings(1)
     fetchSessionBookings(1)
     fetchHotelBookings(1)
-    setCurrentPage({ items: 1, sessions: 1, hotels: 1 })
+    fetchEventBookings(1)
+    setCurrentPage({ items: 1, sessions: 1, hotels: 1, events: 1 })
   }, [statusFilter])
 
   // Handle search with debouncing
@@ -169,7 +208,8 @@ export default function Dash_Bookings() {
       fetchItemBookings(1)
       fetchSessionBookings(1)
       fetchHotelBookings(1)
-      setCurrentPage({ items: 1, sessions: 1, hotels: 1 })
+      fetchEventBookings(1)
+      setCurrentPage({ items: 1, sessions: 1, hotels: 1, events: 1 })
     }, 500) // 500ms debounce
 
     return () => clearTimeout(timeoutId)
@@ -189,6 +229,8 @@ export default function Dash_Bookings() {
       fetchSessionBookings(page)
     } else if (type === 'hotels') {
       fetchHotelBookings(page)
+    } else if (type === 'events') {
+      fetchEventBookings(page)
     }
   }
 
@@ -218,6 +260,7 @@ export default function Dash_Bookings() {
   const filteredItemBookings = getFilteredBookings(itemBookings)
   const filteredSessionBookings = getFilteredBookings(sessionBookings)
   const filteredHotelBookings = getFilteredBookings(hotelBookings)
+  const filteredEventBookings = getFilteredBookings(eventBookings)
 
   // Format date function
   const formatDate = (dateString) => {
@@ -267,7 +310,7 @@ export default function Dash_Bookings() {
               <DropdownMenuItem onClick={() => setStatusFilter("completed")}>Completed Bookings</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setStatusFilter("cancelled")}>Cancelled Bookings</DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+      </DropdownMenu>
 
           <Button variant="outline" size="sm">
             <Download className="mr-2 h-4 w-4" />
@@ -277,10 +320,11 @@ export default function Dash_Bookings() {
       </div>
 
       <Tabs defaultValue="items" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 mb-4">
+        <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="items">Item Bookings</TabsTrigger>
           <TabsTrigger value="sessions">Session Bookings</TabsTrigger>
           <TabsTrigger value="hotels">Hotel Bookings</TabsTrigger>
+          <TabsTrigger value="events">Event Bookings</TabsTrigger>
         </TabsList>        <TabsContent value="items">
           <BookingsTable 
             bookings={filteredItemBookings} 
@@ -322,6 +366,21 @@ export default function Dash_Bookings() {
             totalPages={paginationMeta.hotels.totalPages}
             onPageChange={(page) => handlePageChange('hotels', page)}
             totalItems={paginationMeta.hotels.total}
+            itemsPerPage={itemsPerPage}
+          />
+        </TabsContent>
+        
+        <TabsContent value="events">
+          <BookingsTable 
+            bookings={filteredEventBookings} 
+            loading={loading.events} 
+            type="event" 
+          />
+          <PaginationControls
+            currentPage={paginationMeta.events.currentPage}
+            totalPages={paginationMeta.events.totalPages}
+            onPageChange={(page) => handlePageChange('events', page)}
+            totalItems={paginationMeta.events.total}
             itemsPerPage={itemsPerPage}
           />
         </TabsContent>
@@ -382,6 +441,13 @@ function BookingsTable({ bookings, loading, type }) {
         ...commonHeaders,
         <TableHead key="checkin">Check-in</TableHead>,
         <TableHead key="checkout">Check-out</TableHead>
+      ]
+    } else if (type === "event") {
+      return [
+        <TableHead key="event">Event</TableHead>,
+        <TableHead key="eventId">Event ID</TableHead>,
+        ...commonHeaders,
+        <TableHead key="participants">Participants</TableHead>
       ]
     }
     
@@ -467,6 +533,23 @@ function BookingsTable({ bookings, loading, type }) {
           {commonCells}
           <TableCell>{checkIn}</TableCell>
           <TableCell>{checkOut}</TableCell>
+        </TableRow>
+      )
+    } else if (type === "event") {
+      const eventTitle = booking.event?.title || 'N/A'
+      let eventId = 'N/A'
+      if (booking.event && typeof booking.event === 'object' && booking.event._id) {
+        eventId = booking.event._id
+      } else if (booking.event && typeof booking.event === 'string') {
+        eventId = booking.event
+      }
+      const participants = booking.participants || 1
+      return (
+        <TableRow key={booking._id || booking.id}>
+          <TableCell>{eventTitle}</TableCell>
+          <TableCell>{eventId}</TableCell>
+          {commonCells}
+          <TableCell>{participants}</TableCell>
         </TableRow>
       )
     }

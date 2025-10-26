@@ -1,5 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
+import { Admin } from "../models/admin.model.js";
 import { Instructor } from "../models/instructor.model.js";
 import { UserAdventureExperience } from "../models/userAdventureExperience.model.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -107,15 +108,53 @@ export const deleteUser = asyncHandler(async (req, res) => {
 });
 
 export const updateUser = asyncHandler(async (req, res) => {
-  const updatedUser = await User.findByIdAndUpdate(req.params.id, {
-    $set: req.body,
-  });
-  if (!updatedUser) {
+  const { role } = req.body;
+  const userId = req.params.id;
+
+  // validate role value if provided
+  if (role !== undefined) {
+    const allowedRoles = ["user", "admin", "instructor", "hotel", "superadmin"];
+    if (typeof role !== "string" || !allowedRoles.includes(role)) {
+      throw new ApiError(400, "Invalid role value");
+    }
+  }
+
+  // Fetch existing user
+  const existingUser = await User.findById(userId);
+  if (!existingUser) {
     throw new ApiError(404, "User not found");
   }
-  return res
-    .status(200)
-    .json(new ApiResponse(200, updatedUser, "User updated successfully"));
+
+  // Handle role transitions that require Admin document changes
+  if (role && role !== existingUser.role) {
+    // Promoting to admin: create Admin doc if not exists and attach
+    if (role === 'admin' && existingUser.role !== 'admin') {
+      const adminDoc = await Admin.create({ adminRole: [] });
+      existingUser.admin = adminDoc._id;
+    }
+
+    // Demoting from admin: remove Admin doc if exists
+    if (existingUser.role === 'admin' && role !== 'admin' && existingUser.admin) {
+      try {
+        await Admin.findByIdAndDelete(existingUser.admin);
+      } catch (e) {
+        // ignore
+      }
+      existingUser.admin = undefined;
+    }
+
+    existingUser.role = role;
+  }
+
+  // Apply other updates from req.body (excluding admin changes which are handled separately)
+  const updatePayload = { ...req.body };
+  delete updatePayload.admin; // prevent overwriting admin ref directly
+
+  Object.assign(existingUser, updatePayload);
+
+  await existingUser.save();
+
+  return res.status(200).json(new ApiResponse(200, existingUser, 'User updated successfully'));
 });
 
 export const updateUserProfile = asyncHandler(async (req, res) => {
