@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Navbar } from "../components/Navbar"
+import { Nav_Landing } from "../components/Nav_Landing"
 import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
 import { ShieldCheck, Star, Users, Globe } from "lucide-react"
@@ -13,11 +13,17 @@ export default function MissionPage() {
   const { t } = useTranslation()
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 pt-20">
-      <Navbar />
+  <div className="min-h-screen bg-gradient-to-b from-white to-slate-50">
+      <Nav_Landing />
 
-      <header className="relative bg-[url('/mission-hero.jpg')] bg-cover bg-center h-[420px] sm:h-[520px]">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/70 to-teal-500/60 backdrop-blur-sm" />
+      <header
+        className="relative bg-cover bg-center h-[420px] sm:h-[520px]"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1492963060540-65e3aae73127?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2012')",
+        }}
+      >
+        {/* Neutral overlay to remove green tint while keeping text readable */}
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
         <div className="absolute inset-0 max-w-7xl mx-auto px-6 sm:px-8 flex flex-col justify-center z-20">
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight">Our Mission</h1>
@@ -84,7 +90,8 @@ export default function MissionPage() {
               </div>
             </div>
             <div>
-              <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=60" alt="adventure" className="rounded-xl shadow-md w-full h-60 object-cover" />
+              {/* Use Unsplash source endpoint for a reliable skydiving image; if you prefer the exact photo, provide the direct images.unsplash.com URL */}
+              <img src="https://images.unsplash.com/photo-1659221876406-31a3746f41b9?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470" alt="adventure" className="rounded-xl shadow-md w-full h-60 object-cover" />
             </div>
           </div>
         </section>
