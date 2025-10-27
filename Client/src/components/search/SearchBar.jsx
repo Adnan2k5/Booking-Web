@@ -74,6 +74,7 @@ const SearchBar = memo(({
             className="pl-2 py-4 text-base border-0 focus:ring-0 flex-1 h-full"
             value={date}
             required
+            onFocus={e => e.target.showPicker && e.target.showPicker()}
           />
         </div>
 

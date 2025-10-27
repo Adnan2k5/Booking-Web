@@ -20,7 +20,7 @@ import { Card, CardContent } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
 import { Link, useSearchParams, useNavigate } from "react-router-dom"
 import { useHotels } from "../../hooks/useHotel"
-import { Navbar } from "../../components/Navbar"
+import { Nav_Landing } from "../../components/Nav_Landing"
 import { fetchLocations } from "../../Api/location.api"
 import { useTranslation } from "react-i18next"
 
@@ -93,8 +93,6 @@ export default function HotelBrowsingPage() {
 
     const updateFilter = (key, value) => setFilters(prev => ({ ...prev, [key]: value, page: 1 }))
 
-    const clearFilters = () => setFilters({ location: '', checkIn: '', checkOut: '', guests: 1, page: 1 })
-
     // Simple helpers for date defaults
     const todayISO = new Date().toISOString().split('T')[0]
     const tomorrowISO = new Date(Date.now() + 86400000).toISOString().split('T')[0]
@@ -108,13 +106,13 @@ export default function HotelBrowsingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pt-20">
-            <Navbar />
+        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+            <Nav_Landing />
 
             {/* HERO */}
             <header
                 className="relative bg-cover bg-center h-[520px] sm:h-[600px] rounded-b-3xl overflow-hidden shadow-inner z-10"
-                style={{ backgroundImage: `url('https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1632')` }}
+                style={{ backgroundImage: `url('https://images.unsplash.com/photo-1719466419345-fdb12719ec29?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470')` }}
             >
                 <div className="absolute inset-0 bg-black/45 backdrop-blur-sm z-10"></div>
                 <div className="absolute inset-0 max-w-7xl mx-auto px-6 sm:px-8 flex flex-col justify-center z-20">
@@ -124,7 +122,7 @@ export default function HotelBrowsingPage() {
                     </motion.div>
 
                     {/* Booking Form (overlay) */}
-                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 max-w-4xl z-30">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 max-w-4xl z-30">
                         <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-2xl border border-white/40">
                             <form className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end" onSubmit={handleBookingSearch}>
                                 <div className="sm:col-span-2">
@@ -212,8 +210,8 @@ export default function HotelBrowsingPage() {
                                                     )}
                                                     <div className="flex items-center justify-between mt-3">
                                                         <div className="flex items-center gap-2">
-                                                            <div className="flex">{[...Array(5)].map((_,i)=> <Star key={i} className={`w-4 h-4 ${i < Math.floor(hotel.rating||0) ? 'text-yellow-400' : 'text-gray-200'}`} />)}</div>
-                                                            <span className="text-sm text-gray-600">{(hotel.rating||0).toFixed(1)}</span>
+                                                            <div className="flex">{[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.floor(hotel.rating || 0) ? 'text-yellow-400' : 'text-gray-200'}`} />)}</div>
+                                                            <span className="text-sm text-gray-600">{(hotel.rating || 0).toFixed(1)}</span>
                                                         </div>
                                                         <div className="text-right">
                                                             <div className="text-sm text-gray-500">From</div>
@@ -248,11 +246,11 @@ export default function HotelBrowsingPage() {
                                 </ul>
                             </motion.div>
 
-                            
+
                         </aside>
                     </div>
                 </section>
-            
+
 
                 {/* CTA */}
                 <section className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-8 text-white mb-16 shadow-2xl">
@@ -262,8 +260,8 @@ export default function HotelBrowsingPage() {
                             <p className="mt-2 text-white/90">Find unique stays and unforgettable experiences. Book now & get exclusive member discounts.</p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <Button onClick={()=> navigate('/login')} className="bg-white text-rose-600 px-6 py-3 rounded-xl font-semibold">Join & Save</Button>
-                            <Button onClick={()=> window.scrollTo({top: 400, behavior:'smooth'})} className="bg-white/20 border border-white text-white px-5 py-3 rounded-xl">Browse Stays</Button>
+                            <Button onClick={() => navigate('/login')} className="bg-white text-rose-600 px-6 py-3 rounded-xl font-semibold">Join & Save</Button>
+                            <Button onClick={() => window.scrollTo({ top: 400, behavior: 'smooth' })} className="bg-white/20 border border-white text-white px-5 py-3 rounded-xl">Browse Stays</Button>
                         </div>
                     </div>
                 </section>
