@@ -17,13 +17,12 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
   const [appliedPriceMax, setAppliedPriceMax] = useState('');
   const [appliedAvailability, setAppliedAvailability] = useState('any');
   const [appliedMinRating, setAppliedMinRating] = useState(0);
-  const [appliedBrandFilter, setAppliedBrandFilter] = useState('');
   const [appliedSortBy, setAppliedSortBy] = useState('relevance');
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
   const [availability, setAvailability] = useState('any'); // any | purchase | rent
   const [minRating, setMinRating] = useState(0);
-  const [brandFilter, setBrandFilter] = useState('');
+  
   const [sortBy, setSortBy] = useState('relevance'); // relevance | price-asc | price-desc | rating-desc
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -74,19 +73,14 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
       priceMax: appliedPriceMax,
       availability: appliedAvailability,
       minRating: appliedMinRating,
-      brand: appliedBrandFilter,
+      
       sortBy: appliedSortBy,
     });
-  }, [appliedSearch, appliedCategory, appliedPriceMin, appliedPriceMax, appliedAvailability, appliedMinRating, appliedBrandFilter, appliedSortBy]);
+  }, [appliedSearch, appliedCategory, appliedPriceMin, appliedPriceMax, appliedAvailability, appliedMinRating, appliedSortBy]);
 
   // filter locally as a safety-net; primary filtering happens on server via Shop fetch
   const filtered = items.filter(it => {
     if (localCategory && it.category && it.category.toLowerCase() !== localCategory.toLowerCase()) return false;
-    if (brandFilter && it.brand && it.brand.toLowerCase() !== brandFilter.toLowerCase()) return false;
-    if (localSearch) {
-      const q = localSearch.toLowerCase();
-      if (!((it.name && it.name.toLowerCase().includes(q)) || (it.brand && it.brand.toLowerCase().includes(q)))) return false;
-    }
     if (priceMin !== '' && typeof it.price === 'number' && it.price < parseFloat(priceMin)) return false;
     if (priceMax !== '' && typeof it.price === 'number' && it.price > parseFloat(priceMax)) return false;
     if (availability === 'purchase' && (!it.purchase || it.purchaseStock <= 0)) return false;
@@ -142,7 +136,6 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
                 setAppliedPriceMax(priceMax);
                 setAppliedAvailability(availability);
                 setAppliedMinRating(minRating);
-                setAppliedBrandFilter(brandFilter);
                 setAppliedSortBy(sortBy);
                 setShowSuggestions(false);
               }} className="bg-black text-white">Apply</Button>
@@ -153,7 +146,6 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
                 setPriceMax(''); setAppliedPriceMax('');
                 setAvailability('any'); setAppliedAvailability('any');
                 setMinRating(0); setAppliedMinRating(0);
-                setBrandFilter(''); setAppliedBrandFilter('');
                 setSortBy('relevance'); setAppliedSortBy('relevance');
                 // Update Shop's visible search state but avoid duplicate fetch; the applied state effect will trigger a single fetch
                 onSearch?.('', { skipFetch: true });
@@ -190,10 +182,7 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
             </select>
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Brand</label>
-            <input value={brandFilter} onChange={e => setBrandFilter(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm" placeholder="Brand name" />
-          </div>
+          
 
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">Sort by</label>
