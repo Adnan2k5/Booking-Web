@@ -84,10 +84,12 @@ export default function AdventureShop() {
     fetchItems({ search: q, category: selectedCategory });
   }, []);
 
-  const handleSearch = (q) => {
-    // Do not redirect. Update local state and fetch items from server (search + category)
+  const handleSearch = (q, opts = {}) => {
+    // Do not redirect. Update local state; fetching is controlled by `opts.skipFetch`.
     setSearchQuery(q);
-    fetchItems({ search: q, category: selectedCategory });
+    if (!opts.skipFetch) {
+      fetchItems({ search: q, category: selectedCategory });
+    }
   };
 
   const handleCategorySelect = (category) => {
@@ -136,7 +138,7 @@ export default function AdventureShop() {
   return (
     <div className="w-full font-sans bg-neutral-50 text-neutral-900">
       {/* <AnnouncementBar /> */}
-      <MainHeader categories={categories} selectedCategory={selectedCategory} />
+  <MainHeader categories={categories} selectedCategory={selectedCategory} onSearch={handleSearch} onCategorySelect={handleCategorySelect} />
       <FilterBar search={searchQuery} category={selectedCategory} onClear={clearFilters} onRemoveFilter={removeFilter} />
       <HeroCarousel />
       <CategoryFeatureGrid />
