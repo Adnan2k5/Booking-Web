@@ -4,7 +4,6 @@ import { Loader } from "../components/Loader"
 import { Settings, LogOut, User, TicketIcon } from 'lucide-react'
 import { AnimatePresence, motion } from "framer-motion"
 import { MdLanguage, MdMenu, MdClose } from "react-icons/md"
-import { IoIosLogIn } from "react-icons/io"
 import { MdOutlineExplore } from "react-icons/md";
 import { useTranslation } from "react-i18next"
 import { CiShop } from "react-icons/ci";
@@ -38,6 +37,9 @@ export const Nav_Landing = () => {
     const { user } = useAuth()
     const { isShopEnabled, isHotelsEnabled } = useWebsiteSettings()
     const navigate = useNavigate()
+
+    // standard icon class for consistent sizing across the nav
+    const ICON_CLASS = "h-4 w-4"
 
     const todayISO = new Date().toISOString().split('T')[0]
 
@@ -118,7 +120,7 @@ export const Nav_Landing = () => {
                                 onClick={() => navigate(`/browse?date=${todayISO}&q=adventure`)}
                                 style={{ cursor: "pointer" }}
                             >
-                                {t("explore")} <MdOutlineExplore />
+                                {t("explore")} <MdOutlineExplore className={ICON_CLASS} />
                             </motion.li>
                             {isShopEnabled && (
                                 <motion.li
@@ -126,7 +128,7 @@ export const Nav_Landing = () => {
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
-                                    <Link className="flex items-center gap-2" to="/shop">{t("shop")} <CiShop /> </Link>
+                                    <Link className="flex items-center gap-2" to="/shop">{t("shop")} <CiShop className={ICON_CLASS} /> </Link>
                                 </motion.li>
                             )}
                             {isHotelsEnabled && (
@@ -135,7 +137,7 @@ export const Nav_Landing = () => {
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
-                                    <Link className="flex items-center gap-2" to="/book-hotel">{t("hotels")} <LiaHotelSolid /></Link>
+                                    <Link className="flex items-center gap-2" to="/book-hotel">{t("hotels")} <LiaHotelSolid className={ICON_CLASS} /></Link>
                                 </motion.li>
                             )}
                             <motion.li
@@ -143,7 +145,7 @@ export const Nav_Landing = () => {
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
                             >
-                                <Link className="flex items-center gap-2" to="/mission">{t("mission")} <FiTarget /></Link>
+                                <Link className="flex items-center gap-2" to="/mission">{t("mission")} <FiTarget className={ICON_CLASS} /></Link>
                             </motion.li>
                             <motion.li className="cursor-pointer hover:text-emerald-400 transition-colors">
                                 <LanguageSelector />
@@ -191,14 +193,13 @@ export const Nav_Landing = () => {
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 ) : (
-                                    <motion.div
-                                        whileHover={{ scale: 1.1, rotate: 5 }}
-                                        whileTap={{ scale: 0.95 }}
+                                    <Button
                                         onClick={() => navigate("/login-options")}
-                                        style={{ cursor: "pointer" }}
+                                        className="bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 px-4 py-1.5 rounded-md shadow-sm text-base xl:text-lg font-semibold transition-colors duration-150"
+                                        aria-label={t("login") || "Login"}
                                     >
-                                        <IoIosLogIn className="text-2xl md:text-3xl" />
-                                    </motion.div>
+                                        {t("login") || "Login"}
+                                    </Button>
                                 )}
                             </li>
                         </ul>
@@ -278,12 +279,14 @@ export const Nav_Landing = () => {
                                             <span className="text-sm sm:text-base">{t("profile")}</span>
                                         </div>
                                     ) : (
-                                        <div
-                                            className="flex items-center space-x-2 bg-black/40 hover:bg-black/60 px-3 py-2 rounded-lg cursor-pointer transition-colors"
-                                            onClick={() => navigate("/login-options")}
-                                        >
-                                            <IoIosLogIn className="text-xl sm:text-2xl" />
-                                            <span className="text-sm sm:text-base">{t("login")}</span>
+                                        <div className="flex justify-start">
+                                            <Button
+                                                onClick={() => navigate("/login-options")}
+                                                className="bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 px-4 py-2 rounded-md shadow-sm text-sm sm:text-base font-semibold w-full text-center transition-colors duration-150"
+                                                aria-label={t("login") || "Login"}
+                                            >
+                                                {t("login") || "Login"}
+                                            </Button>
                                         </div>
                                     )}
                                 </li>
