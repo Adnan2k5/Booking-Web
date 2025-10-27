@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { Search, ShoppingCart, Heart, User, Menu, X, GitCompare } from "lucide-react";
+import { Search, ShoppingCart, Heart, User, Menu, X, GitCompare, Activity, ShoppingBag, Package, Star } from "lucide-react";
 
 export default function MainHeader({ categories = [], onSearch, onCategorySelect, selectedCategory }) {
   const navigate = useNavigate();
@@ -11,6 +11,15 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
   const debounceRef = useRef(null);
   const inputRef = useRef(null);
   const baseUrl = import.meta.env.VITE_SERVER_URL;
+
+  // map category names to icons (uses lucide-react icons available in the project)
+  const categoryIcons = {
+    Camping: Activity,
+    Clothing: ShoppingBag,
+    Footwear: Star,
+    Accessories: Package,
+    Equipment: Package,
+  };
 
   const submit = (e) => {
     e.preventDefault();
@@ -79,6 +88,11 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
               aria-current={selectedCategory === c ? 'page' : undefined}
               className={`transition-colors font-medium ${selectedCategory === c ? 'text-orange-400 font-semibold underline underline-offset-4' : 'hover:text-orange-400'}`}
             >
+              {/* render a small icon if we have one for this category */}
+              {(() => {
+                const Icon = categoryIcons[c];
+                return Icon ? <Icon className="inline-block mr-2 -mt-0.5 h-4 w-4 text-current" aria-hidden="true" /> : null;
+              })()}
               {c}
             </Link>
           ))}
@@ -131,7 +145,7 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
             </button>
           </form>
           <div className="grid gap-2">
-            {categories.map(c => (
+              {categories.map(c => (
               <Link
                 key={c}
                 to={`/shop/category/${c.toLowerCase()}`}
@@ -145,6 +159,10 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
                 aria-current={selectedCategory === c ? 'page' : undefined}
                 className={`py-2 border-b border-neutral-800 text-sm font-medium tracking-wide ${selectedCategory === c ? 'text-orange-400 font-semibold underline underline-offset-4' : ''}`}
               >
+                {(() => {
+                  const Icon = categoryIcons[c];
+                  return Icon ? <Icon className="inline-block mr-2 -mt-0.5 h-4 w-4 text-current" aria-hidden="true" /> : null;
+                })()}
                 {c}
               </Link>
             ))}
