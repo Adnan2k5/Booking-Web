@@ -109,7 +109,7 @@ export default function LoginOptionsPage() {
                                         <p className="text-white/90 mb-6">{card.description}</p>
                                         <div className="flex items-center justify-between">
                                             <motion.div
-                                                onClick={() => { navigate(card.path2) }}
+                                                onClick={() => { navigate(`${card.path2}?action=signin&role=${card.id}`) }}
                                                 className="flex items-center text-sm font-semibold"
                                                 animate={{
                                                     x: hoveredCard === card.id ? 10 : 0
@@ -120,7 +120,7 @@ export default function LoginOptionsPage() {
                                                 <ArrowRight className="ml-2 h-4 w-4" />
                                             </motion.div>
                                             <motion.div
-                                                onClick={() => { navigate(card.path1) }}
+                                                onClick={() => { navigate(`${card.path1}?action=signup&role=${card.id}`) }}
                                                 className="flex items-center text-sm font-semibold"
                                                 animate={{
                                                     x: hoveredCard === card.id ? 10 : 0

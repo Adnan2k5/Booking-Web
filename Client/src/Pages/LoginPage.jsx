@@ -11,7 +11,7 @@ import {
   InputOTPGroup,
 } from "../components/ui/input-otp";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { FaGoogle, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
 import { useAuth } from "./AuthProvider";
@@ -20,9 +20,18 @@ import { Loader } from "../components/Loader";
 export default function LoginPage() {
   document.title = "Adventure Login"
   const dispatch = useDispatch();
+  const location = useLocation();
   const [viewPassword, setViewPassword] = useState(false);
   const [usingPhone, setUsingPhone] = useState(false);
-  const [signup, setSignup] = useState(false);
+  // Read action & role from query params first (persist through reloads), fall back to location.state
+  const searchParams = new URLSearchParams(location.search);
+  const paramAction = searchParams.get('action') || location?.state?.action;
+  const paramRole = searchParams.get('role') || location?.state?.role || 'explorer';
+
+  // Initialize signup from action param
+  const [signup, setSignup] = useState(() => paramAction === 'signup');
+  // Role state, default to 'explorer' if not provided
+  const [role, setRole] = useState(() => paramRole);
   const { register, handleSubmit, reset } = useForm();
   const [openOtp, setopenOtp] = useState(false);
   const [value, setValue] = useState("");
@@ -38,11 +47,23 @@ export default function LoginPage() {
       return;
     }
 
+    // If signing up as instructor or hotel, redirect to their registration pages
+    if (signup && (role === 'instructor' || role === 'hotel')) {
+      if (role === 'instructor') {
+        Navigate('/instructor/register', { state: { role: 'instructor' } });
+      } else if (role === 'hotel') {
+        Navigate('/hotel/register', { state: { role: 'hotel' } });
+      }
+      return;
+    }
+
     setloader(true);
     try {
       if (signup) {
         setEmail(data.email);
-        const res = await UserRegister(data);
+        // Attach role to registration data
+        const registrationData = { ...data, role };
+        const res = await UserRegister(registrationData);
         if (res === 201) {
           setopenOtp(true);
           toast.success("Registration successful! Please check your email for OTP verification.");
@@ -163,11 +184,18 @@ export default function LoginPage() {
   };
 
   const handleModeSwitch = () => {
-    setSignup(!signup);
+    const next = !signup;
+    setSignup(next);
     reset(); // Clear form data
     setValue(""); // Clear OTP
     setEmail(""); // Clear email
     setopenOtp(false); // Close OTP modal if open
+    // If switching into sign up mode, prefer role from query param if present
+    if (next) {
+      const params = new URLSearchParams(location.search);
+      const r = params.get('role') || location?.state?.role;
+      if (r) setRole(r);
+    }
   };
 
   const cancel = () => {
@@ -345,6 +373,14 @@ export default function LoginPage() {
   }
     , [user, loading, Navigate])
 
+  // If the page was opened with action=signup for instructor/hotel, redirect immediately to their registration pages
+  useEffect(() => {
+    if (signup && (role === 'instructor' || role === 'hotel')) {
+      if (role === 'instructor') Navigate('/instructor/register', { state: { role: 'instructor' } });
+      if (role === 'hotel') Navigate('/hotel/register', { state: { role: 'hotel' } });
+    }
+  }, [signup, role, Navigate]);
+
   // Use the official GoogleLogin component (returns a credential via response.credential)
 
   return (
@@ -398,7 +434,7 @@ export default function LoginPage() {
               <LogInIcon className="text-white" />
             </div>
             <h1 className="text-2xl font-semibold w-full text-center ">
-              {signup ? "Sign Up" : "Sign In"}
+              {signup ? `Sign Up${role ? ` as ${role.charAt(0).toUpperCase() + role.slice(1)}` : ''}` : "Sign In"}
             </h1>
           </div>
           <form
@@ -511,6 +547,8 @@ export default function LoginPage() {
                     </a>
                   </span>
                 </Checkbox>
+                {/* Show role info for clarity */}
+                <div className="mt-2 text-xs text-gray-500">Registering as: <span className="font-semibold">{role.charAt(0).toUpperCase() + role.slice(1)}</span></div>
               </div>
             )}
             <div className="forgot mt-1 flex flex-col items-center justify-between gap-2">
