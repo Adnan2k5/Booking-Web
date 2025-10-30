@@ -10,7 +10,8 @@ import { Textarea } from "../../components/ui/textarea"
 import { X, Upload, FileText, Building, MapPin, Phone, Mail, User, ImageIcon, Link, Euro, Star } from "lucide-react"
 import { registerHotel, verify } from "../../Api/hotel.api.js"
 import { fetchLocations } from "../../Api/location.api.js"
-export const HotelRegister = () => {    const [formData, setFormData] = useState({
+export const HotelRegister = () => {
+    const [formData, setFormData] = useState({
         name: "",
         email: "",
         password: "",
@@ -175,7 +176,8 @@ export const HotelRegister = () => {    const [formData, setFormData] = useState
             }
             setLoading(true)
             const toastId = toast.loading("Processing your request...")
-            try {                const data = new FormData()
+            try {
+                const data = new FormData()
                 data.append("name", formData.name)
                 data.append("email", formData.email)
                 data.append("password", formData.password)
@@ -616,20 +618,22 @@ export const HotelRegister = () => {    const [formData, setFormData] = useState
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="rooms">Number of Rooms</Label>
-                                            <Input
-                                                id="rooms"
-                                                name="rooms"
-                                                type="number"
-                                                value={formData.rooms}
-                                                onChange={handleChange}
-                                                placeholder={`Total ${getLabel().toLowerCase()} rooms available`}
-                                                min="1"
-                                                required
-                                                className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
-                                            />
-                                        </div>
+                                        {formData.category !== "camping" && formData.category !== "glamping" && (
+                                            <div className="space-y-2">
+                                                <Label htmlFor="rooms">Number of Rooms</Label>
+                                                <Input
+                                                    id="rooms"
+                                                    name="rooms"
+                                                    type="number"
+                                                    value={formData.rooms}
+                                                    onChange={handleChange}
+                                                    placeholder={`Total ${getLabel().toLowerCase()} rooms available`}
+                                                    min="1"
+                                                    required
+                                                    className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
+                                                />
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </div>
