@@ -10,7 +10,7 @@ import { Textarea } from "../../components/ui/textarea"
 import { X, Upload, FileText, Building, MapPin, Phone, Mail, User, ImageIcon, Link, Euro, Star, ChevronDown } from "lucide-react"
 import { registerHotel, verify } from "../../Api/hotel.api.js"
 import { fetchLocations } from "../../Api/location.api.js"
-import { Listbox, Transition } from '@headlessui/react'
+import { Listbox, Transition, ListboxOption, ListboxButton } from '@headlessui/react'
 import { Fragment } from 'react'
 export const HotelRegister = () => {
     const [formData, setFormData] = useState({
@@ -355,6 +355,7 @@ export const HotelRegister = () => {
                 <div className="mb-6 text-center">
                     <h1 className="text-2xl font-bold text-gray-800">{getLabel()} Registration</h1>
                     <p className="text-gray-600">Register your {getLabel().toLowerCase()} to join our adventure platform</p>
+                    <p className="text-sm text-gray-500 mt-2">Become a mentor and provide an impact</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">

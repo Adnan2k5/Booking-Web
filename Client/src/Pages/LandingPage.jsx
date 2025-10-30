@@ -360,19 +360,47 @@ export default function LandingPage() {
                 {/* Booking Form */}
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="participants" className="text-sm font-medium text-gray-700">
-                      {t("numberOfParticipants")}
+                    <Label className="text-sm font-medium text-gray-700">
+                      {t("groupMembers")} ({groupManagement.groupMembers.length + 1})
                     </Label>
-                    <Input
-                      id="participants"
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={eventBooking.bookingForm.participants}
-                      onChange={(e) => eventBooking.updateBookingForm({ participants: parseInt(e.target.value) || 1 })}
-                      className="mt-1"
-                      placeholder="1"
-                    />
+                    <div className="mt-2 space-y-2">
+                      <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8 border border-gray-200 bg-gray-900">
+                            <AvatarFallback className="text-white text-xs">
+                              {user?.user ? user.user.email.charAt(0).toUpperCase() : "Y"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">{user?.user ? user.user.email : "You"}</p>
+                            <p className="text-xs text-gray-500">{t("groupLeader")}</p>
+                          </div>
+                        </div>
+                      </div>
+                      {groupManagement.groupMembers.map((member) => (
+                        <div key={member._id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8 border border-gray-200">
+                              <AvatarImage src={member.profilePicture || "/placeholder.svg"} alt={member.name} />
+                              <AvatarFallback className="text-xs">{member.name?.charAt(0) || member.email?.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-sm font-medium text-gray-800">{member.name || "User"}</p>
+                              <p className="text-xs text-gray-500">{member.email}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => groupManagement.setShowGroupDialog(true)}
+                        className="w-full mt-2 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        {t("addFriendsToGroup")}
+                      </Button>
+                    </div>
                   </div>
 
                   <div>
@@ -590,7 +618,7 @@ export default function LandingPage() {
                   className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-6"
                 >
                   <Users className="h-5 w-5 mr-2" />
-                  {t("bookYourSpot")}
+                  {t("bookNow")}
                 </Button>
               </DialogFooter>
             </DialogContent>
