@@ -31,7 +31,6 @@ export const HotelRegister = () => {
         taxCertificate: null,
         insuranceDocument: null,
         role: "hotel",
-        price: 0,
         pricePerNight: 0,
         rating: 0,
         socialMedias: [],
@@ -197,7 +196,6 @@ export const HotelRegister = () => {
                 data.append("managerName", formData.managerName)
                 data.append("rooms", formData.rooms)
                 data.append("role", formData.role)
-                data.append("price", formData.price)
                 data.append("pricePerNight", formData.pricePerNight)
                 data.append("rating", formData.rating)
                 data.append("website", formData.website)
@@ -499,20 +497,6 @@ export const HotelRegister = () => {
                                                 </option>
                                             ))}
                                         </select>
-                                    </div>                                    <div className="space-y-2">
-                                        <Label htmlFor="price" className="flex items-center">
-                                            <Euro className="h-4 w-4 mr-2" />
-                                            Base Price
-                                        </Label>
-                                        <Input
-                                            id="price"
-                                            name="price"
-                                            type="number"
-                                            value={formData.price}
-                                            onChange={handleChange}
-                                            placeholder="Enter base price"
-                                            className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
-                                        />
                                     </div>
                                 </div>
 
@@ -597,9 +581,10 @@ export const HotelRegister = () => {
                                         </div>
                                         <div className="flex flex-col gap-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="managerName" className="flex items-center">
+                                                <Label htmlFor="website" className="flex items-center">
                                                     <Link className="h-4 w-4 mr-2" />
                                                     {getLabel()} Website
+                                                    <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Optional</span>
                                                 </Label>
                                                 <Input
                                                     id="website"
@@ -611,7 +596,10 @@ export const HotelRegister = () => {
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label>Social Media Links</Label>
+                                                <Label className="flex items-center">
+                                                    Social Media Links
+                                                    <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Optional</span>
+                                                </Label>
                                                 <div className="flex gap-2 mt-2">
                                                     <input
                                                         type="url"
