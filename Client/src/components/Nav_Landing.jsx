@@ -195,7 +195,7 @@ export const Nav_Landing = () => {
                                 ) : (
                                     <Button
                                         onClick={() => navigate("/login-options")}
-                                        className="bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 px-4 py-1.5 rounded-md shadow-sm text-base xl:text-lg font-semibold transition-colors duration-150"
+                                        className="bg-white text-gray-900 border cursor-pointer border-gray-200 hover:bg-gray-50 hover:border-gray-300 px-4 py-1.5 rounded-md shadow-sm text-base xl:text-lg font-semibold transition-colors duration-150"
                                         aria-label={t("login") || "Login"}
                                     >
                                         {t("login") || "Login"}

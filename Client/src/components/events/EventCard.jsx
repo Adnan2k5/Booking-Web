@@ -92,17 +92,7 @@ const EventCard = memo(({ event, onBooking, onViewMore }) => {
                 ? `${event.description.substring(0, 20)}...`
                 : event.description}
             </p>
-            {event.description && event.description.length > 1 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewMore?.(event);
-                }}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium pl-7"
-              >
-                {t("viewMore")}
-              </button>
-            )}
+
           </div>
         </div>
 
@@ -113,15 +103,15 @@ const EventCard = memo(({ event, onBooking, onViewMore }) => {
           className="mt-auto"
         >
           <Button
-            onClick={() => onBooking?.(event)}
+            onClick={() => onViewMore?.(event)}
             className="w-full bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <Users className="h-5 w-5 mr-2" />
             {t("bookYourSpot").toUpperCase()}
           </Button>
         </motion.div>
-      </div>
-    </motion.div>
+      </div >
+    </motion.div >
   )
 })
 
