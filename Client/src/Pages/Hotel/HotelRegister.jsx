@@ -7,10 +7,13 @@ import { Modal } from "antd"
 import { InputOTPSlot, InputOTP, InputOTPGroup } from "../../components/ui/input-otp"
 import { toast } from "sonner"
 import { Textarea } from "../../components/ui/textarea"
-import { X, Upload, FileText, Building, MapPin, Phone, Mail, User, ImageIcon, Link, Euro, Star } from "lucide-react"
+import { X, Upload, FileText, Building, MapPin, Phone, Mail, User, ImageIcon, Link, Euro, Star, ChevronDown } from "lucide-react"
 import { registerHotel, verify } from "../../Api/hotel.api.js"
 import { fetchLocations } from "../../Api/location.api.js"
-export const HotelRegister = () => {    const [formData, setFormData] = useState({
+import { Listbox, Transition, ListboxOption, ListboxButton } from '@headlessui/react'
+import { Fragment } from 'react'
+export const HotelRegister = () => {
+    const [formData, setFormData] = useState({
         name: "",
         email: "",
         password: "",
@@ -28,7 +31,6 @@ export const HotelRegister = () => {    const [formData, setFormData] = useState
         taxCertificate: null,
         insuranceDocument: null,
         role: "hotel",
-        price: 0,
         pricePerNight: 0,
         rating: 0,
         socialMedias: [],
@@ -46,6 +48,12 @@ export const HotelRegister = () => {    const [formData, setFormData] = useState
     // Social media state
     const [customSocial, setCustomSocial] = useState("");
     const [allSocials, setAllSocials] = useState([]);
+
+    const categories = [
+        { id: 'hotel', name: 'Hotel', description: 'Traditional accommodation' },
+        { id: 'camping', name: 'Camping', description: 'Outdoor adventure' },
+        { id: 'glamping', name: 'Glamping', description: 'Luxury camping' }
+    ]
 
     const passValidation = () => {
         if (
@@ -175,7 +183,8 @@ export const HotelRegister = () => {    const [formData, setFormData] = useState
             }
             setLoading(true)
             const toastId = toast.loading("Processing your request...")
-            try {                const data = new FormData()
+            try {
+                const data = new FormData()
                 data.append("name", formData.name)
                 data.append("email", formData.email)
                 data.append("password", formData.password)
@@ -187,7 +196,6 @@ export const HotelRegister = () => {    const [formData, setFormData] = useState
                 data.append("managerName", formData.managerName)
                 data.append("rooms", formData.rooms)
                 data.append("role", formData.role)
-                data.append("price", formData.price)
                 data.append("pricePerNight", formData.pricePerNight)
                 data.append("rating", formData.rating)
                 data.append("website", formData.website)
@@ -345,22 +353,56 @@ export const HotelRegister = () => {    const [formData, setFormData] = useState
                 <div className="mb-6 text-center">
                     <h1 className="text-2xl font-bold text-gray-800">{getLabel()} Registration</h1>
                     <p className="text-gray-600">Register your {getLabel().toLowerCase()} to join our adventure platform</p>
+                    <p className="text-sm text-gray-500 mt-2">Become a mentor and provide an impact</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="mb-4 flex items-center gap-4">
-                        <Label htmlFor="category">Category</Label>
-                        <select
-                            id="category"
-                            name="category"
-                            value={formData.category}
-                            onChange={handleChange}
-                            className="border rounded px-3 py-2 focus:ring-2 focus:ring-black transition-all focus:scale-[1.01]"
-                        >
-                            <option value="hotel">Hotel</option>
-                            <option value="camping">Camping</option>
-                            <option value="glamping">Glamping</option>
-                        </select>
+                        <Label htmlFor="category" className="text-sm font-medium text-slate-700">Category</Label>
+                        <div className="relative w-64">
+                            <Listbox value={formData.category} onChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                                <div className="relative">
+                                    <ListboxButton className="relative w-full cursor-pointer rounded-xl bg-white py-3 pl-4 pr-10 text-left shadow-sm border border-slate-200 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-all duration-200 ease-in-out hover:shadow-md">
+                                        <span className="block truncate text-slate-900 font-medium">
+                                            {categories.find(cat => cat.id === formData.category)?.name}
+                                        </span>
+                                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                            <ChevronDown className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                                        </span>
+                                    </ListboxButton>
+                                    <Transition
+                                        as={Fragment}
+                                        leave="transition ease-in duration-100"
+                                        leaveFrom="opacity-100"
+                                        leaveTo="opacity-0"
+                                    >
+                                        <ListboxOption className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-slate-900/5 focus:outline-none border border-slate-200">
+                                            {categories.map((category) => (
+                                                <ListboxOption
+                                                    key={category.id}
+                                                    className={({ active }) =>
+                                                        `relative cursor-pointer select-none py-3 px-4 ${active ? 'bg-slate-50 text-slate-900' : 'text-slate-700'
+                                                        }`
+                                                    }
+                                                    value={category.id}
+                                                >
+                                                    {({ selected, active }) => (
+                                                        <div className="flex flex-col">
+                                                            <span className={`block truncate font-medium ${selected ? 'text-slate-900' : ''}`}>
+                                                                {category.name}
+                                                            </span>
+                                                            <span className="text-xs text-slate-500 mt-0.5">
+                                                                {category.description}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </ListboxOption>
+                                            ))}
+                                        </ListboxOption>
+                                    </Transition>
+                                </div>
+                            </Listbox>
+                        </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         {/* Left Column - Basic Information */}
@@ -455,20 +497,6 @@ export const HotelRegister = () => {    const [formData, setFormData] = useState
                                                 </option>
                                             ))}
                                         </select>
-                                    </div>                                    <div className="space-y-2">
-                                        <Label htmlFor="price" className="flex items-center">
-                                            <Euro className="h-4 w-4 mr-2" />
-                                            Base Price
-                                        </Label>
-                                        <Input
-                                            id="price"
-                                            name="price"
-                                            type="number"
-                                            value={formData.price}
-                                            onChange={handleChange}
-                                            placeholder="Enter base price"
-                                            className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
-                                        />
                                     </div>
                                 </div>
 
@@ -553,9 +581,10 @@ export const HotelRegister = () => {    const [formData, setFormData] = useState
                                         </div>
                                         <div className="flex flex-col gap-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="managerName" className="flex items-center">
+                                                <Label htmlFor="website" className="flex items-center">
                                                     <Link className="h-4 w-4 mr-2" />
                                                     {getLabel()} Website
+                                                    <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Optional</span>
                                                 </Label>
                                                 <Input
                                                     id="website"
@@ -567,7 +596,10 @@ export const HotelRegister = () => {    const [formData, setFormData] = useState
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label>Social Media Links</Label>
+                                                <Label className="flex items-center">
+                                                    Social Media Links
+                                                    <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Optional</span>
+                                                </Label>
                                                 <div className="flex gap-2 mt-2">
                                                     <input
                                                         type="url"
@@ -616,20 +648,22 @@ export const HotelRegister = () => {    const [formData, setFormData] = useState
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="rooms">Number of Rooms</Label>
-                                            <Input
-                                                id="rooms"
-                                                name="rooms"
-                                                type="number"
-                                                value={formData.rooms}
-                                                onChange={handleChange}
-                                                placeholder={`Total ${getLabel().toLowerCase()} rooms available`}
-                                                min="1"
-                                                required
-                                                className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
-                                            />
-                                        </div>
+                                        {formData.category !== "camping" && formData.category !== "glamping" && (
+                                            <div className="space-y-2">
+                                                <Label htmlFor="rooms">Number of Rooms</Label>
+                                                <Input
+                                                    id="rooms"
+                                                    name="rooms"
+                                                    type="number"
+                                                    value={formData.rooms}
+                                                    onChange={handleChange}
+                                                    placeholder={`Total ${getLabel().toLowerCase()} rooms available`}
+                                                    min="1"
+                                                    required
+                                                    className="transition-all focus:ring-2 focus:ring-black focus:scale-[1.01]"
+                                                />
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </div>
