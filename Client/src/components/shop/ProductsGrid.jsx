@@ -95,7 +95,7 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
   });
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-8">
+    <section className="maxs-w-7xl mx-auto px-6 py-8">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Left filters */}
         <aside className="col-span-1 bg-white rounded-md p-4 shadow-sm">
