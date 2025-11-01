@@ -10,8 +10,9 @@ import { Textarea } from "../../components/ui/textarea"
 import { X, Upload, FileText, Building, MapPin, Phone, Mail, User, ImageIcon, Link, Euro, Star, ChevronDown } from "lucide-react"
 import { registerHotel, verify } from "../../Api/hotel.api.js"
 import { fetchLocations } from "../../Api/location.api.js"
-import { Listbox, Transition, ListboxOption, ListboxButton } from '@headlessui/react'
+import { Listbox, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
+
 export const HotelRegister = () => {
     const [formData, setFormData] = useState({
         name: "",
@@ -82,6 +83,7 @@ export const HotelRegister = () => {
             toast.error("Failed to fetch locations")
         }
     }
+
     useEffect(() => {
         getLocation()
     }, [])
@@ -156,101 +158,151 @@ export const HotelRegister = () => {
                 toast.error(error)
                 return
             }
-            // Validate required fields (repeat for safety)
-            if (!formData.name) {
-                toast.error("Hotel name is required")
-                return
+            
+            // Comprehensive validation with better error messages
+            const validationErrors = [];
+            
+            if (!formData.name || formData.name.trim() === "") {
+                validationErrors.push("Hotel name is required");
+            }
+            if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+                validationErrors.push("Valid email is required");
+            }
+            if (!formData.password || formData.password.length < 6) {
+                validationErrors.push("Password must be at least 6 characters");
+            }
+            if (formData.password !== formData.confirmPassword) {
+                validationErrors.push("Passwords do not match");
             }
             if (!formData.location) {
-                toast.error("Location is required")
-                return
+                validationErrors.push("Location is required");
             }
-            if (!formData.description) {
-                toast.error("Description is required")
-                return
+            if (!formData.description || formData.description.trim() === "") {
+                validationErrors.push("Description is required");
             }
-            if (!formData.rooms || formData.rooms <= 0) {
-                toast.error("Number of rooms is required and must be greater than 0")
-                return
+            if (!formData.address || formData.address.trim() === "") {
+                validationErrors.push("Address is required");
+            }
+            if (!formData.phone || formData.phone.trim() === "") {
+                validationErrors.push("Phone number is required");
+            }
+            if (!formData.managerName || formData.managerName.trim() === "") {
+                validationErrors.push("Manager name is required");
+            }
+            if (!formData.rooms || isNaN(formData.rooms) || Number(formData.rooms) <= 0) {
+                validationErrors.push("Valid number of rooms is required");
+            }
+            if (!formData.pricePerNight || isNaN(formData.pricePerNight) || Number(formData.pricePerNight) <= 0) {
+                validationErrors.push("Valid price per night is required");
             }
             if (!formData.businessLicense) {
-                toast.error("Business license is required")
-                return
+                validationErrors.push("Business license document is required");
             }
-            if (formData.hotelImages.length === 0) {
-                toast.error("At least one hotel image is required")
-                return
+            if (!formData.hotelImages || formData.hotelImages.length === 0) {
+                validationErrors.push("At least one hotel image is required");
             }
+            if (!otp || otp.length !== 6) {
+                validationErrors.push("Valid 6-digit OTP is required");
+            }
+            
+            if (validationErrors.length > 0) {
+                validationErrors.forEach(err => toast.error(err));
+                return;
+            }
+            
             setLoading(true)
-            const toastId = toast.loading("Processing your request...")
+            const toastId = toast.loading("Registering your hotel...")
             try {
                 const data = new FormData()
-                data.append("name", formData.name)
-                data.append("email", formData.email)
+                data.append("name", formData.name.trim())
+                data.append("email", formData.email.trim())
                 data.append("password", formData.password)
                 data.append("confirmPassword", formData.confirmPassword)
-                data.append("description", formData.description)
+                data.append("description", formData.description.trim())
                 data.append("location", formData.location)
-                data.append("address", formData.address)
-                data.append("phone", formData.phone)
-                data.append("managerName", formData.managerName)
+                data.append("address", formData.address.trim())
+                data.append("phone", formData.phone.trim())
+                data.append("managerName", formData.managerName.trim())
                 data.append("rooms", formData.rooms)
                 data.append("role", formData.role)
                 data.append("pricePerNight", formData.pricePerNight)
-                data.append("rating", formData.rating)
-                data.append("website", formData.website)
+                data.append("price", formData.pricePerNight) // Add price field for backend compatibility
+                data.append("rating", formData.rating || 0)
+                data.append("website", formData.website.trim())
                 data.append("otp", otp)
                 data.append("category", formData.category)
-                formData.amenities.forEach((amenity) => {
-                    data.append("amenities[]", amenity)
-                })
+                
+                // Append amenities
+                if (formData.amenities && formData.amenities.length > 0) {
+                    formData.amenities.forEach((amenity) => {
+                        data.append("amenities[]", amenity)
+                    })
+                }
+                
+                // Append files
                 if (formData.profileImage) data.append("profileImage", formData.profileImage)
                 if (formData.businessLicense) data.append("businessLicense", formData.businessLicense)
                 if (formData.taxCertificate) data.append("taxCertificate", formData.taxCertificate)
                 if (formData.insuranceDocument) data.append("insuranceDocument", formData.insuranceDocument)
+                
+                // Append hotel images
                 if (formData.hotelImages && formData.hotelImages.length > 0) {
                     formData.hotelImages.forEach((image) => {
                         data.append("hotelImages", image.file)
                     })
                 }
+                
+                // Append social media links
                 if (formData.socialMedias && formData.socialMedias.length > 0) {
                     formData.socialMedias.forEach((link) => {
-                        data.append("socialMedias[]", link)
+                        data.append("socials[]", link)
                     })
                 }
+                
                 const res = await registerHotel(data)
-                if (res.statusCode === 201) {
-                    toast.success("Hotel Registration successful!")
+                
+                if (res.data && (res.status === 201 || res.data.statusCode === 201)) {
+                    toast.success("Hotel registered successfully! Please wait for admin approval.", { id: toastId, duration: 5000 })
                     setOtpDialog(false)
                     setOtp("")
+                    // Optionally redirect to pending page or login
+                    setTimeout(() => {
+                        window.location.href = "/hotel/pending"
+                    }, 2000)
+                } else {
+                    throw new Error(res.data?.message || "Registration failed")
                 }
             } catch (err) {
-                const message = err?.response?.data?.message || err.message || "Registration failed"
+                console.error("Registration error:", err);
+                const message = err?.response?.data?.message || err.message || "Registration failed. Please try again."
                 toast.error(message, { id: toastId })
             } finally {
                 setLoading(false)
             }
         } else {
-            // This means user is clicking submit for the first time, so only send email for OTP
-            if (!formData.email) {
-                toast.error("Email is required")
+            // First step: send email for OTP
+            if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+                toast.error("Please enter a valid email address")
                 return
             }
+            
             setLoading(true)
-            const toastId = toast.loading("Sending OTP...")
+            const toastId = toast.loading("Sending OTP to your email...")
             try {
-                const data = { email: formData.email }
+                const data = { email: formData.email.trim() }
                 const res = await verify(data)
-                if (res.status === 200) {
-                    toast.success("OTP sent successfully", { id: toastId })
+                
+                if (res.status === 200 || res.data?.statusCode === 200) {
+                    toast.success("OTP sent successfully! Check your email.", { id: toastId })
                     setOtpDialog(true)
-                } else if (res.status === 409) {
-                    toast.error("User already exists", { id: toastId })
+                } else if (res.status === 409 || res.response?.status === 409) {
+                    toast.error("An account with this email already exists", { id: toastId })
                 } else {
-                    toast.error("Failed to send OTP", { id: toastId })
+                    throw new Error("Failed to send OTP")
                 }
             } catch (err) {
-                const message = err?.response?.data?.message || err.message || "Failed to send OTP"
+                console.error("OTP send error:", err);
+                const message = err?.response?.data?.message || err.message || "Failed to send OTP. Please try again."
                 toast.error(message, { id: toastId })
             } finally {
                 setLoading(false)
@@ -362,23 +414,23 @@ export const HotelRegister = () => {
                         <div className="relative w-64">
                             <Listbox value={formData.category} onChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
                                 <div className="relative">
-                                    <ListboxButton className="relative w-full cursor-pointer rounded-xl bg-white py-3 pl-4 pr-10 text-left shadow-sm border border-slate-200 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-all duration-200 ease-in-out hover:shadow-md">
+                                    <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-white py-3 pl-4 pr-10 text-left shadow-sm border border-slate-200 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-all duration-200 ease-in-out hover:shadow-md">
                                         <span className="block truncate text-slate-900 font-medium">
                                             {categories.find(cat => cat.id === formData.category)?.name}
                                         </span>
                                         <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                                             <ChevronDown className="h-4 w-4 text-slate-400" aria-hidden="true" />
                                         </span>
-                                    </ListboxButton>
+                                    </Listbox.Button>
                                     <Transition
                                         as={Fragment}
                                         leave="transition ease-in duration-100"
                                         leaveFrom="opacity-100"
                                         leaveTo="opacity-0"
                                     >
-                                        <ListboxOption className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-slate-900/5 focus:outline-none border border-slate-200">
+                                        <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-slate-900/5 focus:outline-none border border-slate-200">
                                             {categories.map((category) => (
-                                                <ListboxOption
+                                                <Listbox.Option
                                                     key={category.id}
                                                     className={({ active }) =>
                                                         `relative cursor-pointer select-none py-3 px-4 ${active ? 'bg-slate-50 text-slate-900' : 'text-slate-700'
@@ -396,9 +448,9 @@ export const HotelRegister = () => {
                                                             </span>
                                                         </div>
                                                     )}
-                                                </ListboxOption>
+                                                </Listbox.Option>
                                             ))}
-                                        </ListboxOption>
+                                        </Listbox.Options>
                                     </Transition>
                                 </div>
                             </Listbox>

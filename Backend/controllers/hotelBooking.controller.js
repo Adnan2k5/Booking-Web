@@ -257,6 +257,86 @@ export const getMyHotelBookings = asyncHandler(async (req, res) => {
   );
 });
 
+// Get hotel bookings by hotel ID (for hotel owners to see their property bookings)
+export const getHotelBookingsByHotelId = asyncHandler(async (req, res) => {
+  const { hotelId } = req.params;
+  const {
+    page = 1,
+    limit = 10,
+    status,
+    paymentStatus,
+    sortBy = "createdAt",
+    sortOrder = "desc"
+  } = req.query;
+
+  if (!hotelId) {
+    throw new ApiError(400, "Hotel ID is required");
+  }
+
+  // Check if hotel exists and if user is the owner
+  const hotel = await Hotel.findById(hotelId);
+  if (!hotel) {
+    throw new ApiError(404, "Hotel not found");
+  }
+
+  // Verify the requesting user is the hotel owner
+  if (hotel.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not authorized to view these bookings");
+  }
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  // Build query object
+  let query = { hotel: hotelId };
+
+  if (status) {
+    query.status = status;
+  }
+
+  if (paymentStatus) {
+    query.paymentStatus = paymentStatus;
+  }
+
+  // Sorting
+  const sortOptions = {};
+  sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+  const bookings = await HotelBooking.find(query)
+    .sort(sortOptions)
+    .skip(skip)
+    .limit(parseInt(limit))
+    .populate("user", "name email phoneNumber")
+    .populate("hotel", "name location pricePerNight rating medias");
+
+  const total = await HotelBooking.countDocuments(query);
+
+  // Calculate statistics
+  const stats = {
+    totalRevenue: await HotelBooking.aggregate([
+      { $match: { hotel: hotel._id, paymentStatus: "completed" } },
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]),
+    confirmedBookings: await HotelBooking.countDocuments({ hotel: hotelId, status: "confirmed" }),
+    pendingBookings: await HotelBooking.countDocuments({ hotel: hotelId, status: "pending" }),
+    cancelledBookings: await HotelBooking.countDocuments({ hotel: hotelId, status: "cancelled" }),
+  };
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      bookings,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+      stats: {
+        totalRevenue: stats.totalRevenue[0]?.total || 0,
+        confirmedBookings: stats.confirmedBookings,
+        pendingBookings: stats.pendingBookings,
+        cancelledBookings: stats.cancelledBookings,
+      }
+    }, "Hotel bookings retrieved successfully")
+  );
+});
+
 // Get a specific hotel booking by ID
 export const getHotelBookingById = asyncHandler(async (req, res) => {
   const { id } = req.params;

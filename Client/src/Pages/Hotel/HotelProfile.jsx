@@ -1,42 +1,81 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../AuthProvider';
-import { getHotelByOwnerId } from '../../Api/hotel.api.js';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Separator } from '../../components/ui/separator';
+import { getHotelByOwnerId, getHotelBookings } from '../../Api/hotel.api.js';
+import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Loader } from '../../components/Loader';
 import { HotelUpdateModal } from '../../components/HotelUpdateModal';
-import { MapPin, Phone, Home, Users, PocketIcon as Pool, Award, FileText, Shield, Edit, Euro } from 'lucide-react';
+import { HotelSidebar } from '../../components/Hotel/HotelSidebar';
+import { HotelOverview } from '../../components/Hotel/HotelOverview';
+import { HotelBookings } from '../../components/Hotel/HotelBookings';
+import { HotelDocuments } from '../../components/Hotel/HotelDocuments';
+import { HotelStatistics } from '../../components/Hotel/HotelStatistics';
+import { HotelSettings } from '../../components/Hotel/HotelSettings';
 import { useNavigate } from 'react-router-dom';
 
 export const HotelProfile = () => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [hotel, setHotel] = useState(null);
-    const [activeImage, setActiveImage] = useState(null);
+    const [bookings, setBookings] = useState([]);
+    const [bookingStats, setBookingStats] = useState(null);
+    const [bookingLoading, setBookingLoading] = useState(false);
     const [updateModalOpen, setUpdateModalOpen] = useState(false);
     const [updateType, setUpdateType] = useState('price');
-    const Navigate = useNavigate(); const fetchHotel = async () => {
+    const [bookingFilter, setBookingFilter] = useState('all');
+    const [activeTab, setActiveTab] = useState('overview');
+    const Navigate = useNavigate();
+    
+    const fetchHotel = async () => {
         setLoading(true);
         try {
             const res = await getHotelByOwnerId(user.user._id);
-            if (res.data.data.hotel[0].verified === "pending") {
-                Navigate("/hotel/pending");
-            }
-            if (res.data && res.data.data.hotel && res.data.data.hotel.length > 0) {
-                setHotel(res.data.data.hotel[0]);
-                if (res.data.data.hotel[0].medias && res.data.data.hotel[0].medias.length > 0) {
-                    setActiveImage(res.data.data.hotel[0].medias[0]);
-                } else if (res.data.data.hotel[0].logo) {
-                    setActiveImage(res.data.data.hotel[0].logo);
+            if (res.data && res.data.data && res.data.data.hotel && res.data.data.hotel.length > 0) {
+                const hotelData = res.data.data.hotel[0];
+                
+                if (hotelData.verified === "pending") {
+                    Navigate("/hotel/pending");
+                    return;
                 }
+                
+                setHotel(hotelData);
+                
+                // Fetch bookings for this hotel
+                await fetchBookings(hotelData._id);
             }
         } catch (error) {
             console.error("Error fetching hotel:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchBookings = async (hotelId, page = 1, status = 'all') => {
+        setBookingLoading(true);
+        try {
+            const queryParams = {
+                page: page,
+                limit: 10,
+                sortBy: 'createdAt',
+                sortOrder: 'desc'
+            };
+            
+            if (status !== 'all') {
+                queryParams.status = status;
+            }
+            
+            const res = await getHotelBookings(hotelId, queryParams);
+            
+            if (res.data && res.data.data) {
+                setBookings(res.data.data.bookings || []);
+                setBookingStats(res.data.data.stats || null);
+            }
+        } catch (error) {
+            console.error("Error fetching bookings:", error);
+            setBookings([]);
+            setBookingStats(null);
+        } finally {
+            setBookingLoading(false);
         }
     };
 
@@ -49,28 +88,22 @@ export const HotelProfile = () => {
         setUpdateModalOpen(true);
     };
 
-    useEffect(() => {
-        fetchHotel();
-    }, []);
-
-    // Helper: React error #31 occurs when an object is rendered directly in JSX.
-    // Some relations (e.g., location) may be populated as an object with keys {_id, name}.
-    // This formatter ensures we never pass a raw object as a child.
-    const formatDisplay = (value) => {
-        if (value == null) return '';
-        if (typeof value === 'object') {
-            // Prefer common readable keys
-            if (Object.prototype.hasOwnProperty.call(value, 'name')) return value.name;
-            if (Object.prototype.hasOwnProperty.call(value, 'title')) return value.title;
-            // Fallback: stringify safely (avoid circular refs)
-            try {
-                return JSON.stringify(value);
-            } catch {
-                return '';
-            }
+    const handleFilterChange = (filter) => {
+        setBookingFilter(filter);
+        if (hotel && hotel._id) {
+            fetchBookings(hotel._id, 1, filter);
         }
-        return value;
     };
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+    };
+
+    useEffect(() => {
+        if (user && user.user && user.user._id) {
+            fetchHotel();
+        }
+    }, [user]);
 
     if (loading) {
         return <div className="flex justify-center items-center min-h-screen">
@@ -96,219 +129,54 @@ export const HotelProfile = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <div className="max-w-6xl mx-auto">
-                <div className="flex flex-col md:flex-row gap-8">
-                    {/* Left column - Main info */}
-                    <div className="w-full md:w-2/3">
-                        <Card className="mb-8">
-                            <CardHeader className="pb-4">
-                                <div className="flex items-center gap-4">
-                                    {hotel.logo && (
-                                        <div className="w-16 h-16 rounded-full overflow-hidden border">
-                                            <img
-                                                src={hotel.logo || "/placeholder.svg"}
-                                                alt={`${hotel.name} logo`}
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    e.target.src = "/placeholder.svg?height=64&width=64";
-                                                }}
-                                            />
-                                        </div>
-                                    )}
-                                    <div>
-                                        <CardTitle className="text-2xl">{hotel.name}</CardTitle>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                                            <CardDescription>
-                                                {typeof hotel.location === 'object' && hotel.location?.name
-                                                    ? hotel.location.name
-                                                    : typeof hotel.location === 'string'
-                                                        ? hotel.location
-                                                        : "Location not specified"}
-                                            </CardDescription>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <Separator />
-                            <CardContent className="pt-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <h3 className="font-medium mb-2">Hotel Details</h3>
-                                        <ul className="space-y-3">
-                                            <li className="flex items-center gap-2">
-                                                <Users className="h-4 w-4 text-muted-foreground" />
-                                                <span>Manager: {hotel.managerName}</span>
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <Phone className="h-4 w-4 text-muted-foreground" />
-                                                <span>Contact: {hotel.contactNo}</span>
-                                            </li>                                            <li className="flex items-center gap-2">
-                                                <Home className="h-4 w-4 text-muted-foreground" />
-                                                <span>Rooms: {hotel.noRoom}</span>
-                                            </li>                                            <li className="flex items-center gap-2 justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <Euro className="h-4 w-4 text-muted-foreground" />
-                                                    <span>Price: €{hotel.price}</span>
-                                                </div>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => openUpdateModal('price')}
-                                                >
-                                                    <Edit className="h-3 w-3" />
-                                                </Button>
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                                <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
-                                                <span>Address: {hotel.fullAddress}</span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <h3 className="font-medium mb-2">Amenities</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {hotel.amenities && hotel.amenities.map((amenity, index) => (
-                                                <Badge key={index} variant="outline" className="flex items-center gap-1">
-                                                    {(typeof amenity === 'object' && amenity?.name ? amenity.name : amenity) === 'Pool' && <Pool className="h-3 w-3" />}
-                                                    {typeof amenity === 'object' && amenity?.name
-                                                        ? amenity.name
-                                                        : typeof amenity === 'string'
-                                                            ? amenity
-                                                            : 'Amenity'}
-                                                </Badge>
-                                            ))}
-                                        </div>
-
-                                        <h3 className="font-medium mt-6 mb-2">Description</h3>
-                                        <p className="text-sm text-muted-foreground">{hotel.description}</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Gallery Section */}
-                        {hotel.medias && hotel.medias.length > 0 && (
-                            <Card className="mb-8">
-                                <CardHeader>
-                                    <CardTitle className="text-xl">Gallery</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="aspect-video rounded-md overflow-hidden mb-4 bg-muted">
-                                        <img
-                                            src={activeImage || "/placeholder.svg"}
-                                            alt="Hotel view"
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                e.target.src = "/placeholder.svg?height=400&width=600";
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-5 gap-2">
-                                        {hotel.medias.map((media, index) => (
-                                            <div
-                                                key={index}
-                                                className={`aspect-square rounded-md overflow-hidden cursor-pointer border-2 ${activeImage === media ? 'border-primary' : 'border-transparent'}`}
-                                                onClick={() => setActiveImage(media)}
-                                            >
-                                                <img
-                                                    src={media || "/placeholder.svg"}
-                                                    alt={`Hotel view ${index + 1}`}
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => {
-                                                        e.target.src = "/placeholder.svg?height=80&width=80";
-                                                    }}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
+            <div className="max-w-7xl mx-auto">
+                <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Sidebar */}
+                    <div className="w-full lg:w-64">
+                        <HotelSidebar 
+                            activeTab={activeTab} 
+                            onTabChange={handleTabChange}
+                            hotel={hotel}
+                        />
                     </div>
 
-                    {/* Right column - Documents & Certificates */}
-                    <div className="w-full md:w-1/3">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-xl">Documents & Certificates</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <Tabs defaultValue="license">
-                                    <TabsList className="grid grid-cols-3 mb-4">
-                                        <TabsTrigger value="license">License</TabsTrigger>
-                                        <TabsTrigger value="certificate">Certificate</TabsTrigger>
-                                        <TabsTrigger value="insurance">Insurance</TabsTrigger>
-                                    </TabsList>
-
-                                    <TabsContent value="license" className="space-y-4">
-                                        <div className="aspect-[3/4] bg-muted rounded-md overflow-hidden">
-                                            <img
-                                                src={hotel.license || "/placeholder.svg"}
-                                                alt="Hotel license"
-                                                className="w-full h-full object-contain"
-                                                onError={(e) => {
-                                                    e.target.src = "/placeholder.svg?height=400&width=300";
-                                                }}
-                                            />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <FileText className="h-4 w-4 text-muted-foreground" />
-                                                <span className="text-sm">Hotel License</span>
-                                            </div>
-                                            <Button variant="outline" size="sm" onClick={() => window.open(hotel.license, '_blank')}>
-                                                View
-                                            </Button>
-                                        </div>
-                                    </TabsContent>
-
-                                    <TabsContent value="certificate" className="space-y-4">
-                                        <div className="aspect-[3/4] bg-muted rounded-md overflow-hidden">
-                                            <img
-                                                src={hotel.certificate || "/placeholder.svg"}
-                                                alt="Hotel certificate"
-                                                className="w-full h-full object-contain"
-                                                onError={(e) => {
-                                                    e.target.src = "/placeholder.svg?height=400&width=300";
-                                                }}
-                                            />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Award className="h-4 w-4 text-muted-foreground" />
-                                                <span className="text-sm">Hotel Certificate</span>
-                                            </div>
-                                            <Button variant="outline" size="sm" onClick={() => window.open(hotel.certificate, '_blank')}>
-                                                View
-                                            </Button>
-                                        </div>
-                                    </TabsContent>
-
-                                    <TabsContent value="insurance" className="space-y-4">
-                                        <div className="aspect-[3/4] bg-muted rounded-md overflow-hidden">
-                                            <img
-                                                src={hotel.insurance || "/placeholder.svg"}
-                                                alt="Hotel insurance"
-                                                className="w-full h-full object-contain"
-                                                onError={(e) => {
-                                                    e.target.src = "/placeholder.svg?height=400&width=300";
-                                                }}
-                                            />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Shield className="h-4 w-4 text-muted-foreground" />
-                                                <span className="text-sm">Insurance Document</span>
-                                            </div>
-                                            <Button variant="outline" size="sm" onClick={() => window.open(hotel.insurance, '_blank')}>
-                                                View
-                                            </Button>
-                                        </div>
-                                    </TabsContent>
-                                </Tabs>
-                            </CardContent>
-                        </Card>                    </div>
+                    {/* Main Content */}
+                    <div className="flex-1">
+                        {activeTab === 'overview' && (
+                            <HotelOverview 
+                                hotel={hotel}
+                                onUpdatePrice={() => openUpdateModal('price')}
+                            />
+                        )}
+                        
+                        {activeTab === 'bookings' && (
+                            <HotelBookings
+                                bookings={bookings}
+                                bookingStats={bookingStats}
+                                bookingLoading={bookingLoading}
+                                bookingFilter={bookingFilter}
+                                onFilterChange={handleFilterChange}
+                            />
+                        )}
+                        
+                        {activeTab === 'documents' && (
+                            <HotelDocuments hotel={hotel} />
+                        )}
+                        
+                        {activeTab === 'statistics' && (
+                            <HotelStatistics 
+                                bookings={bookings}
+                                bookingStats={bookingStats}
+                            />
+                        )}
+                        
+                        {activeTab === 'settings' && (
+                            <HotelSettings 
+                                hotel={hotel}
+                                onUpdateSuccess={handleUpdateSuccess}
+                            />
+                        )}
+                    </div>
                 </div>
             </div>
 
