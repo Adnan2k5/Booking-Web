@@ -119,3 +119,30 @@ export const updateHotelPrice = async (id, priceData) => {
     return err;
   }
 };
+
+export const updateHotel = async (id, data) => {
+  try {
+    const res = await axiosClient.put(`/api/hotel/update/${id}`, data, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const getHotelBookings = async (hotelId, queryParams = {}) => {
+  try {
+    const params = new URLSearchParams(queryParams).toString();
+    const res = await axiosClient.get(
+      `/api/hotelBooking/hotel/${hotelId}${params ? `?${params}` : ''}`,
+      { withCredentials: true }
+    );
+    return res;
+  } catch (err) {
+    return err;
+  }
+};

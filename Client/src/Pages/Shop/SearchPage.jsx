@@ -27,6 +27,7 @@ export default function SearchPage() {
   const categories = ['Camping', 'Clothing', 'Footwear', 'Accessories', 'Equipment'];
   const searchQuery = searchParams.get('search') || '';
   const categoryParam = searchParams.get('category') || '';
+  const baseUrl = import.meta.env.VITE_SERVER_URL;
   
   const limit = 12;
 
@@ -39,6 +40,7 @@ export default function SearchPage() {
   const fetchItems = async (filters = {}) => {
     try {
       setLoading(true);
+      setError(null);
       const params = new URLSearchParams();
       if (filters.search) params.set('search', filters.search);
       if (filters.category) params.set('category', filters.category);
@@ -51,18 +53,39 @@ export default function SearchPage() {
       if (filters.brand) params.set('brand', filters.brand);
       if (filters.sortBy) params.set('sortBy', filters.sortBy);
 
-      const url = `/api/items${params.toString() ? `?${params.toString()}` : ''}`;
+      const url = `${baseUrl}api/items${params.toString() ? `?${params.toString()}` : ''}`;
+      console.log('Fetching from URL:', url);
+      
       const res = await fetch(url);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Response is not valid JSON');
+      }
+      
       const data = await res.json();
-      if (data && data.message) {
-        setItems(data.message || []);
+      console.log('API Response:', data);
+      
+      // API returns items in message field and metadata in data field
+      if (data && Array.isArray(data.message)) {
+        setItems(data.message);
         setTotalPages(Math.ceil((data.data?.total || 0) / limit));
+      } else if (data && Array.isArray(data.data)) {
+        // Fallback in case structure is different
+        setItems(data.data);
+        setTotalPages(Math.ceil((data.message?.total || 0) / limit));
       } else {
         setItems([]);
+        setTotalPages(1);
       }
     } catch (err) {
       console.error('Error fetching items:', err);
       setError('Error loading search results');
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -70,7 +93,12 @@ export default function SearchPage() {
 
   useEffect(() => {
     if (searchQuery) {
-      fetchItems(currentPage);
+      fetchItems({
+        search: searchQuery,
+        category: categoryParam,
+        page: currentPage,
+        limit
+      });
     } else {
       setItems([]);
       setLoading(false);
@@ -255,7 +283,7 @@ export default function SearchPage() {
         )}
 
         {/* Use ProductsGrid for search results and filters */}
-        <ProductsGrid items={items} categories={categories} selectedCategory={categoryParam} search={searchQuery} addToCart={addToCart} onCategorySelect={(c) => fetchItems({ category: c })} onSearch={(q) => fetchItems({ search: q })} onFilterChange={(f) => fetchItems({ ...f, search: searchQuery })} />
+        <ProductsGrid items={items} categories={categories} selectedCategory={categoryParam} search={searchQuery} addToCart={addToCart} onCategorySelect={(c) => fetchItems({ search: searchQuery, category: c, page: 1, limit })} onSearch={(q) => fetchItems({ search: q, category: categoryParam, page: 1, limit })} onFilterChange={(f) => fetchItems({ ...f, search: searchQuery, category: categoryParam, page: 1, limit })} />
       </div>
 
       <Footer categories={categories} />

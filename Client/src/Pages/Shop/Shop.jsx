@@ -1,6 +1,6 @@
 import { useContext, useState, useEffect, useRef } from "react";
 import { CartContext } from "../Cart/CartContext";
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import MainHeader from "../../components/shop/MainHeader";
 import FilterBar from "../../components/shop/FilterBar";
 import HeroCarousel from "../../components/shop/HeroCarousel";
@@ -20,6 +20,7 @@ export default function AdventureShop() {
 
   const baseUrl = import.meta.env.VITE_SERVER_URL;
   const productsRef = useRef(null);
+  const navigate = useNavigate();
 
   // Fetch items (supports extended filters)
   const fetchItems = async (filters = {}) => {
@@ -85,10 +86,12 @@ export default function AdventureShop() {
   }, []);
 
   const handleSearch = (q, opts = {}) => {
-    // Do not redirect. Update local state; fetching is controlled by `opts.skipFetch`.
-    setSearchQuery(q);
-    if (!opts.skipFetch) {
-      fetchItems({ search: q, category: selectedCategory });
+    // Redirect to search page when search is performed
+    if (q && q.trim()) {
+      const params = new URLSearchParams();
+      params.set('search', q);
+      if (selectedCategory) params.set('category', selectedCategory);
+      navigate(`/shop/search?${params.toString()}`);
     }
   };
 

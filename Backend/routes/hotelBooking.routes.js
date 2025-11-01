@@ -5,6 +5,7 @@ import {
   getHotelBookingsByUserId,
   getMyHotelBookings,
   getHotelBookingById,
+  getHotelBookingsByHotelId,
   updateHotelBookingStatus,
   cancelHotelBooking,
   deleteHotelBooking,
@@ -28,6 +29,9 @@ router.route("/").get(verifyAdmin, getAllHotelBookings);
 
 // Get hotel bookings by user ID (admin only)
 router.route("/user/:userId").get(verifyAdmin, getHotelBookingsByUserId);
+
+// Get hotel bookings by hotel ID (for hotel owners)
+router.route("/hotel/:hotelId").get(getHotelBookingsByHotelId);
 
 // Get a specific hotel booking by ID
 router.route("/:id").get(getHotelBookingById);

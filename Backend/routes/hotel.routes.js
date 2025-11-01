@@ -6,6 +6,7 @@ import {
   getHotelById,
   HotelRegistration,
   rejectHotel,
+  updateHotel,
   updateHotelPrice,
   updateHotelRating,
   verifyHotel,
@@ -36,5 +37,12 @@ router.route("/approve/:id").put(approveHotel);
 router.route("/reject/:id").put(rejectHotel);
 router.route("/rating/:id").put(updateHotelRating);
 router.route("/price/:id").put(updateHotelPrice);
+router.route("/update/:id").put(
+  upload.fields([
+    { name: "profileImage", maxCount: 1 },
+    { name: "hotelImages", maxCount: 5 },
+  ]),
+  updateHotel
+);
 
 export default router;

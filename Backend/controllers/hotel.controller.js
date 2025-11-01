@@ -15,31 +15,50 @@ import { getLanguage } from "../middlewares/language.middleware.js";
 export const verifyHotel = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
+  // Validate email
+  if (!email || !email.trim()) {
+    throw new ApiError(400, "Email is required");
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+
   // Check if user already exists
-  const existingUser = await User.findOne({ email });
+  const existingUser = await User.findOne({ email: email.trim() });
   if (existingUser) {
     throw new ApiError(409, "User already exists with this email");
   }
 
   // Generate OTP
   const otp = Math.floor(100000 + Math.random() * 900000);
-  await Otp.create({ userId: email, otp });
+  
+  // Delete any existing OTP for this email
+  await Otp.deleteMany({ userId: email.trim() });
+  
+  // Create new OTP
+  await Otp.create({ userId: email.trim(), otp });
 
   // Send OTP email
-  await sendEmail({
-    to: email,
-    subject: "Hotel Registration OTP Verification",
-    text: `Your OTP for hotel registration is: ${otp}`,
-  });
+  try {
+    await sendEmail({
+      to: email.trim(),
+      subject: "Hotel Registration OTP Verification",
+      text: `Your OTP for hotel registration is: ${otp}. This OTP is valid for 10 minutes.`,
+    });
+  } catch (emailError) {
+    console.error("Email sending error:", emailError);
+    throw new ApiError(500, "Failed to send OTP email. Please try again.");
+  }
 
-  // Store registration data in session or cache (for demo, return it to client, but in production use Redis or DB)
-  // For now, just acknowledge OTP sent
   res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        { email },
+        { email: email.trim() },
         "OTP sent to email. Please verify to complete registration."
       )
     );
@@ -67,32 +86,85 @@ export const HotelRegistration = asyncHandler(async (req, res) => {
     amenities,
   } = req.body;
 
+  // Validate required fields
+  if (!email || !otp) {
+    throw new ApiError(400, "Email and OTP are required");
+  }
+  
+  if (!name || !password || !location || !address || !phone || !managerName || !rooms) {
+    throw new ApiError(400, "All required fields must be provided");
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+
+  // Validate password strength
+  if (password.length < 6) {
+    throw new ApiError(400, "Password must be at least 6 characters long");
+  }
+
   // Check OTP
   const otpRecord = await Otp.findOne({ userId: email, otp, verified: false });
   if (!otpRecord) {
     throw new ApiError(400, "Invalid or expired OTP");
   }
 
+  // Check if OTP is expired (10 minutes validity)
+  const otpAge = Date.now() - otpRecord.createdAt.getTime();
+  if (otpAge > 10 * 60 * 1000) {
+    await otpRecord.deleteOne();
+    throw new ApiError(400, "OTP has expired. Please request a new one.");
+  }
+
+  // Check if user was created in the meantime
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new ApiError(409, "User already exists with this email");
+  }
+
   // Mark OTP as used
   otpRecord.verified = true;
   await otpRecord.save();
 
-  // Upload images to Cloudinary
+  // Upload images to Cloudinary with error handling
   const files = req.files || {};
+  
   const uploadFile = async (fileArr) => {
     if (!fileArr || !fileArr[0]) return null;
-    const uploaded = await uploadOnCloudinary(fileArr[0].path);
-    return uploaded?.url || null;
+    try {
+      const uploaded = await uploadOnCloudinary(fileArr[0].path);
+      return uploaded?.url || null;
+    } catch (error) {
+      console.error("File upload error:", error);
+      return null;
+    }
   };
+  
   const uploadMultiple = async (fileArr) => {
-    if (!fileArr) return [];
+    if (!fileArr || fileArr.length === 0) return [];
     const urls = [];
     for (const file of fileArr) {
-      const uploaded = await uploadOnCloudinary(file.path);
-      if (uploaded?.url) urls.push(uploaded.url);
+      try {
+        const uploaded = await uploadOnCloudinary(file.path);
+        if (uploaded?.url) urls.push(uploaded.url);
+      } catch (error) {
+        console.error("File upload error:", error);
+      }
     }
     return urls;
   };
+
+  // Validate required files
+  if (!files.businessLicense || !files.businessLicense[0]) {
+    throw new ApiError(400, "Business license document is required");
+  }
+  
+  if (!files.hotelImages || files.hotelImages.length === 0) {
+    throw new ApiError(400, "At least one hotel image is required");
+  }
 
   const profileImageUrl = await uploadFile(files.profileImage);
   const businessLicenseUrl = await uploadFile(files.businessLicense);
@@ -100,41 +172,60 @@ export const HotelRegistration = asyncHandler(async (req, res) => {
   const insuranceDocumentUrl = await uploadFile(files.insuranceDocument);
   const hotelImagesUrls = await uploadMultiple(files.hotelImages);
 
+  // Verify uploads
+  if (!businessLicenseUrl) {
+    throw new ApiError(500, "Failed to upload business license");
+  }
+  
+  if (hotelImagesUrls.length === 0) {
+    throw new ApiError(500, "Failed to upload hotel images");
+  }
+
   // Create user
   const user = await User.create({
-    email,
+    email: email.trim(),
     password,
     role: "hotel",
     verified: true,
   });
+  
+  // Validate location exists
+  const { Location } = await import("../models/location.model.js");
+  const locationExists = await Location.findById(location);
+  if (!locationExists) {
+    await User.findByIdAndDelete(user._id); // Cleanup
+    throw new ApiError(400, "Invalid location selected");
+  }
+  
   // Create hotel
   const hotel = await Hotel.create({
-    name,
+    name: name.trim(),
     location,
-    fullAddress: address,
-    contactNo: phone,
-    managerName,
-    category: category,
+    fullAddress: address.trim(),
+    contactNo: phone.trim(),
+    managerName: managerName.trim(),
+    category: category || "hotel",
     noRoom: Number(rooms),
-    description,
-    price: price,
-    pricePerNight: pricePerNight ? Number(pricePerNight) : price, // Use pricePerNight if provided, otherwise fallback to price
-    rating: rating ? Number(rating) : 0, // Use provided rating or default to 0
-    amenities: Array.isArray(amenities) ? amenities : [amenities],
-    socials: Array.isArray(socials) ? socials : [socials],
+    description: description.trim(),
+    price: pricePerNight ? Number(pricePerNight) : (price ? Number(price) : 0),
+    pricePerNight: pricePerNight ? Number(pricePerNight) : (price ? Number(price) : 0),
+    rating: rating ? Number(rating) : 0,
+    amenities: Array.isArray(amenities) ? amenities.filter(a => a) : (amenities ? [amenities] : []),
+    socials: Array.isArray(socials) ? socials.filter(s => s) : (socials ? [socials] : []),
     logo: profileImageUrl,
     medias: hotelImagesUrls,
-    website: website,
+    website: website ? website.trim() : "",
     license: businessLicenseUrl,
     certificate: taxCertificateUrl,
     insurance: insuranceDocumentUrl,
     owner: user._id,
+    verified: "pending", // Set initial verification status
   });
 
   res
     .status(201)
     .json(
-      new ApiResponse(201, { user, hotel }, "Hotel registered successfully")
+      new ApiResponse(201, { user, hotel }, "Hotel registered successfully. Please wait for admin approval.")
     );
 });
 
@@ -343,4 +434,100 @@ export const updateHotelPrice = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json(new ApiResponse(200, { hotel }, "Hotel price updated successfully"));
+});
+
+export const updateHotel = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const {
+    name,
+    description,
+    contactNo,
+    managerName,
+    fullAddress,
+    price,
+    pricePerNight,
+    noRoom,
+    website,
+    amenities,
+    category,
+  } = req.body;
+
+  // Validate hotel exists and get current data
+  const existingHotel = await Hotel.findById(id);
+  if (!existingHotel) {
+    throw new ApiError(404, "Hotel not found");
+  }
+
+  // Verify ownership (if user is authenticated)
+  if (req.user && existingHotel.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You don't have permission to update this hotel");
+  }
+
+  // Build update object with only provided fields
+  const updateData = {};
+  
+  if (name !== undefined) updateData.name = name.trim();
+  if (description !== undefined) updateData.description = description.trim();
+  if (contactNo !== undefined) updateData.contactNo = contactNo.trim();
+  if (managerName !== undefined) updateData.managerName = managerName.trim();
+  if (fullAddress !== undefined) updateData.fullAddress = fullAddress.trim();
+  if (website !== undefined) updateData.website = website.trim();
+  if (category !== undefined) updateData.category = category;
+  
+  // Handle numeric fields
+  if (price !== undefined) updateData.price = Number(price);
+  if (pricePerNight !== undefined) {
+    updateData.pricePerNight = Number(pricePerNight);
+    // Keep price in sync if pricePerNight is updated
+    if (price === undefined) updateData.price = Number(pricePerNight);
+  }
+  if (noRoom !== undefined) updateData.noRoom = Number(noRoom);
+  
+  // Handle array fields
+  if (amenities !== undefined) {
+    updateData.amenities = Array.isArray(amenities) 
+      ? amenities.filter(a => a) 
+      : (amenities ? [amenities] : []);
+  }
+
+  // Handle file uploads if present
+  const files = req.files || {};
+  
+  if (files.profileImage && files.profileImage[0]) {
+    try {
+      const uploaded = await uploadOnCloudinary(files.profileImage[0].path);
+      if (uploaded?.url) updateData.logo = uploaded.url;
+    } catch (error) {
+      console.error("Profile image upload error:", error);
+    }
+  }
+
+  if (files.hotelImages && files.hotelImages.length > 0) {
+    try {
+      const urls = [];
+      for (const file of files.hotelImages) {
+        const uploaded = await uploadOnCloudinary(file.path);
+        if (uploaded?.url) urls.push(uploaded.url);
+      }
+      if (urls.length > 0) {
+        // Append new images to existing ones
+        updateData.medias = [...(existingHotel.medias || []), ...urls];
+      }
+    } catch (error) {
+      console.error("Hotel images upload error:", error);
+    }
+  }
+
+  // Update hotel
+  const hotel = await Hotel.findByIdAndUpdate(
+    id, 
+    updateData, 
+    { new: true, runValidators: true }
+  )
+    .populate("owner", "name email")
+    .populate("location", "name");
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, { hotel }, "Hotel updated successfully"));
 });
