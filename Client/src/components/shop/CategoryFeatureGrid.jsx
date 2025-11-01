@@ -31,9 +31,11 @@ const featureData = [
 export default function CategoryFeatureGrid() {
   const navigate = useNavigate();
 
-  const gotoCategory = (slug) => {
+  const handleShop = (slug) => {
     if (!slug) return;
-    navigate(`/shop/category/${slug}`);
+    const params = new URLSearchParams();
+    params.set('search', slug);
+    navigate(`/shop/search?${params.toString()}`);
   };
 
   return (
@@ -47,7 +49,7 @@ export default function CategoryFeatureGrid() {
             <div className="relative z-10 h-full flex flex-col justify-end p-8">
               <h3 className="text-white text-xl font-semibold drop-shadow-sm">{f.title}</h3>
               <p className="text-neutral-200 text-sm mt-1 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">{f.subtitle}</p>
-              <Button onClick={() => gotoCategory(f.slug)} aria-label={`Shop ${f.slug}`} className="bg-white text-black hover:bg-orange-500 hover:text-white rounded-full h-9 px-5 text-xs font-semibold tracking-wide w-fit translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+              <Button onClick={() => handleShop(f.slug)} aria-label={`Shop ${f.slug}`} className="bg-white text-black hover:bg-orange-500 hover:text-white rounded-full h-9 px-5 text-xs font-semibold tracking-wide w-fit translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
                 Shop Now
               </Button>
             </div>

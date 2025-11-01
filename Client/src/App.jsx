@@ -41,7 +41,6 @@ const LandingPage = lazy(() => import("./Pages/LandingPage"))
 const FAQ = lazy(() => import("./Pages/FAQ"))
 const BrowsingPage = lazy(() => import("./Pages/Browsing/BrowsingPage"))
 const Shop = lazy(() => import("./Pages/Shop/Shop"))
-const CategoryPage = lazy(() => import("./Pages/Shop/CategoryPage"))
 const SearchPage = lazy(() => import("./Pages/Shop/SearchPage"))
 const NavResultsPage = lazy(() => import("./Pages/Shop/NavResultsPage"))
 const ComparisonPage = lazy(() => import("./Pages/Shop/ComparisonPage"))
@@ -175,11 +174,6 @@ const App = () => {
                   <Route path="/shop" element={
                     <FeatureRoute feature="shop">
                       <Shop />
-                    </FeatureRoute>
-                  } />
-                  <Route path="/shop/category/:slug" element={
-                    <FeatureRoute feature="shop">
-                      <CategoryPage />
                     </FeatureRoute>
                   } />
                   <Route path="/shop/search" element={

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "../../components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const slides = [
   {
@@ -28,6 +29,7 @@ const slides = [
 
 export default function HeroCarousel() {
   const [index, setIndex] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const id = setInterval(() => setIndex(i => (i + 1) % slides.length), 7000);
@@ -35,6 +37,12 @@ export default function HeroCarousel() {
   }, []);
 
   const current = slides[index];
+
+  const handleCtaClick = (cta) => {
+    const params = new URLSearchParams();
+    params.set('search', cta);
+    navigate(`/shop/search?${params.toString()}`);
+  };
 
   return (
     <section className="relative h-[480px] md:h-[560px] w-full overflow-hidden group">
@@ -53,7 +61,7 @@ export default function HeroCarousel() {
           </p>
           <div className="flex flex-wrap gap-4 mt-8">
             {current.ctas.map(c => (
-              <Button key={c} className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6 py-2 text-sm font-medium tracking-wide">
+              <Button key={c} onClick={() => handleCtaClick(c)} className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6 py-2 text-sm font-medium tracking-wide cursor-pointer">
                 {c}
               </Button>
             ))}
