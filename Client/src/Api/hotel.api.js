@@ -120,6 +120,20 @@ export const updateHotelPrice = async (id, priceData) => {
   }
 };
 
+export const updateHotel = async (id, data) => {
+  try {
+    const res = await axiosClient.put(`/api/hotel/update/${id}`, data, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res;
+  } catch (err) {
+    return err;
+  }
+};
+
 export const getHotelBookings = async (hotelId, queryParams = {}) => {
   try {
     const params = new URLSearchParams(queryParams).toString();

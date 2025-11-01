@@ -435,3 +435,99 @@ export const updateHotelPrice = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, { hotel }, "Hotel price updated successfully"));
 });
+
+export const updateHotel = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const {
+    name,
+    description,
+    contactNo,
+    managerName,
+    fullAddress,
+    price,
+    pricePerNight,
+    noRoom,
+    website,
+    amenities,
+    category,
+  } = req.body;
+
+  // Validate hotel exists and get current data
+  const existingHotel = await Hotel.findById(id);
+  if (!existingHotel) {
+    throw new ApiError(404, "Hotel not found");
+  }
+
+  // Verify ownership (if user is authenticated)
+  if (req.user && existingHotel.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You don't have permission to update this hotel");
+  }
+
+  // Build update object with only provided fields
+  const updateData = {};
+  
+  if (name !== undefined) updateData.name = name.trim();
+  if (description !== undefined) updateData.description = description.trim();
+  if (contactNo !== undefined) updateData.contactNo = contactNo.trim();
+  if (managerName !== undefined) updateData.managerName = managerName.trim();
+  if (fullAddress !== undefined) updateData.fullAddress = fullAddress.trim();
+  if (website !== undefined) updateData.website = website.trim();
+  if (category !== undefined) updateData.category = category;
+  
+  // Handle numeric fields
+  if (price !== undefined) updateData.price = Number(price);
+  if (pricePerNight !== undefined) {
+    updateData.pricePerNight = Number(pricePerNight);
+    // Keep price in sync if pricePerNight is updated
+    if (price === undefined) updateData.price = Number(pricePerNight);
+  }
+  if (noRoom !== undefined) updateData.noRoom = Number(noRoom);
+  
+  // Handle array fields
+  if (amenities !== undefined) {
+    updateData.amenities = Array.isArray(amenities) 
+      ? amenities.filter(a => a) 
+      : (amenities ? [amenities] : []);
+  }
+
+  // Handle file uploads if present
+  const files = req.files || {};
+  
+  if (files.profileImage && files.profileImage[0]) {
+    try {
+      const uploaded = await uploadOnCloudinary(files.profileImage[0].path);
+      if (uploaded?.url) updateData.logo = uploaded.url;
+    } catch (error) {
+      console.error("Profile image upload error:", error);
+    }
+  }
+
+  if (files.hotelImages && files.hotelImages.length > 0) {
+    try {
+      const urls = [];
+      for (const file of files.hotelImages) {
+        const uploaded = await uploadOnCloudinary(file.path);
+        if (uploaded?.url) urls.push(uploaded.url);
+      }
+      if (urls.length > 0) {
+        // Append new images to existing ones
+        updateData.medias = [...(existingHotel.medias || []), ...urls];
+      }
+    } catch (error) {
+      console.error("Hotel images upload error:", error);
+    }
+  }
+
+  // Update hotel
+  const hotel = await Hotel.findByIdAndUpdate(
+    id, 
+    updateData, 
+    { new: true, runValidators: true }
+  )
+    .populate("owner", "name email")
+    .populate("location", "name");
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, { hotel }, "Hotel updated successfully"));
+});
