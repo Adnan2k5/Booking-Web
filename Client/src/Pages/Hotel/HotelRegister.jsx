@@ -158,10 +158,10 @@ export const HotelRegister = () => {
                 toast.error(error)
                 return
             }
-            
+
             // Comprehensive validation with better error messages
             const validationErrors = [];
-            
+
             if (!formData.name || formData.name.trim() === "") {
                 validationErrors.push("Hotel name is required");
             }
@@ -204,12 +204,12 @@ export const HotelRegister = () => {
             if (!otp || otp.length !== 6) {
                 validationErrors.push("Valid 6-digit OTP is required");
             }
-            
+
             if (validationErrors.length > 0) {
                 validationErrors.forEach(err => toast.error(err));
                 return;
             }
-            
+
             setLoading(true)
             const toastId = toast.loading("Registering your hotel...")
             try {
@@ -231,36 +231,36 @@ export const HotelRegister = () => {
                 data.append("website", formData.website.trim())
                 data.append("otp", otp)
                 data.append("category", formData.category)
-                
+
                 // Append amenities
                 if (formData.amenities && formData.amenities.length > 0) {
                     formData.amenities.forEach((amenity) => {
                         data.append("amenities[]", amenity)
                     })
                 }
-                
+
                 // Append files
                 if (formData.profileImage) data.append("profileImage", formData.profileImage)
                 if (formData.businessLicense) data.append("businessLicense", formData.businessLicense)
                 if (formData.taxCertificate) data.append("taxCertificate", formData.taxCertificate)
                 if (formData.insuranceDocument) data.append("insuranceDocument", formData.insuranceDocument)
-                
+
                 // Append hotel images
                 if (formData.hotelImages && formData.hotelImages.length > 0) {
                     formData.hotelImages.forEach((image) => {
                         data.append("hotelImages", image.file)
                     })
                 }
-                
+
                 // Append social media links
                 if (formData.socialMedias && formData.socialMedias.length > 0) {
                     formData.socialMedias.forEach((link) => {
                         data.append("socials[]", link)
                     })
                 }
-                
+
                 const res = await registerHotel(data)
-                
+
                 if (res.data && (res.status === 201 || res.data.statusCode === 201)) {
                     toast.success("Hotel registered successfully! Please wait for admin approval.", { id: toastId, duration: 5000 })
                     setOtpDialog(false)
@@ -285,13 +285,13 @@ export const HotelRegister = () => {
                 toast.error("Please enter a valid email address")
                 return
             }
-            
+
             setLoading(true)
             const toastId = toast.loading("Sending OTP to your email...")
             try {
                 const data = { email: formData.email.trim() }
                 const res = await verify(data)
-                
+
                 if (res.status === 200 || res.data?.statusCode === 200) {
                     toast.success("OTP sent successfully! Check your email.", { id: toastId })
                     setOtpDialog(true)
