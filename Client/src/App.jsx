@@ -1,41 +1,31 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { lazy, Suspense } from "react"
 import { Toaster } from "sonner"
-import Booking from "./Pages/BookingSteps/Booking"
 import { ResetPass } from "./Pages/ResetPass"
 import { Loader } from "./components/Loader"
 import { AuthProvider } from "./Pages/AuthProvider"
 import { AdminRoute, InstructorRoute } from "./Auth/ProtectedRoute"
 import { FeatureRoute } from "./Auth/FeatureRoute"
-import UserDashboardPage from "./Pages/User/UserDashboardPage"
-import UserBookingsPage from "./Pages/User/UserBookingsPage"
-import UserFriendsPage from "./Pages/User/UserFriendsPage"
-import UserTicketsPage from "./Pages/User/UserTicketsPage"
-import UserProfilePage from "./Pages/User/UserProfilePage"
-import UserSettingsPage from "./Pages/User/UserSettingsPage"
-import DashboardLayout from "./Pages/User/DashboardLayout"
-import InstructorDashboard from "./Pages/Instructor/InstructorDashboard"
-import SessionForm from "./Pages/Instructor/SessionForm"
-import ConfirmationPage from "./Pages/ConfirmationPage/Confirmation"
-import FacebookCallback from "./Auth/FacebookCallback"
 import { useLanguageInitializer } from "./hooks/useLanguageInitializer"
-import LinkedInCallback from "./Auth/LinkedinCallBack"
 import ChatWidget from "./components/ChatWidget"
-import AdminDashboard from "./Pages/Admin/AdminDashboard"
-import AdminLayout from "./Pages/Admin/Layout"
-import AdventuresPage from "./Pages/Admin/SubPages/Adventures"
-import AdventureFormPage from "./Pages/Admin/SubPages/AdventureForm"
-import Dash_Bookings from "./Pages/Admin/SubPages/Bookings"
-import Dash_User from "./Pages/Admin/SubPages/Users"
-import Dash_Store from "./Pages/Admin/SubPages/Store"
-import Dash_Hotels from "./Pages/Admin/SubPages/Hotels"
-import Dash_Tickets from "./Pages/Admin/SubPages/Tickets"
-import Dash_Terms from "./Pages/Admin/SubPages/Terms"
-import Dash_Declation from "./Pages/Admin/SubPages/Declaration"
-import LocationsPage from "./Pages/Admin/SubPages/Location"
-import EventDetailPage from "./Pages/EventDetailPage"
 
-// Lazy loaded components
+// i18n
+import { I18nextProvider } from "react-i18next"
+import i18n from "i18next"
+import { initReactI18next } from "react-i18next"
+import enTranslation from "./Locales/en.json"
+import frTranslation from "./Locales/fr.json"
+import deTranslation from "./Locales/de.json"
+import esTranslation from "./Locales/es.json"
+import itTranslation from "./Locales/it.json"
+import { updateLanguageHeaders } from "./Api/language.api.js"
+import { CartProvider } from "./Pages/Cart/CartContext"
+import { ComparisonProvider } from "./contexts/ComparisonContext"
+import { FavoritesProvider } from "./contexts/FavoritesContext"
+import { WebsiteSettingsProvider } from "./contexts/WebsiteSettingsContext"
+import { ConnectionSpeedIndicator } from "./components/ConnectionSpeedIndicator"
+
+// Lazy loaded components - All pages for better code splitting
 const LoginPage = lazy(() => import("./Pages/LoginPage"))
 const LandingPage = lazy(() => import("./Pages/LandingPage"))
 const FAQ = lazy(() => import("./Pages/FAQ"))
@@ -60,41 +50,64 @@ const PayPalError = lazy(() => import("./Pages/Payment/PayPalError"))
 const EventBookingConfirmation = lazy(() => import("./Pages/Payment/EventBookingConfirmation"))
 const SecretNftEvents = lazy(() => import("./Pages/SecretNftEvents"))
 const Mission = lazy(() => import("./Pages/Mission"))
+const Booking = lazy(() => import("./Pages/BookingSteps/Booking"))
+const ConfirmationPage = lazy(() => import("./Pages/ConfirmationPage/Confirmation"))
+const FacebookCallback = lazy(() => import("./Auth/FacebookCallback"))
+const LinkedInCallback = lazy(() => import("./Auth/LinkedinCallBack"))
+const EventDetailPage = lazy(() => import("./Pages/EventDetailPage"))
 
-// i18n
-import { I18nextProvider } from "react-i18next"
-import i18n from "i18next"
-import { initReactI18next } from "react-i18next"
-import enTranslation from "./Locales/en.json"
-import frTranslation from "./Locales/fr.json"
-import deTranslation from "./Locales/de.json"
-import esTranslation from "./Locales/es.json"
-import itTranslation from "./Locales/it.json"
-import { updateLanguageHeaders } from "./Api/language.api.js"
-import { InstructorRegister } from "./Pages/Instructor/InstructorLogin"
-import { InstructorSession } from "./Pages/Instructor/InstructorSession"
-import { InstructorProfile } from "./Pages/Instructor/InstructorProfile"
-import InstructorSettings from "./Pages/Instructor/InstructorSettings"
-import InstructorTickets from "./Pages/Instructor/InstructorTickets"
-import { CartProvider } from "./Pages/Cart/CartContext"
-import { ComparisonProvider } from "./contexts/ComparisonContext"
-import { FavoritesProvider } from "./contexts/FavoritesContext"
-import InstructorPendingReview from "./Pages/Instructor/InstructorPendingReview"
-import { WebsiteSettingsProvider } from "./contexts/WebsiteSettingsContext"
-import InstructorsPage from "./Pages/Admin/SubPages/InstructorsVerification"
-import { HotelRegister } from "./Pages/Hotel/HotelRegister"
-import InstructorLayout from "./Pages/Instructor/InstructorLayout"
-import { HotelProfile } from "./Pages/Hotel/HotelProfile"
-import HotelPendingReview from "./Pages/Hotel/HotelPending"
-import Managers from "./Pages/Admin/SubPages/Managers"
-import { ItemPage } from "./Pages/Shop/ItemPage"
-import { Cart } from "./Pages/Shop/Cart"
-import CartSuccess from "./Pages/Shop/CartSuccess"
-import EventsPage from "./Pages/Admin/SubPages/Events"
-import WebsiteSettings from "./Pages/Admin/SubPages/WebsiteSettings"
-import { ChatLayout } from "./Pages/Chat/ChatLayout"
-import SponsorsPage from "./Pages/Admin/SubPages/Sponsors"
-import AchievementRulesPage from "./Pages/Admin/SubPages/AchievementRules"
+// User Dashboard - Lazy loaded
+const UserDashboardPage = lazy(() => import("./Pages/User/UserDashboardPage"))
+const UserBookingsPage = lazy(() => import("./Pages/User/UserBookingsPage"))
+const UserFriendsPage = lazy(() => import("./Pages/User/UserFriendsPage"))
+const UserTicketsPage = lazy(() => import("./Pages/User/UserTicketsPage"))
+const UserProfilePage = lazy(() => import("./Pages/User/UserProfilePage"))
+const UserSettingsPage = lazy(() => import("./Pages/User/UserSettingsPage"))
+const DashboardLayout = lazy(() => import("./Pages/User/DashboardLayout"))
+
+// Instructor - Lazy loaded
+const InstructorDashboard = lazy(() => import("./Pages/Instructor/InstructorDashboard"))
+const SessionForm = lazy(() => import("./Pages/Instructor/SessionForm"))
+const InstructorRegister = lazy(() => import("./Pages/Instructor/InstructorLogin").then(module => ({ default: module.InstructorRegister })))
+const InstructorSession = lazy(() => import("./Pages/Instructor/InstructorSession").then(module => ({ default: module.InstructorSession })))
+const InstructorProfile = lazy(() => import("./Pages/Instructor/InstructorProfile").then(module => ({ default: module.InstructorProfile })))
+const InstructorSettings = lazy(() => import("./Pages/Instructor/InstructorSettings"))
+const InstructorTickets = lazy(() => import("./Pages/Instructor/InstructorTickets"))
+const InstructorPendingReview = lazy(() => import("./Pages/Instructor/InstructorPendingReview"))
+const InstructorLayout = lazy(() => import("./Pages/Instructor/InstructorLayout"))
+
+// Hotel - Lazy loaded
+const HotelRegister = lazy(() => import("./Pages/Hotel/HotelRegister").then(module => ({ default: module.HotelRegister })))
+const HotelProfile = lazy(() => import("./Pages/Hotel/HotelProfile").then(module => ({ default: module.HotelProfile })))
+const HotelPendingReview = lazy(() => import("./Pages/Hotel/HotelPending"))
+
+// Admin - Lazy loaded
+const AdminDashboard = lazy(() => import("./Pages/Admin/AdminDashboard"))
+const AdminLayout = lazy(() => import("./Pages/Admin/Layout"))
+const AdventuresPage = lazy(() => import("./Pages/Admin/SubPages/Adventures"))
+const AdventureFormPage = lazy(() => import("./Pages/Admin/SubPages/AdventureForm"))
+const Dash_Bookings = lazy(() => import("./Pages/Admin/SubPages/Bookings"))
+const Dash_User = lazy(() => import("./Pages/Admin/SubPages/Users"))
+const Dash_Store = lazy(() => import("./Pages/Admin/SubPages/Store"))
+const Dash_Hotels = lazy(() => import("./Pages/Admin/SubPages/Hotels"))
+const Dash_Tickets = lazy(() => import("./Pages/Admin/SubPages/Tickets"))
+const Dash_Terms = lazy(() => import("./Pages/Admin/SubPages/Terms"))
+const Dash_Declation = lazy(() => import("./Pages/Admin/SubPages/Declaration"))
+const LocationsPage = lazy(() => import("./Pages/Admin/SubPages/Location"))
+const InstructorsPage = lazy(() => import("./Pages/Admin/SubPages/InstructorsVerification"))
+const Managers = lazy(() => import("./Pages/Admin/SubPages/Managers"))
+const EventsPage = lazy(() => import("./Pages/Admin/SubPages/Events"))
+const WebsiteSettings = lazy(() => import("./Pages/Admin/SubPages/WebsiteSettings"))
+const SponsorsPage = lazy(() => import("./Pages/Admin/SubPages/Sponsors"))
+const AchievementRulesPage = lazy(() => import("./Pages/Admin/SubPages/AchievementRules"))
+
+// Shop - Lazy loaded
+const ItemPage = lazy(() => import("./Pages/Shop/ItemPage").then(module => ({ default: module.ItemPage })))
+const Cart = lazy(() => import("./Pages/Shop/Cart").then(module => ({ default: module.Cart })))
+const CartSuccess = lazy(() => import("./Pages/Shop/CartSuccess"))
+
+// Chat - Lazy loaded
+const ChatLayout = lazy(() => import("./Pages/Chat/ChatLayout").then(module => ({ default: module.ChatLayout })))
 
 // Initialize i18n with stored language
 const getInitialLanguage = () => {
@@ -141,6 +154,7 @@ const App = () => {
               <FavoritesProvider>
                 <LanguageInitializer />
             <BrowserRouter>
+              <ConnectionSpeedIndicator />
               <ChatWidget />
               <Suspense fallback={<Loader />}>
                 <Toaster />

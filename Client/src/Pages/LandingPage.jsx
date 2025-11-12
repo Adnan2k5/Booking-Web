@@ -56,14 +56,16 @@ export default function LandingPage() {
   const eventsLimit = 6
   const videoContainerRef = useRef(null)
 
-  // Custom hooks
+  // Custom hooks - Prioritize events loading, defer others
   const { events, isLoading: eventsLoading, totalPages: eventsTotalPages } = useEvents({
     page: eventsPage,
-    limit: eventsLimit
+    limit: eventsLimit,
+    defer: false // Load events immediately (critical)
   })
 
-  const { adventures, loading: adventureLoading } = useAdventures()
-  const { locations: allLocations, isLoading: locationsLoading } = useLocations()
+  // Defer adventures and locations - they're not immediately visible
+  const { adventures, loading: adventureLoading } = useAdventures(true)
+  const { locations: allLocations, isLoading: locationsLoading } = useLocations(true)
 
   const eventBooking = useEventBooking()
 

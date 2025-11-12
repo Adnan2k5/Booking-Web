@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { axiosClient } from "../AxiosClient/axios";
 import { loginFailure, loginStart, setUser, logout } from "../Store/UserSlice";
-import { Loader } from "../components/Loader";
 
 // Create Authentication Context
 const AuthContext = createContext(null);
@@ -11,6 +10,7 @@ export const AuthProvider = ({ children }) => {
     const dispatch = useDispatch();
     const user = useSelector((state) => state.user);
     const [loading, setLoading] = useState(true);
+    const [initialCheckDone, setInitialCheckDone] = useState(false);
 
     const verifyToken = async () => {
         try {
@@ -21,6 +21,7 @@ export const AuthProvider = ({ children }) => {
             dispatch(loginFailure(err.response?.status || 500));
         } finally {
             setLoading(false);
+            setInitialCheckDone(true);
         }
     };
 
@@ -45,12 +46,32 @@ export const AuthProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        verifyToken();
+        // Quick check for token existence before making API call
+        const hasToken = document.cookie.includes('accessToken') || 
+                        localStorage.getItem('accessToken');
+        
+        if (!hasToken) {
+            // No token, skip verification and render immediately
+            setLoading(false);
+            setInitialCheckDone(true);
+            dispatch(loginFailure(401));
+        } else {
+            // Token exists, verify it
+            verifyToken();
+        }
     }, []);
+
+    // For public routes, don't block rendering
+    // Only show loader for protected routes after initial check
+    const shouldShowLoader = loading && !initialCheckDone;
 
     return (
         <AuthContext.Provider value={{ user, loading, logout: logoutUser }}>
-            {loading ? <Loader /> : children}
+            {shouldShowLoader ? (
+                <div className="w-full h-screen flex justify-center items-center">
+                    <div className="w-10 h-10 border-4 border-t-blue-500 border-gray-300 rounded-full animate-spin"></div>
+                </div>
+            ) : children}
         </AuthContext.Provider>
     );
 };
