@@ -17,7 +17,7 @@ export default defineConfig({
           // Vendor chunks
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['framer-motion', 'lucide-react'],
-          'form-vendor': ['react-hook-form', 'zod'],
+          'form-vendor': ['react-hook-form'],
           // Separate large libraries
           'i18n': ['i18next', 'react-i18next'],
         }
