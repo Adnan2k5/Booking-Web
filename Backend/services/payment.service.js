@@ -3,6 +3,7 @@ import { Cart } from "../models/cart.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { updateUserAchievement } from "../utils/updateUserAchievement.js";
 import { UserAdventureExperience } from "../models/userAdventureExperience.model.js";
+import emailService from "./email.service.js";
 
 export class PaymentService {
   itemBooking = async (order_id, event, booking) => {
@@ -26,6 +27,17 @@ export class PaymentService {
       }
 
       await booking.save();
+
+      // Send email confirmation
+      try {
+        const populatedBooking = await booking.populate([
+          { path: 'user', select: 'name email phoneNumber' },
+          { path: 'items.item', populate: { path: 'owner', select: 'name email' } }
+        ]);
+        await emailService.sendItemBookingConfirmation(populatedBooking);
+      } catch (emailError) {
+        console.error('Failed to send item booking confirmation email:', emailError);
+      }
 
       return {
         status: 200,
@@ -52,6 +64,17 @@ export class PaymentService {
       }
 
       await booking.save();
+
+      // Send email confirmation
+      try {
+        const populatedBooking = await booking.populate([
+          { path: 'user', select: 'name email phoneNumber' },
+          { path: 'hotel', populate: { path: 'owner', select: 'name email' } }
+        ]);
+        await emailService.sendHotelBookingConfirmation(populatedBooking);
+      } catch (emailError) {
+        console.error('Failed to send hotel booking confirmation email:', emailError);
+      }
 
       return {
         status: 200,
@@ -80,6 +103,18 @@ export class PaymentService {
       }
 
       await booking.save();
+
+      // Send email confirmation
+      try {
+        const populatedBooking = await booking.populate([
+          { path: 'user', select: 'name email phoneNumber' },
+          { path: 'event', select: 'title description date startTime endTime location city country' },
+          { path: 'adventureInstructors.instructor', select: 'name email' }
+        ]);
+        await emailService.sendEventBookingConfirmation(populatedBooking);
+      } catch (emailError) {
+        console.error('Failed to send event booking confirmation email:', emailError);
+      }
 
       return {
         status: 200,
@@ -139,6 +174,24 @@ export class PaymentService {
 
       await booking.save();
 
+      // Send email confirmation
+      try {
+        const populatedBooking = await Booking.findById(booking._id).populate([
+          { path: 'user', select: 'name email phoneNumber' },
+          {
+            path: 'session', populate: [
+              { path: 'adventureId', select: 'name' },
+              { path: 'instructorId', select: 'name email' },
+              { path: 'location', select: 'name' }
+            ]
+          },
+          { path: 'groupMember', select: 'name email' }
+        ]);
+        await emailService.sendSessionBookingConfirmation(populatedBooking);
+      } catch (emailError) {
+        console.error('Failed to send session booking confirmation email:', emailError);
+      }
+
       return {
         status: 200,
         message: "Payment completed successfully",
@@ -161,6 +214,18 @@ export class PaymentService {
       booking.status = "confirmed";
       booking.paymentCompletedAt = new Date();
       await booking.save();
+
+      // Send email confirmation for PayPal payments
+      try {
+        const populatedBooking = await booking.populate([
+          { path: 'user', select: 'name email phoneNumber' },
+          { path: 'event', select: 'title description date startTime endTime location city country' },
+          { path: 'adventureInstructors.instructor', select: 'name email' }
+        ]);
+        await emailService.sendEventBookingConfirmation(populatedBooking);
+      } catch (emailError) {
+        console.error('Failed to send event booking confirmation email:', emailError);
+      }
 
       return {
         status: 200,
