@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { updateUserAchievement } from "../utils/updateUserAchievement.js";
 import { UserAdventureExperience } from "../models/userAdventureExperience.model.js";
 import emailService from "./email.service.js";
+import messageService from "./message.service.js";
 
 export class PaymentService {
   itemBooking = async (order_id, event, booking) => {
@@ -82,6 +83,21 @@ export class PaymentService {
         } else {
           console.warn('Hotel booking confirmation email not sent: user email not found');
         }
+
+        // Send chat message from hotel owner to user
+        if (populatedBooking?.hotel?.owner?._id && populatedBooking?.user?._id) {
+          const bookingDetails = {
+            type: 'hotel',
+            hotelName: populatedBooking.hotel?.name || 'Hotel',
+            checkIn: messageService.formatDate(populatedBooking.checkInDate),
+            checkOut: messageService.formatDate(populatedBooking.checkOutDate)
+          };
+          await messageService.sendBookingConfirmationMessage(
+            populatedBooking.hotel.owner._id,
+            populatedBooking.user._id,
+            bookingDetails
+          );
+        }
       } catch (emailError) {
         console.error('Failed to send hotel booking confirmation email:', emailError);
       }
@@ -126,6 +142,28 @@ export class PaymentService {
           await emailService.sendEventBookingConfirmation(populatedBooking);
         } else {
           console.warn('Event booking confirmation email not sent: user email not found');
+        }
+
+        // Send chat messages from each instructor to user
+        if (populatedBooking?.adventureInstructors && populatedBooking?.user?._id) {
+          const bookingDetails = {
+            type: 'event',
+            eventTitle: populatedBooking.event?.title || 'Event',
+            date: messageService.formatDate(populatedBooking.event?.date),
+            time: messageService.formatTime(populatedBooking.event?.startTime),
+            location: populatedBooking.event?.location || ''
+          };
+
+          // Send message from each instructor
+          for (const adventureInstructor of populatedBooking.adventureInstructors) {
+            if (adventureInstructor?.instructor?._id) {
+              await messageService.sendBookingConfirmationMessage(
+                adventureInstructor.instructor._id,
+                populatedBooking.user._id,
+                bookingDetails
+              );
+            }
+          }
         }
       } catch (emailError) {
         console.error('Failed to send event booking confirmation email:', emailError);
@@ -208,6 +246,22 @@ export class PaymentService {
         } else {
           console.warn('Session booking confirmation email not sent: user email not found');
         }
+
+        // Send chat message from instructor to user
+        if (populatedBooking?.session?.instructorId?._id && populatedBooking?.user?._id) {
+          const bookingDetails = {
+            type: 'session',
+            adventureName: populatedBooking.session.adventureId?.name || 'Adventure Session',
+            date: messageService.formatDate(populatedBooking.session.date),
+            time: messageService.formatTime(populatedBooking.session.startTime),
+            location: populatedBooking.session.location?.name || ''
+          };
+          await messageService.sendBookingConfirmationMessage(
+            populatedBooking.session.instructorId._id,
+            populatedBooking.user._id,
+            bookingDetails
+          );
+        }
       } catch (emailError) {
         console.error('Failed to send session booking confirmation email:', emailError);
       }
@@ -247,6 +301,28 @@ export class PaymentService {
           await emailService.sendEventBookingConfirmation(populatedBooking);
         } else {
           console.warn('Event booking confirmation email not sent: user email not found');
+        }
+
+        // Send chat messages from each instructor to user (PayPal)
+        if (populatedBooking?.adventureInstructors && populatedBooking?.user?._id) {
+          const bookingDetails = {
+            type: 'event',
+            eventTitle: populatedBooking.event?.title || 'Event',
+            date: messageService.formatDate(populatedBooking.event?.date),
+            time: messageService.formatTime(populatedBooking.event?.startTime),
+            location: populatedBooking.event?.location || ''
+          };
+
+          // Send message from each instructor
+          for (const adventureInstructor of populatedBooking.adventureInstructors) {
+            if (adventureInstructor?.instructor?._id) {
+              await messageService.sendBookingConfirmationMessage(
+                adventureInstructor.instructor._id,
+                populatedBooking.user._id,
+                bookingDetails
+              );
+            }
+          }
         }
       } catch (emailError) {
         console.error('Failed to send event booking confirmation email:', emailError);

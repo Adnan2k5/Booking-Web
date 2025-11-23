@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../AuthProvider"
 import { motion } from "framer-motion"
 import { Separator } from "../../components/ui/separator"
-import { Award, Calendar, Users, Star, TrendingUp, Loader2, DollarSign } from "lucide-react"
+import { Award, Calendar, Users, Star, TrendingUp, Loader2, DollarSign, MessageCircle, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
@@ -16,6 +16,7 @@ import { getInstructorSessions } from "../../Api/session.api"
 import { staggerContainer, fadeIn } from "../../assets/Animations"
 import { getInstructorAchievements, evaluateMyInstructorAchievements } from '../../Api/user.api'
 import { axiosClient } from '../../AxiosClient/axios'
+import { ChatLayout } from '../Chat/ChatLayout'
 
 const InstructorDashboard = () => {
     const [instructorAchievements, setInstructorAchievements] = useState(null);
@@ -25,6 +26,7 @@ const InstructorDashboard = () => {
     const { t } = useTranslation()
     const [timeRange, setTimeRange] = useState("month")
     const [adventureTypes, setAdventureTypes] = useState([])
+    const [chatOpen, setChatOpen] = useState(false)
 
     // Dashboard data state
     const [dashboardData, setDashboardData] = useState({
@@ -208,7 +210,7 @@ const InstructorDashboard = () => {
         try {
             // First try to evaluate achievements to ensure they're up to date
             await evaluateMyInstructorAchievements();
-            
+
             // Then fetch the current achievements
             const res = await getInstructorAchievements();
             setInstructorAchievements(res?.data);
@@ -469,12 +471,11 @@ const InstructorDashboard = () => {
                                             {instructorAchievements.badges.map((badge, index) => (
                                                 <div
                                                     key={index}
-                                                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                                        badge.level === 'platinum' ? 'bg-gray-200 text-gray-800' :
+                                                    className={`px-3 py-1 rounded-full text-sm font-medium ${badge.level === 'platinum' ? 'bg-gray-200 text-gray-800' :
                                                         badge.level === 'gold' ? 'bg-yellow-200 text-yellow-800' :
-                                                        badge.level === 'silver' ? 'bg-gray-100 text-gray-700' :
-                                                        'bg-orange-200 text-orange-800'
-                                                    }`}
+                                                            badge.level === 'silver' ? 'bg-gray-100 text-gray-700' :
+                                                                'bg-orange-200 text-orange-800'
+                                                        }`}
                                                 >
                                                     {badge.type} - {badge.level}
                                                 </div>
@@ -497,7 +498,7 @@ const InstructorDashboard = () => {
                                         <div>
                                             <span className="text-muted-foreground">Last Evaluated:</span>
                                             <span className="ml-2 font-medium">
-                                                {instructorAchievements.stats?.lastEvaluated 
+                                                {instructorAchievements.stats?.lastEvaluated
                                                     ? new Date(instructorAchievements.stats.lastEvaluated).toLocaleDateString()
                                                     : 'Never'
                                                 }
@@ -522,6 +523,35 @@ const InstructorDashboard = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Floating Chat Button */}
+            <button
+                onClick={() => setChatOpen(!chatOpen)}
+                className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
+                aria-label="Toggle chat"
+            >
+                {chatOpen ? (
+                    <X className="h-6 w-6" />
+                ) : (
+                    <MessageCircle className="h-6 w-6" />
+                )}
+            </button>
+
+            {/* Chat Modal */}
+            {chatOpen && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="relative w-full max-w-6xl h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
+                        <button
+                            onClick={() => setChatOpen(false)}
+                            className="absolute top-4 right-4 z-50 w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+                            aria-label="Close chat"
+                        >
+                            <X className="h-5 w-5 text-gray-600" />
+                        </button>
+                        <ChatLayout />
+                    </div>
+                </div>
+            )}
         </InstructorLayout>
     )
 
