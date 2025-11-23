@@ -34,7 +34,12 @@ export class PaymentService {
           { path: 'user', select: 'name email phoneNumber' },
           { path: 'items.item', populate: { path: 'owner', select: 'name email' } }
         ]);
-        await emailService.sendItemBookingConfirmation(populatedBooking);
+        // Check if user email exists before sending
+        if (populatedBooking.user && populatedBooking.user.email) {
+          await emailService.sendItemBookingConfirmation(populatedBooking);
+        } else {
+          console.warn('Item booking confirmation email not sent: user email not found');
+        }
       } catch (emailError) {
         console.error('Failed to send item booking confirmation email:', emailError);
       }
@@ -71,7 +76,12 @@ export class PaymentService {
           { path: 'user', select: 'name email phoneNumber' },
           { path: 'hotel', populate: { path: 'owner', select: 'name email' } }
         ]);
-        await emailService.sendHotelBookingConfirmation(populatedBooking);
+        // Check if user email exists before sending
+        if (populatedBooking.user && populatedBooking.user.email) {
+          await emailService.sendHotelBookingConfirmation(populatedBooking);
+        } else {
+          console.warn('Hotel booking confirmation email not sent: user email not found');
+        }
       } catch (emailError) {
         console.error('Failed to send hotel booking confirmation email:', emailError);
       }
@@ -111,7 +121,12 @@ export class PaymentService {
           { path: 'event', select: 'title description date startTime endTime location city country' },
           { path: 'adventureInstructors.instructor', select: 'name email' }
         ]);
-        await emailService.sendEventBookingConfirmation(populatedBooking);
+        // Check if user email exists before sending
+        if (populatedBooking.user && populatedBooking.user.email) {
+          await emailService.sendEventBookingConfirmation(populatedBooking);
+        } else {
+          console.warn('Event booking confirmation email not sent: user email not found');
+        }
       } catch (emailError) {
         console.error('Failed to send event booking confirmation email:', emailError);
       }
@@ -187,7 +202,12 @@ export class PaymentService {
           },
           { path: 'groupMember', select: 'name email' }
         ]);
-        await emailService.sendSessionBookingConfirmation(populatedBooking);
+        // Check if user email exists before sending
+        if (populatedBooking && populatedBooking.user && populatedBooking.user.email) {
+          await emailService.sendSessionBookingConfirmation(populatedBooking);
+        } else {
+          console.warn('Session booking confirmation email not sent: user email not found');
+        }
       } catch (emailError) {
         console.error('Failed to send session booking confirmation email:', emailError);
       }
@@ -222,7 +242,12 @@ export class PaymentService {
           { path: 'event', select: 'title description date startTime endTime location city country' },
           { path: 'adventureInstructors.instructor', select: 'name email' }
         ]);
-        await emailService.sendEventBookingConfirmation(populatedBooking);
+        // Check if user email exists before sending
+        if (populatedBooking.user && populatedBooking.user.email) {
+          await emailService.sendEventBookingConfirmation(populatedBooking);
+        } else {
+          console.warn('Event booking confirmation email not sent: user email not found');
+        }
       } catch (emailError) {
         console.error('Failed to send event booking confirmation email:', emailError);
       }

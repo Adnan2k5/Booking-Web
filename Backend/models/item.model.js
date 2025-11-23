@@ -86,6 +86,7 @@ const itemSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       index: true,
+      required: false,
     },
   },
   { timestamps: true }
