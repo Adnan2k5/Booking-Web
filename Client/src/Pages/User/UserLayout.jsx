@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useNavigate, Link, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { LayoutDashboard, Calendar, TicketIcon, User, Settings, LogOut, Menu, Bell, ChevronRight, Users } from "lucide-react"
+import { LayoutDashboard, Calendar, TicketIcon, User, Settings, LogOut, Menu, Bell, ChevronRight, Users, MessageCircle } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Button } from "../../components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet"
@@ -21,7 +21,7 @@ import { userLogout } from "../../Auth/UserAuth.js"
 import { useDispatch } from "react-redux"
 import { toast } from "sonner"
 
-const UserLayout = ({ children }) => {
+const UserLayout = ({ children, onOpenChat }) => {
     const navigate = useNavigate()
     const location = useLocation()
     const { t } = useTranslation()
@@ -172,6 +172,30 @@ const UserLayout = ({ children }) => {
                             <div className="hidden sm:block">
                                 <LanguageSelector variant="minimal" />
                             </div>
+
+                            {/* Messages Button */}
+                            {onOpenChat && (
+                                <Button
+                                    onClick={onOpenChat}
+                                    variant="ghost"
+                                    className="relative group"
+                                    size="sm"
+                                >
+                                    <div className="relative flex items-center gap-2">
+                                        <div className="relative">
+                                            <MessageCircle className="h-5 w-5 text-purple-600 group-hover:text-purple-700" />
+                                            {/* Notification badge */}
+                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white border border-white">
+                                                3
+                                            </div>
+                                        </div>
+                                        <span className="hidden lg:inline text-sm font-medium text-purple-600 group-hover:text-purple-700">
+                                            Messages
+                                        </span>
+                                    </div>
+                                </Button>
+                            )}
+
                             {/* User Menu */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>

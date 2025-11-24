@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { LayoutDashboard, Users, Calendar, Settings, LogOut, Menu, Bell, User, LifeBuoy } from "lucide-react"
+import { LayoutDashboard, Calendar, Settings, LogOut, Menu, Bell, User, LifeBuoy, MessageCircle } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Button } from "../../components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet"
@@ -20,7 +20,7 @@ import { MdMoney } from "react-icons/md"
 
 
 
-const InstructorLayout = ({ children }) => {
+const InstructorLayout = ({ children, onOpenChat }) => {
     const navigate = useNavigate()
     const { t } = useTranslation()
     const { user, logout } = useAuth()
@@ -135,7 +135,28 @@ const InstructorLayout = ({ children }) => {
                                 <LanguageSelector variant="minimal" />
                             </div>
 
-
+                            {/* Messages Button */}
+                            {onOpenChat && (
+                                <Button
+                                    onClick={onOpenChat}
+                                    variant="ghost"
+                                    className="relative group"
+                                    size="sm"
+                                >
+                                    <div className="relative flex items-center gap-2">
+                                        <div className="relative">
+                                            <MessageCircle className="h-5 w-5 text-purple-600 group-hover:text-purple-700" />
+                                            {/* Notification badge */}
+                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white border border-white">
+                                                3
+                                            </div>
+                                        </div>
+                                        <span className="hidden lg:inline text-sm font-medium text-purple-600 group-hover:text-purple-700">
+                                            Messages
+                                        </span>
+                                    </div>
+                                </Button>
+                            )}
 
                             {/* User Menu */}
                             <DropdownMenu>

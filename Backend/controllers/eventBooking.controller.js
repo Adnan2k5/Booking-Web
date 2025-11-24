@@ -535,6 +535,7 @@ export const getAllEventBookings = asyncHandler(async (req, res) => {
     status,
     paymentStatus,
     event,
+    instructor,
     sortBy = "createdAt",
     sortOrder = "desc",
   } = req.query;
@@ -546,6 +547,11 @@ export const getAllEventBookings = asyncHandler(async (req, res) => {
   if (status) query.status = status;
   if (paymentStatus) query.paymentStatus = paymentStatus;
   if (event) query.event = event;
+
+  // Filter by instructor
+  if (instructor) {
+    query.instructor = instructor;
+  }
 
   // Sorting
   const sortOptions = {};

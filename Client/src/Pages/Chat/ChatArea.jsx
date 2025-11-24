@@ -132,7 +132,7 @@ export const ChatArea = ({ selectedFriend, toggleSidebar, onClose }) => {
     return (
         <BackgroundEffects>
             <motion.div
-                className="chat-room flex flex-col w-full h-[100vh] justify-between relative"
+                className="chat-room flex flex-col w-full h-full justify-between relative"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
