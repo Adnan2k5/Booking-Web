@@ -3,12 +3,12 @@ import nodemailer from 'nodemailer';
 class EmailService {
     constructor() {
         this.transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST,
-            port: process.env.EMAIL_PORT || 587,
-            secure: process.env.EMAIL_PORT == 465, // true for 465, false for other ports
+            host: process.env.EMAIL_HOST || process.env.SMTP_HOST,
+            port: process.env.EMAIL_PORT || process.env.SMTP_PORT || 587,
+            secure: (process.env.EMAIL_PORT || process.env.SMTP_PORT) == 465, // true for 465, false for other ports
             auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASSWORD,
+                user: process.env.EMAIL_USER || process.env.SMTP_EMAIL,
+                pass: process.env.EMAIL_PASSWORD || process.env.SMTP_PASSWORD,
             },
         });
     }
