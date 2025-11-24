@@ -18,7 +18,7 @@ class MessageService {
                 return null;
             }
 
-            const messageContent = this.formatBookingMessage(bookingDetails);
+            const messageContent = this.formatBookingMessage(bookingDetails, fromUserId);
 
             const message = await Message.create({
                 from: fromUserId,
@@ -40,23 +40,28 @@ class MessageService {
     /**
      * Format booking details into a user-friendly message
      * @param {Object} bookingDetails - Booking information
+     * @param {String} instructorId - ID of the instructor/service provider
      * @returns {String} Formatted message
      */
-    formatBookingMessage(bookingDetails) {
-        const { type, adventureName, hotelName, eventTitle, date, time, checkIn, checkOut, location } = bookingDetails;
+    formatBookingMessage(bookingDetails, instructorId) {
+        const { type, adventureName, hotelName, eventTitle, date, time, checkIn, checkOut, location, instructorName } = bookingDetails;
+
+        // Create chat link that can be used in the frontend
+        const chatLink = `/chat?chat=${instructorId}`;
+        const chatPrompt = `Click here to chat with ${instructorName || 'your instructor'}`;
 
         switch (type) {
             case 'session':
-                return `Hi! Your booking for ${adventureName} on ${date} at ${time} has been confirmed. ${location ? `Location: ${location}. ` : ''}Looking forward to seeing you! Feel free to ask any questions.`;
+                return `Hi! Your booking for ${adventureName} on ${date} at ${time} has been confirmed. ${location ? `Location: ${location}. ` : ''}Looking forward to seeing you! Feel free to ask any questions. 💬 ${chatPrompt}: ${chatLink}`;
 
             case 'hotel':
-                return `Hello! Your reservation at ${hotelName} from ${checkIn} to ${checkOut} is confirmed. We're excited to host you! Let us know if you need anything.`;
+                return `Hello! Your reservation at ${hotelName} from ${checkIn} to ${checkOut} is confirmed. We're excited to host you! Let us know if you need anything. 💬 ${chatPrompt}: ${chatLink}`;
 
             case 'event':
-                return `Great news! Your booking for ${eventTitle} on ${date}${time ? ` at ${time}` : ''} is confirmed. ${location ? `Location: ${location}. ` : ''}Can't wait to see you there! Reach out if you have any questions.`;
+                return `Great news! Your booking for ${eventTitle} on ${date}${time ? ` at ${time}` : ''} is confirmed. ${location ? `Location: ${location}. ` : ''}Can't wait to see you there! Reach out if you have any questions. 💬 ${chatPrompt}: ${chatLink}`;
 
             default:
-                return `Your booking has been confirmed! Looking forward to seeing you. Feel free to reach out if you have any questions.`;
+                return `Your booking has been confirmed! Looking forward to seeing you. Feel free to reach out if you have any questions. 💬 ${chatPrompt}: ${chatLink}`;
         }
     }
 

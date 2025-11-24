@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '../../../components/ui/avatar';
 import { isMessageFromUser } from '../../../utils/chatHelpers';
-import { CheckCheck } from 'lucide-react';
+import { CheckCheck, MessageCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const MessageBubble = ({ message, userId, currentUser, friendData }) => {
     const isSender = isMessageFromUser(message, userId);
@@ -16,6 +17,74 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
     const getInitial = (user) => {
         if (!user?.name) return '?';
         return user.name.charAt(0).toUpperCase();
+    };
+
+    // Parse message content for chat links
+    const parseMessageContent = (content) => {
+        if (!content) return null;
+
+        // Regex to find chat links in the format: /chat?chat=<id>
+        const chatLinkRegex = /(\/chat\?chat=[a-zA-Z0-9]+)/g;
+        
+        // Find all chat links in the message
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+
+        while ((match = chatLinkRegex.exec(content)) !== null) {
+            // Add text before the link
+            if (match.index > lastIndex) {
+                parts.push({
+                    type: 'text',
+                    content: content.substring(lastIndex, match.index)
+                });
+            }
+
+            // Add the link
+            parts.push({
+                type: 'link',
+                content: match[0],
+                url: match[0]
+            });
+
+            lastIndex = match.index + match[0].length;
+        }
+
+        // Add remaining text after the last link
+        if (lastIndex < content.length) {
+            parts.push({
+                type: 'text',
+                content: content.substring(lastIndex)
+            });
+        }
+
+        // If no links found, return the original content as text
+        return parts.length > 0 ? parts : [{ type: 'text', content }];
+    };
+
+    const renderMessageContent = (content) => {
+        const parts = parseMessageContent(content);
+        
+        return parts.map((part, index) => {
+            if (part.type === 'link') {
+                return (
+                    <Link
+                        key={index}
+                        to={part.url}
+                        className={`inline-flex items-center gap-1 underline hover:no-underline ${
+                            isSender ? 'text-white font-semibold' : 'text-blue-600 font-semibold'
+                        }`}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                        }}
+                    >
+                        <MessageCircle size={14} />
+                        Open Chat
+                    </Link>
+                );
+            }
+            return <span key={index}>{part.content}</span>;
+        });
     };
 
     return (
@@ -52,7 +121,7 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
                     {/* Message text content */}
                     {(message.content || message.text) && (
                         <p className="m-0 whitespace-pre-wrap text-sm">
-                            {message.content || message.text}
+                            {renderMessageContent(message.content || message.text)}
                         </p>
                     )}
 
