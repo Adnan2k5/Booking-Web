@@ -250,7 +250,7 @@ export default function BookingFlow() {
   // Calculate total price
   const calculateTotal = () => {
     const itemsPrice = cartItems.reduce((sum, item) => {
-      const itemData = items.find((i) => i._id === item._id)
+      const itemData = Array.isArray(items) ? items.find((i) => i._id === item._id) : null
       if (!itemData) return sum
 
       const price = itemData.price;
@@ -259,7 +259,7 @@ export default function BookingFlow() {
 
     // Calculate hotel price based on number of nights
     let hotelPrice = 0
-    if (selectedHotel) {
+    if (selectedHotel && Array.isArray(hotels)) {
       const hotel = hotels.find((hotel) => hotel._id === selectedHotel)
       const pricePerNight = hotel?.pricePerNight || hotel?.price || 0
       const nights = calculateNights()
@@ -329,12 +329,12 @@ export default function BookingFlow() {
 
     let currentStepNumber = 2;
 
-    if (isShopEnabled) {
+    if (isShopEnabled === true) {
       steps.push({ step: currentStepNumber, icon: <ShoppingCart size={18} />, label: "Shop" });
       currentStepNumber++;
     }
 
-    if (isHotelsEnabled) {
+    if (isHotelsEnabled === true) {
       steps.push({ step: currentStepNumber, icon: <Building size={18} />, label: "Hotel" });
       currentStepNumber++;
     }
@@ -377,7 +377,7 @@ export default function BookingFlow() {
         {/* Progress indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between max-w-md mx-auto">
-            {stepLabels.map((item) => (
+            {Array.isArray(stepLabels) && stepLabels.map((item) => (
               <div key={item.step} className="flex flex-col items-center">
                 <div
                   className={cn(
@@ -485,7 +485,7 @@ export default function BookingFlow() {
                 {isShopEnabled ? (
                   <div className="space-y-8">
                     <ShopSelection
-                      mockItems={items}
+                      mockItems={Array.isArray(items) ? items : []}
                       cartItems={cartItems}
                       handleAddToCart={handleAddToCart}
                       handleRemoveFromCart={handleRemoveFromCart}
@@ -500,9 +500,9 @@ export default function BookingFlow() {
                           selectedInstructor={selectedInstructor}
                           groupMembers={groupMembers}
                           cartItems={cartItems}
-                          mockItems={items}
+                          mockItems={Array.isArray(items) ? items : []}
                           selectedHotel={selectedHotel}
-                          mockHotels={hotels}
+                          mockHotels={Array.isArray(hotels) ? hotels : []}
                           calculateTotal={calculateTotal}
                           checkInDate={checkInDate}
                           checkOutDate={checkOutDate}
@@ -518,7 +518,7 @@ export default function BookingFlow() {
                       <HotelSelection
                         selectedHotel={selectedHotel}
                         onSelectHotel={handleHotelSelect}
-                        hotels={hotels}
+                        hotels={Array.isArray(hotels) ? hotels : []}
                         checkInDate={checkInDate}
                         checkOutDate={checkOutDate}
                         onDateChange={handleDateChange}
@@ -532,9 +532,9 @@ export default function BookingFlow() {
                           selectedInstructor={selectedInstructor}
                           groupMembers={groupMembers}
                           cartItems={cartItems}
-                          mockItems={items}
+                          mockItems={Array.isArray(items) ? items : []}
                           selectedHotel={selectedHotel}
-                          mockHotels={hotels}
+                          mockHotels={Array.isArray(hotels) ? hotels : []}
                           calculateTotal={calculateTotal}
                           checkInDate={checkInDate}
                           checkOutDate={checkOutDate}
@@ -551,9 +551,9 @@ export default function BookingFlow() {
                         selectedInstructor={selectedInstructor}
                         groupMembers={groupMembers}
                         cartItems={cartItems}
-                        mockItems={items}
+                        mockItems={Array.isArray(items) ? items : []}
                         selectedHotel={selectedHotel}
-                        mockHotels={hotels}
+                        mockHotels={Array.isArray(hotels) ? hotels : []}
                         calculateTotal={calculateTotal}
                         checkInDate={checkInDate}
                         checkOutDate={checkOutDate}
@@ -580,7 +580,7 @@ export default function BookingFlow() {
                   <HotelSelection
                     selectedHotel={selectedHotel}
                     onSelectHotel={handleHotelSelect}
-                    hotels={hotels}
+                    hotels={Array.isArray(hotels) ? hotels : []}
                     checkInDate={checkInDate}
                     checkOutDate={checkOutDate}
                     onDateChange={handleDateChange}
@@ -594,9 +594,9 @@ export default function BookingFlow() {
                       selectedInstructor={selectedInstructor}
                       groupMembers={groupMembers}
                       cartItems={cartItems}
-                      mockItems={items}
+                      mockItems={Array.isArray(items) ? items : []}
                       selectedHotel={selectedHotel}
-                      mockHotels={hotels}
+                      mockHotels={Array.isArray(hotels) ? hotels : []}
                       calculateTotal={calculateTotal}
                       checkInDate={checkInDate}
                       checkOutDate={checkOutDate}
