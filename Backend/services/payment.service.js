@@ -90,7 +90,8 @@ export class PaymentService {
             type: 'hotel',
             hotelName: populatedBooking.hotel?.name || 'Hotel',
             checkIn: messageService.formatDate(populatedBooking.checkInDate),
-            checkOut: messageService.formatDate(populatedBooking.checkOutDate)
+            checkOut: messageService.formatDate(populatedBooking.checkOutDate),
+            instructorName: populatedBooking.hotel.owner?.name || 'the hotel'
           };
           await messageService.sendBookingConfirmationMessage(
             populatedBooking.hotel.owner._id,
@@ -146,17 +147,17 @@ export class PaymentService {
 
         // Send chat messages from each instructor to user
         if (populatedBooking?.adventureInstructors && populatedBooking?.user?._id) {
-          const bookingDetails = {
-            type: 'event',
-            eventTitle: populatedBooking.event?.title || 'Event',
-            date: messageService.formatDate(populatedBooking.event?.date),
-            time: messageService.formatTime(populatedBooking.event?.startTime),
-            location: populatedBooking.event?.location || ''
-          };
-
           // Send message from each instructor
           for (const adventureInstructor of populatedBooking.adventureInstructors) {
             if (adventureInstructor?.instructor?._id) {
+              const bookingDetails = {
+                type: 'event',
+                eventTitle: populatedBooking.event?.title || 'Event',
+                date: messageService.formatDate(populatedBooking.event?.date),
+                time: messageService.formatTime(populatedBooking.event?.startTime),
+                location: populatedBooking.event?.location || '',
+                instructorName: adventureInstructor.instructor?.name || 'your instructor'
+              };
               await messageService.sendBookingConfirmationMessage(
                 adventureInstructor.instructor._id,
                 populatedBooking.user._id,
@@ -254,7 +255,8 @@ export class PaymentService {
             adventureName: populatedBooking.session.adventureId?.name || 'Adventure Session',
             date: messageService.formatDate(populatedBooking.session.date),
             time: messageService.formatTime(populatedBooking.session.startTime),
-            location: populatedBooking.session.location?.name || ''
+            location: populatedBooking.session.location?.name || '',
+            instructorName: populatedBooking.session.instructorId?.name || 'your instructor'
           };
           await messageService.sendBookingConfirmationMessage(
             populatedBooking.session.instructorId._id,
@@ -305,17 +307,17 @@ export class PaymentService {
 
         // Send chat messages from each instructor to user (PayPal)
         if (populatedBooking?.adventureInstructors && populatedBooking?.user?._id) {
-          const bookingDetails = {
-            type: 'event',
-            eventTitle: populatedBooking.event?.title || 'Event',
-            date: messageService.formatDate(populatedBooking.event?.date),
-            time: messageService.formatTime(populatedBooking.event?.startTime),
-            location: populatedBooking.event?.location || ''
-          };
-
           // Send message from each instructor
           for (const adventureInstructor of populatedBooking.adventureInstructors) {
             if (adventureInstructor?.instructor?._id) {
+              const bookingDetails = {
+                type: 'event',
+                eventTitle: populatedBooking.event?.title || 'Event',
+                date: messageService.formatDate(populatedBooking.event?.date),
+                time: messageService.formatTime(populatedBooking.event?.startTime),
+                location: populatedBooking.event?.location || '',
+                instructorName: adventureInstructor.instructor?.name || 'your instructor'
+              };
               await messageService.sendBookingConfirmationMessage(
                 adventureInstructor.instructor._id,
                 populatedBooking.user._id,

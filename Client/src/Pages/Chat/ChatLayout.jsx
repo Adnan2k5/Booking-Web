@@ -4,12 +4,14 @@ import { useFriend } from '../../hooks/useFriend';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { motion } from 'framer-motion';
 import { Search, Users, MessageCircle } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 export const ChatLayout = () => {
     const { friends, fetchFriends } = useFriend();
     const [selectedFriend, setSelectedFriend] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showSidebar, setShowSidebar] = useState(true);
+    const [searchParams] = useSearchParams();
 
     useEffect(() => {
         fetchFriends();
@@ -32,6 +34,21 @@ export const ChatLayout = () => {
         // Cleanup
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // Handle chat query parameter to auto-select a friend
+    useEffect(() => {
+        const chatUserId = searchParams.get('chat');
+        if (chatUserId && friends.length > 0) {
+            const friend = friends.find(f => f._id === chatUserId);
+            if (friend) {
+                setSelectedFriend(friend);
+                // On mobile, show chat area and hide sidebar
+                if (window.innerWidth < 768) {
+                    setShowSidebar(false);
+                }
+            }
+        }
+    }, [searchParams, friends]);
 
     const toggleSidebar = () => {
         setShowSidebar(!showSidebar);
