@@ -369,6 +369,7 @@ export const getAllSessionBookings = asyncHandler(async (req, res) => {
     limit = 10,
     status,
     modeOfPayment,
+    instructor,
     search,
     sortBy = "createdAt",
     sortOrder = "desc",
@@ -385,6 +386,13 @@ export const getAllSessionBookings = asyncHandler(async (req, res) => {
 
   if (modeOfPayment) {
     query.modeOfPayment = modeOfPayment;
+  }
+
+  // Filter by instructor - need to find sessions with this instructor first
+  if (instructor) {
+    const instructorSessions = await Session.find({ instructorId: instructor }).select("_id");
+    const sessionIds = instructorSessions.map(session => session._id);
+    query.session = { $in: sessionIds };
   }
 
   // Search functionality - search by user name/email

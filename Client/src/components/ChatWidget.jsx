@@ -121,21 +121,43 @@ export default function ChatWidget() {
 
     return (
         <>
-            {/* Chat button */}
-            <motion.button
-                className="fixed bottom-6 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg z-50"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleChat}
+            {/* Chat button - Customer Support */}
+            <motion.div
+                className="fixed bottom-6 right-6 z-[9999] group"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
             >
-                <MessageCircle size={24} />
-            </motion.button>
+                <button
+                    onClick={toggleChat}
+                    className="relative"
+                    aria-label="Customer Support"
+                >
+                    {/* Animated ring effect */}
+                    <div className="absolute inset-0 bg-blue-600 rounded-full animate-ping opacity-20"></div>
+                    
+                    {/* Main button */}
+                    <div className="relative bg-gradient-to-br from-blue-600 to-cyan-500 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center w-14 h-14">
+                        <MessageCircle size={24} className="relative z-10" />
+                    </div>
+                    
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full right-0 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                        Customer Support
+                        <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                    </div>
+                    
+                    {/* Active indicator */}
+                    {isOpen && (
+                        <div className="absolute top-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+                    )}
+                </button>
+            </motion.div>
 
             {/* Chat window */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        className="fixed bottom-20 right-6 w-80 bg-white rounded-lg shadow-xl overflow-hidden z-50 flex flex-col"
+                        className="fixed bottom-20 right-6 w-80 bg-white rounded-lg shadow-xl overflow-hidden z-[9999] flex flex-col"
                         style={{ height: isMinimized ? "auto" : "400px" }}
                         initial={{ opacity: 0, y: 50, height: "auto" }}
                         animate={{

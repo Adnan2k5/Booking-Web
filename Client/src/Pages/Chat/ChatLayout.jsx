@@ -50,14 +50,14 @@ export const ChatLayout = () => {
     );
 
     return (
-        <div className='min-h-screen w-screen overflow-hidden flex'>
+        <div className='h-full w-full flex relative'>
             {/* Sidebar */}
             <motion.div
-                className={`sidebar md:min-w-[320px] w-full md:w-[320px] md:relative absolute z-10 h-screen flex flex-col bg-gradient-to-b from-blue-50 to-indigo-50 backdrop-blur-sm border-r border-gray-200`}
-                initial={{ x: window.innerWidth < 768 ? -320 : 0 }}
+                className={`sidebar md:min-w-[320px] w-full md:w-[320px] md:relative absolute z-10 h-full flex flex-col bg-gradient-to-b from-blue-50 to-indigo-50 backdrop-blur-sm border-r border-gray-200`}
+                initial={{ x: typeof window !== 'undefined' && window.innerWidth < 768 ? -320 : 0 }}
                 animate={{ x: showSidebar ? 0 : -320 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                style={{ maxWidth: '100vw' }}
+                style={{ maxWidth: '100%' }}
             >
                 <div className="sidebar-header p-5 border-b border-gray-200 bg-white/70 backdrop-blur-sm">
                     <div className="flex items-center gap-3">
@@ -125,7 +125,7 @@ export const ChatLayout = () => {
             </motion.div>
 
             {/* Chat Area */}
-            <div className="flex-1 w-full">
+            <div className="flex-1 w-full h-full">
                 <ChatArea
                     selectedFriend={selectedFriend}
                     toggleSidebar={toggleSidebar}
