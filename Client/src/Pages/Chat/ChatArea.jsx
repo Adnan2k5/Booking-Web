@@ -2,14 +2,9 @@ import { useMessage } from '../../hooks/useMessage';
 import React, { useEffect, useState, useRef } from 'react'
 import { io } from "socket.io-client";
 import { useAuth } from '../AuthProvider';
-import { AnimatePresence, motion } from 'framer-motion';
-import { format } from 'date-fns';
-import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
-import { formatMessage, isMessageFromUser } from '../../utils/chatHelpers';
+import { motion } from 'framer-motion';
+import { formatMessage } from '../../utils/chatHelpers';
 import { SOCKET_URL, SOCKET_CONFIG, EMPTY_STATES } from '../../constants/chatConstants';
-import { uploadFile, isImageFile, debugFileUpload } from '../../utils/fileUploadUtils';
-import MessageBubble from './components/MessageBubble';
-import AttachmentPanel from './components/AttachmentPanel';
 import EmptyState from './components/EmptyState';
 import MessageInput from './components/MessageInput';
 import BackgroundEffects from './components/BackgroundEffects';

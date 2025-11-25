@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getChatHistory, getAllChats, markMessageAsRead } from "../controllers/message.controller.js";
+import { getChatHistory, markMessageAsRead, getSenders } from "../controllers/message.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
@@ -9,7 +9,7 @@ router.use(verifyJWT);
 
 // Routes
 router.get("/", getChatHistory);
-router.get("/chats", getAllChats);
+router.get("/senders", getSenders);
 router.patch("/:messageId/read", markMessageAsRead);
 
 export default router;
