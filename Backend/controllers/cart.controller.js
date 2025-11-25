@@ -130,7 +130,6 @@ export const updateCartItem = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Item id is required");
   }
   let cart = await Cart.findOne({ user: userId });
-  console.log(cart);
   if (!cart) throw new ApiError(404, "Cart not found");
   
   const cartItem = cart.items.find(
@@ -181,7 +180,7 @@ export const removeCartItem = asyncHandler(async (req, res) => {
 
   await cart.save();
   await cart.populate("items.item");
-console.log("Item Removed")
+
   const totalPrice = cart.items.reduce((total, cartItem) => {
     const item = cartItem.item;
     if (item && cartItem.purchase) {

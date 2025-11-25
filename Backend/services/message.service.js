@@ -29,7 +29,6 @@ class MessageService {
                 isRead: false,
             });
 
-            console.log(`Booking confirmation message sent from ${fromUserId} to ${toUserId}`);
             return message;
         } catch (error) {
             console.error('Error sending booking confirmation message:', error);
@@ -88,7 +87,15 @@ class MessageService {
      */
     formatTime(time) {
         if (!time) return '';
-        // Convert 24h to 12h format
+        // If time is a Date, convert to string
+        if (time instanceof Date) {
+            time = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        } else if (typeof time === 'number') {
+            time = new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        } else if (typeof time !== 'string') {
+            return 'N/A';
+        }
+        // Now safe to split
         const [hours, minutes] = time.split(':');
         const h = parseInt(hours);
         const ampm = h >= 12 ? 'PM' : 'AM';

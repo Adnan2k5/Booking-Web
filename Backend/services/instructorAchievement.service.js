@@ -12,11 +12,9 @@ class InstructorAchievementService {
    */
   async evaluateAfterBooking(instructorUserId) {
     try {
-      console.log(`Evaluating achievements for instructor: ${instructorUserId}`);
       const newlyAwarded = await evaluateAndAwardForInstructor(instructorUserId);
       
       if (newlyAwarded.length > 0) {
-        console.log(`Instructor ${instructorUserId} earned new achievements:`, newlyAwarded);
         // Here you could add notification logic, email sending, etc.
         await this.notifyInstructorOfNewAchievements(instructorUserId, newlyAwarded);
       }

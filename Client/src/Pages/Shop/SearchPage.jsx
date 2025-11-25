@@ -54,7 +54,6 @@ export default function SearchPage() {
       if (filters.sortBy) params.set('sortBy', filters.sortBy);
 
       const url = `${baseUrl}api/items${params.toString() ? `?${params.toString()}` : ''}`;
-      console.log('Fetching from URL:', url);
       
       const res = await fetch(url);
       
@@ -68,7 +67,6 @@ export default function SearchPage() {
       }
       
       const data = await res.json();
-      console.log('API Response:', data);
       
       // API returns items in message field and metadata in data field
       if (data && Array.isArray(data.message)) {

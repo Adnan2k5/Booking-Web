@@ -39,7 +39,7 @@ export default function AdventuresPage() {
       refetch()
     } catch (error) {
       toast.error("Error deleting adventure", { id: toastId })
-      console.log(error)
+      console.error(error)
     }
   }
 

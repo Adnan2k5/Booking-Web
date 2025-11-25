@@ -1,57 +1,57 @@
 import nodemailer from 'nodemailer';
 
 class EmailService {
-    constructor() {
-        this.transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || process.env.SMTP_HOST,
-            port: process.env.EMAIL_PORT || process.env.SMTP_PORT || 587,
-            secure: (process.env.EMAIL_PORT || process.env.SMTP_PORT) == 465, // true for 465, false for other ports
-            auth: {
-                user: process.env.EMAIL_USER || process.env.SMTP_EMAIL,
-                pass: process.env.EMAIL_PASSWORD || process.env.SMTP_PASSWORD,
-            },
-        });
+  constructor() {
+    this.transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || process.env.SMTP_HOST,
+      port: process.env.EMAIL_PORT || process.env.SMTP_PORT || 587,
+      secure: (process.env.EMAIL_PORT || process.env.SMTP_PORT) == 465, // true for 465, false for other ports
+      auth: {
+        user: process.env.EMAIL_USER || process.env.SMTP_EMAIL,
+        pass: process.env.EMAIL_PASSWORD || process.env.SMTP_PASSWORD,
+      },
+    });
+  }
+
+  /**
+   * Send a generic email
+   * @param {Object} options - Email options
+   * @param {string|string[]} options.to - Recipient email(s)
+   * @param {string} options.subject - Email subject
+   * @param {string} options.html - HTML content
+   * @param {string} options.text - Plain text content (optional)
+   */
+  async sendEmail({ to, subject, html, text }) {
+    try {
+      const mailOptions = {
+        from: process.env.EMAIL_FROM || '"Booking Platform" <noreply@booking.com>',
+        to: Array.isArray(to) ? to.join(', ') : to,
+        subject,
+        html,
+        text: text || html.replace(/<[^>]*>/g, ''), // Strip HTML for text version
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully:', info.messageId);
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      console.error('❌ Email sending failed:', error);
+      return { success: false, error: error.message };
     }
+  }
 
-    /**
-     * Send a generic email
-     * @param {Object} options - Email options
-     * @param {string|string[]} options.to - Recipient email(s)
-     * @param {string} options.subject - Email subject
-     * @param {string} options.html - HTML content
-     * @param {string} options.text - Plain text content (optional)
-     */
-    async sendEmail({ to, subject, html, text }) {
-        try {
-            const mailOptions = {
-                from: process.env.EMAIL_FROM || '"Booking Platform" <noreply@booking.com>',
-                to: Array.isArray(to) ? to.join(', ') : to,
-                subject,
-                html,
-                text: text || html.replace(/<[^>]*>/g, ''), // Strip HTML for text version
-            };
+  /**
+   * Send hotel booking confirmation emails
+   * @param {Object} booking - Hotel booking object with populated fields
+   */
+  async sendHotelBookingConfirmation(booking) {
+    try {
+      const userEmail = booking.user.email;
+      const hotelOwnerEmail = booking.hotel.owner?.email;
 
-            const info = await this.transporter.sendMail(mailOptions);
-            console.log('✅ Email sent successfully:', info.messageId);
-            return { success: true, messageId: info.messageId };
-        } catch (error) {
-            console.error('❌ Email sending failed:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    /**
-     * Send hotel booking confirmation emails
-     * @param {Object} booking - Hotel booking object with populated fields
-     */
-    async sendHotelBookingConfirmation(booking) {
-        try {
-            const userEmail = booking.user.email;
-            const hotelOwnerEmail = booking.hotel.owner?.email;
-
-            // Email to user
-            const userSubject = `Hotel Booking Confirmation - ${booking.hotel.name}`;
-            const userHtml = `
+      // Email to user
+      const userSubject = `Hotel Booking Confirmation - ${booking.hotel.name}`;
+      const userHtml = `
         <!DOCTYPE html>
         <html>
         <head>
@@ -121,12 +121,12 @@ class EmailService {
         </html>
       `;
 
-            await this.sendEmail({ to: userEmail, subject: userSubject, html: userHtml });
+      await this.sendEmail({ to: userEmail, subject: userSubject, html: userHtml });
 
-            // Email to hotel owner
-            if (hotelOwnerEmail) {
-                const ownerSubject = `New Booking Received - ${booking.hotel.name}`;
-                const ownerHtml = `
+      // Email to hotel owner
+      if (hotelOwnerEmail) {
+        const ownerSubject = `New Booking Received - ${booking.hotel.name}`;
+        const ownerHtml = `
           <!DOCTYPE html>
           <html>
           <head>
@@ -186,27 +186,27 @@ class EmailService {
           </html>
         `;
 
-                await this.sendEmail({ to: hotelOwnerEmail, subject: ownerSubject, html: ownerHtml });
-            }
+        await this.sendEmail({ to: hotelOwnerEmail, subject: ownerSubject, html: ownerHtml });
+      }
 
-            return { success: true };
-        } catch (error) {
-            console.error('Error sending hotel booking confirmation:', error);
-            return { success: false, error: error.message };
-        }
+      return { success: true };
+    } catch (error) {
+      console.error('Error sending hotel booking confirmation:', error);
+      return { success: false, error: error.message };
     }
+  }
 
-    /**
-     * Send event booking confirmation emails
-     * @param {Object} booking - Event booking object with populated fields
-     */
-    async sendEventBookingConfirmation(booking) {
-        try {
-            const userEmail = booking.user.email;
+  /**
+   * Send event booking confirmation emails
+   * @param {Object} booking - Event booking object with populated fields
+   */
+  async sendEventBookingConfirmation(booking) {
+    try {
+      const userEmail = booking.user.email;
 
-            // Email to user
-            const userSubject = `Event Booking Confirmation - ${booking.event.title}`;
-            const userHtml = `
+      // Email to user
+      const userSubject = `Event Booking Confirmation - ${booking.event.title}`;
+      const userHtml = `
         <!DOCTYPE html>
         <html>
         <head>
@@ -274,17 +274,17 @@ class EmailService {
         </html>
       `;
 
-            await this.sendEmail({ to: userEmail, subject: userSubject, html: userHtml });
+      await this.sendEmail({ to: userEmail, subject: userSubject, html: userHtml });
 
-            // Email to instructors
-            if (booking.adventureInstructors && booking.adventureInstructors.length > 0) {
-                const instructorEmails = booking.adventureInstructors
-                    .map(ai => ai.instructor?.email)
-                    .filter(email => email);
+      // Email to instructors
+      if (booking.adventureInstructors && booking.adventureInstructors.length > 0) {
+        const instructorEmails = booking.adventureInstructors
+          .map(ai => ai.instructor?.email)
+          .filter(email => email);
 
-                if (instructorEmails.length > 0) {
-                    const instructorSubject = `New Event Booking - ${booking.event.title}`;
-                    const instructorHtml = `
+        if (instructorEmails.length > 0) {
+          const instructorSubject = `New Event Booking - ${booking.event.title}`;
+          const instructorHtml = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -333,29 +333,29 @@ class EmailService {
             </html>
           `;
 
-                    await this.sendEmail({ to: instructorEmails, subject: instructorSubject, html: instructorHtml });
-                }
-            }
-
-            return { success: true };
-        } catch (error) {
-            console.error('Error sending event booking confirmation:', error);
-            return { success: false, error: error.message };
+          await this.sendEmail({ to: instructorEmails, subject: instructorSubject, html: instructorHtml });
         }
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error sending event booking confirmation:', error);
+      return { success: false, error: error.message };
     }
+  }
 
-    /**
-     * Send session booking confirmation emails
-     * @param {Object} booking - Session booking object with populated fields
-     */
-    async sendSessionBookingConfirmation(booking) {
-        try {
-            const userEmail = booking.user.email;
-            const instructorEmail = booking.session?.instructorId?.email;
+  /**
+   * Send session booking confirmation emails
+   * @param {Object} booking - Session booking object with populated fields
+   */
+  async sendSessionBookingConfirmation(booking) {
+    try {
+      const userEmail = booking.user.email;
+      const instructorEmail = booking.session?.instructorId?.email;
 
-            // Email to user
-            const userSubject = `Session Booking Confirmation - ${booking.session?.adventureId?.name || 'Adventure Session'}`;
-            const userHtml = `
+      // Email to user
+      const userSubject = `Session Booking Confirmation - ${booking.session?.adventureId?.name || 'Adventure Session'}`;
+      const userHtml = `
         <!DOCTYPE html>
         <html>
         <head>
@@ -392,9 +392,9 @@ class EmailService {
                 <div class="detail-row">
                   <span class="label">Session Date:</span> ${new Date(booking.session?.startTime).toLocaleDateString()}
                 </div>
-                <div class="detail-row">
-                  <span class="label">Start Time:</span> ${new Date(booking.session?.startTime).toLocaleTimeString()}
-                </div>
+                  <div class="detail-row">
+                    <span class="label">Start Time:</span> ${booking.session?.startTime ? new Date(booking.session.startTime).toLocaleTimeString() : 'N/A'}
+                  </div>
                 ${booking.session?.instructorId?.name ? `
                 <div class="detail-row">
                   <span class="label">Instructor:</span> ${booking.session.instructorId.name}
@@ -406,7 +406,7 @@ class EmailService {
                 </div>
                 ` : ''}
                 <div class="detail-row">
-                  <span class="label">Total Amount:</span> £${booking.amount.toFixed(2)}
+                  <span class="label">Total Amount:</span> £${(booking.session.price * (booking.groupMember ? (booking.groupMember.length + 1) : 1)).toFixed(2)}
                 </div>
                 <div class="detail-row">
                   <span class="label">Payment Status:</span> ✅ Completed
@@ -422,13 +422,12 @@ class EmailService {
         </body>
         </html>
       `;
+      await this.sendEmail({ to: userEmail, subject: userSubject, html: userHtml });
 
-            await this.sendEmail({ to: userEmail, subject: userSubject, html: userHtml });
-
-            // Email to instructor
-            if (instructorEmail) {
-                const instructorSubject = `New Session Booking - ${booking.session?.adventureId?.name || 'Adventure'}`;
-                const instructorHtml = `
+      // Email to instructor
+      if (instructorEmail) {
+        const instructorSubject = `New Session Booking - ${booking.session?.adventureId?.name || 'Adventure'}`;
+        const instructorHtml = `
           <!DOCTYPE html>
           <html>
           <head>
@@ -479,42 +478,42 @@ class EmailService {
           </html>
         `;
 
-                await this.sendEmail({ to: instructorEmail, subject: instructorSubject, html: instructorHtml });
-            }
+        await this.sendEmail({ to: instructorEmail, subject: instructorSubject, html: instructorHtml });
+      }
 
-            return { success: true };
-        } catch (error) {
-            console.error('Error sending session booking confirmation:', error);
-            return { success: false, error: error.message };
-        }
+      return { success: true };
+    } catch (error) {
+      console.error('Error sending session booking confirmation:', error);
+      return { success: false, error: error.message };
     }
+  }
 
-    /**
-     * Send item booking confirmation emails
-     * @param {Object} booking - Item booking object with populated fields
-     */
-    async sendItemBookingConfirmation(booking) {
-        try {
-            const userEmail = booking.user.email;
+  /**
+   * Send item booking confirmation emails
+   * @param {Object} booking - Item booking object with populated fields
+   */
+  async sendItemBookingConfirmation(booking) {
+    try {
+      const userEmail = booking.user.email;
 
-            // Email to user
-            const itemsList = booking.items.map(item => {
-                const itemName = item.item?.name || 'Item';
-                const quantity = item.quantity;
-                const isPurchase = item.purchase;
-                const rentalPeriod = item.rentalPeriod;
+      // Email to user
+      const itemsList = booking.items.map(item => {
+        const itemName = item.item?.name || 'Item';
+        const quantity = item.quantity;
+        const isPurchase = item.purchase;
+        const rentalPeriod = item.rentalPeriod;
 
-                let details = `${itemName} (Qty: ${quantity})`;
-                if (isPurchase) {
-                    details += ' - Purchase';
-                } else if (rentalPeriod) {
-                    details += ` - Rental: ${new Date(rentalPeriod.startDate).toLocaleDateString()} to ${new Date(rentalPeriod.endDate).toLocaleDateString()}`;
-                }
-                return details;
-            }).join('<br>');
+        let details = `${itemName} (Qty: ${quantity})`;
+        if (isPurchase) {
+          details += ' - Purchase';
+        } else if (rentalPeriod) {
+          details += ` - Rental: ${new Date(rentalPeriod.startDate).toLocaleDateString()} to ${new Date(rentalPeriod.endDate).toLocaleDateString()}`;
+        }
+        return details;
+      }).join('<br>');
 
-            const userSubject = `Item Booking Confirmation`;
-            const userHtml = `
+      const userSubject = `Item Booking Confirmation`;
+      const userHtml = `
         <!DOCTYPE html>
         <html>
         <head>
@@ -547,7 +546,7 @@ class EmailService {
                   <span class="label">Items:</span><br>${itemsList}
                 </div>
                 <div class="detail-row">
-                  <span class="label">Total Amount:</span> £${booking.amount.toFixed(2)}
+                  <span class="label">Total Amount:</span> £${booking.amount?.toFixed(2)}
                 </div>
                 <div class="detail-row">
                   <span class="label">Payment Status:</span> ✅ Completed
@@ -567,42 +566,42 @@ class EmailService {
         </html>
       `;
 
-            await this.sendEmail({ to: userEmail, subject: userSubject, html: userHtml });
+      await this.sendEmail({ to: userEmail, subject: userSubject, html: userHtml });
 
-            // Email to item owners (if owner field exists)
-            const uniqueOwners = new Map();
-            booking.items.forEach(item => {
-                if (item.item?.owner?.email) {
-                    const ownerEmail = item.item.owner.email;
-                    if (!uniqueOwners.has(ownerEmail)) {
-                        uniqueOwners.set(ownerEmail, {
-                            email: ownerEmail,
-                            name: item.item.owner.name,
-                            items: []
-                        });
-                    }
-                    uniqueOwners.get(ownerEmail).items.push(item);
-                }
+      // Email to item owners (if owner field exists)
+      const uniqueOwners = new Map();
+      booking.items.forEach(item => {
+        if (item.item?.owner?.email) {
+          const ownerEmail = item.item.owner.email;
+          if (!uniqueOwners.has(ownerEmail)) {
+            uniqueOwners.set(ownerEmail, {
+              email: ownerEmail,
+              name: item.item.owner.name,
+              items: []
             });
+          }
+          uniqueOwners.get(ownerEmail).items.push(item);
+        }
+      });
 
-            for (const [email, ownerData] of uniqueOwners) {
-                const ownerItemsList = ownerData.items.map(item => {
-                    const itemName = item.item?.name || 'Item';
-                    const quantity = item.quantity;
-                    const isPurchase = item.purchase;
-                    const rentalPeriod = item.rentalPeriod;
+      for (const [email, ownerData] of uniqueOwners) {
+        const ownerItemsList = ownerData.items.map(item => {
+          const itemName = item.item?.name || 'Item';
+          const quantity = item.quantity;
+          const isPurchase = item.purchase;
+          const rentalPeriod = item.rentalPeriod;
 
-                    let details = `${itemName} (Qty: ${quantity})`;
-                    if (isPurchase) {
-                        details += ' - Purchase';
-                    } else if (rentalPeriod) {
-                        details += ` - Rental: ${new Date(rentalPeriod.startDate).toLocaleDateString()} to ${new Date(rentalPeriod.endDate).toLocaleDateString()}`;
-                    }
-                    return details;
-                }).join('<br>');
+          let details = `${itemName} (Qty: ${quantity})`;
+          if (isPurchase) {
+            details += ' - Purchase';
+          } else if (rentalPeriod) {
+            details += ` - Rental: ${new Date(rentalPeriod.startDate).toLocaleDateString()} to ${new Date(rentalPeriod.endDate).toLocaleDateString()}`;
+          }
+          return details;
+        }).join('<br>');
 
-                const ownerSubject = `New Item Booking Received`;
-                const ownerHtml = `
+        const ownerSubject = `New Item Booking Received`;
+        const ownerHtml = `
           <!DOCTYPE html>
           <html>
           <head>
@@ -650,15 +649,15 @@ class EmailService {
           </html>
         `;
 
-                await this.sendEmail({ to: email, subject: ownerSubject, html: ownerHtml });
-            }
+        await this.sendEmail({ to: email, subject: ownerSubject, html: ownerHtml });
+      }
 
-            return { success: true };
-        } catch (error) {
-            console.error('Error sending item booking confirmation:', error);
-            return { success: false, error: error.message };
-        }
+      return { success: true };
+    } catch (error) {
+      console.error('Error sending item booking confirmation:', error);
+      return { success: false, error: error.message };
     }
+  }
 }
 
 export default new EmailService();

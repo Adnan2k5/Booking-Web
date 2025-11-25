@@ -35,7 +35,7 @@ const SessionForm = () => {
                 setAdventureTypes(res.data)
                 setIsLoading(false)
             }).catch((err) => {
-                console.log(err);
+                console.error(err);
                 toast.error("Failed to load adventure data")
             });
         } else {

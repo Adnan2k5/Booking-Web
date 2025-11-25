@@ -171,7 +171,6 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
   if (typeof name === "string") {
     user.name = name.trim();
   }
-  console.log(req.headers['content-type']);
   // Handle profile picture upload
   if (req.file) {
     // Upload new image to Cloudinary

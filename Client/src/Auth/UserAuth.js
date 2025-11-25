@@ -43,7 +43,7 @@ export const ResendOtp = async (email) => {
     const data = { email: email };
     const res = await axiosClient.post('/api/auth/resendOtp', data);
   } catch (err) {
-    console.log(err);
+    console.error(err);
     if (err.response) {
       if (err.response.status === 403) {
         return err.response.status;

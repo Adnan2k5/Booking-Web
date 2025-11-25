@@ -11,7 +11,7 @@ export class PaymentService {
     // Check if this is an order completion event
     if (event === "ORDER_COMPLETED" || event === "ORDER_AUTHORISED") {
       if (!booking) {
-        return res.status(200).json({ message: "Webhook received" });
+        return { status: 200, message: "Webhook received" };
       }
 
       if (event === "ORDER_COMPLETED") {
@@ -241,6 +241,7 @@ export class PaymentService {
           },
           { path: 'groupMember', select: 'name email' }
         ]);
+
         // Check if user email exists before sending
         if (populatedBooking && populatedBooking.user && populatedBooking.user.email) {
           await emailService.sendSessionBookingConfirmation(populatedBooking);
