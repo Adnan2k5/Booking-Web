@@ -136,7 +136,7 @@ export const createEventBooking = asyncHandler(async (req, res) => {
     try {
       const paypalService = new PayPalService();
       paymentOrder = await paypalService.createOrder(finalAmount, "GBP");
-      console.log("✅ PayPal Order Created:", JSON.stringify(paymentOrder, null, 2));
+      ("✅ PayPal Order Created:", JSON.stringify(paymentOrder, null, 2));
     } catch (paypalError) {
       console.error("❌ PayPal order creation failed:", paypalError);
       throw new ApiError(500, "Failed to create PayPal payment order");
@@ -153,7 +153,6 @@ export const createEventBooking = asyncHandler(async (req, res) => {
         ? `${process.env.CLIENT_URL}/event-booking-confirmation`
         : `http://localhost:5173/event-booking-confirmation`
     );
-    console.log("✅ Revolut Order Created:", JSON.stringify(paymentOrder, null, 2));
   }
 
   const booking = await EventBooking.create({
@@ -218,7 +217,6 @@ export const handleEventBookingWebhook = asyncHandler(async (req, res) => {
         event,
         booking
       );
-      console.log("Payment result:", result);
       res
         .status(result.status)
         .json(new ApiResponse(result.status, result.booking, result.message));
@@ -256,7 +254,6 @@ export const handlePayPalEventBookingWebhook = asyncHandler(async (req, res) => 
         status,
         booking
       );
-      console.log("PayPal Payment result:", result);
       res
         .status(result.status)
         .json(new ApiResponse(result.status, result.booking, result.message));

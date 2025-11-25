@@ -122,9 +122,6 @@ export const InstructorProfile = () => {
                 ],
                 gallery: formatGalleryItems(user.user.instructor?.portfolioMedias || [])
             }))
-
-            console.log(user);
-            console.log(fetchedAdventure);
         }
     }, [user, fetchedAdventure])
 

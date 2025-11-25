@@ -127,7 +127,6 @@ export default function EventDetailPage() {
 
         // Debug: log bookingData before sending
         // eslint-disable-next-line no-console
-        console.log("Booking Data:", bookingData, { event, id });
 
         // Validate all required fields before sending
         if (!bookingData.event || !bookingData.participants || !bookingData.contactInfo.email || !bookingData.contactInfo.phone || isNaN(bookingData.amount)) {
@@ -144,13 +143,6 @@ export default function EventDetailPage() {
             const response = await createEventBooking(bookingData);
             toast.dismiss();
             
-            // Debug: log API response - Check response structure
-            // eslint-disable-next-line no-console
-            console.log("🔵 Full API Response:", response);
-            console.log("🔵 Response.data:", response?.data);
-            console.log("🔵 Response.data.paymentMethod:", response?.data?.paymentMethod);
-            console.log("🔵 Response.data.paymentOrder:", response?.data?.paymentOrder);
-            console.log("🔵 isFreeEvent:", isFreeEvent);
 
             // Check payment method FIRST before checking for checkout_url
             if (isFreeEvent) {
@@ -162,9 +154,6 @@ export default function EventDetailPage() {
                 const paymentOrder = response?.data?.paymentOrder;
                 let approvalUrl = null;
 
-                // Debug log to see response structure
-                console.log("🔵 PayPal Order Response:", paymentOrder);
-
                 // Try to find approval link
                 if (paymentOrder?.links && Array.isArray(paymentOrder.links)) {
                     // Look for "approve" link
@@ -172,7 +161,6 @@ export default function EventDetailPage() {
                         link => link.rel === "approve"
                     );
                     approvalUrl = approveLink?.href;
-                    console.log("🔵 Found approve link href:", approvalUrl);
                 }
 
                 // Fallback to approve_url if links not found (older API versions)
@@ -180,10 +168,7 @@ export default function EventDetailPage() {
                     approvalUrl = paymentOrder.approve_url;
                 }
 
-                console.log("🔵 Final approval URL:", approvalUrl);
-
                 if (approvalUrl) {
-                    console.log("🔵 🔵 🔵 REDIRECTING TO PAYPAL:", approvalUrl);
                     toast.success("Booking created! Redirecting to PayPal...");
                     // Use a small delay to ensure toast is shown
                     setTimeout(() => {
@@ -198,7 +183,6 @@ export default function EventDetailPage() {
             } else if (response?.data?.paymentMethod === "revolut" || response?.data?.paymentOrder?.checkout_url) {
                 // For Revolut, redirect to Revolut checkout
                 const checkoutUrl = response?.data?.paymentOrder?.checkout_url;
-                console.log("🔴 Redirecting to Revolut:", checkoutUrl);
                 toast.success("Booking created! Redirecting to Revolut...");
                 setTimeout(() => {
                     window.location.href = checkoutUrl;

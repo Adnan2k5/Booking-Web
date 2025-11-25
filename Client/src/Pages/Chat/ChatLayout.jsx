@@ -1,20 +1,33 @@
 import React, { useEffect, useState } from 'react'
 import { ChatArea } from './ChatArea'
-import { useFriend } from '../../hooks/useFriend';
+import { useSenders } from '../../hooks/useSenders';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { motion } from 'framer-motion';
 import { Search, Users, MessageCircle } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 export const ChatLayout = () => {
-    const { friends, fetchFriends } = useFriend();
+    const { senders, fetchSenders } = useSenders();
+    // Map senders to the same `friend` shape this component expects
+
+    const friends = (senders || []).map(s => ({
+        _id: s._id,
+        name: s.user?.name || s.hotel?.name || 'Unknown',
+        email: s.user?.email || '',
+        profilePicture: s.user?.profilePicture || '',
+        latestMessage: s.latestMessage,
+        unreadCount: s.unreadCount || 0,
+        hotelName: s.hotel?.name || null
+    }));
+
+    console.log('Mapped friends:', friends);
     const [selectedFriend, setSelectedFriend] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showSidebar, setShowSidebar] = useState(true);
     const [searchParams] = useSearchParams();
 
     useEffect(() => {
-        fetchFriends();
+    fetchSenders();
 
         // Hide sidebar on mobile by default
         const handleResize = () => {
@@ -129,7 +142,7 @@ export const ChatLayout = () => {
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
                                     <h3 className='text-base font-semibold text-gray-800'>{friend.name}</h3>
-                                    <p className='text-sm text-gray-500 truncate'>{friend.email}</p>
+                                    <p className='text-sm text-gray-500 truncate'>{friend.hotelName ? friend.hotelName : friend.email}</p>
                                 </div>
                             </motion.div>
                         ))

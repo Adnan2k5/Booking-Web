@@ -12,11 +12,9 @@ class InstructorAchievementService {
    */
   async evaluateAfterBooking(instructorUserId) {
     try {
-      console.log(`Evaluating achievements for instructor: ${instructorUserId}`);
       const newlyAwarded = await evaluateAndAwardForInstructor(instructorUserId);
       
       if (newlyAwarded.length > 0) {
-        console.log(`Instructor ${instructorUserId} earned new achievements:`, newlyAwarded);
         // Here you could add notification logic, email sending, etc.
         await this.notifyInstructorOfNewAchievements(instructorUserId, newlyAwarded);
       }
@@ -34,11 +32,9 @@ class InstructorAchievementService {
    */
   async evaluateAfterRatingUpdate(instructorUserId) {
     try {
-      console.log(`Evaluating achievements after rating update for instructor: ${instructorUserId}`);
       const newlyAwarded = await evaluateAndAwardForInstructor(instructorUserId);
       
       if (newlyAwarded.length > 0) {
-        console.log(`Instructor ${instructorUserId} earned new achievements after rating update:`, newlyAwarded);
         await this.notifyInstructorOfNewAchievements(instructorUserId, newlyAwarded);
       }
       

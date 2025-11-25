@@ -15,7 +15,7 @@ const sendEmail = async (mailOptions) => {
         // verify connection configuration
         transporter.verify(function (error, success) {
             if (error) {
-                console.log(error);
+                console.error(error);
                 reject(error);
             } else {
                 resolve(success);

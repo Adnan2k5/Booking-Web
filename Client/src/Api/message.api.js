@@ -37,6 +37,18 @@ export const getAllChats = async () => {
   }
 };
 
+// Get all distinct users who sent messages to the current user
+export const getSendersApi = async () => {
+  try {
+    const response = await axiosClient.get(`${BASE_URL}/senders`, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Mark a message as read
 export const markMessageAsRead = async (messageId) => {
   try {

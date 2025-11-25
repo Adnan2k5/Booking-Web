@@ -103,7 +103,6 @@ export const paypalOnboardingComplete = asyncHandler(async (req, res) => {
     riskStatus
   } = req.query;
 
-  console.log("PayPal onboarding callback received:", req.query);
 
   if (!userId) {
     return res.status(400).send("Missing userId parameter");
@@ -131,8 +130,6 @@ export const paypalOnboardingComplete = asyncHandler(async (req, res) => {
     if (!user) {
       return res.status(404).send("User not found");
     }
-
-    console.log(`PayPal onboarding completed for user: ${user._id}`);
 
     // Redirect to frontend success page
     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/paypal/success?status=linked&userId=${userId}`);

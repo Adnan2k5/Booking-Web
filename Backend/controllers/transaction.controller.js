@@ -102,7 +102,6 @@ const getConfirmedBookings = async () => {
         providerInfo: booking.session?.instructor
       })));
     } else {
-      console.log('SessionBooking model not found, checking regular Booking model for sessions...');
       
       // Check if regular Booking model has session-related bookings
       const sessionBookings = await Booking.find({
@@ -136,7 +135,7 @@ const getConfirmedBookings = async () => {
       bookings.push(...populatedBookings.filter(Boolean));
     }
   } catch (error) {
-    console.log('Error processing session bookings:', error.message);
+    console.error('Error processing session bookings:', error.message);
   }
   
   // Get confirmed hotel bookings (if HotelBooking model exists)

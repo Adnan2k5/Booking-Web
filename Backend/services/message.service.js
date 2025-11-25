@@ -17,7 +17,6 @@ class MessageService {
                 console.warn('Cannot send booking message: missing user IDs');
                 return null;
             }
-
             const messageContent = this.formatBookingMessage(bookingDetails, fromUserId);
 
             const message = await Message.create({
@@ -29,7 +28,6 @@ class MessageService {
                 isRead: false,
             });
 
-            console.log(`Booking confirmation message sent from ${fromUserId} to ${toUserId}`);
             return message;
         } catch (error) {
             console.error('Error sending booking confirmation message:', error);
@@ -52,13 +50,13 @@ class MessageService {
 
         switch (type) {
             case 'session':
-                return `Hi! Your booking for ${adventureName} on ${date} at ${time} has been confirmed. ${location ? `Location: ${location}. ` : ''}Looking forward to seeing you! Feel free to ask any questions. 💬 ${chatPrompt}: ${chatLink}`;
+                return `Hi! Your booking for ${adventureName} on ${date} at ${time} has been confirmed. ${location ? `Location: ${location}. ` : ''}Looking forward to seeing you! Feel free to ask any questions. 💬 ${chatPrompt}`;
 
             case 'hotel':
-                return `Hello! Your reservation at ${hotelName} from ${checkIn} to ${checkOut} is confirmed. We're excited to host you! Let us know if you need anything. 💬 ${chatPrompt}: ${chatLink}`;
+                return `Hello! Your reservation at ${hotelName} from ${checkIn} to ${checkOut} is confirmed. We're excited to host you! Let us know if you need anything. 💬 ${chatPrompt}`;
 
             case 'event':
-                return `Great news! Your booking for ${eventTitle} on ${date}${time ? ` at ${time}` : ''} is confirmed. ${location ? `Location: ${location}. ` : ''}Can't wait to see you there! Reach out if you have any questions. 💬 ${chatPrompt}: ${chatLink}`;
+                return `Great news! Your booking for ${eventTitle} on ${date}${time ? ` at ${time}` : ''} is confirmed. ${location ? `Location: ${location}. ` : ''}Can't wait to see you there! Reach out if you have any questions. 💬 ${chatPrompt}`;
 
             default:
                 return `Your booking has been confirmed! Looking forward to seeing you. Feel free to reach out if you have any questions. 💬 ${chatPrompt}: ${chatLink}`;
@@ -88,7 +86,15 @@ class MessageService {
      */
     formatTime(time) {
         if (!time) return '';
-        // Convert 24h to 12h format
+        // If time is a Date, convert to string
+        if (time instanceof Date) {
+            time = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        } else if (typeof time === 'number') {
+            time = new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        } else if (typeof time !== 'string') {
+            return 'N/A';
+        }
+        // Now safe to split
         const [hours, minutes] = time.split(':');
         const h = parseInt(hours);
         const ampm = h >= 12 ? 'PM' : 'AM';
