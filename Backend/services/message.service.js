@@ -51,13 +51,13 @@ class MessageService {
 
         switch (type) {
             case 'session':
-                return `Hi! Your booking for ${adventureName} on ${date} at ${time} has been confirmed. ${location ? `Location: ${location}. ` : ''}Looking forward to seeing you! Feel free to ask any questions. 💬 ${chatPrompt}: ${chatLink}`;
+                return `Hi! Your booking for ${adventureName} on ${date} at ${time} has been confirmed. ${location ? `Location: ${location}. ` : ''}Looking forward to seeing you! Feel free to ask any questions. 💬 ${chatPrompt}`;
 
             case 'hotel':
-                return `Hello! Your reservation at ${hotelName} from ${checkIn} to ${checkOut} is confirmed. We're excited to host you! Let us know if you need anything. 💬 ${chatPrompt}: ${chatLink}`;
+                return `Hello! Your reservation at ${hotelName} from ${checkIn} to ${checkOut} is confirmed. We're excited to host you! Let us know if you need anything. 💬 ${chatPrompt}`;
 
             case 'event':
-                return `Great news! Your booking for ${eventTitle} on ${date}${time ? ` at ${time}` : ''} is confirmed. ${location ? `Location: ${location}. ` : ''}Can't wait to see you there! Reach out if you have any questions. 💬 ${chatPrompt}: ${chatLink}`;
+                return `Great news! Your booking for ${eventTitle} on ${date}${time ? ` at ${time}` : ''} is confirmed. ${location ? `Location: ${location}. ` : ''}Can't wait to see you there! Reach out if you have any questions. 💬 ${chatPrompt}`;
 
             default:
                 return `Your booking has been confirmed! Looking forward to seeing you. Feel free to reach out if you have any questions. 💬 ${chatPrompt}: ${chatLink}`;
