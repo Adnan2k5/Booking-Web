@@ -17,7 +17,6 @@ class MessageService {
                 console.warn('Cannot send booking message: missing user IDs');
                 return null;
             }
-
             const messageContent = this.formatBookingMessage(bookingDetails, fromUserId);
 
             const message = await Message.create({
