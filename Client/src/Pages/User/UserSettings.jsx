@@ -39,7 +39,7 @@ export const UserSettings = () => {
             extpassword: extpassword,
             newpassword: newpassword,
         });
-        
+
         if (res.statusCode === 200) {
             toast.success("Password updated successfully.");
             setExtPassword("");
@@ -106,52 +106,52 @@ export const UserSettings = () => {
             setLoading(false);
         }
     }
-    
+
     return (
         <div className="flex">
             <div className="w-full">
-                <Card className="rounded-2xl border-gray-200">
+                <Card className="rounded-2xl border-0 shadow-xl bg-white">
                     <CardHeader>
                         <div className="flex items-center justify-between w-full">
                             <div>
-                                <CardTitle>Profile & Account</CardTitle>
+                                <CardTitle className="text-2xl">Profile & Account</CardTitle>
                                 <p className="text-sm text-gray-500 mt-1">Manage your profile, email and security settings</p>
                             </div>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div>
-                            <h4 className="font-medium mb-3">Personal Information</h4>
+                            <h4 className="font-semibold mb-4 text-lg">Personal Information</h4>
                             <div className="flex flex-col md:flex-row md:items-center md:space-x-6 gap-4">
                                 <div className="flex items-center space-x-4">
-                                    <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center text-xl font-semibold text-gray-700">
-                                        {userProfile.profilePicture ? "" : userProfile.name.split(' ').map(n => n[0]).slice(0,2).join('')}
+                                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+                                        {userProfile.profilePicture ? "" : userProfile.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
                                     </div>
                                     <div>
-                                        <div className="font-semibold">{userProfile.name}</div>
+                                        <div className="font-bold text-lg">{userProfile.name}</div>
                                         <div className="text-sm text-gray-500">{new Date(userProfile.joinDate).toLocaleDateString()}</div>
                                     </div>
                                 </div>
 
                                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Full name</label>
-                                        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="rounded-xl" />
+                                        <label className="text-sm font-semibold text-gray-700">Full name</label>
+                                        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Email</label>
+                                        <label className="text-sm font-semibold text-gray-700">Email</label>
                                         <div className="relative">
                                             <Input
                                                 value={newEmail}
                                                 onChange={handleEmailChange}
-                                                className="rounded-xl pr-24"
+                                                className="rounded-xl pr-24 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                                             />
                                             {!otpSent && isEmailChanged && (
                                                 <Button
                                                     onClick={handleEmailUpdate}
                                                     disabled={loading}
                                                     size="sm"
-                                                    className="absolute right-2 top-1 h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700"
+                                                    className="absolute right-2 top-1 h-8 px-3 text-xs bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700"
                                                 >
                                                     {loading ? "..." : "Send OTP"}
                                                 </Button>
@@ -187,23 +187,23 @@ export const UserSettings = () => {
                         <Separator />
 
                         <div>
-                            <h4 className="font-medium mb-3">Change password</h4>
-                            <p className="text-sm text-gray-500 mb-3">Choose a strong password you haven't used elsewhere.</p>
+                            <h4 className="font-semibold mb-3 text-lg">Change password</h4>
+                            <p className="text-sm text-gray-500 mb-4">Choose a strong password you haven't used elsewhere.</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Current password</label>
-                                    <Input type="password" placeholder="Enter current password" value={extpassword} onChange={(e) => { setExtPassword(e.target.value) }} className="rounded-xl border py-1 px-3" />
+                                    <label className="text-sm font-semibold text-gray-700">Current password</label>
+                                    <Input type="password" placeholder="Enter current password" value={extpassword} onChange={(e) => { setExtPassword(e.target.value) }} className="rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 py-1 px-3" />
                                 </div>
                                 <div className="space-y-2 flex flex-col">
-                                    <label className="text-sm font-medium">New password</label>
-                                    <Input type="password" placeholder="Choose a new password" value={newpassword} onChange={(e) => { setNewPassword(e.target.value) }} className="rounded-xl border py-1 px-3" />
+                                    <label className="text-sm font-semibold text-gray-700">New password</label>
+                                    <Input type="password" placeholder="Choose a new password" value={newpassword} onChange={(e) => { setNewPassword(e.target.value) }} className="rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 py-1 px-3" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            <Button onClick={() => { handlePassword() }} className="rounded-xl bg-black hover:bg-gray-800 text-white">Save changes</Button>
-                            <Button onClick={() => { setFullName(userProfile.name); setNewEmail(userProfile.email); setIsEmailChanged(false); setOtpSent(false); setOtp("") }} variant="ghost" className="rounded-xl">Cancel</Button>
+                        <div className="flex items-center gap-3 pt-2">
+                            <Button onClick={() => { handlePassword() }} className="rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">Save changes</Button>
+                            <Button onClick={() => { setFullName(userProfile.name); setNewEmail(userProfile.email); setIsEmailChanged(false); setOtpSent(false); setOtp("") }} variant="ghost" className="rounded-xl hover:bg-gray-100">Cancel</Button>
                         </div>
                     </CardContent>
                 </Card>

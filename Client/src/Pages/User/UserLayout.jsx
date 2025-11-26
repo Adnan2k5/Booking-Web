@@ -75,35 +75,11 @@ const UserLayout = ({ children, onOpenChat }) => {
         return location.pathname === path || (path === "/dashboard" && location.pathname === "/dashboard")
     }
 
-    // Mock notifications
-    const notifications = [
-        {
-            id: 1,
-            title: "Booking confirmed",
-            message: "Your Mountain Climbing adventure has been confirmed",
-            time: "10 minutes ago",
-            unread: true,
-        },
-        {
-            id: 2,
-            title: "Upcoming adventure",
-            message: "Your Paragliding adventure is in 3 days",
-            time: "2 hours ago",
-            unread: true,
-        },
-        {
-            id: 3,
-            title: "Special offer",
-            message: "Get 20% off on your next booking with code ADVENTURE20",
-            time: "Yesterday",
-            unread: false,
-        },
-    ]
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Top Navigation Bar */}
-            <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <header className="sticky top-0 z-50 bg-gradient-to-r from-white via-blue-50/30 to-purple-50/30 dark:bg-gray-800 shadow-md border-b border-gray-200/50 dark:border-gray-700 backdrop-blur-sm">
                 <div className="w-full px-3 sm:px-4 lg:px-6">
                     <div className="flex h-14 sm:h-16 items-center justify-between">
                         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
@@ -130,14 +106,14 @@ const UserLayout = ({ children, onOpenChat }) => {
                                                     <li key={item.path}>
                                                         <Link
                                                             to={item.path}
-                                                            className={`flex items-center gap-3 px-3 py-2.5 sm:py-3 rounded-md text-sm sm:text-base transition-colors ${isActive(item.path)
-                                                                ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                                                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                            className={`flex items-center gap-3 px-3 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base transition-all duration-300 ${isActive(item.path)
+                                                                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                                                                : "text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
                                                                 }`}
                                                             onClick={() => setIsMobileMenuOpen(false)}
                                                         >
                                                             <span className="shrink-0">{item.icon}</span>
-                                                            <span className="truncate">{item.label}</span>
+                                                            <span className="truncate font-medium">{item.label}</span>
                                                             {isActive(item.path) && <ChevronRight className="ml-auto h-4 w-4" />}
                                                         </Link>
                                                     </li>
@@ -147,7 +123,7 @@ const UserLayout = ({ children, onOpenChat }) => {
                                         <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700">
                                             <Button
                                                 variant="outline"
-                                                className="w-full flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm sm:text-base"
+                                                className="w-full flex items-center gap-2 text-red-500 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-pink-500 border-red-200 hover:border-transparent transition-all duration-300 rounded-xl shadow-md hover:shadow-lg font-medium text-sm sm:text-base"
                                                 onClick={handleLogout}
                                             >
                                                 <LogOut className="h-4 w-4" />
@@ -159,11 +135,11 @@ const UserLayout = ({ children, onOpenChat }) => {
                             </Sheet>
 
                             {/* Logo */}
-                            <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
-                                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-600 flex items-center justify-center text-white shrink-0">
+                            <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0 group">
+                                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white shrink-0 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                                     <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5" />
                                 </div>
-                                <span className="font-bold text-base sm:text-lg lg:text-xl hidden sm:inline-block truncate">{t("userDashboard")}</span>
+                                <span className="font-bold text-base sm:text-lg lg:text-xl hidden sm:inline-block truncate bg-gradient-to-r from-gray-900 to-blue-800 bg-clip-text text-transparent">{t("userDashboard")}</span>
                             </Link>
                         </div>
 
@@ -178,18 +154,18 @@ const UserLayout = ({ children, onOpenChat }) => {
                                 <Button
                                     onClick={onOpenChat}
                                     variant="ghost"
-                                    className="relative group"
+                                    className="relative group hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition-all duration-300"
                                     size="sm"
                                 >
                                     <div className="relative flex items-center gap-2">
                                         <div className="relative">
-                                            <MessageCircle className="h-5 w-5 text-purple-600 group-hover:text-purple-700" />
+                                            <MessageCircle className="h-5 w-5 text-purple-600 group-hover:text-purple-700 transition-colors" />
                                             {/* Notification badge */}
-                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white border border-white">
+                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-red-500 to-pink-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-white shadow-lg animate-pulse">
                                                 3
                                             </div>
                                         </div>
-                                        <span className="hidden lg:inline text-sm font-medium text-purple-600 group-hover:text-purple-700">
+                                        <span className="hidden lg:inline text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                                             Messages
                                         </span>
                                     </div>
@@ -199,10 +175,10 @@ const UserLayout = ({ children, onOpenChat }) => {
                             {/* User Menu */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full">
-                                        <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                                    <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full hover:scale-110 transition-transform duration-300">
+                                        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-purple-200 hover:ring-purple-400 transition-all duration-300">
                                             <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-                                            <AvatarFallback className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-sm sm:text-base">
+                                            <AvatarFallback className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 text-white text-sm sm:text-base font-bold">
                                                 {user?.user?.email?.[0]?.toUpperCase() || "U"}
                                             </AvatarFallback>
                                         </Avatar>
@@ -243,7 +219,7 @@ const UserLayout = ({ children, onOpenChat }) => {
             {/* Main Content */}
             <div className="flex min-h-screen">
                 {/* Desktop Sidebar */}
-                <aside className="hidden lg:block w-64 xl:w-72 fixed inset-y-0 pt-14 sm:pt-16 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-30">
+                <aside className="hidden lg:block w-64 xl:w-72 fixed inset-y-0 pt-14 sm:pt-16 bg-gradient-to-b from-white via-blue-50/20 to-purple-50/20 dark:bg-gray-800 border-r border-gray-200/50 dark:border-gray-700 z-30 shadow-lg">
                     <div className="flex flex-col h-full">
                         <nav className="flex-1 px-4 xl:px-6 py-6 overflow-y-auto">
                             <ul className="space-y-1">
@@ -251,23 +227,23 @@ const UserLayout = ({ children, onOpenChat }) => {
                                     <li key={item.path}>
                                         <Link
                                             to={item.path}
-                                            className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${isActive(item.path)
-                                                ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 ${isActive(item.path)
+                                                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105"
+                                                : "text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:scale-102"
                                                 }`}
                                         >
                                             <span className="shrink-0">{item.icon}</span>
-                                            <span className="truncate">{item.label}</span>
+                                            <span className="truncate font-medium">{item.label}</span>
                                             {isActive(item.path) && <ChevronRight className="ml-auto h-4 w-4" />}
                                         </Link>
                                     </li>
                                 ))}
                             </ul>
                         </nav>
-                        <div className="p-4 xl:p-6 border-t border-gray-200 dark:border-gray-700">
+                        <div className="p-4 xl:p-6 border-t border-gray-200/50 dark:border-gray-700">
                             <Button
                                 variant="outline"
-                                className="w-full flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                className="w-full flex items-center gap-2 text-red-500 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-pink-500 border-red-200 hover:border-transparent transition-all duration-300 rounded-xl shadow-md hover:shadow-lg font-medium"
                                 onClick={handleLogout}
                             >
                                 <LogOut className="h-4 w-4" />
@@ -278,7 +254,7 @@ const UserLayout = ({ children, onOpenChat }) => {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 lg:ml-64 xl:ml-72 pt-14 sm:pt-16 min-h-screen bg-gray-50 dark:bg-gray-900">
+                <main className="flex-1 lg:ml-64 xl:ml-72 pt-14 sm:pt-16 min-h-screen">
                     <div className="w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
                         <div className="max-w-7xl mx-auto">
                             {children}

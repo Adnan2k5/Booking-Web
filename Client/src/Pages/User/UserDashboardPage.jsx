@@ -237,57 +237,61 @@ export default function UserDashboardPage() {
 
     return (
         <UserLayout onOpenChat={() => setChatOpen(true)}>
-            <div className="min-h-screen  p-4 sm:p-6">
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 p-4 sm:p-6">
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
                         <div>
-                            <h1 className="text-3xl font-bold text-black">Dashboard</h1>
-                            <p className="text-gray-600">Welcome back, {userProfile.name}</p>
+                            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-2">Dashboard</h1>
+                            <p className="text-gray-600 text-lg">Welcome back, <span className="font-semibold text-gray-900">{userProfile.name}</span></p>
                         </div>
 
-                        <div className="flex px-3 items-center gap-3">
-                            <Link to="/browse" variant="outline" className="flex px-3 py-1 text-white bg-black items-center gap-2 rounded-xl  hover:bg-gray-800">
+                        <div className="flex items-center gap-3">
+                            <Link to="/browse" className="flex px-5 py-2.5 text-white bg-gradient-to-r from-blue-600 to-purple-600 items-center gap-2 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 font-medium">
                                 <Calendar className="h-4 w-4" />
                                 Browse Adventures
                             </Link>
 
-                            <Link to="/shop" className="bg-black px-3 py-1 text-white hover:bg-gray-800 rounded-xl">Shop</Link>
+                            <Link to="/shop" className="bg-gradient-to-r from-gray-900 to-gray-700 px-5 py-2.5 text-white hover:from-gray-800 hover:to-gray-600 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl font-medium">Shop</Link>
                         </div>
                     </div>
 
                     {/* User Stats Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
                         {/* Level Card */}
-                        <Card className="rounded-2xl border-gray-200">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg font-medium">Overall Adventure Level</CardTitle>
+                        <Card className="rounded-2xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-blue-600 to-purple-600 text-white overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <CardHeader className="pb-3 relative z-10">
+                                <CardTitle className="text-lg font-semibold text-white/90">Overall Adventure Level</CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="relative z-10">
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
-                                        <Avatar className="h-16 w-16 border-2 border-black">
-                                            <AvatarFallback className="bg-black text-white text-lg font-bold">
+                                        <Avatar className="h-20 w-20 border-4 border-white/30 shadow-lg">
+                                            <AvatarFallback className="bg-white text-blue-600 text-2xl font-bold">
                                                 {userProfile.level}
                                             </AvatarFallback>
                                         </Avatar>
+                                        <div className="absolute -bottom-1 -right-1 bg-yellow-400 rounded-full p-1.5 shadow-md">
+                                            <Award className="h-3 w-3 text-yellow-900" />
+                                        </div>
                                     </div>
                                     <div className="flex-1">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="font-medium">Level {userProfile.level}</span>
-                                            <span className="text-sm text-gray-500">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="font-bold text-xl text-white">Level {userProfile.level}</span>
+                                            <span className="text-sm text-white/80 font-medium">
                                                 {userProfile.experience}/{userProfile.nextLevel} XP
                                             </span>
                                         </div>
-                                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                                            <div className="h-full bg-black rounded-full transition-all duration-500"
+                                        <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+                                            <div className="h-full bg-gradient-to-r from-yellow-300 to-yellow-500 rounded-full transition-all duration-500 shadow-lg"
                                                 style={{ width: `${progressPercentage}%` }}></div>
                                         </div>
-                                        <div className="flex justify-between mt-1">
-                                            <p className="text-xs text-gray-500">
-                                                {userProfile.nextLevel - userProfile.experience} XP to next milestone
+                                        <div className="flex justify-between mt-2">
+                                            <p className="text-xs text-white/70">
+                                                {userProfile.nextLevel - userProfile.experience} XP to next
                                             </p>
-                                            <p className="text-xs text-gray-500">
+                                            <p className="text-xs text-white/70">
                                                 {userProfile.adventureCount} adventures
                                             </p>
                                         </div>
@@ -297,20 +301,21 @@ export default function UserDashboardPage() {
                         </Card>
 
                         {/* Completed Adventures */}
-                        <Card className="rounded-2xl border-gray-200">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg font-medium">Completed Adventures</CardTitle>
+                        <Card className="rounded-2xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-white overflow-hidden group hover:scale-105">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+                            <CardHeader className="pb-3 relative z-10">
+                                <CardTitle className="text-lg font-semibold text-gray-700">Completed Adventures</CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="relative z-10">
                                 <div className="flex items-center gap-4">
-                                    <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
-                                        <Award className="h-8 w-8 text-black" />
+                                    <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform duration-300">
+                                        <Award className="h-10 w-10 text-white" />
                                     </div>
                                     <div>
-                                        <p className="text-3xl font-bold">
+                                        <p className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                                             {loading ? "..." : error ? "0" : userProfile.completedAdventures}
                                         </p>
-                                        <p className="text-sm text-gray-500">Adventures completed</p>
+                                        <p className="text-sm text-gray-600 font-medium">Adventures completed</p>
                                         {error && (
                                             <p className="text-xs text-red-500 mt-1">{error}</p>
                                         )}
@@ -320,20 +325,21 @@ export default function UserDashboardPage() {
                         </Card>
 
                         {/* Upcoming Adventures */}
-                        <Card className="rounded-2xl border-gray-200">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg font-medium">Upcoming Adventures</CardTitle>
+                        <Card className="rounded-2xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-white overflow-hidden group hover:scale-105">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-400/20 to-amber-400/20 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+                            <CardHeader className="pb-3 relative z-10">
+                                <CardTitle className="text-lg font-semibold text-gray-700">Upcoming Adventures</CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="relative z-10">
                                 <div className="flex items-center gap-4">
-                                    <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
-                                        <Calendar className="h-8 w-8 text-black" />
+                                    <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform duration-300">
+                                        <Calendar className="h-10 w-10 text-white" />
                                     </div>
                                     <div>
-                                        <p className="text-3xl font-bold">
+                                        <p className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                                             {loading ? "..." : error ? "0" : userProfile.upcomingAdventures}
                                         </p>
-                                        <p className="text-sm text-gray-500">Adventures scheduled</p>
+                                        <p className="text-sm text-gray-600 font-medium">Adventures scheduled</p>
                                         {error && (
                                             <p className="text-xs text-red-500 mt-1">{error}</p>
                                         )}
@@ -344,20 +350,20 @@ export default function UserDashboardPage() {
                     </div>
 
                     {/* Adventure Experiences Section */}
-                    <div className="mb-8">
-                        <div className="flex items-center justify-between mb-6">
+                    <div className="mb-10">
+                        <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900">Adventure Experience</h2>
-                                <p className="text-gray-600">
+                                <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Adventure Experience</h2>
+                                <p className="text-gray-600 mt-1 text-lg">
                                     {adventureExperiences.length > 0
                                         ? `Your progress in ${adventureExperiences.length} adventure${adventureExperiences.length !== 1 ? 's' : ''}`
                                         : "Your progress in each adventure"
                                     }
                                 </p>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Target className="h-5 w-5 text-gray-500" />
-                                <span className="text-sm text-gray-600">
+                            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-md">
+                                <Target className="h-5 w-5 text-purple-600" />
+                                <span className="text-sm text-gray-700 font-semibold">
                                     {userProfile.adventureCount} Adventure{userProfile.adventureCount !== 1 ? 's' : ''}
                                 </span>
                             </div>
@@ -403,7 +409,7 @@ export default function UserDashboardPage() {
 
                     <div className="stats">
                         <div className="lg:col-span-2">
-                            <Card className="rounded-2xl border-gray-200">
+                            <Card className="rounded-2xl border-0 shadow-xl bg-white">
                                 <CardHeader>
                                     <CardTitle>Level Overview</CardTitle>
                                 </CardHeader>
