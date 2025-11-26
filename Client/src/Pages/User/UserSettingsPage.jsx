@@ -9,8 +9,8 @@ export default function UserSettingsPage() {
                     {/* Header */}
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
                         <div>
-                            <h1 className="text-3xl font-bold text-black">Settings</h1>
-                            <p className="text-gray-600">Customize your account preferences</p>
+                            <h1 className="text-3xl font-bold text-black">Profile & Settings</h1>
+                            <p className="text-gray-600">Manage your profile, contact details and security preferences</p>
                         </div>
                     </div>
 
