@@ -265,6 +265,39 @@ export const getAllSessions = asyncHandler(async (req, res, next) => {
   return res.status(200).json(sessions);
 });
 
+// Get all sessions from other instructors (excluding current instructor)
+export const getAllOtherInstructorsSessions = asyncHandler(async (req, res, next) => {
+  const { excludeInstructor, startDate, endDate } = req.query;
+
+  let query = {};
+
+  // Exclude specific instructor if provided
+  if (excludeInstructor) {
+    query.instructorId = { $ne: excludeInstructor };
+  }
+
+  // Filter by date range if provided
+  if (startDate || endDate) {
+    query.startTime = {};
+    if (startDate) {
+      query.startTime.$gte = new Date(startDate);
+    }
+    if (endDate) {
+      query.startTime.$lte = new Date(endDate);
+    }
+  }
+
+  const sessions = await Session.find(query)
+    .select('startTime expiresAt capacity status instructorId')
+    .lean();
+
+  return res.status(200).json({
+    success: true,
+    count: sessions.length,
+    data: sessions
+  });
+});
+
 export const getInstructorSessions = asyncHandler(async (req, res, next) => {
   const { location, session_date, adventure } = req.query;
 
@@ -348,14 +381,14 @@ export const getInstructorSessionsWithBookings = asyncHandler(async (req, res) =
     const now = new Date();
     const startTime = new Date(session.startTime);
     const expiresAt = new Date(session.expiresAt);
-    
+
     let computedStatus = 'upcoming';
     if (now > expiresAt) {
       computedStatus = 'expired';
     } else if (now >= startTime) {
       computedStatus = 'completed';
     }
-    
+
     // Calculate available seats
     let bookedSeats = 0;
     if (session.booking) {
@@ -364,9 +397,9 @@ export const getInstructorSessionsWithBookings = asyncHandler(async (req, res) =
         bookedSeats += session.booking.groupMember.length;
       }
     }
-    
+
     const availableSeats = Math.max(0, session.capacity - bookedSeats);
-    
+
     return {
       ...session.toObject(),
       computedStatus,

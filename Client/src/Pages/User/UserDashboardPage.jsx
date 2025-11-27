@@ -237,55 +237,58 @@ export default function UserDashboardPage() {
 
     return (
         <UserLayout onOpenChat={() => setChatOpen(true)}>
-            <div className="min-h-screen  p-4 sm:p-6">
+            <div className="min-h-screen p-4 sm:p-6">
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
                         <div>
-                            <h1 className="text-3xl font-bold text-black">Dashboard</h1>
-                            <p className="text-gray-600">Welcome back, {userProfile.name}</p>
+                            <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
+                            <p className="text-gray-600 text-lg">Welcome back, <span className="font-semibold text-gray-900">{userProfile.name}</span></p>
                         </div>
 
-                        <div className="flex px-3 items-center gap-3">
-                            <Link to="/browse" variant="outline" className="flex px-3 py-1 text-white bg-black items-center gap-2 rounded-xl  hover:bg-gray-800">
+                        <div className="flex items-center gap-3">
+                            <Link to="/browse" className="flex px-5 py-2.5 text-white bg-gray-900 items-center gap-2 rounded-xl hover:bg-gray-800 transition-all duration-300 shadow-lg hover:shadow-xl font-medium">
                                 <Calendar className="h-4 w-4" />
                                 Browse Adventures
                             </Link>
 
-                            <Link to="/shop" className="bg-black px-3 py-1 text-white hover:bg-gray-800 rounded-xl">Shop</Link>
+                            <Link to="/shop" className="bg-white border-2 border-gray-900 px-5 py-2.5 text-gray-900 hover:bg-gray-50 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg font-medium">Shop</Link>
                         </div>
                     </div>
 
                     {/* User Stats Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                         {/* Level Card */}
-                        <Card className="rounded-2xl border-gray-200">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg font-medium">Overall Adventure Level</CardTitle>
+                        <Card className="rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg font-semibold text-gray-900">Overall Adventure Level</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
-                                        <Avatar className="h-16 w-16 border-2 border-black">
-                                            <AvatarFallback className="bg-black text-white text-lg font-bold">
+                                        <Avatar className="h-20 w-20 border-4 border-gray-200 shadow-lg">
+                                            <AvatarFallback className="bg-gray-900 text-white text-2xl font-bold">
                                                 {userProfile.level}
                                             </AvatarFallback>
                                         </Avatar>
+                                        <div className="absolute -bottom-1 -right-1 bg-yellow-400 rounded-full p-1.5 shadow-md">
+                                            <Award className="h-3 w-3 text-yellow-900" />
+                                        </div>
                                     </div>
                                     <div className="flex-1">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="font-medium">Level {userProfile.level}</span>
-                                            <span className="text-sm text-gray-500">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="font-bold text-xl text-gray-900">Level {userProfile.level}</span>
+                                            <span className="text-sm text-gray-600 font-medium">
                                                 {userProfile.experience}/{userProfile.nextLevel} XP
                                             </span>
                                         </div>
-                                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                                            <div className="h-full bg-black rounded-full transition-all duration-500"
+                                        <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                                            <div className="h-full bg-gray-900 rounded-full transition-all duration-500"
                                                 style={{ width: `${progressPercentage}%` }}></div>
                                         </div>
-                                        <div className="flex justify-between mt-1">
+                                        <div className="flex justify-between mt-2">
                                             <p className="text-xs text-gray-500">
-                                                {userProfile.nextLevel - userProfile.experience} XP to next milestone
+                                                {userProfile.nextLevel - userProfile.experience} XP to next
                                             </p>
                                             <p className="text-xs text-gray-500">
                                                 {userProfile.adventureCount} adventures
@@ -297,20 +300,20 @@ export default function UserDashboardPage() {
                         </Card>
 
                         {/* Completed Adventures */}
-                        <Card className="rounded-2xl border-gray-200">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg font-medium">Completed Adventures</CardTitle>
+                        <Card className="rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group hover:scale-105">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg font-semibold text-gray-900">Completed Adventures</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex items-center gap-4">
-                                    <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
-                                        <Award className="h-8 w-8 text-black" />
+                                    <div className="h-20 w-20 rounded-2xl bg-gray-100 flex items-center justify-center shadow-md">
+                                        <Award className="h-10 w-10 text-gray-900" />
                                     </div>
                                     <div>
-                                        <p className="text-3xl font-bold">
+                                        <p className="text-4xl font-bold text-gray-900">
                                             {loading ? "..." : error ? "0" : userProfile.completedAdventures}
                                         </p>
-                                        <p className="text-sm text-gray-500">Adventures completed</p>
+                                        <p className="text-sm text-gray-600 font-medium">Adventures completed</p>
                                         {error && (
                                             <p className="text-xs text-red-500 mt-1">{error}</p>
                                         )}
@@ -320,20 +323,20 @@ export default function UserDashboardPage() {
                         </Card>
 
                         {/* Upcoming Adventures */}
-                        <Card className="rounded-2xl border-gray-200">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg font-medium">Upcoming Adventures</CardTitle>
+                        <Card className="rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group hover:scale-105">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg font-semibold text-gray-900">Upcoming Adventures</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex items-center gap-4">
-                                    <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
-                                        <Calendar className="h-8 w-8 text-black" />
+                                    <div className="h-20 w-20 rounded-2xl bg-gray-100 flex items-center justify-center shadow-md">
+                                        <Calendar className="h-10 w-10 text-gray-900" />
                                     </div>
                                     <div>
-                                        <p className="text-3xl font-bold">
+                                        <p className="text-4xl font-bold text-gray-900">
                                             {loading ? "..." : error ? "0" : userProfile.upcomingAdventures}
                                         </p>
-                                        <p className="text-sm text-gray-500">Adventures scheduled</p>
+                                        <p className="text-sm text-gray-600 font-medium">Adventures scheduled</p>
                                         {error && (
                                             <p className="text-xs text-red-500 mt-1">{error}</p>
                                         )}
@@ -343,67 +346,9 @@ export default function UserDashboardPage() {
                         </Card>
                     </div>
 
-                    {/* Adventure Experiences Section */}
-                    <div className="mb-8">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-900">Adventure Experience</h2>
-                                <p className="text-gray-600">
-                                    {adventureExperiences.length > 0
-                                        ? `Your progress in ${adventureExperiences.length} adventure${adventureExperiences.length !== 1 ? 's' : ''}`
-                                        : "Your progress in each adventure"
-                                    }
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Target className="h-5 w-5 text-gray-500" />
-                                <span className="text-sm text-gray-600">
-                                    {userProfile.adventureCount} Adventure{userProfile.adventureCount !== 1 ? 's' : ''}
-                                </span>
-                            </div>
-                        </div>
-
-                        {experienceLoading ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {[1, 2, 3].map((i) => (
-                                    <div key={i} className="h-64 bg-gray-200 rounded-2xl animate-pulse"></div>
-                                ))}
-                            </div>
-                        ) : adventureExperiences.length > 0 ? (
-                            <div className={getGridClasses(adventureExperiences.length)}>
-                                {adventureExperiences.map((adventureExp, index) => (
-                                    <AdventureExperienceCard
-                                        key={adventureExp._id}
-                                        adventureExp={adventureExp}
-                                        isFullWidth={adventureExperiences.length === 1}
-                                        index={index}
-                                    />
-                                ))}
-                            </div>
-                        ) : (
-                            <Card className="rounded-2xl border-gray-200 border-dashed">
-                                <CardContent className="flex flex-col items-center justify-center py-16">
-                                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                                        <Award className="h-10 w-10 text-gray-400" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No Adventure Experience Yet</h3>
-                                    <p className="text-gray-600 text-center mb-8 max-w-md">
-                                        Start your adventure journey by booking your first session and gain experience points to level up!
-                                    </p>
-                                    <Link
-                                        to="/browse"
-                                        className="bg-black text-white px-8 py-3 rounded-xl hover:bg-gray-800 transition-colors font-medium"
-                                    >
-                                        Browse Adventures
-                                    </Link>
-                                </CardContent>
-                            </Card>
-                        )}
-                    </div>
-
                     <div className="stats">
                         <div className="lg:col-span-2">
-                            <Card className="rounded-2xl border-gray-200">
+                            <Card className="rounded-2xl border-0 shadow-xl bg-white">
                                 <CardHeader>
                                     <CardTitle>Level Overview</CardTitle>
                                 </CardHeader>
@@ -560,6 +505,64 @@ export default function UserDashboardPage() {
                                 </CardContent>
                             </Card>
                         </div>
+                    </div>
+
+                    {/* Adventure Experiences Section */}
+                    <div className="mb-10">
+                        <div className="flex items-center justify-between mb-8 pt-8">
+                            <div>
+                                <h2 className="text-3xl font-bold text-gray-900">Adventure Experience</h2>
+                                <p className="text-gray-600 mt-1 text-lg">
+                                    {adventureExperiences.length > 0
+                                        ? `Your progress in ${adventureExperiences.length} adventure${adventureExperiences.length !== 1 ? 's' : ''}`
+                                        : "Your progress in each adventure"
+                                    }
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-md">
+                                <Target className="h-5 w-5 text-gray-900" />
+                                <span className="text-sm text-gray-700 font-semibold">
+                                    {userProfile.adventureCount} Adventure{userProfile.adventureCount !== 1 ? 's' : ''}
+                                </span>
+                            </div>
+                        </div>
+
+                        {experienceLoading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="h-64 bg-gray-200 rounded-2xl animate-pulse"></div>
+                                ))}
+                            </div>
+                        ) : adventureExperiences.length > 0 ? (
+                            <div className={getGridClasses(adventureExperiences.length)}>
+                                {adventureExperiences.map((adventureExp, index) => (
+                                    <AdventureExperienceCard
+                                        key={adventureExp._id}
+                                        adventureExp={adventureExp}
+                                        isFullWidth={adventureExperiences.length === 1}
+                                        index={index}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <Card className="rounded-2xl border-gray-200 border-dashed">
+                                <CardContent className="flex flex-col items-center justify-center py-16">
+                                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                                        <Award className="h-10 w-10 text-gray-400" />
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No Adventure Experience Yet</h3>
+                                    <p className="text-gray-600 text-center mb-8 max-w-md">
+                                        Start your adventure journey by booking your first session and gain experience points to level up!
+                                    </p>
+                                    <Link
+                                        to="/browse"
+                                        className="bg-black text-white px-8 py-3 rounded-xl hover:bg-gray-800 transition-colors font-medium"
+                                    >
+                                        Browse Adventures
+                                    </Link>
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
                 </div>
             </div>

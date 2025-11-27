@@ -18,11 +18,10 @@ import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Card, CardContent } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
-import { Link, useSearchParams, useNavigate } from "react-router-dom"
+import { useSearchParams, useNavigate } from "react-router-dom"
 import { useHotels } from "../../hooks/useHotel"
 import { Nav_Landing } from "../../components/Nav_Landing"
 import { fetchLocations } from "../../Api/location.api"
-import { useTranslation } from "react-i18next"
 
 // Lightweight amenity icon detection (keeps previous behavior)
 const amenityIcons = {
@@ -47,7 +46,6 @@ const getAmenityIcon = (amenityName) => {
 }
 
 export default function HotelBrowsingPage() {
-    const { t } = useTranslation()
     const [searchParams, setSearchParams] = useSearchParams()
     const navigate = useNavigate()
 
@@ -118,7 +116,7 @@ export default function HotelBrowsingPage() {
                 <div className="absolute inset-0 max-w-7xl mx-auto px-6 sm:px-8 flex flex-col justify-center z-20">
                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-lg">Find your perfect stay</h1>
-                        <p className="mt-3 text-lg sm:text-xl text-white/90 max-w-2xl">Handpicked hostels, boutique stays and cozy hotels for every kind of traveler. Explore exclusive offers and flexible bookings.</p>
+                        <p className="mt-3 text-lg sm:text-xl text-white/90 max-w-2xl">Handpicked hostels, boutique stays and cozy hostels for every kind of traveler. Explore exclusive offers and flexible bookings.</p>
                     </motion.div>
 
                     {/* Booking Form (overlay) */}

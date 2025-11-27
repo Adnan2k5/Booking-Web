@@ -12,7 +12,7 @@ import InstructorLayout from "./InstructorLayout"
 import SessionCalendar from "../../components/SessionCalendar"
 import UpcomingBookingsCard from "../../components/UpcomingBookingsCard"
 import { getAdventure } from "../../Api/adventure.api"
-import { getInstructorSessions } from "../../Api/session.api"
+import { getInstructorSessions, getAllOtherInstructorsSessions } from "../../Api/session.api"
 import { staggerContainer, fadeIn } from "../../assets/Animations"
 import { getInstructorAchievements, evaluateMyInstructorAchievements } from '../../Api/user.api'
 import { axiosClient } from '../../AxiosClient/axios'
@@ -42,6 +42,8 @@ const InstructorDashboard = () => {
 
     const [upcomingSessionsCount, setUpcomingSessionsCount] = useState(0)
     const [isLoadingSessions, setIsLoadingSessions] = useState(false)
+    const [otherInstructorsSessions, setOtherInstructorsSessions] = useState([])
+    const [otherSessionsCount, setOtherSessionsCount] = useState(0)
 
     const fetchDashboardData = async () => {
         if (!user?.user?._id) return
@@ -60,7 +62,9 @@ const InstructorDashboard = () => {
 
             // Process event bookings
             if (eventBookingsRes.status === 'fulfilled' && eventBookingsRes.value?.data?.success) {
-                const eventBookings = eventBookingsRes.value.data.data || []
+                const eventBookings = Array.isArray(eventBookingsRes.value.data.data)
+                    ? eventBookingsRes.value.data.data
+                    : []
                 allBookings.push(...eventBookings)
                 totalRevenue += eventBookings.reduce((sum, booking) =>
                     sum + (booking.status === 'completed' && booking.paymentStatus === 'completed' ? booking.amount * 0.8 : 0), 0
@@ -69,7 +73,9 @@ const InstructorDashboard = () => {
 
             // Process session bookings
             if (sessionBookingsRes.status === 'fulfilled' && sessionBookingsRes.value?.data?.success) {
-                const sessionBookings = sessionBookingsRes.value.data.data || []
+                const sessionBookings = Array.isArray(sessionBookingsRes.value.data.data)
+                    ? sessionBookingsRes.value.data.data
+                    : []
                 allBookings.push(...sessionBookings)
                 totalRevenue += sessionBookings.reduce((sum, booking) =>
                     sum + (booking.status === 'completed' ? booking.amount * 0.8 : 0), 0
@@ -236,6 +242,33 @@ const InstructorDashboard = () => {
         }
     };
 
+    const fetchOtherInstructorsSessions = async () => {
+        if (!user?.user?._id) return
+
+        try {
+            const now = new Date()
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+            const res = await getAllOtherInstructorsSessions(
+                user.user._id,
+                startOfMonth.toISOString(),
+                endOfMonth.toISOString()
+            )
+
+            if (res.status === 200 && res.data?.success) {
+                const sessions = res.data.data || []
+                setOtherInstructorsSessions(sessions)
+                setOtherSessionsCount(sessions.length)
+            }
+        } catch (error) {
+            console.error("Error fetching other instructors sessions:", error)
+            setOtherInstructorsSessions([])
+            setOtherSessionsCount(0)
+        }
+    }
+
+
     useEffect(() => {
         if (!user.user) {
             toast.error("Please login to access the instructor dashboard")
@@ -259,6 +292,7 @@ const InstructorDashboard = () => {
         fetchDashboardData()
         fetchUpcomingSessions()
         fetchInstructorAchievements()
+        fetchOtherInstructorsSessions()
     }, [user, navigate])
 
     return (
@@ -372,7 +406,11 @@ const InstructorDashboard = () => {
                         </motion.div>
 
                         <motion.div variants={fadeIn} initial="hidden" animate="visible" className="w-full">
-                            <SessionCalendar adventureTypes={adventureTypes} />
+                            <SessionCalendar
+                                adventureTypes={adventureTypes}
+                                otherInstructorsSessions={otherInstructorsSessions}
+                                otherSessionsCount={otherSessionsCount}
+                            />
                         </motion.div>
 
                         <motion.div variants={fadeIn} initial="hidden" animate="visible" className="w-full">

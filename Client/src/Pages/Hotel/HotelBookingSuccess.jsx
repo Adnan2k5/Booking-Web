@@ -4,11 +4,11 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { toast } from "sonner"
-import { 
-  Check, 
-  Calendar, 
-  MapPin, 
-  Home, 
+import {
+  Check,
+  Calendar,
+  MapPin,
+  Home,
   User,
   Download,
   ArrowRight,
@@ -27,14 +27,14 @@ export default function HotelBookingSuccess() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  
+
   const [bookingDetails, setBookingDetails] = useState(
     location.state?.bookingDetails || null
   )
   const [isLoading, setIsLoading] = useState(false)
 
   const bookingId = location.state?.bookingId
-  
+
   // Redirect if there's no booking data
   useEffect(() => {
     if (!bookingId && !bookingDetails) {
@@ -47,8 +47,9 @@ export default function HotelBookingSuccess() {
     if (bookingId && !bookingDetails) {
       const fetchBookingDetails = async () => {
         setIsLoading(true)
-        try {          const response = await getHotelBookingById(bookingId)
-          
+        try {
+          const response = await getHotelBookingById(bookingId)
+
           if (response.data && response.data.success) {
             setBookingDetails(response.data.data)
           } else {
@@ -63,11 +64,11 @@ export default function HotelBookingSuccess() {
           setIsLoading(false)
         }
       }
-      
+
       fetchBookingDetails()
     }
   }, [bookingId, bookingDetails, navigate])
-  
+
   if (isLoading || !bookingDetails) {
     return (
       <div className="min-h-screen bg-white">
@@ -90,11 +91,11 @@ export default function HotelBookingSuccess() {
   const formattedCheckInDate = checkInDate ? new Date(checkInDate).toLocaleDateString() : "N/A"
   const formattedCheckOutDate = checkOutDate ? new Date(checkOutDate).toLocaleDateString() : "N/A"
   const roomQuantity = bookingDetails.hotels?.[0]?.quantity || 1
-  
+
   const handlePrintConfirmation = () => {
     window.print()
   }
-  
+
   const handleDownloadConfirmation = () => {
     // This is a placeholder. In a real app, you would generate a PDF or 
     // make an API call to get a downloadable confirmation
@@ -106,7 +107,7 @@ export default function HotelBookingSuccess() {
       <div className="print:hidden">
         <Navbar />
       </div>
-      
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -123,7 +124,7 @@ export default function HotelBookingSuccess() {
             Your reservation has been successfully processed and confirmed
           </p>
         </div>
-        
+
         {/* Booking details card */}
         <Card className="mb-6 border-2 border-green-100 shadow-md print:shadow-none print:border">
           <CardHeader className="border-b pb-3">
@@ -137,7 +138,7 @@ export default function HotelBookingSuccess() {
               </Badge>
             </div>
           </CardHeader>
-          
+
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row gap-6">
               {/* Left column - Hotel info */}
@@ -158,7 +159,7 @@ export default function HotelBookingSuccess() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center gap-2">
@@ -176,9 +177,9 @@ export default function HotelBookingSuccess() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   {bookingDetails.guestInfo && (
                     <div>
                       <div className="flex items-center gap-2 mb-2">
@@ -192,12 +193,12 @@ export default function HotelBookingSuccess() {
                   )}
                 </div>
               </div>
-              
+
               {/* Right column - Booking summary */}
               <div className="flex-1">
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <h4 className="font-semibold mb-3">Booking Summary</h4>
-                  
+
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Booking ID</span>
@@ -215,18 +216,18 @@ export default function HotelBookingSuccess() {
                       <span className="text-gray-600">Payment Method</span>
                       <span>{bookingDetails.modeOfPayment || "Card"}</span>
                     </div>
-                    
+
                     <Separator />
-                    
+
                     <div className="flex justify-between font-semibold">
                       <span>Total Amount</span>
                       <span>${bookingDetails.amount?.toFixed(2) || "N/A"}</span>
                     </div>
-                    
+
                     {bookingDetails.status && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Status</span>
-                        <Badge 
+                        <Badge
                           variant={bookingDetails.status === "confirmed" ? "success" : "secondary"}
                           className="text-xs"
                         >
@@ -238,7 +239,7 @@ export default function HotelBookingSuccess() {
                 </div>
               </div>
             </div>
-            
+
             {/* Special requests */}
             {bookingDetails.specialRequests && (
               <div className="mt-6 p-3 bg-blue-50 rounded-md">
@@ -248,19 +249,19 @@ export default function HotelBookingSuccess() {
             )}
           </CardContent>
         </Card>
-        
+
         {/* Action buttons */}
         <div className="flex flex-wrap justify-center gap-3 mb-8 print:hidden">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="flex items-center gap-2"
             onClick={handlePrintConfirmation}
           >
             <Printer className="h-4 w-4" />
             Print Confirmation
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="flex items-center gap-2"
             onClick={handleDownloadConfirmation}
           >
@@ -268,7 +269,7 @@ export default function HotelBookingSuccess() {
             Download Receipt
           </Button>
         </div>
-        
+
         {/* Next actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:hidden">
           <Card className="bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer" onClick={() => navigate("/user/bookings")}>
@@ -283,13 +284,13 @@ export default function HotelBookingSuccess() {
               <ArrowRight className="h-5 w-5 text-gray-400" />
             </CardContent>
           </Card>
-          
+
           <Card className="bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer" onClick={() => navigate("/hotels")}>
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Home className="h-5 w-5 text-blue-600" />
                 <div>
-                  <h3 className="font-medium">Browse More Hotels</h3>
+                  <h3 className="font-medium">Browse More Hostels</h3>
                   <p className="text-sm text-gray-600">Discover other places to stay</p>
                 </div>
               </div>
@@ -297,7 +298,7 @@ export default function HotelBookingSuccess() {
             </CardContent>
           </Card>
         </div>
-        
+
         {/* Footer text */}
         <p className="text-center text-gray-500 text-sm mt-8 print:mt-4">
           A confirmation email has been sent to your email address.

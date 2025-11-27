@@ -63,16 +63,36 @@ export const getInstructorSessionsWithBookings = async (queryParams = {}) => {
   }
 };
 
+export const getAllOtherInstructorsSessions = async (currentInstructorId, startDate, endDate) => {
+  try {
+    const params = new URLSearchParams();
+    if (currentInstructorId) params.append('excludeInstructor', currentInstructorId);
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+
+    const res = await axiosClient.get(`/api/session/all?${params.toString()}`, {
+      withCredentials: true,
+    });
+    if (res.status === 200) {
+      return res;
+    }
+    throw new Error(`Unexpected status code: ${res.status}`);
+  } catch (err) {
+    console.error('Error fetching other instructors sessions:', err);
+    throw err;
+  }
+};
+
 export const deleteSession = async (id) => {
   try {
     if (!id) {
       throw new Error('Session ID is required');
     }
-    
+
     const res = await axiosClient.delete(`/api/session/${id}`, {
       withCredentials: true,
     });
-    
+
     if (res.status === 200 || res.status === 204) {
       return res;
     }

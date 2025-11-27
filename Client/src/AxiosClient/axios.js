@@ -9,11 +9,19 @@ export const axiosClient = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor to add language header
+// Request interceptor to add language header and authorization token
 axiosClient.interceptors.request.use(
   (config) => {
     // Add the current language to request headers
-    return setLanguageHeaders(config);
+    const configWithLang = setLanguageHeaders(config);
+
+    // Add authorization token if available
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      configWithLang.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return configWithLang;
   },
   (error) => {
     return Promise.reject(error);

@@ -66,19 +66,20 @@ export default function UserBookingsPage() {
             || (b.items && b.items.length > 0 && (b.items[0].item?.description || b.items[0].itemDescription))
             || ''
           return (
-            <Card key={b._id} className="rounded-2xl">
-              <div className="h-40 w-full relative">
-                <img src={imageSrc} alt="media" className="w-full h-full object-cover" />
-                <Badge className="absolute top-2 right-2">{statusLabel}</Badge>
+            <Card key={b._id} className="rounded-2xl border-0 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group hover:scale-105">
+              <div className="h-40 w-full relative overflow-hidden">
+                <img src={imageSrc} alt="media" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <Badge className="absolute top-2 right-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-lg">{statusLabel}</Badge>
               </div>
               <CardHeader className="pt-4">
-                <CardTitle>{title}</CardTitle>
+                <CardTitle className="text-lg">{title}</CardTitle>
                 <CardDescription className="text-sm text-gray-600">{description}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between items-center">
-                  <div className="text-sm">${priceDisplay}</div>
-                  <Button variant="outline" onClick={() => handleViewDetails(b)}>View Details</Button>
+                  <div className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">${priceDisplay}</div>
+                  <Button variant="outline" onClick={() => handleViewDetails(b)} className="rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300">View Details</Button>
                 </div>
               </CardContent>
             </Card>
@@ -90,24 +91,24 @@ export default function UserBookingsPage() {
 
   return (
     <UserLayout>
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20">
         <div className="max-w-7xl mx-auto py-8">
-          <h1 className="text-3xl font-bold mb-2">My Bookings</h1>
-          <p className="text-gray-600 mb-6">Manage your adventure bookings</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-2">My Bookings</h1>
+          <p className="text-gray-600 mb-8 text-lg">Manage your adventure bookings</p>
 
           <Tabs value={activeTab} onValueChange={handleTabChange}>
-            <TabsList className="grid grid-cols-3 mb-6">
-              <TabsTrigger value="sessions">
+            <TabsList className="grid grid-cols-3 mb-8 bg-white shadow-md rounded-xl p-1">
+              <TabsTrigger value="sessions" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg transition-all duration-300 flex items-center gap-2">
                 <Activity className="h-4 w-4" />
-                Sessions
+                <span className="hidden sm:inline">Sessions</span>
               </TabsTrigger>
-              <TabsTrigger value="hotels">
+              <TabsTrigger value="hotels" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg transition-all duration-300 flex items-center gap-2">
                 <Hotel className="h-4 w-4" />
-                Hotels
+                <span className="hidden sm:inline">Hotels</span>
               </TabsTrigger>
-              <TabsTrigger value="items">
+              <TabsTrigger value="items" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg transition-all duration-300 flex items-center gap-2">
                 <Package className="h-4 w-4" />
-                Items
+                <span className="hidden sm:inline">Items</span>
               </TabsTrigger>
             </TabsList>
 
