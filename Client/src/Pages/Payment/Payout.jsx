@@ -107,7 +107,20 @@ export default function PayoutPage() {
 
         bookingsData.forEach((result, index) => {
           if (result.status === 'fulfilled' && result.value?.data?.success) {
-            const bookings = result.value.data.data || [];
+            // Handle both direct array and paginated response (with docs property)
+            let bookings = result.value.data.data || [];
+
+            // If the data has a docs property (paginated), use that instead
+            if (bookings.docs && Array.isArray(bookings.docs)) {
+              bookings = bookings.docs;
+            }
+
+            // Ensure bookings is an array before proceeding
+            if (!Array.isArray(bookings)) {
+              console.warn(`Bookings data is not an array for request ${index}:`, bookings);
+              return;
+            }
+
             bookingCount += bookings.length;
 
             bookings.forEach(booking => {
@@ -515,7 +528,6 @@ export default function PayoutPage() {
                   <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• Automatic daily processing at 2 AM UTC</li>
                     <li>• Only bookings older than 24 hours are processed</li>
-                    <li>• Minimum payout amount: $10 USD</li>
                     <li>• Payouts sent directly to your PayPal account</li>
                   </ul>
                 </div>
