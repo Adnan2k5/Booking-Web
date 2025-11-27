@@ -913,7 +913,7 @@ export const HotelRegister = () => {
                             className="w-full bg-black hover:bg-gray-800 text-white transition-transform active:scale-95"
                             disabled={loading}
                         >
-                            {loading ? "Processing..." : otpDialog ? "Verify OTP" : "Submit Hotel Application"}
+                            {loading ? "Processing..." : otpDialog ? "Verify OTP" : "Submit Hostel Application"}
                         </Button>
                         <p className="mt-3 text-center text-sm text-gray-500">
                             By submitting, you agree to our terms and conditions. Your application will be reviewed by our team.

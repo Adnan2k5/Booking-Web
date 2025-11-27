@@ -29,11 +29,11 @@ export default function HotelPendingReview() {
                             <Clock className="h-8 w-8 text-yellow-600" />
                         </div>
                         <CardTitle className="text-2xl font-bold">Application Under Review</CardTitle>
-                        <CardDescription>Thank you for registering your hotel with us</CardDescription>
+                        <CardDescription>Thank you for registering your hostel with us</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 text-center">
                         <p className="text-gray-600">
-                            Our team is currently reviewing your hotel application. This process typically takes 1-3 business days.
+                            Our team is currently reviewing your hostel application. This process typically takes 1-3 business days.
                         </p>
 
                         <div className="bg-blue-50 p-4 rounded-lg">
@@ -44,7 +44,7 @@ export default function HotelPendingReview() {
                             <ul className="text-sm text-blue-600 text-left list-disc pl-5 space-y-1">
                                 <li>Our team will verify all submitted documents</li>
                                 <li>We may contact you for additional information if needed</li>
-                                <li>Once confirmed, you can see your hotel listing</li>
+                                <li>Once confirmed, you can see your hostel listing</li>
                             </ul>
                         </div>
                     </CardContent>
