@@ -15,12 +15,25 @@ export default function AdventureShop() {
   const [categories] = useState(['Camping', 'Clothing', 'Footwear', 'Accessories', 'Equipment']);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [adventures, setAdventures] = useState([]);
+  const [selectedAdventure, setSelectedAdventure] = useState("");
   const { addToCart } = useContext(CartContext);
   const location = useLocation();
 
   const baseUrl = import.meta.env.VITE_SERVER_URL;
   const productsRef = useRef(null);
   const navigate = useNavigate();
+
+  // Fetch adventures from API
+  const fetchAdventures = async () => {
+    try {
+      const response = await fetch(`${baseUrl}api/adventure/all`);
+      const data = await response.json();
+      setAdventures(data.adventures || []);
+    } catch (error) {
+      console.error("Error fetching adventures:", error);
+    }
+  };
 
   // Fetch items (supports extended filters)
   const fetchItems = async (filters = {}) => {
@@ -54,6 +67,9 @@ export default function AdventureShop() {
   };
 
   useEffect(() => { fetchItems({ category: selectedCategory }); }, [selectedCategory]);
+
+  // Fetch adventures on mount
+  useEffect(() => { fetchAdventures(); }, []);
 
   // On mount, read URL to set initial category/search state (supports direct navigation)
   useEffect(() => {
@@ -141,12 +157,12 @@ export default function AdventureShop() {
   return (
     <div className="w-full font-sans bg-neutral-50 text-neutral-900">
       {/* <AnnouncementBar /> */}
-  <MainHeader categories={categories} selectedCategory={selectedCategory} onSearch={handleSearch} onCategorySelect={handleCategorySelect} />
+      <MainHeader categories={categories} selectedCategory={selectedCategory} onSearch={handleSearch} onCategorySelect={handleCategorySelect} />
       <FilterBar search={searchQuery} category={selectedCategory} onClear={clearFilters} onRemoveFilter={removeFilter} />
       <HeroCarousel />
       <CategoryFeatureGrid />
       {/* Products grid: replaces separate product page navigation; shows all products with left filters */}
-      <ProductsGrid items={items} categories={categories} selectedCategory={selectedCategory} search={searchQuery} addToCart={addToCart} onCategorySelect={handleCategorySelect} onSearch={handleSearch} onFilterChange={fetchItems} />
+      <ProductsGrid items={items} categories={categories} selectedCategory={selectedCategory} search={searchQuery} addToCart={addToCart} onCategorySelect={handleCategorySelect} onSearch={handleSearch} onFilterChange={fetchItems} adventures={adventures} selectedAdventure={selectedAdventure} />
       <PromoBanners />
       <BrandStrip />
       <Footer categories={categories} />

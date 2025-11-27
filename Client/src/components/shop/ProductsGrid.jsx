@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useFavorites } from '../../contexts/FavoritesContext';
 
 // Simple left-filter + product grid component
-export default function ProductsGrid({ items = [], categories = [], selectedCategory = '', search = '', addToCart, onCategorySelect, onSearch, onFilterChange }) {
+export default function ProductsGrid({ items = [], categories = [], selectedCategory = '', search = '', addToCart, onCategorySelect, onSearch, onFilterChange, adventures = [], selectedAdventure = '' }) {
   const navigate = useNavigate();
   const [localCategory, setLocalCategory] = useState(selectedCategory || '');
   const [localSearch, setLocalSearch] = useState(search || '');
@@ -18,11 +18,13 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
   const [appliedAvailability, setAppliedAvailability] = useState('any');
   const [appliedMinRating, setAppliedMinRating] = useState(0);
   const [appliedSortBy, setAppliedSortBy] = useState('relevance');
+  const [appliedAdventure, setAppliedAdventure] = useState('');
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
   const [availability, setAvailability] = useState('any'); // any | purchase | rent
   const [minRating, setMinRating] = useState(0);
-  
+  const [localAdventure, setLocalAdventure] = useState(selectedAdventure || '');
+
   const [sortBy, setSortBy] = useState('relevance'); // relevance | price-asc | price-desc | rating-desc
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -31,6 +33,7 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
 
   useEffect(() => { setLocalCategory(selectedCategory || ''); setAppliedCategory(selectedCategory || ''); }, [selectedCategory]);
   useEffect(() => { setLocalSearch(search || ''); setAppliedSearch(search || ''); }, [search]);
+  useEffect(() => { setLocalAdventure(selectedAdventure || ''); setAppliedAdventure(selectedAdventure || ''); }, [selectedAdventure]);
 
   // suggestions (debounced) for left-side search
   useEffect(() => {
@@ -73,7 +76,7 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
       priceMax: appliedPriceMax,
       availability: appliedAvailability,
       minRating: appliedMinRating,
-      
+      adventure: appliedAdventure,
       sortBy: appliedSortBy,
     });
   }, [appliedSearch, appliedCategory, appliedPriceMin, appliedPriceMax, appliedAvailability, appliedMinRating, appliedSortBy]);
@@ -137,6 +140,7 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
                 setAppliedAvailability(availability);
                 setAppliedMinRating(minRating);
                 setAppliedSortBy(sortBy);
+                setAppliedAdventure(localAdventure);
                 setShowSuggestions(false);
               }} className="bg-black text-white">Apply</Button>
               <Button size="sm" variant="ghost" onClick={() => {
@@ -147,6 +151,7 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
                 setAvailability('any'); setAppliedAvailability('any');
                 setMinRating(0); setAppliedMinRating(0);
                 setSortBy('relevance'); setAppliedSortBy('relevance');
+                setLocalAdventure(''); setAppliedAdventure('');
                 // Update Shop's visible search state but avoid duplicate fetch; the applied state effect will trigger a single fetch
                 onSearch?.('', { skipFetch: true });
                 setShowSuggestions(false);
@@ -182,7 +187,7 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
             </select>
           </div>
 
-          
+
 
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">Sort by</label>
@@ -202,6 +207,16 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
                 <button key={c} onClick={() => { setLocalCategory(c); onCategorySelect?.(c); }} className={`text-left text-sm py-1 ${localCategory === c ? 'font-semibold text-orange-500' : 'text-neutral-700'}`}>{c}</button>
               ))}
             </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">Adventure</label>
+            <select value={localAdventure} onChange={e => setLocalAdventure(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm">
+              <option value="">Any</option>
+              {adventures.map(adv => (
+                <option key={adv._id} value={adv._id}>{adv.name}</option>
+              ))}
+            </select>
           </div>
         </aside>
 

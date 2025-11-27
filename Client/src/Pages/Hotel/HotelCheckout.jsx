@@ -40,7 +40,7 @@ export default function HotelCheckout() {
 
   if (!hotelData) {
     useEffect(() => {
-      toast.error("No hotel selected for booking")
+      toast.error("No hostel selected for booking")
       navigate("/hotels")
     }, [])
     return null
@@ -80,7 +80,7 @@ export default function HotelCheckout() {
         checkInDate: bookingDetails.checkInDate,
         checkOutDate: bookingDetails.checkOutDate,
         specialRequests: bookingDetails.specialRequests,
-        modeOfPayment: paymentMode 
+        modeOfPayment: paymentMode
       }
       // Make API request to create hotel booking
       const response = await createHotelBooking(bookingData)
@@ -139,7 +139,7 @@ export default function HotelCheckout() {
               {/* Hotel details summary */}
               <Card className="mb-6">
                 <CardHeader className="pb-3">
-                  <CardTitle>Hotel Details</CardTitle>
+                  <CardTitle>Hostel Details</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-start gap-4">
@@ -374,7 +374,7 @@ export default function HotelCheckout() {
                     onClick={(e) => handleSubmit(e, "paypal")}
                   >
                     <svg className="h-5 w-5" viewBox="0 0 32 32" fill="currentColor">
-                      <path d="M29.8 13.8c-.3-2.2-2.2-3.7-4.7-3.7h-7.8c-.5 0-.9.3-1 .8l-3.2 15.2c-.1.4.2.8.6.8h4.1c.5 0 .9-.3 1-.8l.9-4.2c.1-.5.5-.8 1-.8h2.6c4.1 0 7.3-2.1 8.2-6.4.2-.7.2-1.3.3-1.9zm-3.2 2.1c-.6 2.7-2.7 3.9-5.6 3.9h-1.7l1.1-5.2c.1-.5.5-.8 1-.8h1.7c1.2 0 2.1.3 2.7.8.6.5.8 1.3.6 2.3z"/>
+                      <path d="M29.8 13.8c-.3-2.2-2.2-3.7-4.7-3.7h-7.8c-.5 0-.9.3-1 .8l-3.2 15.2c-.1.4.2.8.6.8h4.1c.5 0 .9-.3 1-.8l.9-4.2c.1-.5.5-.8 1-.8h2.6c4.1 0 7.3-2.1 8.2-6.4.2-.7.2-1.3.3-1.9zm-3.2 2.1c-.6 2.7-2.7 3.9-5.6 3.9h-1.7l1.1-5.2c.1-.5.5-.8 1-.8h1.7c1.2 0 2.1.3 2.7.8.6.5.8 1.3.6 2.3z" />
                     </svg>
                     {isLoading ? (
                       <>

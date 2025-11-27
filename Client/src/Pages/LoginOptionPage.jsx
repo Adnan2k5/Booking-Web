@@ -33,8 +33,8 @@ export default function LoginOptionsPage() {
         },
         {
             id: "hotel",
-            title: "Hotel",
-            description: t("Join As Hotel"),
+            title: "Accommodation",
+            description: t("Join As Accommodation Provider"),
             image: "/src/assets/login.jpg",
             color: "from-amber-500 to-orange-600",
             path1: "/hotel/register",

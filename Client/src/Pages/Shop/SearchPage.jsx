@@ -13,9 +13,6 @@ export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { addToCart } = useContext(CartContext);
-  const { addToComparison, removeFromComparison, isInComparison } = useComparison();
-  const { addToFavorites, removeFromFavorites, isInFavorites } = useFavorites();
-  
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,18 +20,34 @@ export default function SearchPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [searchInput, setSearchInput] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  
+  const [adventures, setAdventures] = useState([]);
+  const [selectedAdventure, setSelectedAdventure] = useState('');
+
   const categories = ['Camping', 'Clothing', 'Footwear', 'Accessories', 'Equipment'];
   const searchQuery = searchParams.get('search') || '';
   const categoryParam = searchParams.get('category') || '';
   const baseUrl = import.meta.env.VITE_SERVER_URL;
-  
+
   const limit = 12;
+
+  // Fetch adventures from API
+  const fetchAdventures = async () => {
+    try {
+      const response = await fetch(`${baseUrl}api/adventure/all`);
+      const data = await response.json();
+      setAdventures(data.adventures || []);
+    } catch (error) {
+      console.error("Error fetching adventures:", error);
+    }
+  };
 
   useEffect(() => {
     setSearchInput(searchQuery);
     setSelectedCategory(categoryParam);
   }, [searchQuery, categoryParam]);
+
+  // Fetch adventures on mount
+  useEffect(() => { fetchAdventures(); }, []);
 
   // Shared fetch that ProductsGrid will call via onFilterChange
   const fetchItems = async (filters = {}) => {
@@ -54,20 +67,20 @@ export default function SearchPage() {
       if (filters.sortBy) params.set('sortBy', filters.sortBy);
 
       const url = `${baseUrl}api/items${params.toString() ? `?${params.toString()}` : ''}`;
-      
+
       const res = await fetch(url);
-      
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      
+
       const contentType = res.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         throw new Error('Response is not valid JSON');
       }
-      
+
       const data = await res.json();
-      
+
       // API returns items in message field and metadata in data field
       if (data && Array.isArray(data.message)) {
         setItems(data.message);
@@ -129,7 +142,7 @@ export default function SearchPage() {
     } else if (filterType === 'category' && searchQuery) {
       params.set('search', searchQuery);
     }
-    
+
     if (params.toString()) {
       navigate(`/shop/search?${params.toString()}`);
     } else {
@@ -148,12 +161,12 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      <MainHeader 
-        categories={categories} 
-        onSearch={handleSearch} 
+      <MainHeader
+        categories={categories}
+        onSearch={handleSearch}
         selectedCategory={selectedCategory}
       />
-      
+
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-6 py-4">
         <nav className="flex items-center space-x-2 text-sm text-neutral-600">
@@ -167,7 +180,7 @@ export default function SearchPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-neutral-900 mb-4">Search Products</h1>
-          
+
           {/* Enhanced Search Form */}
           <form onSubmit={handleSearchSubmit} className="relative mb-6">
             <div className="flex gap-4">
@@ -186,7 +199,7 @@ export default function SearchPage() {
                   <Search className="h-5 w-5" />
                 </button>
               </div>
-              
+
               {/* Category Filter */}
               <select
                 value={selectedCategory}
@@ -205,7 +218,7 @@ export default function SearchPage() {
           {(searchQuery || categoryParam) && (
             <div className="flex items-center gap-3 mb-6">
               <span className="text-sm font-medium text-neutral-700">Active filters:</span>
-              
+
               {searchQuery && (
                 <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full text-sm border">
                   <Search className="h-4 w-4 text-neutral-500" />
@@ -215,7 +228,7 @@ export default function SearchPage() {
                   </button>
                 </div>
               )}
-              
+
               {categoryParam && (
                 <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full text-sm border">
                   <Filter className="h-4 w-4 text-neutral-500" />
@@ -225,7 +238,7 @@ export default function SearchPage() {
                   </button>
                 </div>
               )}
-              
+
               <button
                 onClick={clearAllFilters}
                 className="text-sm text-orange-500 hover:text-orange-600 font-medium"
@@ -281,7 +294,7 @@ export default function SearchPage() {
         )}
 
         {/* Use ProductsGrid for search results and filters */}
-        <ProductsGrid items={items} categories={categories} selectedCategory={categoryParam} search={searchQuery} addToCart={addToCart} onCategorySelect={(c) => fetchItems({ search: searchQuery, category: c, page: 1, limit })} onSearch={(q) => fetchItems({ search: q, category: categoryParam, page: 1, limit })} onFilterChange={(f) => fetchItems({ ...f, search: searchQuery, category: categoryParam, page: 1, limit })} />
+        <ProductsGrid items={items} categories={categories} selectedCategory={categoryParam} search={searchQuery} addToCart={addToCart} onCategorySelect={(c) => fetchItems({ search: searchQuery, category: c, page: 1, limit })} onSearch={(q) => fetchItems({ search: q, category: categoryParam, page: 1, limit })} onFilterChange={(f) => fetchItems({ ...f, search: searchQuery, category: categoryParam, page: 1, limit })} adventures={adventures} selectedAdventure={selectedAdventure} />
       </div>
 
       <Footer categories={categories} />
