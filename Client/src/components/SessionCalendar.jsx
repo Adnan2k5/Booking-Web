@@ -201,7 +201,7 @@ const CalendarDay = ({ day, isToday, hasSession, sessionCount, onClick }) => (
     </motion.div>
 )
 
-const SessionCalendar = ({ adventureTypes }) => {
+const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherSessionsCount = 0 }) => {
     const { t } = useTranslation()
     const user = useAuth()
     // Core state
@@ -414,6 +414,12 @@ const SessionCalendar = ({ adventureTypes }) => {
                 <div>
                     <CardTitle className="text-lg sm:text-xl">{t("instructor.sessionCalendar")}</CardTitle>
                     <CardDescription className="text-sm">{t("instructor.manageYourSessions")}</CardDescription>
+                    <div className="mt-2 flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs bg-gray-50">
+                            <Users className="h-3 w-3 mr-1" />
+                            {otherSessionsCount} {otherSessionsCount === 1 ? 'session' : 'sessions'} by other instructors this month
+                        </Badge>
+                    </div>
                 </div>
 
                 <div className="flex items-center space-x-1 sm:space-x-2 w-full sm:w-auto justify-between sm:justify-end">
