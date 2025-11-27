@@ -509,7 +509,7 @@ export default function UserDashboardPage() {
 
                     {/* Adventure Experiences Section */}
                     <div className="mb-10">
-                        <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center justify-between mb-8 pt-8">
                             <div>
                                 <h2 className="text-3xl font-bold text-gray-900">Adventure Experience</h2>
                                 <p className="text-gray-600 mt-1 text-lg">
@@ -565,22 +565,23 @@ export default function UserDashboardPage() {
                         )}
                     </div>
                 </div>
+            </div>
 
-                {/* Chat Modal */}
-                {chatOpen && (
-                    <div className="fixed inset-0 z-[9997] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                        <div className="relative w-full max-w-6xl h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
-                            <button
-                                onClick={() => setChatOpen(false)}
-                                className="absolute top-4 right-4 z-50 w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
-                                aria-label="Close chat"
-                            >
-                                <X className="h-5 w-5 text-gray-600" />
-                            </button>
-                            <ChatLayout />
-                        </div>
+            {/* Chat Modal */}
+            {chatOpen && (
+                <div className="fixed inset-0 z-[9997] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="relative w-full max-w-6xl h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
+                        <button
+                            onClick={() => setChatOpen(false)}
+                            className="absolute top-4 right-4 z-50 w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+                            aria-label="Close chat"
+                        >
+                            <X className="h-5 w-5 text-gray-600" />
+                        </button>
+                        <ChatLayout />
                     </div>
-                )}
+                </div>
+            )}
         </UserLayout>
     )
 }
