@@ -27,7 +27,7 @@ export const ChatLayout = () => {
     const [searchParams] = useSearchParams();
 
     useEffect(() => {
-    fetchSenders();
+        fetchSenders();
 
         // Hide sidebar on mobile by default
         const handleResize = () => {
@@ -83,39 +83,39 @@ export const ChatLayout = () => {
         <div className='h-full w-full flex relative'>
             {/* Sidebar */}
             <motion.div
-                className={`sidebar md:min-w-[320px] w-full md:w-[320px] md:relative absolute z-10 h-full flex flex-col bg-gradient-to-b from-blue-50 to-indigo-50 backdrop-blur-sm border-r border-gray-200`}
+                className={`sidebar md:min-w-[320px] w-full md:w-[320px] md:relative absolute z-10 h-full flex flex-col bg-white border-r border-gray-100 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]`}
                 initial={{ x: typeof window !== 'undefined' && window.innerWidth < 768 ? -320 : 0 }}
                 animate={{ x: showSidebar ? 0 : -320 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 style={{ maxWidth: '100%' }}
             >
-                <div className="sidebar-header p-5 border-b border-gray-200 bg-white/70 backdrop-blur-sm">
+                <div className="sidebar-header p-2 border-b border-gray-100 bg-white/70 backdrop-blur-sm">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center">
                             <MessageCircle size={20} className="text-white" />
                         </div>
-                        <h2 className='text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600'>
+                        <h2 className='text-xl font-bold text-black'>
                             Adventure Social
                         </h2>
                     </div>
                 </div>
 
-                <div className='p-5 flex items-center justify-between border-b border-gray-200 bg-white/50 backdrop-blur-sm'>
+                <div className='p-2 flex items-center justify-between border-b border-gray-100 bg-white/50 backdrop-blur-sm'>
                     <div className="flex items-center gap-2">
-                        <Users size={18} className="text-indigo-500" />
+                        <Users size={18} className="text-black" />
                         <h2 className='text-lg font-medium text-gray-800'>Friends</h2>
                     </div>
                 </div>
 
                 {/* Search input */}
-                <div className="p-4 border-b border-gray-200 bg-white/30">
+                <div className="p-2 border-b border-gray-100 bg-white/30">
                     <div className="relative">
                         <input
                             type="text"
                             placeholder="Search friends..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full p-2.5 pl-10 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
+                            className="w-full p-2.5 pl-10 bg-gray-50 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 transition-all"
                         />
                         <Search size={16} className="absolute left-3.5 top-3 text-gray-400" />
                     </div>
@@ -130,13 +130,13 @@ export const ChatLayout = () => {
                                     setSelectedFriend(friend);
                                     if (window.innerWidth < 768) setShowSidebar(false);
                                 }}
-                                className={`p-4 flex gap-4 items-center cursor-pointer transition-all hover:bg-white/50 ${selectedFriend?._id === friend._id ? 'bg-white/60 border-l-4 border-indigo-500 pl-3' : 'border-l-4 border-transparent'}`}
+                                className={`p-2 flex gap-2 items-center cursor-pointer transition-all hover:bg-gray-50/80 ${selectedFriend?._id === friend._id ? 'bg-gray-50 border-l-4 border-gray-900 pl-1.5' : 'border-l-4 border-transparent'}`}
                                 whileHover={{ x: 5 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <Avatar className='w-12 h-12 border-2 border-white shadow-sm'>
+                                <Avatar className='w-8 h-8 border border-gray-100 shadow-sm'>
                                     <AvatarImage src={friend.profilePicture} alt={friend.name} />
-                                    <AvatarFallback className='w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-medium'>
+                                    <AvatarFallback className='w-8 h-8 bg-gray-900 text-white font-medium text-xs'>
                                         {friend.name.charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>

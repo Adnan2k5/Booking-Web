@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next"
 import { useAuth } from "../Pages/AuthProvider"
 import { createPreset, getInstructorSessions, deleteSession, createSession } from "../Api/session.api"
 import { toast } from "sonner"
+import HintTooltip from "./HintTooltip"
 
 // Constants
 const MONTH_NAMES = [
@@ -163,43 +164,78 @@ const PricingFields = ({ price, unit, onPriceChange, onUnitChange }) => (
     </div>
 )
 
-const CalendarDay = ({ day, isToday, hasSession, sessionCount, onClick }) => (
-    <motion.div
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className={`h-16 sm:h-20 lg:h-24 border rounded-lg relative cursor-pointer transition-all overflow-hidden group
-            ${isToday ? "border-blue-500 shadow-sm" : "border-gray-200 hover:border-blue-300"}
-            ${hasSession ? "bg-blue-50 dark:bg-blue-900/20" : ""}
+const CalendarDay = ({ day, isToday, hasSession, sessionCount, onClick, trafficLevel, trafficCount }) => {
+    let trafficGradient = ""
+    let trafficText = "Low Traffic"
+
+    if (trafficCount >= 1) {
+        if (trafficCount <= 2) {
+            trafficGradient = "bg-gradient-to-br from-white to-green-200 dark:from-slate-950 dark:to-green-800/60"
+            trafficText = "Low Traffic"
+        } else if (trafficCount <= 5) {
+            trafficGradient = "bg-gradient-to-br from-white to-yellow-200 dark:from-slate-950 dark:to-yellow-800/60"
+            trafficText = "Medium Traffic"
+        } else {
+            trafficGradient = "bg-gradient-to-br from-white to-red-200 dark:from-slate-950 dark:to-red-800/60"
+            trafficText = "High Traffic"
+        }
+    }
+
+    return (
+        <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`h-12 sm:h-16 lg:h-20 border rounded-lg relative cursor-pointer transition-all duration-200 overflow-hidden group
+            ${isToday ? "border-gray-900 shadow-md ring-1 ring-gray-900" : "border-gray-100 hover:border-gray-300 hover:shadow-md"}
+            ${hasSession ? "bg-gray-50 dark:bg-gray-900" : trafficGradient}
         `}
-        onClick={onClick}
-    >
-        <div className="absolute top-1 right-1">
-            {isToday ? (
-                <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
-                    {day}
+            onClick={onClick}
+        >
+            <div className="absolute top-1 right-1 flex flex-col items-end gap-1">
+                {trafficCount > 0 ? (
+                    <HintTooltip
+                        content={`${trafficText}: ${trafficCount} other session${trafficCount !== 1 ? 's' : ''}`}
+                        className="z-10"
+                    >
+                        {isToday ? (
+                            <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-gray-900 flex items-center justify-center text-white text-xs cursor-help shadow-sm">
+                                {day}
+                            </div>
+                        ) : (
+                            <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center text-xs sm:text-sm cursor-help hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                                {day}
+                            </div>
+                        )}
+                    </HintTooltip>
+                ) : (
+                    isToday ? (
+                        <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-gray-900 flex items-center justify-center text-white text-xs shadow-sm">
+                            {day}
+                        </div>
+                    ) : (
+                        <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center text-xs sm:text-sm">{day}</div>
+                    )
+                )}
+            </div>
+
+            {hasSession ? (
+                <div className="absolute bottom-1 left-1 right-1">
+                    <Badge className="bg-gray-900 hover:bg-gray-800 text-xs px-1 py-0.5 shadow-sm w-full justify-center">
+                        <span className="hidden sm:inline">{sessionCount} {sessionCount === 1 ? "Session" : "Sessions"}</span>
+                        <span className="sm:hidden">{sessionCount}</span>
+                    </Badge>
                 </div>
             ) : (
-                <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center text-xs sm:text-sm">{day}</div>
+                <div className="absolute bottom-1 left-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Badge variant="outline" className="border-dashed border-gray-400 text-black text-xs px-1 py-0.5">
+                        <Plus className="h-2 w-2 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
+                        <span className="hidden sm:inline">Add</span>
+                    </Badge>
+                </div>
             )}
-        </div>
-
-        {hasSession ? (
-            <div className="absolute bottom-1 left-1 right-1">
-                <Badge className="bg-blue-500 hover:bg-blue-600 text-xs px-1 py-0.5">
-                    <span className="hidden sm:inline">{sessionCount} {sessionCount === 1 ? "Session" : "Sessions"}</span>
-                    <span className="sm:hidden">{sessionCount}</span>
-                </Badge>
-            </div>
-        ) : (
-            <div className="absolute bottom-1 left-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Badge variant="outline" className="border-dashed border-blue-300 text-blue-500 text-xs px-1 py-0.5">
-                    <Plus className="h-2 w-2 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
-                    <span className="hidden sm:inline">Add</span>
-                </Badge>
-            </div>
-        )}
-    </motion.div>
-)
+        </motion.div>
+    )
+}
 
 const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherSessionsCount = 0 }) => {
     const { t } = useTranslation()
@@ -254,6 +290,19 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
     const getSessionCount = useCallback((day) => {
         return getSessionsForDate(day).length
     }, [getSessionsForDate])
+
+    // Traffic helpers
+    const getTrafficForDate = useCallback((day) => {
+        if (!otherInstructorsSessions) return 0
+        return otherInstructorsSessions.filter(session => {
+            const sessionDate = new Date(session.startTime)
+            return (
+                sessionDate.getDate() === day &&
+                sessionDate.getMonth() === currentMonth &&
+                sessionDate.getFullYear() === currentYear
+            )
+        }).length
+    }, [otherInstructorsSessions, currentMonth, currentYear])
 
     // Navigation handlers
     const handlePrevMonth = useCallback(() => {
@@ -392,6 +441,7 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
 
             const hasSession = hasSessionsOnDate(day)
             const sessionCount = getSessionCount(day)
+            const trafficCount = getTrafficForDate(day)
 
             days.push(
                 <CalendarDay
@@ -400,6 +450,7 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                     isToday={isToday}
                     hasSession={hasSession}
                     sessionCount={sessionCount}
+                    trafficCount={trafficCount}
                     onClick={() => handleDateClick(day)}
                 />
             )
@@ -410,15 +461,23 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
 
     return (
         <Card className="col-span-full lg:col-span-7">
-            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 pb-2">
+            <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                 <div>
-                    <CardTitle className="text-lg sm:text-xl">{t("instructor.sessionCalendar")}</CardTitle>
+                    <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg sm:text-xl">{t("instructor.sessionCalendar")}</CardTitle>
+                        <HintTooltip content="Manage your availability, view scheduled sessions, and create new ones." />
+                    </div>
                     <CardDescription className="text-sm">{t("instructor.manageYourSessions")}</CardDescription>
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
                         <Badge variant="outline" className="text-xs bg-gray-50">
                             <Users className="h-3 w-3 mr-1" />
                             {otherSessionsCount} {otherSessionsCount === 1 ? 'session' : 'sessions'} by other instructors this month
                         </Badge>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground ml-2">
+                            <span className="flex items-center"><div className="w-3 h-3 rounded bg-gradient-to-br from-white to-green-200 border border-green-200 mr-1"></div>Low</span>
+                            <span className="flex items-center"><div className="w-3 h-3 rounded bg-gradient-to-br from-white to-yellow-200 border border-yellow-200 mr-1"></div>Med</span>
+                            <span className="flex items-center"><div className="w-3 h-3 rounded bg-gradient-to-br from-white to-red-200 border border-red-200 mr-1"></div>High</span>
+                        </div>
                     </div>
                 </div>
 

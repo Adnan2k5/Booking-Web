@@ -113,7 +113,7 @@ export default function MessageInput({ onSendMessage }) {
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder="Type a message..."
-                        className="w-full py-2.5 pl-10 pr-12 rounded-full border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white/80 backdrop-blur-sm"
+                        className="w-full py-2.5 pl-10 pr-12 rounded-full border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all bg-gray-50"
                     />
 
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -147,7 +147,7 @@ export default function MessageInput({ onSendMessage }) {
                         p-2.5 rounded-full shadow-sm flex items-center justify-center 
                         transition-all duration-200
                         ${message.trim() || attachments.length > 0
-                            ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white"
+                            ? "bg-black text-white"
                             : "bg-gray-100 text-gray-400"
                         }
                     `}

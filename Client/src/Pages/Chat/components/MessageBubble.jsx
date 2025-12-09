@@ -25,7 +25,7 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
 
         // Regex to find chat links in the format: /chat?chat=<id>
         const chatLinkRegex = /(\/chat\?chat=[a-zA-Z0-9]+)/g;
-        
+
         // Find all chat links in the message
         const parts = [];
         let lastIndex = 0;
@@ -64,16 +64,15 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
 
     const renderMessageContent = (content) => {
         const parts = parseMessageContent(content);
-        
+
         return parts.map((part, index) => {
             if (part.type === 'link') {
                 return (
                     <Link
                         key={index}
                         to={part.url}
-                        className={`inline-flex items-center gap-1 underline hover:no-underline ${
-                            isSender ? 'text-white font-semibold' : 'text-blue-600 font-semibold'
-                        }`}
+                        className={`inline-flex items-center gap-1 underline hover:no-underline ${isSender ? 'text-white font-semibold' : 'text-black font-semibold'
+                            }`}
                         onClick={(e) => {
                             e.stopPropagation();
                         }}
@@ -101,7 +100,7 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
                             src={messageUser?.profilePicture || "/placeholder.svg"}
                             alt={messageUser?.name}
                         />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-400 to-indigo-600 text-white">
+                        <AvatarFallback className="bg-black text-white">
                             {getInitial(messageUser)}
                         </AvatarFallback>
                     </Avatar>
@@ -113,8 +112,8 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
                     className={`
                         relative px-4 py-2 rounded-2xl shadow-sm backdrop-blur-sm
                         ${isSender ?
-                            'bg-gradient-to-r from-blue-400/90 to-indigo-500/90 text-white rounded-tr-none' :
-                            'bg-white/90 text-gray-800 rounded-tl-none border border-gray-100'
+                            'bg-black text-white rounded-tr-none' :
+                            'bg-gray-100 text-black rounded-tl-none border border-gray-200'
                         }
                     `}
                 >
@@ -169,7 +168,7 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
                             ) : (
                                 <div className={`
                                     file-attachment p-3 rounded-lg flex items-center
-                                    ${isSender ? 'bg-blue-600/30' : 'bg-gray-100'}
+                                    ${isSender ? 'bg-white/10' : 'bg-white'}
                                 `}>
                                     <div className="file-icon mr-3 text-2xl">📄</div>
                                     <div className="file-info flex-1 overflow-hidden">
@@ -186,7 +185,7 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
                                             download={message.attachment.name}
                                             className={`
                                                 download-button ml-2 p-1.5 rounded-full 
-                                                ${isSender ? 'bg-blue-700 text-white' : 'bg-gray-200 text-gray-700'}
+                                                ${isSender ? 'bg-white text-black' : 'bg-gray-200 text-black'}
                                                 hover:opacity-80 transition-opacity
                                             `}
                                             target="_blank"
@@ -210,7 +209,7 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
                     <span className="mx-1">{formattedTime}</span>
 
                     {isSender && (
-                        <CheckCheck size={14} className="text-blue-500" />
+                        <CheckCheck size={14} className="text-black" />
                     )}
                 </div>
             </div>
@@ -222,7 +221,7 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
                             src={messageUser?.profilePicture || "/placeholder.svg"}
                             alt={messageUser?.name}
                         />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+                        <AvatarFallback className="bg-black text-white">
                             {getInitial(messageUser)}
                         </AvatarFallback>
                     </Avatar>

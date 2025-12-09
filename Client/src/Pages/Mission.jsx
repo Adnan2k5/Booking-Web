@@ -13,7 +13,7 @@ export default function MissionPage() {
   const { t } = useTranslation()
 
   return (
-  <div className="min-h-screen bg-gradient-to-b from-white to-slate-50">
+    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50">
       <Nav_Landing />
 
       <header
@@ -30,7 +30,6 @@ export default function MissionPage() {
             <p className="mt-3 text-lg sm:text-xl text-white/90 max-w-2xl">High-quality, safe, and sustainable adventures that connect people with the world.</p>
             <div className="mt-6 flex gap-3">
               <Button onClick={() => navigate('/browse?date=' + new Date().toISOString().split('T')[0] + '&q=adventure')} className="bg-white text-emerald-600">Explore Adventures</Button>
-              <Button variant="ghost" onClick={() => navigate('/book-hotel')}>List a Stay</Button>
             </div>
           </motion.div>
         </div>

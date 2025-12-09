@@ -32,7 +32,7 @@ const ChatHeader = ({ friend, toggleSidebar, onClose }) => {
                 <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
                         <AvatarImage src={friend?.avatar} alt={friend?.name} />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white">
+                        <AvatarFallback className="bg-black text-white">
                             {getInitials(friend?.name)}
                         </AvatarFallback>
                     </Avatar>
