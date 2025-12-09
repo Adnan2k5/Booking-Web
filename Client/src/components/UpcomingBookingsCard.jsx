@@ -20,8 +20,8 @@ const UpcomingBookingsCard = ({ bookings, onViewAll }) => {
                             className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors gap-3 sm:gap-4"
                         >
                             <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                                <div className="bg-primary/10 p-2 rounded-full flex-shrink-0">
-                                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                                <div className="bg-gray-100 p-2 rounded-full flex-shrink-0">
+                                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-black" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h4 className="font-medium text-sm sm:text-base truncate">{booking.adventure}</h4>
@@ -47,7 +47,7 @@ const UpcomingBookingsCard = ({ bookings, onViewAll }) => {
                                         {booking.participants} {t("instructor.participants")}
                                     </div>
                                 </div>
-                                <Badge variant={booking.status === "confirmed" ? "default" : "outline"} className="text-xs">
+                                <Badge variant={booking.status === "confirmed" ? "default" : "outline"} className={`text-xs ${booking.status === "confirmed" ? "bg-black hover:bg-gray-800" : ""}`}>
                                     {booking.status === "confirmed" ? t("instructor.confirmed") : t("instructor.pending")}
                                 </Badge>
                             </div>

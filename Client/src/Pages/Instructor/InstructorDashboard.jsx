@@ -17,6 +17,7 @@ import { staggerContainer, fadeIn } from "../../assets/Animations"
 import { getInstructorAchievements, evaluateMyInstructorAchievements } from '../../Api/user.api'
 import { axiosClient } from '../../AxiosClient/axios'
 import { ChatLayout } from '../Chat/ChatLayout'
+import HintTooltip from "../../components/HintTooltip"
 
 const InstructorDashboard = () => {
     const [instructorAchievements, setInstructorAchievements] = useState(null);
@@ -297,210 +298,265 @@ const InstructorDashboard = () => {
 
     return (
         <InstructorLayout onOpenChat={() => setChatOpen(true)}>
-            <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 gap-4">
-                    <div className="flex-1 min-w-0">
-                        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate">
-                            {t("instructor.dashboard")}
-                        </h2>
-                        <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                            {t("instructor.welcomeMessage")}
-                        </p>
+            <div className="space-y-6 min-h-screen">
+                {/* Header Section */}
+                <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 md:p-8 shadow-lg border border-slate-700">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white truncate">
+                                {t("instructor.dashboard")}
+                            </h2>
+                            <p className="text-sm sm:text-base text-slate-300 mt-2">
+                                {t("instructor.welcomeMessage")}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
+                                <p className="text-xs text-slate-300 uppercase tracking-wider">Level</p>
+                                <p className="text-2xl font-bold text-white">{instructorAchievements?.level || 0}</p>
+                            </div>
+                            <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
+                                <p className="text-xs text-slate-300 uppercase tracking-wider">XP</p>
+                                <p className="text-2xl font-bold text-white">{instructorAchievements?.totalExperiencePoints || 0}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div defaultValue="overview" className="space-y-4 sm:space-y-6">
-                    <div value="overview" className="space-y-4 sm:space-y-6">
-                        <motion.div
-                            className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
-                            variants={staggerContainer}
-                            initial="hidden"
-                            animate="visible"
-                        >
-                            <motion.div variants={fadeIn}>
-                                <Card className="h-full">
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4 sm:px-6 sm:pt-6">
-                                        <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
-                                            {t("instructor.totalBookings")}
-                                        </CardTitle>
-                                        <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
-                                    </CardHeader>
-                                    <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
-                                        <div className="text-lg sm:text-xl lg:text-2xl font-bold">
-                                            {isLoadingData ? (
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                            ) : (
-                                                dashboardData.totalBookings
-                                            )}
-                                        </div>
-                                        <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
-                                            <span
-                                                className={`flex items-center ${dashboardData.bookingIncrease > 0 ? "text-green-500" : "text-red-500"}`}
-                                            >
-                                                {dashboardData.bookingIncrease > 0 ? (
-                                                    <TrendingUp className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
-                                                ) : (
-                                                    <TrendingUp className="h-2 w-2 sm:h-3 sm:w-3 mr-1 transform rotate-180" />
-                                                )}
-                                                {Math.abs(dashboardData.bookingIncrease)}%
-                                            </span>
-                                            <span className="hidden sm:inline">
-                                                {t("instructor.fromLast")} {timeRange}
-                                            </span>
-                                            <span className="sm:hidden">vs last {timeRange}</span>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
+                {/* Stats Cards */}
+                <motion.div
+                    className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                    variants={staggerContainer}
+                    initial="hidden"
+                    animate="visible"
+                >
+                    <motion.div variants={fadeIn}>
+                        <Card className="h-full bg-white hover:shadow-xl transition-all duration-300 border-slate-200">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-blue-100 rounded-lg">
+                                        <Users className="h-5 w-5 text-blue-600" />
+                                    </div>
+                                    <CardTitle className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                                        {t("instructor.totalBookings")}
+                                    </CardTitle>
+                                </div>
+                                <HintTooltip content="Total number of bookings received across all your adventures and sessions." />
+                            </CardHeader>
+                            <CardContent className="px-6 pb-6">
+                                <div className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+                                    {isLoadingData ? (
+                                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                                    ) : (
+                                        dashboardData.totalBookings
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span className={`flex items-center gap-1 px-2 py-1 rounded-md font-medium ${dashboardData.bookingIncrease > 0 ? "text-green-700 bg-green-50" : "text-red-700 bg-red-50"}`}>
+                                        {dashboardData.bookingIncrease > 0 ? (
+                                            <TrendingUp className="h-4 w-4" />
+                                        ) : (
+                                            <TrendingUp className="h-4 w-4 transform rotate-180" />
+                                        )}
+                                        {Math.abs(dashboardData.bookingIncrease)}%
+                                    </span>
+                                    <span className="text-slate-500">vs last {timeRange}</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
 
-                            <motion.div variants={fadeIn}>
-                                <Card className="h-full">
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4 sm:px-6 sm:pt-6">
-                                        <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
-                                            {t("instructor.upcomingSessions")}
-                                        </CardTitle>
-                                        <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
-                                    </CardHeader>
-                                    <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
-                                        <div className="text-lg sm:text-xl lg:text-2xl font-bold">
-                                            {isLoadingSessions ? "..." : upcomingSessionsCount}
-                                        </div>
-                                        <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
-                                            <span className="text-blue-500">{t("instructor.scheduled")}</span>
-                                            <span>•</span>
-                                            <span className="hidden sm:inline">{t("instructor.nextWeek")}</span>
-                                            <span className="sm:hidden">next week</span>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
+                    <motion.div variants={fadeIn}>
+                        <Card className="h-full bg-white hover:shadow-xl transition-all duration-300 border-slate-200">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-purple-100 rounded-lg">
+                                        <Calendar className="h-5 w-5 text-purple-600" />
+                                    </div>
+                                    <CardTitle className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                                        {t("instructor.upcomingSessions")}
+                                    </CardTitle>
+                                </div>
+                                <HintTooltip content="Number of sessions scheduled for the upcoming week." />
+                            </CardHeader>
+                            <CardContent className="px-6 pb-6 relative">
+                                <div className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+                                    {isLoadingSessions ? (
+                                        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                                    ) : (
+                                        upcomingSessionsCount
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span className="px-2 py-1 rounded-md font-medium text-purple-700 bg-purple-50">
+                                        {t("instructor.scheduled")}
+                                    </span>
+                                    <span className="text-slate-500">{t("instructor.nextWeek")}</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
 
-                            <motion.div variants={fadeIn}>
-                                <Card className="h-full">
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4 sm:px-6 sm:pt-6">
-                                        <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
-                                            {t("instructor.rating")}
-                                        </CardTitle>
-                                        <Star className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
-                                    </CardHeader>
-                                    <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
-                                        <div className="text-lg sm:text-xl lg:text-2xl font-bold">
-                                            {isLoadingData ? (
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                            ) : (
-                                                dashboardData.rating || "0.0"
-                                            )}
-                                        </div>
-                                        <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
-                                            <span className="text-yellow-500 flex items-center">
-                                                <Star className="h-2 w-2 sm:h-3 sm:w-3 fill-current mr-0.5" />
-                                                <Star className="h-2 w-2 sm:h-3 sm:w-3 fill-current mr-0.5" />
-                                                <Star className="h-2 w-2 sm:h-3 sm:w-3 fill-current mr-0.5" />
-                                                <Star className="h-2 w-2 sm:h-3 sm:w-3 fill-current mr-0.5" />
-                                                <Star className="h-2 w-2 sm:h-3 sm:w-3 fill-current" />
-                                            </span>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        </motion.div>
+                    <motion.div variants={fadeIn}>
+                        <Card className="h-full bg-white hover:shadow-xl transition-all duration-300 border-slate-200">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-amber-100 rounded-lg">
+                                        <Star className="h-5 w-5 text-amber-600" />
+                                    </div>
+                                    <CardTitle className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                                        {t("instructor.rating")}
+                                    </CardTitle>
+                                </div>
+                                <HintTooltip content="Your average rating from completed bookings." />
+                            </CardHeader>
+                            <CardContent className="px-6 pb-6">
+                                <div className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+                                    {isLoadingData ? (
+                                        <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+                                    ) : (
+                                        dashboardData.rating || "0.0"
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star
+                                            key={i}
+                                            className={`h-5 w-5 ${i < Math.floor(dashboardData.rating || 0) ? "fill-amber-400 text-amber-400" : "text-slate-300"}`}
+                                        />
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                </motion.div>
 
-                        <motion.div variants={fadeIn} initial="hidden" animate="visible" className="w-full">
+                {/* Calendar Section */}
+                <motion.div
+                    variants={fadeIn}
+                    initial="hidden"
+                    animate="visible"
+                    className="w-full"
+                >
+                    <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                        <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
+                            <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                <Calendar className="h-5 w-5 text-slate-700" />
+                                Session Calendar
+                            </h3>
+                        </div>
+                        <div className="p-4 md:p-6">
                             <SessionCalendar
                                 adventureTypes={adventureTypes}
                                 otherInstructorsSessions={otherInstructorsSessions}
                                 otherSessionsCount={otherSessionsCount}
                             />
-                        </motion.div>
+                        </div>
+                    </div>
+                </motion.div>
 
-                        <motion.div variants={fadeIn} initial="hidden" animate="visible" className="w-full">
+                {/* Upcoming Bookings Section */}
+                <motion.div
+                    variants={fadeIn}
+                    initial="hidden"
+                    animate="visible"
+                    className="w-full"
+                >
+                    <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                        <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
+                            <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                <Users className="h-5 w-5 text-slate-700" />
+                                Upcoming Bookings
+                            </h3>
+                        </div>
+                        <div className="p-4 md:p-6">
                             <UpcomingBookingsCard
                                 bookings={upcomingBookings}
                                 onViewAll={() => navigate("/instructor/bookings")}
                                 isLoading={isLoadingData}
                             />
-                        </motion.div>
-
-                        {/* Achievements Section */}
-                        <Separator />
-                        <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-lg font-medium">{t("Achievements")}</h4>
-                            {achievementsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                         </div>
+                    </div>
+                </motion.div>
 
+                {/* Achievements Section */}
+                <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                <Award className="h-5 w-5 text-slate-700" />
+                                {t("Achievements")}
+                            </h3>
+                            {achievementsLoading && <Loader2 className="h-5 w-5 animate-spin text-slate-600" />}
+                        </div>
+                    </div>
+
+                    <div className="p-6">
                         {instructorAchievements ? (
                             <div className="space-y-6">
-                                {/* Achievement Summary */}
-                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                                    <Card>
-                                        <CardContent className="p-4">
-                                            <div className="text-center">
-                                                <div className="text-2xl font-bold text-blue-600">
-                                                    {instructorAchievements.level || 0}
-                                                </div>
-                                                <div className="text-sm text-muted-foreground">Level</div>
+                                {/* Achievement Summary Cards */}
+                                <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+                                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                                        <div className="text-center">
+                                            <div className="text-3xl font-bold text-blue-900">
+                                                {instructorAchievements.level || 0}
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                    <Card>
-                                        <CardContent className="p-4">
-                                            <div className="text-center">
-                                                <div className="text-2xl font-bold text-green-600">
-                                                    {instructorAchievements.achievements?.length || 0}
-                                                </div>
-                                                <div className="text-sm text-muted-foreground">Achievements</div>
+                                            <div className="text-sm text-blue-700 font-medium mt-1">Level</div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+                                        <div className="text-center">
+                                            <div className="text-3xl font-bold text-purple-900">
+                                                {instructorAchievements.achievements?.length || 0}
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                    <Card>
-                                        <CardContent className="p-4">
-                                            <div className="text-center">
-                                                <div className="text-2xl font-bold text-yellow-600">
-                                                    {instructorAchievements.currentRating?.toFixed(1) || "0.0"}
-                                                </div>
-                                                <div className="text-sm text-muted-foreground">Rating</div>
+                                            <div className="text-sm text-purple-700 font-medium mt-1">Achievements</div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200">
+                                        <div className="text-center">
+                                            <div className="text-3xl font-bold text-amber-900">
+                                                {instructorAchievements.currentRating?.toFixed(1) || "0.0"}
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                    <Card>
-                                        <CardContent className="p-4">
-                                            <div className="text-center">
-                                                <div className="text-2xl font-bold text-purple-600">
-                                                    {instructorAchievements.totalExperiencePoints || 0}
-                                                </div>
-                                                <div className="text-sm text-muted-foreground">XP</div>
+                                            <div className="text-sm text-amber-700 font-medium mt-1">Rating</div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+                                        <div className="text-center">
+                                            <div className="text-3xl font-bold text-green-900">
+                                                {instructorAchievements.totalExperiencePoints || 0}
                                             </div>
-                                        </CardContent>
-                                    </Card>
+                                            <div className="text-sm text-green-700 font-medium mt-1">XP</div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Earned Achievements */}
                                 {instructorAchievements.achievements && instructorAchievements.achievements.length > 0 ? (
                                     <div>
-                                        <h5 className="text-md font-medium mb-3">Earned Achievements</h5>
-                                        <div className="grid gap-3 md:grid-cols-2">
+                                        <h4 className="text-md font-semibold text-slate-900 mb-4">Earned Achievements</h4>
+                                        <div className="grid gap-4 md:grid-cols-2">
                                             {instructorAchievements.achievements.map((achievement, index) => (
                                                 <div
                                                     key={index}
-                                                    className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200"
+                                                    className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-200 hover:shadow-md transition-all duration-200"
                                                 >
-                                                    <div className="text-2xl">
+                                                    <div className="text-4xl">
                                                         {achievement.icon || "🏆"}
                                                     </div>
                                                     <div className="flex-1">
-                                                        <div className="font-medium text-yellow-800">
+                                                        <div className="font-semibold text-slate-900">
                                                             {achievement.name}
                                                         </div>
-                                                        <div className="text-sm text-yellow-600">
+                                                        <div className="text-sm text-slate-600 mt-1">
                                                             {achievement.description}
                                                         </div>
-                                                        <div className="text-xs text-yellow-500 mt-1">
+                                                        <div className="text-xs text-slate-500 mt-2">
                                                             Earned: {new Date(achievement.earnedAt).toLocaleDateString()}
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <div className="text-sm font-medium text-yellow-700">
-                                                            Level {achievement.level}
+                                                        <div className="px-3 py-1 bg-slate-900 text-white rounded-lg text-sm font-medium">
+                                                            Lv {achievement.level}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -508,25 +564,25 @@ const InstructorDashboard = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="text-center py-8">
-                                        <Award className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                                        <p className="text-gray-500">No achievements earned yet</p>
-                                        <p className="text-sm text-gray-400 mt-1">Keep instructing to unlock achievements!</p>
+                                    <div className="text-center py-12 bg-slate-50 rounded-xl">
+                                        <Award className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                                        <p className="text-slate-600 font-medium">No achievements earned yet</p>
+                                        <p className="text-sm text-slate-500 mt-2">Keep instructing to unlock achievements!</p>
                                     </div>
                                 )}
 
                                 {/* Performance Badges */}
                                 {instructorAchievements.badges && instructorAchievements.badges.length > 0 && (
                                     <div>
-                                        <h5 className="text-md font-medium mb-3">Performance Badges</h5>
-                                        <div className="flex flex-wrap gap-2">
+                                        <h4 className="text-md font-semibold text-slate-900 mb-4">Performance Badges</h4>
+                                        <div className="flex flex-wrap gap-3">
                                             {instructorAchievements.badges.map((badge, index) => (
                                                 <div
                                                     key={index}
-                                                    className={`px-3 py-1 rounded-full text-sm font-medium ${badge.level === 'platinum' ? 'bg-gray-200 text-gray-800' :
-                                                        badge.level === 'gold' ? 'bg-yellow-200 text-yellow-800' :
-                                                            badge.level === 'silver' ? 'bg-gray-100 text-gray-700' :
-                                                                'bg-orange-200 text-orange-800'
+                                                    className={`px-4 py-2 rounded-full text-sm font-semibold shadow-sm ${badge.level === 'platinum' ? 'bg-gradient-to-r from-slate-800 to-slate-900 text-white' :
+                                                        badge.level === 'gold' ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900' :
+                                                            badge.level === 'silver' ? 'bg-gradient-to-r from-slate-300 to-slate-400 text-slate-900' :
+                                                                'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700'
                                                         }`}
                                                 >
                                                     {badge.type} - {badge.level}
@@ -537,46 +593,58 @@ const InstructorDashboard = () => {
                                 )}
 
                                 {/* Statistics */}
-                                <div className="pt-4 border-t">
-                                    <div className="grid gap-4 md:grid-cols-3 text-sm">
-                                        <div>
-                                            <span className="text-muted-foreground">Total Bookings:</span>
-                                            <span className="ml-2 font-medium">{instructorAchievements.totalBookingsReceived || 0}</span>
+                                <div className="pt-6 border-t border-slate-200">
+                                    <div className="grid gap-6 md:grid-cols-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-3 bg-blue-100 rounded-lg">
+                                                <Users className="h-5 w-5 text-blue-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-slate-600">Total Bookings</p>
+                                                <p className="text-xl font-bold text-slate-900">{instructorAchievements.totalBookingsReceived || 0}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="text-muted-foreground">Experience:</span>
-                                            <span className="ml-2 font-medium">{instructorAchievements.monthsSinceJoining || 0} months</span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-3 bg-purple-100 rounded-lg">
+                                                <Calendar className="h-5 w-5 text-purple-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-slate-600">Experience</p>
+                                                <p className="text-xl font-bold text-slate-900">{instructorAchievements.monthsSinceJoining || 0} months</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="text-muted-foreground">Last Evaluated:</span>
-                                            <span className="ml-2 font-medium">
-                                                {instructorAchievements.stats?.lastEvaluated
-                                                    ? new Date(instructorAchievements.stats.lastEvaluated).toLocaleDateString()
-                                                    : 'Never'
-                                                }
-                                            </span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-3 bg-green-100 rounded-lg">
+                                                <Star className="h-5 w-5 text-green-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-slate-600">Last Evaluated</p>
+                                                <p className="text-xl font-bold text-slate-900">
+                                                    {instructorAchievements.stats?.lastEvaluated
+                                                        ? new Date(instructorAchievements.stats.lastEvaluated).toLocaleDateString()
+                                                        : 'Never'
+                                                    }
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         ) : achievementsLoading ? (
-                            <div className="text-center py-8">
-                                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                                <p className="text-gray-500">Loading achievements...</p>
+                            <div className="text-center py-12">
+                                <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-slate-600" />
+                                <p className="text-slate-600">Loading achievements...</p>
                             </div>
                         ) : (
-                            <div className="text-center py-8">
-                                <Award className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                                <p className="text-gray-500">No achievement data available</p>
-                                <p className="text-sm text-gray-400 mt-1">Complete some bookings to start earning achievements!</p>
+                            <div className="text-center py-12 bg-slate-50 rounded-xl">
+                                <Award className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                                <p className="text-slate-600 font-medium">No achievement data available</p>
+                                <p className="text-sm text-slate-500 mt-2">Complete some bookings to start earning achievements!</p>
                             </div>
                         )}
-
                     </div>
                 </div>
-            </div>
-
-            {/* Chat Modal */}
+            </div>            {/* Chat Modal */}
             {chatOpen && (
                 <div className="fixed inset-0 z-[9997] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="relative w-full max-w-6xl h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
