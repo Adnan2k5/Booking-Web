@@ -133,9 +133,9 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col relative">
       {/* Background Video */}
       <div
-        className="bg absolute top-0 left-0 w-full h-screen overflow-hidden -z-50 object-cover"
+        className="bg absolute inset-0 w-full h-[70vh] md:h-screen min-h-[420px] overflow-hidden -z-50"
         ref={videoContainerRef}
-        style={{ width: '100vw', height: '100vh' }}
+        style={{ width: "100vw" }}
       >
         <motion.div
           className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 z-10"
@@ -177,9 +177,9 @@ export default function LandingPage() {
 
       <Nav_Landing />
       {/* Main Content - First Section */}
-      <section className="flex items-center h-screen justify-center">
+      <section className="flex items-center min-h-[70vh] md:min-h-screen justify-center pt-20 pb-16 sm:pt-28">
         <motion.div
-          className="mx-auto px-4 sm:px-6 md:px-8 py-8 flex-col w-[90%]"
+          className="mx-auto px-4 sm:px-6 md:px-8 py-8 flex-col w-full max-w-5xl"
           variants={fadeIn}
           initial="hidden"
           animate="visible"
@@ -224,7 +224,7 @@ export default function LandingPage() {
           {countrySlider.countriesFromEvents.length > 0 && (
             <div className="relative mb-12">
               <motion.div
-                className="flex justify-center items-center mb-8"
+                className="flex flex-col sm:flex-row justify-center items-center mb-8 gap-3 sm:gap-4"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
@@ -232,23 +232,23 @@ export default function LandingPage() {
               >
                 <Button
                   variant="ghost"
-                  size="lg"
+                    size="lg"
                   onClick={countrySlider.prevCountry}
-                  className="p-3 rounded-full hover:bg-gray-100 transition-colors"
+                    className="p-2 sm:p-3 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </Button>
 
-                <div className="flex items-center space-x-8 mx-8">
+                    <div className="flex items-center space-x-4 sm:space-x-8 mx-4 sm:mx-8 w-full sm:w-auto overflow-x-auto no-scrollbar justify-center">
                   {countrySlider.countriesFromEvents.map((country, index) => (
                     <motion.div
                       key={country.name}
-                      className={`cursor-pointer transition-all duration-500 ${index === countrySlider.currentCountryIndex
-                        ? "scale-125 text-2xl font-bold text-gray-900"
-                        : "scale-100 text-lg text-gray-400 hover:text-gray-600"
+                          className={`cursor-pointer transition-all duration-500 text-base sm:text-lg ${index === countrySlider.currentCountryIndex
+                            ? "scale-110 sm:scale-125 sm:text-2xl font-bold text-gray-900"
+                            : "scale-100 text-sm sm:text-lg text-gray-400 hover:text-gray-600"
                         }`}
                       onClick={() => countrySlider.goToCountry(index)}
-                      whileHover={{ scale: index === countrySlider.currentCountryIndex ? 1.25 : 1.1 }}
+                          whileHover={{ scale: index === countrySlider.currentCountryIndex ? 1.2 : 1.05 }}
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     >
                       {country.name}
@@ -260,7 +260,7 @@ export default function LandingPage() {
                   variant="ghost"
                   size="lg"
                   onClick={countrySlider.nextCountry}
-                  className="p-3 rounded-full hover:bg-gray-100 transition-colors"
+                  className="p-2 sm:p-3 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
                 >
                   <ChevronRight className="h-6 w-6" />
                 </Button>
@@ -283,7 +283,7 @@ export default function LandingPage() {
 
           {/* Events Grid */}
           {eventsLoading ? (
-            <div className="flex justify-center items-center py-20">
+            <div className="flex justify-center items-center py-12 sm:py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
             </div>
           ) : countrySlider.countriesFromEvents.length > 0 ? (
@@ -291,7 +291,7 @@ export default function LandingPage() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={countrySlider.currentCountryIndex}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -50 }}
@@ -323,7 +323,7 @@ export default function LandingPage() {
 
           {/* Booking Dialog */}
           <Dialog open={eventBooking.bookingDialog} onOpenChange={eventBooking.setBookingDialog}>
-            <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl">
+            <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold text-gray-900">{t("bookYourEvent")}</DialogTitle>
                 <DialogDescription className="text-gray-600">
@@ -435,13 +435,13 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <DialogFooter className="space-x-3">
-                <Button variant="outline" onClick={eventBooking.closeDialogs} className="px-6">
+              <DialogFooter className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0">
+                <Button variant="outline" onClick={eventBooking.closeDialogs} className="px-6 w-full sm:w-auto">
                   {t("cancel")}
                 </Button>
                 <Button
                   onClick={handleSubmitBooking}
-                  className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-6"
+                  className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-6 w-full sm:w-auto"
                   disabled={!eventBooking.bookingForm.email || !eventBooking.bookingForm.phone}
                 >
                   {t("continueToPayment")}
@@ -452,7 +452,7 @@ export default function LandingPage() {
 
           {/* View More Dialog */}
           <Dialog open={eventBooking.viewMoreDialog} onOpenChange={eventBooking.setViewMoreDialog}>
-            <DialogContent className="sm:max-w-[600px] bg-white rounded-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[600px] bg-white rounded-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold text-gray-900">
                   {eventBooking.selectedEvent?.title}
@@ -608,8 +608,8 @@ export default function LandingPage() {
                 )}
               </div>
 
-              <DialogFooter className="space-x-3">
-                <Button variant="outline" onClick={eventBooking.closeDialogs} className="px-6">
+              <DialogFooter className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0">
+                <Button variant="outline" onClick={eventBooking.closeDialogs} className="px-6 w-full sm:w-auto">
                   {t("close")}
                 </Button>
                 <Button
@@ -617,7 +617,7 @@ export default function LandingPage() {
                     eventBooking.setViewMoreDialog(false);
                     eventBooking.handleBooking(eventBooking.selectedEvent);
                   }}
-                  className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-6"
+                  className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-6 w-full sm:w-auto"
                 >
                   <Users className="h-5 w-5 mr-2" />
                   {t("bookNow")}
@@ -635,14 +635,14 @@ export default function LandingPage() {
       />
 
       {/* Group Dialog */}
-      <Dialog open={groupManagement.showGroupDialog} onOpenChange={groupManagement.setShowGroupDialog}>
-        <DialogContent className="sm:max-w-[500px] bg-white/95 backdrop-blur-md border border-gray-200 rounded-lg">
+          <Dialog open={groupManagement.showGroupDialog} onOpenChange={groupManagement.setShowGroupDialog}>
+        <DialogContent className="sm:max-w-[500px] bg-white/95 backdrop-blur-md border border-gray-200 rounded-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl text-gray-800">{t("addFriendsToGroup")}</DialogTitle>
             <DialogDescription>{t("inviteFriendsDescription")}</DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={groupManagement.handleSearchFriends} className="flex gap-2 mb-4 mt-4">
+          <form onSubmit={groupManagement.handleSearchFriends} className="flex flex-col sm:flex-row gap-2 mb-4 mt-4">
             <Input
               type="email"
               placeholder={t("searchByEmail")}
@@ -653,7 +653,7 @@ export default function LandingPage() {
             <Button
               type="submit"
               disabled={groupManagement.friendLoading.search || !groupManagement.searchEmail}
-              className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white"
+              className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800 text-white w-full sm:w-auto"
             >
               {groupManagement.friendLoading.search ? t("searching") : t("search")}
             </Button>
@@ -686,7 +686,7 @@ export default function LandingPage() {
                       <Button
                         size="sm"
                         onClick={() => groupManagement.addGroupMember(groupManagement.searchResult.user)}
-                        className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white"
+                        className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
                       >
                         <UserPlus size={14} />
                         {t("add")}
@@ -695,7 +695,7 @@ export default function LandingPage() {
                       <Button
                         size="sm"
                         disabled
-                        className="flex items-center gap-1 bg-gray-400 text-white cursor-not-allowed"
+                        className="flex items-center gap-1 bg-gray-400 text-white cursor-not-allowed w-full sm:w-auto"
                       >
                         {groupManagement.searchResult.requestStatus?.isSentByMe ? t("requestSent") : t("requestReceived")}
                       </Button>
@@ -705,7 +705,7 @@ export default function LandingPage() {
                           size="sm"
                           onClick={() => groupManagement.handleSendFriendRequest(groupManagement.searchResult.user._id)}
                           disabled={groupManagement.friendLoading.action}
-                          className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                          className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs w-full sm:w-auto"
                         >
                           <UserPlus size={14} />
                           {groupManagement.friendLoading.action ? t("sending") : t("sendRequest")}
@@ -713,7 +713,7 @@ export default function LandingPage() {
                         <Button
                           size="sm"
                           onClick={() => groupManagement.addGroupMember(groupManagement.searchResult.user)}
-                          className="flex items-center gap-1 bg-black hover:bg-gray-800 text-white"
+                          className="flex items-center gap-1 bg-black hover:bg-gray-800 text-white w-full sm:w-auto"
                         >
                           <UserPlus size={14} />
                           {t("addDirectly")}
@@ -757,7 +757,7 @@ export default function LandingPage() {
                       <Button
                         size="sm"
                         onClick={() => groupManagement.addGroupMember(friend)}
-                        className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
+                        className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 w-full sm:w-auto"
                       >
                         <UserPlus size={12} />
                         {t("add")}
@@ -839,7 +839,7 @@ export default function LandingPage() {
           </div>
 
           <DialogFooter className="mt-4">
-            <Button onClick={() => groupManagement.setShowGroupDialog(false)} className="bg-black hover:bg-gray-800 text-white">
+            <Button onClick={() => groupManagement.setShowGroupDialog(false)} className="bg-black hover:bg-gray-800 text-white w-full sm:w-auto">
               {t("done")}
             </Button>
           </DialogFooter>
