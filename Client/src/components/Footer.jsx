@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { MapPin, Loader2 } from 'lucide-react'
+import { MapPin, Loader2, ArrowRight, X, ExternalLink } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { axiosClient } from '../AxiosClient/axios'
 
-export const Footer = () => {
+export const Footer = ({ className = "" }) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
 
@@ -23,7 +23,7 @@ export const Footer = () => {
       try {
         setLoadingSponsors(true)
         setSponsorError(null)
-        const base = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+        // const base = import.meta.env.VITE_API_URL || 'http://localhost:8080'
         const res = await axiosClient.get(`/api/sponsors`)
         if (!ignore) {
           const data = Array.isArray(res.data?.data) ? res.data.data : []
@@ -67,110 +67,99 @@ export const Footer = () => {
   }, [selectedPartner])
 
   return (
-    <footer className="bg-gray-900 text-white mt-12 py-12 px-4">
-      <div className="container mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-          {/* Left side - About Website */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold text-blue-400">{t("aboutAdventureBooking")}</h3>
-            <p className="text-gray-300 leading-relaxed">
+    <footer className={`bg-black text-white border-t border-white/10 ${className}`}>
+      <div className="container mx-auto max-w-7xl px-6 py-16 lg:py-20">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-16">
+
+          {/* Brand Section - Spans 5 columns */}
+          <div className="md:col-span-5 space-y-6">
+            <h3 className="text-2xl font-bold tracking-tight text-white">{t("aboutAdventureBooking")}</h3>
+            <p className="text-neutral-400 leading-relaxed max-w-md text-sm md:text-base">
               {t("footerDescription")}
             </p>
-          </div>
-
-          {/* Middle - Terms & Support */}
-          <div className="flex flex-col items-center space-y-6">
-            <div className="flex flex-col gap-4 text-center">
-              <Link
-                to="/terms"
-                className="text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium"
+            <div className="pt-4">
+              <button
+                onClick={handleLogoClick}
+                className="group flex items-center gap-3 bg-white text-black px-5 py-3 rounded-full font-medium transition-all hover:bg-neutral-200"
               >
-                {t("termsConditions")}
-              </Link>
-              <Link
-                to="/privacy"
-                className="text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium"
-              >
-                {t("privacyPolicy")}
-              </Link>
-              <Link
-                to="/support"
-                className="text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium"
-              >
-                {t("customerSupport")}
-              </Link>
-              <Link
-                to="/faq"
-                className="text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium"
-              >
-                {t("faq")}
-              </Link>
+                <MapPin className="w-5 h-5" />
+                <span>{t("adventureBooking")}</span>
+                <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+              </button>
             </div>
           </div>
 
-          {/* Right side - Logo + Scrolling Partner Logos */}
-          <div className="flex flex-col items-center md:items-end gap-6">
-            <button
-              onClick={handleLogoClick}
-              className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 transition-all duration-300 px-6 py-3 rounded-lg group cursor-pointer shadow-lg shadow-blue-800/30"
-            >
-              <MapPin className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
-              <span className="text-xl font-bold text-white tracking-wide">
-                {t("adventureBooking")}
-              </span>
-            </button>
+          {/* Navigation Links - Spans 3 columns */}
+          <div className="md:col-span-3">
+            <h4 className="font-semibold text-lg mb-6 text-white">{t("quickLinks")}</h4>
+            <ul className="space-y-4">
+              {[
+                { to: "/terms", label: t("termsConditions") },
+                { to: "/privacy", label: t("privacyPolicy") },
+                { to: "/support", label: t("customerSupport") },
+                { to: "/faq", label: t("faq") }
+              ].map((link, idx) => (
+                <li key={idx}>
+                  <Link
+                    to={link.to}
+                    className="text-neutral-400 hover:text-white transition-colors duration-200 flex items-center gap-2 group text-sm"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-neutral-800 group-hover:bg-white transition-colors"></span>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-            {/* Scrolling logos */}
-            <div className="w-full md:w-[280px] mt-5 relative overflow-hidden logo-marquee rounded-md border border-gray-700/60 bg-gray-800/50">
-              <div className="absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-gray-900 to-transparent pointer-events-none z-10" />
-              <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-gray-900 to-transparent pointer-events-none z-10" />
-              <ul className="flex items-center gap-12 logo-marquee-track py-5 pl-6">
-                {loadingSponsors && (
-                  <li className="flex items-center gap-2 text-xs text-gray-400">
-                    <Loader2 className="h-4 w-4 animate-spin" /> {t("loadingSponsors")}
-                  </li>
-                )}
-                {!loadingSponsors && sponsorError && (
-                  <li className="text-xs text-red-400">{sponsorError === 'FAILED_TO_LOAD_SPONSORS' ? t("failedToLoadSponsors") : sponsorError}</li>
-                )}
-                {!loadingSponsors && !sponsorError && sponsors.length === 0 && (
-                  <li className="text-xs text-gray-400">{t("noSponsorsYet")}</li>
-                )}
-                {!loadingSponsors && !sponsorError && sponsors.length > 0 && (
-                  sponsors.concat(sponsors).map((p, i) => (
-                    <li
-                      key={i}
-                      className="flex-shrink-0 opacity-80 hover:opacity-100 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/70 rounded"
-                      title={p.name}
-                      tabIndex={0}
-                      onClick={() => setSelectedPartner(p)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedPartner(p) } }}
-                    >
-                      <img
-                        src={p.logoUrl}
-                        alt={(p.name || 'Sponsor') + ' logo'}
-                        loading="lazy"
-                        className="h-12 w-auto object-contain drop-shadow-sm hover:drop-shadow"
-                        onError={(e) => { e.currentTarget.style.opacity = '0.25' }}
-                      />
+          {/* Sponsors Section - Spans 4 columns */}
+          <div className="md:col-span-4 flex flex-col justify-between h-full">
+            <div>
+              <h4 className="font-semibold text-lg mb-6 text-white">{t("ourPartners")}</h4>
+              <div className="w-full relative overflow-hidden logo-marquee rounded-xl border border-white/5 bg-neutral-900/30 p-1">
+                <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black via-black/80 to-transparent z-10 pointer-events-none" />
+                <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black via-black/80 to-transparent z-10 pointer-events-none" />
+
+                <ul className="flex items-center gap-12 logo-marquee-track py-6">
+                  {loadingSponsors && (
+                    <li className="flex items-center gap-2 text-xs text-neutral-500 pl-4">
+                      <Loader2 className="h-3 w-3 animate-spin" /> {t("loadingSponsors")}
                     </li>
-                  ))
-                )}
-              </ul>
+                  )}
+                  {!loadingSponsors && sponsorError && (
+                    <li className="text-xs text-red-900 pl-4">{sponsorError === 'FAILED_TO_LOAD_SPONSORS' ? t("failedToLoadSponsors") : sponsorError}</li>
+                  )}
+                  {!loadingSponsors && !sponsorError && sponsors.length === 0 && (
+                    <li className="text-xs text-neutral-600 pl-4">{t("noSponsorsYet")}</li>
+                  )}
+                  {!loadingSponsors && !sponsorError && sponsors.length > 0 && (
+                    // Duplicate list for infinite scroll effect
+                    sponsors.concat(sponsors).map((p, i) => (
+                      <li
+                        key={i}
+                        className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                        onClick={() => setSelectedPartner(p)}
+                        title={p.name}
+                      >
+                        <img
+                          src={p.logoUrl}
+                          alt={p.name}
+                          className="h-12 max-w-[140px] object-contain filter grayscale hover:grayscale-0 transition-all duration-500"
+                          onError={(e) => { e.currentTarget.style.display = 'none' }}
+                        />
+                      </li>
+                    ))
+                  )}
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Bottom section */}
-        <div className="mt-8 pt-8 border-t border-gray-700 text-center">
-          <p className="text-gray-400">
-            {t("copyrightText")}
-          </p>
         </div>
       </div>
-      {/* Component-scoped styles for the scrolling marquee */}
+
+      {/* Marquee Styles */}
       <style>{`
-        .logo-marquee { --marquee-duration: 22s; }
+        .logo-marquee { --marquee-duration: 15s; }
         .logo-marquee-track {
           animation: marquee var(--marquee-duration) linear infinite;
           width: max-content;
@@ -185,69 +174,58 @@ export const Footer = () => {
         }
       `}</style>
 
+      {/* Sponsor Modal */}
       {selectedPartner && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true"
-          aria-label={selectedPartner.name + ' ' + t("sponsorDetails")}
-        >
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" onClick={closeModal} />
-          <div className="relative w-full max-w-lg bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden animate-scale-in">
-            <div className="absolute top-2 right-2">
-              <button
-                ref={closeButtonRef}
-                onClick={closeModal}
-                className="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded p-2"
-                aria-label={t("closeSponsorDetails")}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-6 space-y-5">
-              <div className="flex items-center gap-5">
-                <div className="shrink-0 bg-gray-800/60 rounded-lg p-4 border border-gray-700">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-sm transition-opacity" onClick={closeModal} />
+          <div className="relative w-full max-w-md bg-black border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+
+            {/* Close Button */}
+            <button
+              ref={closeButtonRef}
+              onClick={closeModal}
+              className="absolute top-4 right-4 p-2 text-neutral-500 hover:text-white transition-colors rounded-full hover:bg-neutral-900"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="p-8">
+              <div className="flex flex-col items-center text-center space-y-6">
+                <div className="w-32 h-32 bg-white rounded-xl flex items-center justify-center p-6 mb-2">
                   <img
                     src={selectedPartner.logoUrl}
-                    alt={(selectedPartner.name || 'Sponsor') + ' logo large'}
-                    className="h-20 w-auto object-contain"
+                    alt={selectedPartner.name}
+                    className="w-full h-full object-contain"
                   />
                 </div>
-                <div className="space-y-1">
-                  <h2 className="text-2xl font-bold tracking-wide text-white">{selectedPartner.name}</h2>
+
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold text-white">{selectedPartner.name}</h2>
                   {selectedPartner.tier && (
-                    <p className="text-sm font-medium text-blue-400 uppercase tracking-wide">{selectedPartner.tier}</p>
+                    <span className="inline-block px-3 py-1 bg-neutral-900 text-neutral-300 text-xs font-medium rounded-full uppercase tracking-wider border border-white/10">
+                      {selectedPartner.tier}
+                    </span>
                   )}
                 </div>
-              </div>
-              <p className="text-gray-300 leading-relaxed text-sm">
-                {selectedPartner.description || t("noDescriptionProvided")}
-              </p>
-              <div className="flex items-center justify-between pt-2">
-                {selectedPartner.website ? (
+
+                <p className="text-neutral-400 text-sm leading-relaxed">
+                  {selectedPartner.description || t("noDescriptionProvided")}
+                </p>
+
+                {selectedPartner.website && (
                   <a
                     href={selectedPartner.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium group"
+                    className="w-full flex items-center justify-center gap-2 bg-white text-black py-3 rounded-lg font-medium hover:bg-neutral-200 transition-colors"
                   >
                     {t("visitWebsite")}
-                    <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                    <ExternalLink className="w-4 h-4" />
                   </a>
-                ) : <span className="text-xs text-gray-500">{t("noWebsite")}</span>}
-                <button
-                  onClick={closeModal}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-sm rounded-md border border-gray-700 text-gray-200 transition-colors"
-                >
-                  {t("close")}
-                </button>
+                )}
               </div>
             </div>
           </div>
-          <style>{`
-            .animate-fade-in { animation: fadeIn .25s ease-out; }
-            .animate-scale-in { animation: scaleIn .25s ease-out; }
-            @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-            @keyframes scaleIn { from { opacity:0; transform: translateY(12px) scale(.96); } to { opacity:1; transform: translateY(0) scale(1); } }
-          `}</style>
         </div>
       )}
     </footer>

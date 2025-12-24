@@ -20,7 +20,7 @@ const EventCard = memo(({ event, onBooking, onViewMore }) => {
           alt={event.title}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-4 left-4">
           <h4 className="text-xl font-bold text-white">{event.title}</h4>
         </div>
@@ -32,7 +32,7 @@ const EventCard = memo(({ event, onBooking, onViewMore }) => {
         <div className="flex-1 space-y-4">
           {/* Location Info */}
           <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-gray-700">
+            <div className="flex items-center space-x-2 text-gray-900">
               <MapPin className="h-5 w-5" />
               <span className="font-semibold">{t("location")}</span>
             </div>
@@ -43,7 +43,7 @@ const EventCard = memo(({ event, onBooking, onViewMore }) => {
           </div>
 
           {/* Time Info */}
-          <div className="flex items-center space-x-2 text-gray-600">
+          <div className="flex items-center space-x-2 text-gray-700">
             <Clock className="h-5 w-5" />
             <span className="font-medium">
               {t("time")} {event.startTime} - {event.endTime}
@@ -51,7 +51,7 @@ const EventCard = memo(({ event, onBooking, onViewMore }) => {
           </div>
 
           {/* Date Info */}
-          <div className="flex items-center space-x-2 text-gray-600">
+          <div className="flex items-center space-x-2 text-gray-700">
             <Calendar className="h-5 w-5" />
             <span className="font-medium">
               {t("date")} {new Date(event.date).toLocaleDateString()}
@@ -61,14 +61,14 @@ const EventCard = memo(({ event, onBooking, onViewMore }) => {
           {/* Adventures */}
           {event.adventures && event.adventures.length > 0 && (
             <div className="space-y-2">
-              <div className="flex items-center space-x-2 text-gray-700">
+              <div className="flex items-center space-x-2 text-gray-900">
                 <Compass className="h-5 w-5" />
                 <span className="font-semibold">{t("adventures")}</span>
               </div>
               <div className="pl-7 space-y-1">
                 {event.adventures.slice(0, 2).map((adventure, index) => (
                   <div key={adventure._id || index} className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-black rounded-full"></div>
                     <span className="text-gray-600 text-sm">{adventure.name}</span>
                   </div>
                 ))}
@@ -83,7 +83,7 @@ const EventCard = memo(({ event, onBooking, onViewMore }) => {
 
           {/* Description */}
           <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-gray-700">
+            <div className="flex items-center space-x-2 text-gray-900">
               <Compass className="h-5 w-5" />
               <span className="font-semibold">{t("description")}</span>
             </div>
@@ -104,7 +104,7 @@ const EventCard = memo(({ event, onBooking, onViewMore }) => {
         >
           <Button
             onClick={() => onViewMore?.(event)}
-            className="w-full bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+            className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <Users className="h-5 w-5 mr-2" />
             {t("bookYourSpot").toUpperCase()}
