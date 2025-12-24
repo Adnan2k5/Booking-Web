@@ -1,17 +1,13 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Loader } from "../components/Loader"
-import { Settings, LogOut, User, TicketIcon } from 'lucide-react'
-import { AnimatePresence, motion } from "framer-motion"
-import { MdLanguage, MdMenu, MdClose } from "react-icons/md"
-import { MdOutlineExplore } from "react-icons/md";
+import { Settings, LogOut, User, TicketIcon, Menu, X } from 'lucide-react'
+import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion"
+import { MdLanguage } from "react-icons/md"
 import { useTranslation } from "react-i18next"
-import { CiShop } from "react-icons/ci";
-import { FiTarget } from "react-icons/fi";
-import { LiaHotelSolid } from "react-icons/lia";
 import { useAuth } from "../Pages/AuthProvider"
 import { useWebsiteSettings } from "../contexts/WebsiteSettingsContext"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -28,30 +24,48 @@ import { useDispatch } from "react-redux";
 import { updateLanguageHeaders } from "../Api/language.api.js"
 import { userLogout } from "../Auth/UserAuth.js"
 import { toast } from "sonner"
-import { Link } from "react-router-dom"
 
 export const Nav_Landing = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const { t, i18n } = useTranslation()
-    const [loading, setLoading] = useState(false)
     const { user } = useAuth()
     const { isShopEnabled, isHotelsEnabled } = useWebsiteSettings()
     const navigate = useNavigate()
-
-    // standard icon class for consistent sizing across the nav
-    const ICON_CLASS = "h-4 w-4"
-
-    const todayISO = new Date().toISOString().split('T')[0]
-
     const dispatch = useDispatch();
+    const [isScrolled, setIsScrolled] = useState(false)
+
+    // Handle scroll effect for navbar background
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 50) {
+                setIsScrolled(true)
+            } else {
+                setIsScrolled(false)
+            }
+        }
+
+        window.addEventListener("scroll", handleScroll)
+        return () => window.removeEventListener("scroll", handleScroll)
+    }, [])
 
     const handleLogout = async () => {
         await userLogout(dispatch).then(() => {
             window.location.reload()
         }).catch((error) => {
-            toast.error(t("logoutError")
-            )
+            toast.error(t("logoutError"))
         })
+    }
+
+    const navigateprofile = () => {
+        if (user.user.role === "instructor") {
+            navigate("/instructor/dashboard")
+        } else if (user.user.role === "hotel") {
+            navigate("/hotel")
+        } else if (user.user.role === "admin") {
+            navigate("/admin")
+        } else {
+            navigate("/dashboard")
+        }
     }
 
     const languages = [
@@ -75,185 +89,138 @@ export const Nav_Landing = () => {
         }, 100)
     }
 
-    const navigateprofile = () => {
-        if (user.user.role === "instructor") {
-            navigate("/instructor/dashboard")
-        } else if (user.user.role === "hotel") {
-            navigate("/hotel")
-        } else if (user.user.role === "admin") {
-            navigate("/admin")
-        } else {
-            navigate("/dashboard")
-        }
-    }
-
     return (
-        <nav className="w-full fixed h-fit z-50 px-2 sm:px-4">
-            <motion.div
-                className="bg-black/70 backdrop-blur-md w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] m-auto mt-2 sm:mt-3 md:mt-5 text-white px-2 sm:px-3 py-2 sm:py-3 rounded-xl border border-white/10"
-                initial={{ y: -50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-            >
-                <div className="container mx-auto flex justify-between items-center">
-                    <motion.h1
-                        className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent"
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                        onClick={() => navigate("/")}
-                        style={{ cursor: "pointer" }}
-                    >
+        <nav
+            className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out ${isScrolled ? "bg-black/90 backdrop-blur-md py-3" : "bg-transparent py-5"
+                }`}
+        >
+            <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
+                {/* Logo */}
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <Link to="/" className="text-2xl font-bold text-white tracking-tighter hover:text-gray-300 transition-colors">
                         Adventure
-                    </motion.h1>
+                    </Link>
+                </motion.div>
 
-                    <div className="lg:hidden">
-                        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white p-1 sm:p-2">
-                            {mobileMenuOpen ? <MdClose className="text-xl sm:text-2xl" /> : <MdMenu className="text-xl sm:text-2xl" />}
-                        </button>
-                    </div>
-                    <div className="hidden lg:flex links gap-5 xl:gap-10 items-center">
-                        <ul className="flex space-x-3 xl:space-x-5 items-center text-base xl:text-lg">
-                            <motion.li
-                                className="flex items-center cursor-pointer gap-2 hover:text-emerald-400 transition-colors"
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => navigate(`/browse?date=${todayISO}&q=adventure`)}
-                                style={{ cursor: "pointer" }}
-                            >
-                                {t("explore")} <MdOutlineExplore className={ICON_CLASS} />
-                            </motion.li>
-                            {isShopEnabled && (
-                                <motion.li
-                                    className="cursor-pointer  hover:text-emerald-400 transition-colors"
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.95 }}
-                                >
-                                    <Link className="flex items-center gap-2" to="/shop">{t("shop")} <CiShop className={ICON_CLASS} /> </Link>
-                                </motion.li>
-                            )}
-                            {isHotelsEnabled && (
-                                <motion.li
-                                    className="cursor-pointer hover:text-emerald-400 transition-colors"
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.95 }}
-                                >
-                                    <Link className="flex items-center gap-2" to="/book-hotel">{t("hotels")} <LiaHotelSolid className={ICON_CLASS} /></Link>
-                                </motion.li>
-                            )}
-                            <motion.li
-                                className="cursor-pointer hover:text-emerald-400 transition-colors"
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                <Link className="flex items-center gap-2" to="/mission">{t("mission")} <FiTarget className={ICON_CLASS} /></Link>
-                            </motion.li>
-                            <motion.li className="cursor-pointer hover:text-emerald-400 transition-colors">
-                                <LanguageSelector />
-                            </motion.li>
-                            <li>
-                                {loading ? (
-                                    <Loader />
-                                ) : user.user ? (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                className="relative h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 p-0"
-                                            >                                                <Avatar className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 text-black">
-                                                    <AvatarFallback>{user?.user?.email?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
-                                                </Avatar>
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="w-56" align="end" forceMount>
-                                            <DropdownMenuLabel className="font-normal">
-                                                <div className="flex flex-col space-y-1">
-                                                    <p className="text-sm font-medium leading-none">{user?.user?.email}</p>
-                                                </div>
-                                            </DropdownMenuLabel>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem onClick={() => navigateprofile()}>
-                                                    <User className="mr-2 h-4 w-4" />
-                                                    <span>{t("profile")}</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => navigate("/dashboard/tickets")}>
-                                                    <TicketIcon className="mr-2 h-4 w-4" />
-                                                    <span>{t("tickets")}</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => navigate("/dashboard/settings")}>
-                                                    <Settings className="mr-2 h-4 w-4" />
-                                                    <span>{t("settings")}</span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem onClick={handleLogout}>
-                                                <LogOut className="mr-2 h-4 w-4" />
-                                                <span>{t("logout")}</span>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                ) : (
-                                    <Button
-                                        onClick={() => navigate("/login-options")}
-                                        className="bg-white text-gray-900 border cursor-pointer border-gray-200 hover:bg-gray-50 hover:border-gray-300 px-4 py-1.5 rounded-md shadow-sm text-base xl:text-lg font-semibold transition-colors duration-150"
-                                        aria-label={t("login") || "Login"}
-                                    >
-                                        {t("login") || "Login"}
+                {/* Desktop Menu */}
+                <div className="hidden lg:flex items-center space-x-8">
+                    <ul className="flex items-center space-x-6">
+                        <NavLink to={`/browse?date=${new Date().toISOString().split('T')[0]}&q=adventure`} text={t("explore")} />
+                        {isShopEnabled && <NavLink to="/shop" text={t("shop")} />}
+                        {isHotelsEnabled && <NavLink to="/book-hotel" text={t("hotels")} />}
+                        <NavLink to="/mission" text={t("mission")} />
+                    </ul>
+
+                    <div className="flex items-center space-x-4 border-l border-white/20 pl-6">
+                        <div className="text-white/80 hover:text-white transition-colors">
+                            <LanguageSelector />
+                        </div>
+
+                        {user.user ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-white/10 p-0 border border-white/20">
+                                        <Avatar className="h-full w-full">
+                                            <AvatarFallback className="bg-black text-white border border-white/20">
+                                                {user?.user?.email?.charAt(0)?.toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
                                     </Button>
-                                )}
-                            </li>
-                        </ul>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56 bg-black/95 text-white border-white/10" align="end">
+                                    <DropdownMenuLabel className="font-normal text-gray-400">
+                                        {user?.user?.email}
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator className="bg-white/10" />
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer" onClick={() => navigateprofile()}>
+                                            <User className="mr-2 h-4 w-4" />
+                                            <span>{t("profile")}</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer" onClick={() => navigate("/dashboard/tickets")}>
+                                            <TicketIcon className="mr-2 h-4 w-4" />
+                                            <span>{t("tickets")}</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer" onClick={() => navigate("/dashboard/settings")}>
+                                            <Settings className="mr-2 h-4 w-4" />
+                                            <span>{t("settings")}</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuGroup>
+                                    <DropdownMenuSeparator className="bg-white/10" />
+                                    <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer text-red-400 focus:text-red-400" onClick={handleLogout}>
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>{t("logout")}</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : (
+                            <Button
+                                onClick={() => navigate("/login-options")}
+                                className="bg-white text-black hover:bg-gray-200 font-medium rounded-full px-6 transition-transform hover:scale-105"
+                            >
+                                {t("login")}
+                            </Button>
+                        )}
                     </div>
                 </div>
 
-                {/* Mobile Menu */}
-                <AnimatePresence>
-                    {mobileMenuOpen && (
-                        <motion.div
-                            className="lg:hidden mt-3 pb-2"
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <ul className="flex flex-col space-y-3 px-2">
-                                <motion.li
-                                    className="cursor-pointer hover:text-emerald-400 transition-colors text-sm sm:text-base"
-                                    whileTap={{ scale: 0.97 }}
-                                    onClick={() => {
-                                        navigate(`/browse?date=${todayISO}&q=adventure`)
-                                        setMobileMenuOpen(false)
-                                    }}
-                                    style={{ cursor: "pointer" }}
-                                >{t("explore")}</motion.li>
+                {/* Mobile Menu Toggle */}
+                <div className="lg:hidden">
+                    <button
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        className="text-white p-2 focus:outline-none"
+                    >
+                        {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                    </button>
+                </div>
+            </div>
 
-                                {isShopEnabled && (
-                                    <motion.li
-                                        className="cursor-pointer hover:text-emerald-400 transition-colors text-sm sm:text-base"
-                                        whileTap={{ scale: 0.97 }}
-                                    >
-                                        <a href="/shop">{t("shop")}</a>
-                                    </motion.li>
-                                )}
+            {/* Mobile Menu Overlay */}
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, x: "100%" }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: "100%" }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        className="fixed inset-0 bg-black z-50 lg:hidden flex flex-col px-6 overflow-y-auto"
+                    >
+                        <div className="flex justify-end pt-6 pb-2">
+                            <button
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-white p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                            >
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
 
-                                {isHotelsEnabled && (
-                                    <motion.li
-                                        className="cursor-pointer hover:text-emerald-400 transition-colors text-sm sm:text-base"
-                                        whileTap={{ scale: 0.97 }}
-                                    >
-                                        <a href="/book-hotel">{t("hotels")}</a>
-                                    </motion.li>
-                                )}
+                        <div className="flex flex-col space-y-6 mt-4">
+                            <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate(`/browse?date=${new Date().toISOString().split('T')[0]}&q=adventure`) }}>
+                                {t("explore")}
+                            </MobileNavLink>
+                            {isShopEnabled && (
+                                <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate("/shop") }}>
+                                    {t("shop")}
+                                </MobileNavLink>
+                            )}
+                            {isHotelsEnabled && (
+                                <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate("/book-hotel") }}>
+                                    {t("hotels")}
+                                </MobileNavLink>
+                            )}
+                            <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate("/mission") }}>
+                                {t("mission")}
+                            </MobileNavLink>
 
-                                <motion.li
-                                    className="cursor-pointer hover:text-emerald-400 transition-colors text-sm sm:text-base"
-                                    whileTap={{ scale: 0.97 }}
-                                >{t("mission")}</motion.li>
-
-                                <li className="flex items-center">
-                                    <MdLanguage className="text-white text-lg sm:text-xl mr-2" />
+                            <div className="border-t border-white/10 pt-6 mt-6">
+                                <div className="flex items-center space-x-4 mb-6">
+                                    <MdLanguage className="text-white text-xl" />
                                     <select
-                                        className="bg-transparent text-white text-sm sm:text-base border border-white/20 rounded px-1 py-1"
+                                        className="bg-transparent text-white text-base border-none focus:ring-0 p-0"
                                         value={i18n.language}
                                         onChange={(e) => changeLanguage(e.target.value)}
                                     >
@@ -263,38 +230,69 @@ export const Nav_Landing = () => {
                                             </option>
                                         ))}
                                     </select>
-                                </li>
+                                </div>
 
-                                <li className="flex justify-start">
-                                    {loading ? (
-                                        <Loader />
-                                    ) : user.user ? (
+                                {user.user ? (
+                                    <div className="space-y-4">
                                         <div
-                                            className="flex items-center space-x-2 bg-black/40 hover:bg-black/60 px-3 py-2 rounded-lg cursor-pointer transition-colors"
-                                            onClick={() => navigateprofile()}
+                                            className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-white/5"
+                                            onClick={() => { setMobileMenuOpen(false); navigateprofile() }}
                                         >
-                                            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex items-center justify-center rounded-full">
-                                                {user?.user?.email?.charAt(0)?.toUpperCase()}
+                                            <Avatar className="h-10 w-10 border border-white/20">
+                                                <AvatarFallback className="bg-black text-white">
+                                                    {user?.user?.email?.charAt(0)?.toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="text-white font-medium">{t("profile")}</p>
+                                                <p className="text-gray-400 text-sm">{user?.user?.email}</p>
                                             </div>
-                                            <span className="text-sm sm:text-base">{t("profile")}</span>
                                         </div>
-                                    ) : (
-                                        <div className="flex justify-start">
-                                            <Button
-                                                onClick={() => navigate("/login-options")}
-                                                className="bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 px-4 py-2 rounded-md shadow-sm text-sm sm:text-base font-semibold w-full text-center transition-colors duration-150"
-                                                aria-label={t("login") || "Login"}
-                                            >
-                                                {t("login") || "Login"}
-                                            </Button>
-                                        </div>
-                                    )}
-                                </li>
-                            </ul>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </motion.div>
+                                        <Button
+                                            variant="ghost"
+                                            onClick={handleLogout}
+                                            className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-white/5"
+                                        >
+                                            <LogOut className="mr-2 h-4 w-4" />
+                                            {t("logout")}
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <Button
+                                        onClick={() => navigate("/login-options")}
+                                        className="w-full bg-white text-black hover:bg-gray-200 py-6 text-lg rounded-xl"
+                                    >
+                                        {t("login")}
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </nav>
     )
 }
+
+// Helper Components
+const NavLink = ({ to, text }) => (
+    <li>
+        <Link
+            to={to}
+            className="text-white/80 hover:text-white text-sm font-medium tracking-wide transition-colors relative group"
+        >
+            {text}
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
+        </Link>
+    </li>
+)
+
+const MobileNavLink = ({ children, onClick }) => (
+    <button
+        onClick={onClick}
+        className="text-left text-2xl font-light text-white hover:text-gray-300 transition-colors"
+    >
+        {children}
+    </button>
+)
+

@@ -50,11 +50,8 @@ export default function LandingPage() {
   const [date, setDate] = useState("")
   const [adventure, setAdventure] = useState("")
   const [eventsPage, setEventsPage] = useState(1)
-  const [isVideoReady, setIsVideoReady] = useState(false)
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
 
   const eventsLimit = 6
-  const videoContainerRef = useRef(null)
 
   // Custom hooks - Prioritize events loading, defer others
   const { events, isLoading: eventsLoading, totalPages: eventsTotalPages } = useEvents({
@@ -86,42 +83,6 @@ export default function LandingPage() {
     navigate(`/browse?adventure=${adventure}&location=${location}&date=${date}`)
   }, [location, date, adventure, navigate, t, groupManagement])
 
-  const onReady = useCallback(() => {
-    setIsVideoReady(true)
-  }, [])
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
-      setShouldLoadVideo(true)
-      return
-    }
-
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setShouldLoadVideo(true)
-        observer.disconnect()
-      }
-    }, {
-      threshold: 0.2
-    })
-
-    const target = videoContainerRef.current
-    if (target) {
-      observer.observe(target)
-    }
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!shouldLoadVideo && typeof window !== "undefined") {
-      const timeoutId = window.setTimeout(() => setShouldLoadVideo(true), 2000)
-      return () => window.clearTimeout(timeoutId)
-    }
-  }, [shouldLoadVideo])
-
   const handleSubmitBooking = useCallback(() => {
     const result = eventBooking.submitBooking()
     if (!result.success) {
@@ -132,58 +93,43 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Background Video */}
-      <div
-        className="bg absolute top-0 left-0 w-full h-screen overflow-hidden -z-50 object-cover"
-        ref={videoContainerRef}
-        style={{ width: '100vw', height: '100vh' }}
-      >
+      <div className="fixed inset-0 w-full h-screen overflow-hidden -z-50 bg-black">
         <motion.div
-          className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 z-10"
+          className="absolute inset-0 bg-black/40 z-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.5 }}
         />
-        <Suspense fallback={<div className="w-full h-full bg-gray-900" />}>
-          {shouldLoadVideo && (
-            <div className="player-wrapper h-full w-full absolute top-0 left-0">
-              <ReactPlayer
-                url={"https://dazzling-chaja-b80bdd.netlify.app/video.mp4"}
-                onReady={onReady}
-                controls={false}
-                loop={true}
-                playing={shouldLoadVideo}
-                muted={true}
-                width="100%"
-                height="100%"
-                onStart={() => setIsVideoReady(true)}
-                style={{ objectFit: "cover", width: "100%", height: "100%" }}
-                className="react-player absolute top-0 left-0"
-                wrapperClassName={`h-full w-full transition-opacity duration-700 ${isVideoReady ? "opacity-100" : "opacity-0"}`}
-                config={{
-                  file: {
-                    attributes: {
-                      preload: "auto",
-                      playsInline: true,
-                      autoPlay: true,
-                      muted: true
-                    }
-                  }
-                }}
-              />
-            </div>
-          )}
-        </Suspense>
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-0 animate-fade-in transition-opacity duration-1000"
+          onLoadedData={(e) => e.currentTarget.classList.remove("opacity-0")}
+        >
+          <source src="https://dazzling-chaja-b80bdd.netlify.app/video.mp4" type="video/mp4" />
+        </video>
       </div>
 
       <Nav_Landing />
       {/* Main Content - First Section */}
-      <section className="flex items-center h-screen justify-center">
+      <section className="flex items-center min-h-screen justify-center pt-20 pb-16 px-4">
         <motion.div
-          className="mx-auto px-4 sm:px-6 md:px-8 py-8 flex-col w-[90%]"
+          className="w-full max-w-5xl"
           variants={fadeIn}
           initial="hidden"
           animate="visible"
         >
+          <div className="text-center mb-10 md:mb-16">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight drop-shadow-md">
+              {t("discoverAdventures") || "Discover Your Next Adventure"}
+            </h1>
+            <p className="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto drop-shadow-sm">
+              {t("adventureDescription") || "Explore the world's most exciting events and experiences."}
+            </p>
+          </div>
+
           <SearchBar
             adventures={adventures}
             adventure={adventure}
@@ -204,77 +150,104 @@ export default function LandingPage() {
 
 
       {/* Featured Events Content */}
-      <div className="w-full bg-gradient-to-br from-gray-50 to-white px-4 sm:px-6 md:px-8 py-20">
-        <div className="max-w-7xl mx-auto">
+      <div className="w-full relative overflow-hidden bg-slate-50 px-4 sm:px-6 md:px-8 py-24 min-h-[80vh] flex flex-col justify-between">
+
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <motion.div
+            className="absolute -top-[10%] -right-[10%] w-[500px] h-[500px] bg-purple-200/40 rounded-full blur-3xl mix-blend-multiply filter"
+            animate={{ x: [0, -50, 0], y: [0, 50, 0], scale: [1, 1.2, 1] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          />
+          <motion.div
+            className="absolute top-[20%] -left-[10%] w-[600px] h-[600px] bg-blue-200/40 rounded-full blur-3xl mix-blend-multiply filter"
+            animate={{ x: [0, 50, 0], y: [0, -50, 0], scale: [1, 1.1, 1] }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          />
+          <motion.div
+            className="absolute -bottom-[10%] right-[20%] w-[400px] h-[400px] bg-indigo-200/40 rounded-full blur-3xl mix-blend-multiply filter"
+            animate={{ x: [0, -30, 0], y: [0, 30, 0] }}
+            transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+          />
+        </div>
+
+        <div className="max-w-7xl mx-auto w-full relative z-10">
           {/* Section Header */}
           <motion.div
-            className="text-center mb-16"
+            className="text-center mb-20"
             initial={{ opacity: 0, y: -30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{t("featuredEvents")}</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <h2 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 mb-6 tracking-tight">
+              {t("featuredEvents")}
+            </h2>
+            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto font-light">
               {t("discoverAmazingAdventures")}
             </p>
           </motion.div>
 
-          {/* Country Slider - Always show if we have events */}
+          {/* Country Slider */}
           {countrySlider.countriesFromEvents.length > 0 && (
-            <div className="relative mb-12">
+            <div className="relative mb-16">
               <motion.div
-                className="flex justify-center items-center mb-8"
+                className="flex items-center justify-center gap-4 md:gap-8"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.6 }}
               >
                 <Button
                   variant="ghost"
-                  size="lg"
+                  size="icon"
                   onClick={countrySlider.prevCountry}
-                  className="p-3 rounded-full hover:bg-gray-100 transition-colors"
+                  className="rounded-full h-12 w-12 hover:bg-white hover:shadow-lg transition-all duration-300 text-gray-800"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </Button>
 
-                <div className="flex items-center space-x-8 mx-8">
-                  {countrySlider.countriesFromEvents.map((country, index) => (
-                    <motion.div
-                      key={country.name}
-                      className={`cursor-pointer transition-all duration-500 ${index === countrySlider.currentCountryIndex
-                        ? "scale-125 text-2xl font-bold text-gray-900"
-                        : "scale-100 text-lg text-gray-400 hover:text-gray-600"
-                        }`}
-                      onClick={() => countrySlider.goToCountry(index)}
-                      whileHover={{ scale: index === countrySlider.currentCountryIndex ? 1.25 : 1.1 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    >
-                      {country.name}
-                    </motion.div>
-                  ))}
+                {/* Scrollable Container with Hidden Scrollbar */}
+                <div className="flex-1 overflow-x-auto no-scrollbar mask-gradient-x">
+                  <div className="flex items-center justify-center space-x-8 md:space-x-12 px-4 min-w-max mx-auto">
+                    {countrySlider.countriesFromEvents.map((country, index) => (
+                      <motion.div
+                        key={country.name}
+                        onClick={() => countrySlider.goToCountry(index)}
+                        className={`cursor-pointer transition-all duration-500 whitespace-nowrap px-4 py-2 rounded-full ${index === countrySlider.currentCountryIndex
+                          ? "text-3xl md:text-4xl font-bold text-gray-900 scale-100" // Highlighted
+                          : "text-xl md:text-2xl text-gray-400 hover:text-gray-600 scale-95" // Dimmed
+                          }`}
+                        whileHover={{ scale: index === countrySlider.currentCountryIndex ? 1.05 : 1.05 }}
+                        layout
+                      >
+                        <span className={index === countrySlider.currentCountryIndex ? "border-b-4 border-gray-900 pb-1" : ""}>
+                          {country.name}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
 
                 <Button
                   variant="ghost"
-                  size="lg"
+                  size="icon"
                   onClick={countrySlider.nextCountry}
-                  className="p-3 rounded-full hover:bg-gray-100 transition-colors"
+                  className="rounded-full h-12 w-12 hover:bg-white hover:shadow-lg transition-all duration-300 text-gray-800"
                 >
                   <ChevronRight className="h-6 w-6" />
                 </Button>
               </motion.div>
 
-              {/* Country Indicator Dots */}
-              <div className="flex justify-center space-x-2 mb-8">
+              {/* Minimalist Indicators */}
+              <div className="flex justify-center space-x-3 mt-8">
                 {countrySlider.countriesFromEvents.map((_, index) => (
                   <motion.div
                     key={index}
-                    className={`h-2 rounded-full cursor-pointer transition-all duration-300 ${index === countrySlider.currentCountryIndex ? "w-8 bg-gray-900" : "w-2 bg-gray-300"
+                    className={`h-1.5 rounded-full cursor-pointer transition-all duration-300 ${index === countrySlider.currentCountryIndex ? "w-12 bg-gray-900" : "w-1.5 bg-gray-300"
                       }`}
                     onClick={() => countrySlider.goToCountry(index)}
-                    whileHover={{ scale: 1.2 }}
+                    layoutId="activeIndicator"
                   />
                 ))}
               </div>
@@ -283,7 +256,7 @@ export default function LandingPage() {
 
           {/* Events Grid */}
           {eventsLoading ? (
-            <div className="flex justify-center items-center py-20">
+            <div className="flex justify-center items-center py-12 sm:py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
             </div>
           ) : countrySlider.countriesFromEvents.length > 0 ? (
@@ -291,7 +264,7 @@ export default function LandingPage() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={countrySlider.currentCountryIndex}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -50 }}
@@ -317,13 +290,13 @@ export default function LandingPage() {
           ) : (
             /* Show empty state when no events */
             <div className="col-span-full text-center py-20">
-              <p className="text-gray-500 text-lg">{t("noEventsAvailable")}</p>
+              <p className="text-gray-400 text-lg">{t("noEventsAvailable")}</p>
             </div>
           )}
 
           {/* Booking Dialog */}
           <Dialog open={eventBooking.bookingDialog} onOpenChange={eventBooking.setBookingDialog}>
-            <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl">
+            <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold text-gray-900">{t("bookYourEvent")}</DialogTitle>
                 <DialogDescription className="text-gray-600">
@@ -435,13 +408,13 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <DialogFooter className="space-x-3">
-                <Button variant="outline" onClick={eventBooking.closeDialogs} className="px-6">
+              <DialogFooter className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0">
+                <Button variant="outline" onClick={eventBooking.closeDialogs} className="px-6 w-full sm:w-auto">
                   {t("cancel")}
                 </Button>
                 <Button
                   onClick={handleSubmitBooking}
-                  className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-6"
+                  className="bg-black hover:bg-gray-800 text-white px-6 w-full sm:w-auto transition-colors"
                   disabled={!eventBooking.bookingForm.email || !eventBooking.bookingForm.phone}
                 >
                   {t("continueToPayment")}
@@ -452,7 +425,7 @@ export default function LandingPage() {
 
           {/* View More Dialog */}
           <Dialog open={eventBooking.viewMoreDialog} onOpenChange={eventBooking.setViewMoreDialog}>
-            <DialogContent className="sm:max-w-[600px] bg-white rounded-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[600px] bg-white rounded-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold text-gray-900">
                   {eventBooking.selectedEvent?.title}
@@ -542,24 +515,24 @@ export default function LandingPage() {
                 {/* NFT Reward Section */}
                 {eventBooking.selectedEvent?.isNftEvent && (
                   <div className="space-y-3">
-                    <div className="flex items-center space-x-2 text-gray-700">
-                      <Star className="h-5 w-5 text-purple-600" />
+                    <div className="flex items-center space-x-2 text-gray-900">
+                      <Star className="h-5 w-5 text-gray-900" />
                       <span className="font-semibold">{t("nftReward")}</span>
                     </div>
                     <div className="pl-7">
-                      <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                      <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                         <div className="flex items-center space-x-2 mb-2">
-                          <Star className="h-4 w-4 text-purple-600" />
-                          <span className="font-medium text-purple-900">{t("exclusiveNftAvailable")}</span>
+                          <Star className="h-4 w-4 text-gray-900" />
+                          <span className="font-medium text-gray-900">{t("exclusiveNftAvailable")}</span>
                         </div>
-                        <p className="text-sm text-purple-700">
+                        <p className="text-sm text-gray-600">
                           {t("completeAllAdventures")}
                         </p>
                         {eventBooking.selectedEvent.nftReward?.nftName && (
                           <div className="mt-3 space-y-1">
-                            <p className="text-sm font-medium text-purple-900">{t("nft")} {eventBooking.selectedEvent.nftReward.nftName}</p>
+                            <p className="text-sm font-medium text-gray-900">{t("nft")} {eventBooking.selectedEvent.nftReward.nftName}</p>
                             {eventBooking.selectedEvent.nftReward.nftDescription && (
-                              <p className="text-xs text-purple-700">{eventBooking.selectedEvent.nftReward.nftDescription}</p>
+                              <p className="text-xs text-gray-600">{eventBooking.selectedEvent.nftReward.nftDescription}</p>
                             )}
                           </div>
                         )}
@@ -608,8 +581,8 @@ export default function LandingPage() {
                 )}
               </div>
 
-              <DialogFooter className="space-x-3">
-                <Button variant="outline" onClick={eventBooking.closeDialogs} className="px-6">
+              <DialogFooter className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0">
+                <Button variant="outline" onClick={eventBooking.closeDialogs} className="px-6 w-full sm:w-auto">
                   {t("close")}
                 </Button>
                 <Button
@@ -617,7 +590,7 @@ export default function LandingPage() {
                     eventBooking.setViewMoreDialog(false);
                     eventBooking.handleBooking(eventBooking.selectedEvent);
                   }}
-                  className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-6"
+                  className="bg-black hover:bg-gray-800 text-white px-6 w-full sm:w-auto transition-colors"
                 >
                   <Users className="h-5 w-5 mr-2" />
                   {t("bookNow")}
@@ -625,24 +598,26 @@ export default function LandingPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          <div className="mt-16">
+            <PaginationComponent
+              currentPage={eventsPage}
+              totalPages={eventsTotalPages}
+              onPageChange={setEventsPage}
+            />
+          </div>
         </div>
       </div>
 
-      <PaginationComponent
-        currentPage={eventsPage}
-        totalPages={eventsTotalPages}
-        onPageChange={setEventsPage}
-      />
-
       {/* Group Dialog */}
       <Dialog open={groupManagement.showGroupDialog} onOpenChange={groupManagement.setShowGroupDialog}>
-        <DialogContent className="sm:max-w-[500px] bg-white/95 backdrop-blur-md border border-gray-200 rounded-lg">
+        <DialogContent className="sm:max-w-[500px] bg-white/95 backdrop-blur-md border border-gray-200 rounded-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl text-gray-800">{t("addFriendsToGroup")}</DialogTitle>
             <DialogDescription>{t("inviteFriendsDescription")}</DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={groupManagement.handleSearchFriends} className="flex gap-2 mb-4 mt-4">
+          <form onSubmit={groupManagement.handleSearchFriends} className="flex flex-col sm:flex-row gap-2 mb-4 mt-4">
             <Input
               type="email"
               placeholder={t("searchByEmail")}
@@ -653,7 +628,7 @@ export default function LandingPage() {
             <Button
               type="submit"
               disabled={groupManagement.friendLoading.search || !groupManagement.searchEmail}
-              className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white"
+              className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800 text-white w-full sm:w-auto"
             >
               {groupManagement.friendLoading.search ? t("searching") : t("search")}
             </Button>
@@ -686,7 +661,7 @@ export default function LandingPage() {
                       <Button
                         size="sm"
                         onClick={() => groupManagement.addGroupMember(groupManagement.searchResult.user)}
-                        className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white"
+                        className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
                       >
                         <UserPlus size={14} />
                         {t("add")}
@@ -695,7 +670,7 @@ export default function LandingPage() {
                       <Button
                         size="sm"
                         disabled
-                        className="flex items-center gap-1 bg-gray-400 text-white cursor-not-allowed"
+                        className="flex items-center gap-1 bg-gray-400 text-white cursor-not-allowed w-full sm:w-auto"
                       >
                         {groupManagement.searchResult.requestStatus?.isSentByMe ? t("requestSent") : t("requestReceived")}
                       </Button>
@@ -705,7 +680,7 @@ export default function LandingPage() {
                           size="sm"
                           onClick={() => groupManagement.handleSendFriendRequest(groupManagement.searchResult.user._id)}
                           disabled={groupManagement.friendLoading.action}
-                          className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                          className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs w-full sm:w-auto"
                         >
                           <UserPlus size={14} />
                           {groupManagement.friendLoading.action ? t("sending") : t("sendRequest")}
@@ -713,7 +688,7 @@ export default function LandingPage() {
                         <Button
                           size="sm"
                           onClick={() => groupManagement.addGroupMember(groupManagement.searchResult.user)}
-                          className="flex items-center gap-1 bg-black hover:bg-gray-800 text-white"
+                          className="flex items-center gap-1 bg-black hover:bg-gray-800 text-white w-full sm:w-auto"
                         >
                           <UserPlus size={14} />
                           {t("addDirectly")}
@@ -757,7 +732,7 @@ export default function LandingPage() {
                       <Button
                         size="sm"
                         onClick={() => groupManagement.addGroupMember(friend)}
-                        className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
+                        className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 w-full sm:w-auto"
                       >
                         <UserPlus size={12} />
                         {t("add")}
@@ -839,14 +814,14 @@ export default function LandingPage() {
           </div>
 
           <DialogFooter className="mt-4">
-            <Button onClick={() => groupManagement.setShowGroupDialog(false)} className="bg-black hover:bg-gray-800 text-white">
+            <Button onClick={() => groupManagement.setShowGroupDialog(false)} className="bg-black hover:bg-gray-800 text-white w-full sm:w-auto">
               {t("done")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Footer />
+      <Footer className="!mt-0" />
     </div>
   )
 }
