@@ -1,13 +1,13 @@
 import express from "express";
-import { 
-    getAllDeclarations, 
-    getDeclarationById, 
-    getDeclarationByTitleAndVersion,
-    getDeclarationsByAdventureId,
-    createDeclaration, 
-    updateDeclaration, 
-    deleteDeclaration,
-    getLatestDeclarationByTitle
+import {
+  getAllDeclarations,
+  getDeclarationById,
+  getDeclarationByTitleAndVersion,
+  getDeclarationsByAdventureId,
+  createDeclaration,
+  updateDeclaration,
+  deleteDeclaration,
+  getLatestDeclarationByTitle,
 } from "../controllers/declaration.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyAdmin } from "../middlewares/admin.middleware.js";
