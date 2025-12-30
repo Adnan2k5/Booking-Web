@@ -4,16 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Booking Adventure</title>
-    
+
     <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="https://dazzling-chaja-b80bdd.netlify.app" />
-    
+
     <!-- Preload critical resources -->
     <link rel="modulepreload" href="/src/main.jsx" />
-    
-    <!-- Add loading indicator CSS -->
+
+    <!-- Add loading indicator CSS
     <style>
       #loading-screen {
         position: fixed;
@@ -41,19 +41,21 @@
         animation: spin 1s linear infinite;
       }
       @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+          transform: rotate(360deg);
+        }
       }
-    </style>
+    </style> -->
   </head>
   <body>
     <!-- Loading screen -->
-    <div id="loading-screen">
+    <!-- <div id="loading-screen">
       <div class="spinner"></div>
-    </div>
-    
+    </div> -->
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    
+
     <!-- Remove loading screen after app loads -->
     <script>
       window.addEventListener('load', () => {
