@@ -4,11 +4,10 @@ import { verifyAdmin } from "../middlewares/admin.middleware.js";
 import {
   clearCache,
   getCacheStats,
-  preloadTranslations
+  preloadTranslations,
 } from "../controllers/translation.controller.js";
 
 const router = express.Router();
-
 
 // Protected routes - require authentication
 router.use(verifyJWT);
