@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { ArrowRight, Compass, GraduationCap, Building2 } from 'lucide-react'
@@ -11,6 +11,15 @@ export default function LoginOptionsPage() {
     const navigate = useNavigate()
     const { t } = useTranslation()
     const [hoveredCard, setHoveredCard] = useState(null)
+    const [isMobile, setIsMobile] = useState(false)
+
+    // Detect mobile viewport
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768)
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
 
     const cards = [
         {
@@ -81,21 +90,23 @@ export default function LoginOptionsPage() {
                                     className="relative w-full md:w-1/3 max-w-sm h-[160px] md:h-[450px] cursor-pointer group"
                                     initial={{
                                         opacity: 0,
-                                        rotateY: 15,
-                                        rotateX: 15,
-                                        translateZ: -50
+                                        y: isMobile ? 20 : 0,
+                                        rotateY: isMobile ? 0 : 15,
+                                        rotateX: isMobile ? 0 : 15,
+                                        translateZ: isMobile ? 0 : -50
                                     }}
                                     animate={{
                                         opacity: 1,
-                                        rotateY: index === 0 ? -15 : index === 2 ? 15 : 0,
+                                        y: 0,
+                                        rotateY: isMobile ? 0 : (index === 0 ? -15 : index === 2 ? 15 : 0),
                                         rotateX: 0,
                                         translateZ: 0
                                     }}
                                     transition={{
-                                        duration: 0.6,
-                                        delay: index * 0.15
+                                        duration: 0.5,
+                                        delay: index * 0.1
                                     }}
-                                    whileHover={{
+                                    whileHover={isMobile ? {} : {
                                         scale: 1.05,
                                         rotateY: 0,
                                         translateZ: 50,
