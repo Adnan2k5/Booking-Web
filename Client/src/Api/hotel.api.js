@@ -41,6 +41,7 @@ export const getHotel = async ({
   limit = 10,
   verified = 'all',
   location = null,
+  category = null,
   minPrice = null,
   maxPrice = null,
   minRating = null,
@@ -54,6 +55,9 @@ export const getHotel = async ({
     }
     if (location !== null) {
       params.location = location;
+    }
+    if (category !== null) {
+      params.category = category;
     }
     if (minPrice !== null) {
       params.minPrice = minPrice;
