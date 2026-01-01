@@ -117,33 +117,33 @@ export default function LoginOptionsPage() {
                                 >
                                     {/* Mobile: Glassmorphism horizontal card */}
                                     <div className="md:hidden absolute inset-0 overflow-hidden rounded-2xl mobile-glass-input backdrop-blur-xl transition-all duration-300 active:scale-[0.98]">
-                                        <div className="absolute inset-0 flex items-center p-5 gap-4">
+                                        <div className="absolute inset-0 flex items-center p-4 gap-3">
                                             {/* Icon with gradient background */}
-                                            <div className={`flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center shadow-lg`}>
-                                                <IconComponent className="h-7 w-7 text-white" />
+                                            <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center shadow-lg`}>
+                                                <IconComponent className="h-6 w-6 text-white" />
                                             </div>
 
-                                            {/* Content */}
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="text-xl font-bold text-white mb-1 drop-shadow-sm">{card.title}</h3>
-                                                <p className="text-sm text-white/80 truncate">{card.description}</p>
+                                            {/* Content - with proper overflow handling */}
+                                            <div className="flex-1 min-w-0 overflow-hidden">
+                                                <h3 className="text-lg font-bold text-white mb-0.5 drop-shadow-sm truncate">{card.title}</h3>
+                                                <p className="text-xs text-white/80 truncate">{card.description}</p>
                                             </div>
 
-                                            {/* Action buttons */}
-                                            <div className="flex flex-col gap-2">
+                                            {/* Action buttons - more compact */}
+                                            <div className="flex-shrink-0 flex flex-col gap-1.5">
                                                 <button
                                                     onClick={() => navigate(`${card.path2}?action=signin&role=${card.id}`)}
-                                                    className="px-4 py-2 bg-white/90 hover:bg-white text-gray-900 text-sm font-semibold rounded-lg transition-all duration-200 shadow-md flex items-center gap-1"
+                                                    className="px-3 py-1.5 bg-white/90 hover:bg-white text-gray-900 text-xs font-semibold rounded-lg transition-all duration-200 shadow-md flex items-center gap-1 whitespace-nowrap"
                                                 >
                                                     Sign In
-                                                    <ArrowRight className="h-3.5 w-3.5" />
+                                                    <ArrowRight className="h-3 w-3" />
                                                 </button>
                                                 <button
                                                     onClick={() => navigate(`${card.path1}?action=signup&role=${card.id}`)}
-                                                    className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-lg transition-all duration-200 border border-white/30 flex items-center gap-1"
+                                                    className="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold rounded-lg transition-all duration-200 border border-white/30 flex items-center gap-1 whitespace-nowrap"
                                                 >
                                                     Sign Up
-                                                    <ArrowRight className="h-3.5 w-3.5" />
+                                                    <ArrowRight className="h-3 w-3" />
                                                 </button>
                                             </div>
                                         </div>
