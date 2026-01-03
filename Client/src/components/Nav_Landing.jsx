@@ -111,7 +111,7 @@ export const Nav_Landing = () => {
                     <ul className="flex items-center space-x-6">
                         <NavLink to={`/browse?date=${new Date().toISOString().split('T')[0]}&q=adventure`} text={t("explore")} />
                         {isShopEnabled && <NavLink to="/shop" text={t("shop")} />}
-                        {isHotelsEnabled && <NavLink to="/book-hotel" text={t("hotels")} />}
+                        {isHotelsEnabled && <NavLink to="/book-hotel" text={t("Accommodations")} />}
                         <NavLink to="/mission" text={t("mission")} />
                     </ul>
 
@@ -209,7 +209,7 @@ export const Nav_Landing = () => {
                             )}
                             {isHotelsEnabled && (
                                 <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate("/book-hotel") }}>
-                                    {t("hotels")}
+                                    {t("Accommodations")}
                                 </MobileNavLink>
                             )}
                             <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate("/mission") }}>

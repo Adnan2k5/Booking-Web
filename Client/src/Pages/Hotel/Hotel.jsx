@@ -122,11 +122,11 @@ export default function HotelBrowsingPage() {
 
             {/* HERO */}
             <header
-                className="relative bg-cover bg-center h-[520px] sm:h-[600px] rounded-b-3xl overflow-hidden shadow-inner z-10"
+                className="relative bg-cover bg-center min-h-[720px] sm:min-h-[680px] md:min-h-[620px] rounded-b-3xl overflow-visible shadow-inner z-10 pt-28 sm:pt-32"
                 style={{ backgroundImage: `url('https://images.unsplash.com/photo-1719466419345-fdb12719ec29?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470')` }}
             >
                 <div className="absolute inset-0 bg-black/45 backdrop-blur-sm z-10"></div>
-                <div className="absolute inset-0 max-w-7xl mx-auto px-6 sm:px-8 flex flex-col justify-center z-20">
+                <div className="absolute inset-0 max-w-7xl mx-auto px-6 sm:px-8 flex flex-col justify-center z-20 pt-24 md:pt-28 pb-10">
                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-lg">Find your perfect stay</h1>
                         <p className="mt-3 text-lg sm:text-xl text-white/90 max-w-2xl">Handpicked hostels, boutique stays and cozy hostels for every kind of traveler. Explore exclusive offers and flexible bookings.</p>
