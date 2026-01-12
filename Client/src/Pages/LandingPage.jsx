@@ -264,7 +264,7 @@ export default function LandingPage() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={countrySlider.currentCountryIndex}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch"
+                className="flex overflow-x-auto gap-6 sm:gap-8 pb-4 snap-x snap-mandatory scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -50 }}
@@ -273,7 +273,7 @@ export default function LandingPage() {
                 {countrySlider.currentCountry?.events.map((event, index) => (
                   <motion.div
                     key={event._id}
-                    className="h-full"
+                    className="min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center md:snap-none h-full"
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}

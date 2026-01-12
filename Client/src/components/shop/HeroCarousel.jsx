@@ -69,16 +69,16 @@ export default function HeroCarousel() {
         </div>
       </div>
       {/* Controls */}
-      <button onClick={()=>setIndex(i => (i - 1 + slides.length) % slides.length)} className="opacity-0 group-hover:opacity-100 transition-opacity absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full">
+      <button onClick={() => setIndex(i => (i - 1 + slides.length) % slides.length)} className="opacity-0 group-hover:opacity-100 transition-opacity absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full">
         <ChevronLeft className="h-5 w-5" />
       </button>
-      <button onClick={()=>setIndex(i => (i + 1) % slides.length)} className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full">
+      <button onClick={() => setIndex(i => (i + 1) % slides.length)} className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full">
         <ChevronRight className="h-5 w-5" />
       </button>
       {/* Progress dots */}
       <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-3 z-10">
         {slides.map((s, i) => (
-          <button key={s.id} onClick={()=>setIndex(i)} aria-label={`Go to slide ${i+1}`} className={`h-2.5 rounded-full transition-all duration-500 ${i===index ? 'w-8 bg-orange-500' : 'w-2.5 bg-white/50 hover:bg-white/70'}`} />
+          <button key={s.id} onClick={() => setIndex(i)} aria-label={`Go to slide ${i + 1}`} className={`h-2.5 rounded-full transition-all duration-500 ${i === index ? 'w-8 bg-orange-500' : 'w-2.5 bg-white/50 hover:bg-white/70'}`} />
         ))}
       </div>
     </section>

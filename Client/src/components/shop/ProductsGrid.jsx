@@ -234,9 +234,11 @@ export default function ProductsGrid({ items = [], categories = [], selectedCate
                 </div>
                 <div className="p-4 space-y-2">
                   <p className="text-xs uppercase text-neutral-500">{item.brand}</p>
-                  <h3 className="text-sm font-medium">{item.name}</h3>
-                  <div className="flex items-center justify-between">
-                    <p className="font-bold">€{item.price}</p>
+                  <div className="flex items-center justify-between flex-row-reverse">
+                    <div className="flex flex-col items-end gap-1">
+                      <h3 className="text-sm font-medium">{item.name}</h3>
+                      <p className="font-bold">€{item.price}</p>
+                    </div>
                     <div className="flex items-center gap-2">
                       <FavoriteButton item={item} />
                       <Button

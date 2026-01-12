@@ -55,10 +55,30 @@ export default function LoginOptionsPage() {
     ]
 
     return (
-        <div className="flex-1 flex flex-col min-h-screen">
+        <div className="flex-1 flex flex-col min-h-screen relative">
+            {/* Background Video */}
+            <div className="fixed inset-0 w-full h-screen overflow-hidden -z-50 bg-black">
+                <motion.div
+                    className="absolute inset-0 bg-black/40 z-10"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1.5 }}
+                />
+                <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover opacity-0 animate-fade-in transition-opacity duration-1000"
+                    onLoadedData={(e) => e.currentTarget.classList.remove("opacity-0")}
+                >
+                    <source src="https://dazzling-chaja-b80bdd.netlify.app/video.mp4" type="video/mp4" />
+                </video>
+            </div>
+
             <Nav_Landing />
 
-            <div className="flex-1 flex items-center justify-center px-4 py-8 md:py-16">
+            <div className="flex-1 flex items-center justify-center px-4 pt-24 pb-8 md:pt-32 md:pb-16">
                 <div className="max-w-7xl w-full">
                     {/* Header - Compact on mobile */}
                     <div className="text-center mb-8 md:mb-12">
@@ -87,7 +107,7 @@ export default function LoginOptionsPage() {
                             return (
                                 <motion.div
                                     key={card.id}
-                                    className="relative w-full md:w-1/3 max-w-sm h-[160px] md:h-[450px] cursor-pointer group"
+                                    className="relative w-full md:w-1/3 max-w-sm h-[280px] md:h-[450px] cursor-pointer group"
                                     initial={{
                                         opacity: 0,
                                         y: isMobile ? 20 : 0,
@@ -115,36 +135,46 @@ export default function LoginOptionsPage() {
                                     onHoverStart={() => setHoveredCard(card.id)}
                                     onHoverEnd={() => setHoveredCard(null)}
                                 >
-                                    {/* Mobile: Glassmorphism horizontal card */}
-                                    <div className="md:hidden absolute inset-0 overflow-hidden rounded-2xl mobile-glass-input backdrop-blur-xl transition-all duration-300 active:scale-[0.98]">
-                                        <div className="absolute inset-0 flex items-center p-4 gap-3">
-                                            {/* Icon with gradient background */}
-                                            <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center shadow-lg`}>
-                                                <IconComponent className="h-6 w-6 text-white" />
+                                    {/* Mobile: Vertical card matching desktop design */}
+                                    <div className="md:hidden absolute inset-0 overflow-hidden rounded-2xl shadow-xl">
+                                        {/* Background Image */}
+                                        <div
+                                            className="absolute inset-0 bg-cover bg-center transition-transform duration-500"
+                                            style={{ backgroundImage: `url(${card.image})` }}
+                                        />
+                                        <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-80`} />
+
+                                        {/* Content */}
+                                        <div className="absolute inset-0 flex flex-col justify-between p-5 text-white">
+                                            {/* Icon at top */}
+                                            <div className="flex justify-start">
+                                                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                                                    <IconComponent className="h-6 w-6 text-white" />
+                                                </div>
                                             </div>
 
-                                            {/* Content - with proper overflow handling */}
-                                            <div className="flex-1 min-w-0 overflow-hidden">
-                                                <h3 className="text-lg font-bold text-white mb-0.5 drop-shadow-sm truncate">{card.title}</h3>
-                                                <p className="text-xs text-white/80 truncate">{card.description}</p>
-                                            </div>
+                                            {/* Title and description at bottom */}
+                                            <div>
+                                                <h3 className="text-2xl font-bold mb-2 drop-shadow-lg">{card.title}</h3>
+                                                <p className="text-white/90 text-sm mb-4 drop-shadow-sm">{card.description}</p>
 
-                                            {/* Action buttons - more compact */}
-                                            <div className="flex-shrink-0 flex flex-col gap-1.5">
-                                                <button
-                                                    onClick={() => navigate(`${card.path2}?action=signin&role=${card.id}`)}
-                                                    className="px-3 py-1.5 bg-white/90 hover:bg-white text-gray-900 text-xs font-semibold rounded-lg transition-all duration-200 shadow-md flex items-center gap-1 whitespace-nowrap"
-                                                >
-                                                    Sign In
-                                                    <ArrowRight className="h-3 w-3" />
-                                                </button>
-                                                <button
-                                                    onClick={() => navigate(`${card.path1}?action=signup&role=${card.id}`)}
-                                                    className="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold rounded-lg transition-all duration-200 border border-white/30 flex items-center gap-1 whitespace-nowrap"
-                                                >
-                                                    Sign Up
-                                                    <ArrowRight className="h-3 w-3" />
-                                                </button>
+                                                {/* Action buttons */}
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => navigate(`${card.path2}?action=signin&role=${card.id}`)}
+                                                        className="flex-1 px-4 py-2.5 bg-white text-gray-900 text-sm font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 flex items-center justify-center gap-1.5"
+                                                    >
+                                                        Sign In
+                                                        <ArrowRight className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => navigate(`${card.path1}?action=signup&role=${card.id}`)}
+                                                        className="flex-1 px-4 py-2.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-lg transition-all duration-200 border border-white/40 flex items-center justify-center gap-1.5"
+                                                    >
+                                                        Sign Up
+                                                        <ArrowRight className="h-4 w-4" />
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
