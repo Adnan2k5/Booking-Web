@@ -23,9 +23,10 @@ import { toast } from "sonner"
 export default function InstructorsPage() {
     const [searchTerm, setSearchTerm] = useState("")
     const [debouncedSearch, setDebouncedSearch] = useState("")
+    const [statusFilter, setStatusFilter] = useState("all")
     const [selectedInstructor, setSelectedInstructor] = useState(null)
     const [showDocuments, setShowDocuments] = useState(false)
-    const { instructors, page, setPage, deleteInstructorById, totalPages, changeDocumentStatus } = useInstructors(debouncedSearch)
+    const { instructors, page, setPage, deleteInstructorById, totalPages, changeDocumentStatus } = useInstructors(debouncedSearch, statusFilter)
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -36,7 +37,7 @@ export default function InstructorsPage() {
 
     useEffect(() => {
         setPage((prev) => (prev !== 1 ? 1 : prev))
-    }, [debouncedSearch, setPage])
+    }, [debouncedSearch, statusFilter, setPage])
 
     const handleViewDocuments = (instructor) => {
         setSelectedInstructor(instructor)
@@ -76,15 +77,27 @@ export default function InstructorsPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 mb-4">
-                <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="Search instructors..."
-                        className="w-full sm:w-[300px] pl-8"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                <div className="relative flex items-center gap-2">
+                    <div className="relative">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search instructors..."
+                            className="w-full sm:w-[300px] pl-8"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <select
+                        className="h-10 w-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="verified">Verified</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
                 </div>
             </div>
 
@@ -104,7 +117,7 @@ export default function InstructorsPage() {
                             {instructors.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                        {debouncedSearch ? `No instructors found for "${searchTerm.trim()}"` : "No instructors yet."}
+                                        {debouncedSearch || statusFilter !== 'all' ? `No instructors found` : "No instructors yet."}
                                     </TableCell>
                                 </TableRow>
                             ) : instructors.map((instructor) => (

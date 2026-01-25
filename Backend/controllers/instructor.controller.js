@@ -9,13 +9,19 @@ import {
 } from "../utils/cloudinary.js";
 
 export const getAllInstructors = asyncHandler(async (req, res) => {
-  const { page, limit = 10, search = "" } = req.query;
+  const { page, limit = 10, search = "", status } = req.query;
 
   const pageNumber = Math.max(1, Number.parseInt(page, 10) || 1);
   const pageSize = Math.max(1, Number.parseInt(limit, 10) || 10);
 
   const searchTerm = typeof search === "string" ? search.trim() : "";
   const filter = { role: "instructor" };
+
+  if (status && status !== "all" && status !== "") {
+    const instructors = await Instructor.find({ documentVerified: status }).select("_id");
+    const instructorIds = instructors.map((inst) => inst._id);
+    filter.instructor = { $in: instructorIds };
+  }
 
   if (searchTerm) {
     filter.$or = [
@@ -62,9 +68,9 @@ export const getAllInstructors = asyncHandler(async (req, res) => {
 
 export const getInstructorById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const instructor = await User.findOne({ 
-    role: "instructor", 
-    instructor: id 
+  const instructor = await User.findOne({
+    role: "instructor",
+    instructor: id
   })
     .populate({
       path: "instructor",

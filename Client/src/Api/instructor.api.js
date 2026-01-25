@@ -34,13 +34,16 @@ export const getAllSessions = async ({
   }
 };
 
-export const getAllInstructors = async ({ page, limit, search } = {}) => {
+export const getAllInstructors = async ({ page, limit, search, status } = {}) => {
   try {
     const params = {};
     if (page !== undefined) params.page = page;
     if (limit !== undefined) params.limit = limit;
     if (search !== undefined && search !== null && search !== "") {
       params.search = search;
+    }
+    if (status && status !== "all") {
+      params.status = status;
     }
     const res = await axiosClient.get('/api/instructor', { params });
     return res;
@@ -85,8 +88,7 @@ export const getInstructorSessionsWithBookings = async (queryParams = {}) => {
   try {
     const params = new URLSearchParams(queryParams).toString();
     const res = await axiosClient.get(
-      `/api/session/instructor/my-sessions${
-        params ? `?${params}` : ''
+      `/api/session/instructor/my-sessions${params ? `?${params}` : ''
       }`,
       {
         withCredentials: true,
