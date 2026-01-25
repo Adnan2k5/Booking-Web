@@ -16,10 +16,15 @@ export const RBACProvider = ({ children }) => {
     const [adminRoles, setAdminRoles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [serverPermissions, setServerPermissions] = useState(null);
+
     // Helper function to get admin roles safely
-    // Returns null if admin data is not available (not populated)
+    // Returns:
+    //   - empty array [] for super admin (no admin doc, or admin doc with empty adminRole)
+    //   - array of roles for role-restricted admins
+    //   - null if admin is ObjectId string (not populated yet)
     const getAdminRoles = (userObj) => {
-        if (!userObj?.admin) return null; // No admin field at all
+        // No admin field at all = super admin (legacy or intentional)
+        if (!userObj?.admin) return [];
 
         // Check if admin is just an ObjectId string (not populated)
         if (typeof userObj.admin === 'string') return null;
@@ -28,17 +33,18 @@ export const RBACProvider = ({ children }) => {
         return userObj.admin.adminRole || [];
     };
 
-    // Determine if current user is a super admin (empty adminRole array)
+    // Determine if current user is a super admin (empty adminRole array or no admin doc)
     const isSuperAdmin = useMemo(() => {
         if (!user?.user) return false;
         if (user.user.role !== 'admin') return false;
 
         const roles = getAdminRoles(user.user);
 
-        // If roles is null, admin data not available - default to false (not super admin)
-        // This prevents all admins from appearing as super admin when data isn't loaded
+        // If roles is null, admin field is ObjectId (not populated) - need to fetch
+        // Default to false to be safe, will be updated when data loads
         if (roles === null) return false;
 
+        // Empty array = super admin (either no admin doc, or adminRole is empty)
         return checkIsSuperAdmin(roles);
     }, [user]);
 
