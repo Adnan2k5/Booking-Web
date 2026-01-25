@@ -71,12 +71,13 @@ export const updateTicketStatus = async (ticketId, status) => {
 
 // Admin: Get all tickets (with filters)
 export const getAllTickets = async (filters = {}) => {
-  const { status, priority, category, page = 1, limit = 10, search = "" } = filters;
+  const { status, priority, category, assignedTo, page = 1, limit = 10, search = "" } = filters;
 
   let queryParams = new URLSearchParams();
   if (status) queryParams.append('status', status);
   if (priority) queryParams.append('priority', priority);
   if (category) queryParams.append('category', category);
+  if (assignedTo) queryParams.append('assignedTo', assignedTo);
   queryParams.append('page', page);
   queryParams.append('limit', limit);
   queryParams.append('search', search);
@@ -93,6 +94,27 @@ export const getAllTickets = async (filters = {}) => {
 // Admin: Delete a ticket
 export const deleteTicket = async (ticketId) => {
   const response = await axiosClient.delete(`/api/tickets/${ticketId}`, {
+    withCredentials: true,
+  });
+  return response.data;
+};
+// Admin: Assign ticket to admin
+export const assignTicket = async (ticketId, adminId) => {
+  const response = await axiosClient.patch(
+    `/api/tickets/${ticketId}/assign`,
+    {
+      assignedTo: adminId,
+    },
+    {
+      withCredentials: true,
+    }
+  );
+  return response.data;
+};
+
+// Admin: Get list of admin users for assignment
+export const getAdminUsersForTickets = async () => {
+  const response = await axiosClient.get('/api/tickets/admin-users', {
     withCredentials: true,
   });
   return response.data;

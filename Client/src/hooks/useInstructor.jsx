@@ -1,7 +1,7 @@
-import { getAllInstructors, deleteInstructor, changeDocumentStatusById, getInstructorById } from "../Api/instructor.api";
+import { getAllInstructors, deleteInstructor, changeDocumentStatusById, getInstructorById, updateInstructor } from "../Api/instructor.api";
 import { useState, useEffect } from "react";
 
-export function useInstructors(searchTerm = "") {
+export function useInstructors(searchTerm = "", statusFilter = "all") {
     const [instructors, setInstructors] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -13,7 +13,7 @@ export function useInstructors(searchTerm = "") {
     const getProfile = async () => {
         setIsLoading(true);
         try {
-            const res = await getAllInstructors({ page, limit, search: searchTerm });
+            const res = await getAllInstructors({ page, limit, search: searchTerm, status: statusFilter });
             const payload = res?.data?.data ?? {};
             setInstructors(payload.instructors ?? []);
             setTotal(payload.total ?? 0);
@@ -28,7 +28,7 @@ export function useInstructors(searchTerm = "") {
     };
     useEffect(() => {
         getProfile();
-    }, [page, searchTerm]);
+    }, [page, searchTerm, statusFilter]);
 
     const deleteInstructorById = async (id) => {
         setIsLoading(true);
@@ -91,5 +91,21 @@ export function useInstructors(searchTerm = "") {
         }
     }
 
-    return { instructors, isLoading, getProfile, error, page, setPage, total, limit, deleteInstructorById, checkInstructorStatus, totalPages, changeDocumentStatus };
+    const updateInstructorData = async (id, data) => {
+        setIsLoading(true);
+        try {
+            await updateInstructor(id, data);
+
+            // Optimistically update or re-fetch
+            getProfile();
+            setError(null);
+        } catch (err) {
+            setError(err);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    return { instructors, isLoading, getProfile, error, page, setPage, total, limit, deleteInstructorById, checkInstructorStatus, totalPages, changeDocumentStatus, updateInstructorData };
 }

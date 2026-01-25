@@ -13,7 +13,8 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
-} from '../../components/ui/sidebar'
+} from '../../components/ui/sidebar';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import {
   BarChart3,
   BookOpen,

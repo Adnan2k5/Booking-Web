@@ -7,6 +7,11 @@ const ticketSchema = new mongoose.Schema(
             ref: "User",
             required: true,
         },
+        assignedTo: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+        },
         subject: {
             type: String,
             required: true,
@@ -73,5 +78,6 @@ const ticketSchema = new mongoose.Schema(
 // Index for efficient querying
 ticketSchema.index({ user: 1, status: 1 });
 ticketSchema.index({ status: 1, priority: 1 });
+ticketSchema.index({ assignedTo: 1, status: 1 });
 
 export const Ticket = mongoose.model("Ticket", ticketSchema);

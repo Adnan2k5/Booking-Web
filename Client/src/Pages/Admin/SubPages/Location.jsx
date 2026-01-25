@@ -236,6 +236,7 @@ export default function LocationsPage() {
             lat: loc.location?.coordinates[1],
             lng: loc.location?.coordinates[0],
             address: loc.address,
+            instructorLimit: loc.instructorLimit,
           }))
         )
       })
@@ -285,6 +286,7 @@ export default function LocationsPage() {
             lat: loc.location?.coordinates[1],
             lng: loc.location?.coordinates[0],
             address: loc.address,
+            instructorLimit: loc.instructorLimit,
           },
         ])
       } else {

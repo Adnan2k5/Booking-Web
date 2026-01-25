@@ -30,6 +30,11 @@ export const getUser = asyncHandler(async (req, res) => {
     user = await User.findById(req.user._id)
       .populate("instructor")
       .select("-password -refreshToken");
+  } else if (req.user.role === "admin") {
+    // Populate admin field for admin users to get adminRole
+    user = await User.findById(req.user._id)
+      .populate("admin")
+      .select("-password -refreshToken");
   } else {
     user = req.user;
   }
@@ -77,7 +82,7 @@ export const getUserAdventure = asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
   const user = await User.findById(userId)
-    .populate("adventures") 
+    .populate("adventures")
     .select("name email adventures");
 
   if (!user) {
@@ -175,7 +180,7 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
   if (req.file) {
     // Upload new image to Cloudinary
     const uploadResult = await uploadOnCloudinary(req.file.path);
-    
+
     if (!uploadResult) {
       throw new ApiError(500, "Failed to upload profile picture");
     }
@@ -186,7 +191,7 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
       const urlParts = user.profilePicture.split('/');
       const publicIdWithExt = urlParts[urlParts.length - 1];
       const publicId = publicIdWithExt.split('.')[0];
-      
+
       // Delete old image
       await deleteFromCloudinary(publicId);
     }
@@ -203,7 +208,7 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
     if (instructor) {
       if (bio !== undefined) {
         let bioArray;
-        
+
         // Parse bio if it's a JSON string (from FormData)
         let parsedBio = bio;
         if (typeof bio === "string") {
@@ -243,7 +248,7 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
             parsedLanguages = [];
           }
         }
-        
+
         if (Array.isArray(parsedLanguages)) {
           instructor.languages = parsedLanguages
             .filter((language) => typeof language === "string")

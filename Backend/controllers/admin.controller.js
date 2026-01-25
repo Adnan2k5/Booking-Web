@@ -8,6 +8,11 @@ import { Adventure } from "../models/adventure.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import {
+  getUserPermissions,
+  isSuperAdmin,
+  PERMISSIONS
+} from "../config/permissions.js";
 
 const monthNames = [
   "Jan",
@@ -190,15 +195,15 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
     EventBooking.aggregate(summaryPipeline(eventMatch)),
     ItemBooking.aggregate(summaryPipeline(itemMatch)),
     HotelBooking.aggregate(summaryPipeline(hotelMatch)),
-  // Totals for the selected current period (currentStart -> now)
-  Booking.aggregate(summaryPipeline(buildMatch(bookingMatch, currentStart, now))),
-  Booking.aggregate(summaryPipeline(buildMatch(bookingMatch, previousStart, previousEnd))),
-  EventBooking.aggregate(summaryPipeline(buildMatch(eventMatch, currentStart, now))),
-  EventBooking.aggregate(summaryPipeline(buildMatch(eventMatch, previousStart, previousEnd))),
-  ItemBooking.aggregate(summaryPipeline(buildMatch(itemMatch, currentStart, now))),
-  ItemBooking.aggregate(summaryPipeline(buildMatch(itemMatch, previousStart, previousEnd))),
-  HotelBooking.aggregate(summaryPipeline(buildMatch(hotelMatch, currentStart, now))),
-  HotelBooking.aggregate(summaryPipeline(buildMatch(hotelMatch, previousStart, previousEnd))),
+    // Totals for the selected current period (currentStart -> now)
+    Booking.aggregate(summaryPipeline(buildMatch(bookingMatch, currentStart, now))),
+    Booking.aggregate(summaryPipeline(buildMatch(bookingMatch, previousStart, previousEnd))),
+    EventBooking.aggregate(summaryPipeline(buildMatch(eventMatch, currentStart, now))),
+    EventBooking.aggregate(summaryPipeline(buildMatch(eventMatch, previousStart, previousEnd))),
+    ItemBooking.aggregate(summaryPipeline(buildMatch(itemMatch, currentStart, now))),
+    ItemBooking.aggregate(summaryPipeline(buildMatch(itemMatch, previousStart, previousEnd))),
+    HotelBooking.aggregate(summaryPipeline(buildMatch(hotelMatch, currentStart, now))),
+    HotelBooking.aggregate(summaryPipeline(buildMatch(hotelMatch, previousStart, previousEnd))),
     User.countDocuments({ role: { $in: ["user", "instructor", "hotel"] } }),
     User.countDocuments({
       role: { $in: ["user", "instructor", "hotel"] },
@@ -630,4 +635,38 @@ export const deleteAdmin = asyncHandler(async (req, res) => {
   await User.findByIdAndDelete(id);
   await Admin.findByIdAndDelete(admin.admin);
   res.status(200).json(new ApiResponse(200, "Admin deleted successfully"));
+});
+
+/**
+ * Get current admin user's permissions
+ * Used by frontend for RBAC
+ */
+export const getAdminPermissions = asyncHandler(async (req, res) => {
+  const user = req.user;
+
+  if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+    throw new ApiError(403, "Admin access required");
+  }
+
+  let adminRoles = [];
+  if (user.admin) {
+    const adminDoc = await Admin.findById(user.admin);
+    adminRoles = adminDoc?.adminRole || [];
+  }
+
+  const isSuperAdminUser = isSuperAdmin(adminRoles);
+  const permissions = getUserPermissions(adminRoles);
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        isSuperAdmin: isSuperAdminUser,
+        adminRoles,
+        permissions,
+        allPermissions: PERMISSIONS, // Send all permission constants for frontend reference
+      },
+      "Permissions retrieved successfully"
+    )
+  );
 });
