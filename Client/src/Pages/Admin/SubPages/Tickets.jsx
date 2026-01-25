@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Search, Filter, Download, ChevronDown, Eye, Trash2, MessageCircle, TicketCheck, Send } from "lucide-react"
+import { Search, Filter, Download, ChevronDown, Eye, Trash2, MessageCircle, TicketCheck, Send, User, UserMinus } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import { Textarea } from "../../../components/ui/textarea"
@@ -32,32 +32,37 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Card, CardContent } from "../../../components/ui/card"
 import { Badge } from "../../../components/ui/badge"
 import { toast } from "sonner"
-import { getAllTickets, getTicketById, addTicketResponse, updateTicketStatus, deleteTicket } from "../../../Api/ticket.api"
+import { getAllTickets, getTicketById, addTicketResponse, updateTicketStatus, deleteTicket, assignTicket, getAdminUsersForTickets } from "../../../Api/ticket.api"
 
-export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = useState("")
+export default function Dash_Tickets() {
+  const [searchTerm, setSearchTerm] = useState("")
   const [activeSearchTerm, setActiveSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [assigneeFilter, setAssigneeFilter] = useState("all")
   const [tickets, setTickets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [pagination, setPagination] = useState({ page: 1, limit: 10, totalPages: 1 })
-  
+
   // Dialog states
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [respondDialogOpen, setRespondDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState(null)
   const [selectedTicketDetails, setSelectedTicketDetails] = useState(null)
-  
+
   // Form states
   const [responseMessage, setResponseMessage] = useState("")
   const [newStatus, setNewStatus] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+  const [adminUsers, setAdminUsers] = useState([])
+  const [selectedAdminUser, setSelectedAdminUser] = useState("")
+
   // Reset pagination when active search term or status filter changes
   useEffect(() => {
     setPagination((prev) => ({ ...prev, page: 1 }))
-  }, [activeSearchTerm, statusFilter])
+  }, [activeSearchTerm, statusFilter, assigneeFilter])
   // Handle search button click
   const handleSearch = () => {
     setActiveSearchTerm(searchTerm.trim())
@@ -77,7 +82,8 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
   }
 
   useEffect(() => {
-    const fetchTickets = async () => {      setLoading(true)
+    const fetchTickets = async () => {
+      setLoading(true)
       setError(null)
       try {
         // Prepare filters based on current state        
@@ -88,6 +94,9 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
         }
         if (statusFilter !== "all") {
           filters.status = statusFilter
+        }
+        if (assigneeFilter !== "all") {
+          filters.assignedTo = assigneeFilter
         }
 
         const response = await getAllTickets(filters)
@@ -113,11 +122,27 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
         setError("Failed to fetch tickets. Please try again.")
         setTickets([])
       } finally {
-        setLoading(false)      }
+        setLoading(false)
+      }
     }
 
     fetchTickets()
-  }, [statusFilter, pagination.page, pagination.limit, activeSearchTerm])
+  }, [statusFilter, assigneeFilter, pagination.page, pagination.limit, activeSearchTerm])
+
+  // Fetch admin users for assignment dropdown
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const response = await getAdminUsersForTickets()
+        if (response && response.data) {
+          setAdminUsers(response.data)
+        }
+      } catch (err) {
+        console.error("Error fetching admin users:", err)
+      }
+    }
+    fetchAdmins()
+  }, [])
   const formatDate = (dateString) => {
     if (!dateString) return "N/A"
     try {
@@ -179,6 +204,50 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
     setSelectedTicket(ticket)
     setDeleteDialogOpen(true)
   }
+
+  // Handle assign ticket
+  const handleAssignTicket = (ticket) => {
+    setSelectedTicket(ticket)
+    setSelectedAdminUser(ticket.assignedTo?._id || ticket.assignedTo || "unassigned")
+    setAssignDialogOpen(true)
+  }
+
+  // Submit assignment
+  const handleSubmitAssignment = async () => {
+    const submittingToast = toast.loading("Assigning ticket...")
+    try {
+      setIsSubmitting(true)
+
+      // If "unassigned" is selected, send null or empty string depending on API
+      const adminId = selectedAdminUser === "unassigned" ? null : selectedAdminUser
+
+      await assignTicket(selectedTicket._id || selectedTicket.id, adminId)
+
+      toast.dismiss(submittingToast)
+      toast.success("Ticket assigned successfully")
+      setAssignDialogOpen(false)
+
+      // Refresh tickets
+      const filters = {
+        page: pagination.page,
+        limit: pagination.limit,
+        search: activeSearchTerm,
+      }
+      if (statusFilter !== "all") filters.status = statusFilter
+      if (assigneeFilter !== "all") filters.assignedTo = assigneeFilter
+
+      const response = await getAllTickets(filters)
+      if (response?.data?.tickets) {
+        setTickets(response.data.tickets)
+      }
+    } catch (error) {
+      console.error("Error assigning ticket:", error)
+      toast.dismiss(submittingToast)
+      toast.error("Failed to assign ticket")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
   // Submit response
   const handleSubmitResponse = async () => {
     if (!responseMessage.trim() && newStatus === selectedTicket?.status) {
@@ -189,23 +258,23 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
     const submittingToast = toast.loading("Submitting response...")
     try {
       setIsSubmitting(true)
-      
+
       // Add response if message provided
       if (responseMessage.trim()) {
         await addTicketResponse(selectedTicket._id || selectedTicket.id, responseMessage.trim())
       }
-      
+
       // Update status if changed
       if (newStatus !== selectedTicket?.status) {
         await updateTicketStatus(selectedTicket._id || selectedTicket.id, newStatus)
       }
-      
+
       toast.dismiss(submittingToast)
       toast.success("Response submitted successfully")
       setRespondDialogOpen(false)
       setResponseMessage("")
       setNewStatus("")
-      
+
       // Refresh tickets
       const filters = {
         page: pagination.page,
@@ -236,7 +305,7 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
       toast.dismiss(deletingToast)
       toast.success("Ticket deleted successfully")
       setDeleteDialogOpen(false)
-      
+
       // Refresh tickets
       const filters = {
         page: pagination.page,
@@ -278,49 +347,67 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
 
       {/* Filters and Actions */}
       <Card>        <CardContent className="p-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="relative w-full md:w-1/3 flex gap-2">
-            <div className="relative flex-1">
-              <Input
-                type="text"
-                placeholder="Search by ID, subject, customer..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="pl-10"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            </div>            <Button onClick={handleSearch} disabled={loading}>
-              Search
+        <div className="relative w-full md:w-1/3 flex gap-2">
+          <div className="relative flex-1">
+            <Input
+              type="text"
+              placeholder="Search by ID, subject, customer..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="pl-10"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          </div>            <Button onClick={handleSearch} disabled={loading}>
+            Search
+          </Button>
+          {activeSearchTerm && (
+            <Button variant="outline" onClick={handleClearSearch} disabled={loading}>
+              Clear
             </Button>
-            {activeSearchTerm && (
-              <Button variant="outline" onClick={handleClearSearch} disabled={loading}>
-                Clear
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Assignee: {assigneeFilter === "all" ? "All" : assigneeFilter === "unassigned" ? "Unassigned" : "Selected"}
+                <ChevronDown className="h-4 w-4" />
               </Button>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  Status: {statusFilter === "all" ? "All" : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setStatusFilter("all")}>All</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("open")}>Open</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("in-progress")}>In Progress</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("resolved")}>Resolved</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("closed")}>Closed</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              Export
-            </Button>
-          </div>
-        </CardContent>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setAssigneeFilter("all")}>All</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setAssigneeFilter("unassigned")}>Unassigned</DropdownMenuItem>
+              {adminUsers.map(admin => (
+                <DropdownMenuItem key={admin._id} onClick={() => setAssigneeFilter(admin._id)}>
+                  {admin.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                Status: {statusFilter === "all" ? "All" : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setStatusFilter("all")}>All</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("open")}>Open</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("in-progress")}>In Progress</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("resolved")}>Resolved</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("closed")}>Closed</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button variant="outline" className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+        </div>
+      </CardContent>
       </Card>
 
       {/* Tickets Table */}
@@ -344,6 +431,7 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
                 <TableHead>Status</TableHead>
                 <TableHead>Priority</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead>Assigned To</TableHead>
                 <TableHead>Created At</TableHead>
                 <TableHead>Last Updated</TableHead>
                 <TableHead>Actions</TableHead>
@@ -388,33 +476,51 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
                     </Badge>
                   </TableCell>
                   <TableCell>{ticket.category}</TableCell>
+                  <TableCell>
+                    {ticket.assignedTo ? (
+                      <div className="flex items-center gap-1 text-sm">
+                        <User className="h-3 w-3" />
+                        {ticket.assignedTo.name}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 italic text-sm">Unassigned</span>
+                    )}
+                  </TableCell>
                   <TableCell>{formatDate(ticket.createdAt)}</TableCell>
                   <TableCell>{formatDate(ticket.updatedAt)}</TableCell>                  <TableCell>
                     <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         title="View Details"
                         onClick={() => handleViewTicket(ticket)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         title="Respond"
                         onClick={() => handleRespondToTicket(ticket)}
                       >
                         <MessageCircle className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         title="Delete Ticket"
                         onClick={() => handleDeleteTicket(ticket)}
                         className="text-red-500 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Assign Ticket"
+                        onClick={() => handleAssignTicket(ticket)}
+                      >
+                        <User className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -444,7 +550,7 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
           >
             Next
           </Button>
-        </div>      )}
+        </div>)}
 
       {/* View Ticket Details Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
@@ -455,7 +561,7 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
               View complete ticket information and conversation history
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedTicketDetails && (
             <div className="space-y-6">
               {/* Ticket Information */}
@@ -482,6 +588,12 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
                   <Label className="text-sm font-medium">Category</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {selectedTicketDetails.category}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Assigned To</Label>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {selectedTicketDetails.assignedTo ? selectedTicketDetails.assignedTo.name : 'Unassigned'}
                   </p>
                 </div>
                 <div>
@@ -531,9 +643,9 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
                   <div className="mt-2 space-y-2">
                     {selectedTicketDetails.attachments.map((attachment, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <a 
-                          href={attachment} 
-                          target="_blank" 
+                        <a
+                          href={attachment}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-500 hover:text-blue-700 text-sm"
                         >
@@ -582,7 +694,7 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
               Add a response and/or update the ticket status
             </DialogDescription>
           </DialogHeader>
-            {selectedTicketDetails && (
+          {selectedTicketDetails && (
             <div className="space-y-4">
               <div>
                 <Label className="text-sm font-medium">Ticket: {selectedTicketDetails.subject}</Label>
@@ -657,7 +769,7 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
             <Button variant="outline" onClick={() => setRespondDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleSubmitResponse}
               disabled={isSubmitting}
               className="flex items-center gap-2"
@@ -678,7 +790,7 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
               Are you sure you want to delete this ticket? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedTicket && (
             <div className="py-4">
               <p className="text-sm">
@@ -697,12 +809,66 @@ export default function Dash_Tickets() {  const [searchTerm, setSearchTerm] = us
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="destructive"
               onClick={handleConfirmDelete}
               disabled={isSubmitting}
             >
               {isSubmitting ? "Deleting..." : "Delete Ticket"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Ticket Dialog */}
+      <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Ticket</DialogTitle>
+            <DialogDescription>
+              Assign this ticket to an admin user
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedTicket && (
+            <div className="py-4 space-y-4">
+              <div>
+                <Label className="text-sm font-medium">Ticket: {selectedTicket.subject}</Label>
+              </div>
+
+              <div>
+                <Label htmlFor="assignee" className="mb-2 block">Assign To</Label>
+                <Select value={selectedAdminUser} onValueChange={setSelectedAdminUser}>
+                  <SelectTrigger id="assignee">
+                    <SelectValue placeholder="Select an admin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <UserMinus className="h-4 w-4" />
+                        <span>Unassigned</span>
+                      </div>
+                    </SelectItem>
+                    {adminUsers.map(admin => (
+                      <SelectItem key={admin._id} value={admin._id}>
+                        {admin.name} ({admin.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitAssignment}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Assigning..." : "Assign Ticket"}
             </Button>
           </DialogFooter>
         </DialogContent>

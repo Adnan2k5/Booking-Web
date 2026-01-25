@@ -43,14 +43,14 @@ const createTicket = asyncHandler(async (req, res) => {
 // Get all tickets for current user
 const getUserTickets = asyncHandler(async (req, res) => {
   const language = getLanguage(req);
-  
+
   const ticketsData = await Ticket.find({ user: req.user._id })
     .sort({ createdAt: -1 })
     .select("-responses.responder");
 
   // Convert to plain objects
   const plainTickets = ticketsData.map(ticket => ticket.toJSON());
-  
+
   let tickets;
   // Translate ticket fields if language is not English
   if (language !== 'en') {
@@ -88,18 +88,18 @@ const getTicketById = asyncHandler(async (req, res) => {
 
   // Convert to plain object
   const plainTicket = ticketData.toJSON();
-  
+
   let ticket;
   // Translate ticket fields if language is not English
   if (language !== 'en') {
     const fieldsToTranslate = ['subject', 'description', 'category'];
     ticket = await translateObjectFields(plainTicket, fieldsToTranslate, language);
-    
+
     // Also translate response messages
     if (ticket.responses && ticket.responses.length > 0) {
       const translatedResponses = await translateObjectsFields(
-        ticket.responses, 
-        ['message'], 
+        ticket.responses,
+        ['message'],
         language
       );
       ticket.responses = translatedResponses;
@@ -197,7 +197,7 @@ const updateTicketStatus = asyncHandler(async (req, res) => {
 
 // Admin: Get all tickets (with filters)
 const getAllTickets = asyncHandler(async (req, res) => {
-  const { status, priority, category, page = 1, limit = 10, search } = req.query;
+  const { status, priority, category, assignedTo, page = 1, limit = 10, search } = req.query;
   const language = getLanguage(req);
 
   // Create the base filter
@@ -206,6 +206,13 @@ const getAllTickets = asyncHandler(async (req, res) => {
   if (priority) filter.priority = priority;
   if (category) filter.category = category;
 
+  // Filter by assignedTo
+  if (assignedTo === 'unassigned') {
+    filter.assignedTo = null;
+  } else if (assignedTo) {
+    filter.assignedTo = assignedTo;
+  }
+
   // Add search functionality
   if (search) {
     // Create search conditions for ID, subject, and user name
@@ -213,17 +220,17 @@ const getAllTickets = asyncHandler(async (req, res) => {
       { subject: { $regex: search, $options: 'i' } }, // Case-insensitive search in subject
       { description: { $regex: search, $options: 'i' } } // Also search in description
     ];
-    
+
     // If search looks like a valid ObjectId, include it in the search
     if (/^[0-9a-fA-F]{24}$/.test(search)) {
       searchConditions.push({ _id: search });
     }
 
     // To search by username, we need to find matching users first
-    const matchingUsers = await User.find({ 
-      name: { $regex: search, $options: 'i' } 
+    const matchingUsers = await User.find({
+      name: { $regex: search, $options: 'i' }
     }).select('_id');
-    
+
     // If we found users matching the search term, add their IDs to our search criteria
     if (matchingUsers.length > 0) {
       const userIds = matchingUsers.map(user => user._id);
@@ -238,13 +245,14 @@ const getAllTickets = asyncHandler(async (req, res) => {
     .sort({ updatedAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
-    .populate("user", "name email");
+    .populate("user", "name email")
+    .populate("assignedTo", "name email");
 
   const totalTickets = await Ticket.countDocuments(filter);
 
   // Convert to plain objects
   const plainTickets = ticketsData.map(ticket => ticket.toJSON());
-  
+
   let tickets;
   // Translate ticket fields if language is not English
   if (language !== 'en') {
@@ -290,6 +298,53 @@ const deleteTicket = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "Ticket deleted successfully"));
 });
 
+// Admin: Assign ticket to an admin user
+const assignTicket = asyncHandler(async (req, res) => {
+  const { ticketId } = req.params;
+  const { assignedTo } = req.body;
+
+  const ticket = await Ticket.findById(ticketId);
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  // Validate the assigned user exists and is an admin
+  if (assignedTo) {
+    const assignee = await User.findById(assignedTo);
+    if (!assignee) {
+      throw new ApiError(404, "Assigned user not found");
+    }
+    if (!['admin', 'superadmin'].includes(assignee.role)) {
+      throw new ApiError(400, "Tickets can only be assigned to admin users");
+    }
+  }
+
+  ticket.assignedTo = assignedTo || null;
+  await ticket.save();
+
+  // Populate the assignedTo field before returning
+  await ticket.populate("assignedTo", "name email");
+  await ticket.populate("user", "name email");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, ticket, "Ticket assigned successfully"));
+});
+
+// Get admin users for ticket assignment dropdown
+const getAdminUsersForAssignment = asyncHandler(async (req, res) => {
+  const adminUsers = await User.find({
+    role: { $in: ['admin', 'superadmin'] }
+  })
+    .select('_id name email role')
+    .sort({ name: 1 });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, adminUsers, "Admin users retrieved successfully"));
+});
+
 export {
   createTicket,
   getUserTickets,
@@ -298,4 +353,6 @@ export {
   updateTicketStatus,
   getAllTickets,
   deleteTicket,
+  assignTicket,
+  getAdminUsersForAssignment,
 };

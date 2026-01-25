@@ -7,6 +7,8 @@ import {
   updateTicketStatus,
   getAllTickets,
   deleteTicket,
+  assignTicket,
+  getAdminUsersForAssignment,
 } from "../controllers/ticket.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyAdmin } from "../middlewares/admin.middleware.js";
@@ -19,15 +21,21 @@ const router = Router();
 router.use(verifyJWT);
 router.use(languageMiddleware);
 
-// User routes
+// Admin routes
+router.get("/", getAllTickets);
+router.get("/admin-users", verifyAdmin, getAdminUsersForAssignment);
+
+// User routes - Specific routes first
 router.post("/create", upload.array("attachments", 5), createTicket);
 router.get("/my-tickets", getUserTickets);
+
+// Dynamic routes
 router.get("/:ticketId", getTicketById);
 router.post("/:ticketId/respond", addTicketResponse);
 router.patch("/:ticketId/status", updateTicketStatus);
 
-// Admin routes
-router.get("/", getAllTickets);
+// Admin specific dynamic routes
+router.patch("/:ticketId/assign", verifyAdmin, assignTicket);
 router.delete("/:ticketId", verifyAdmin, deleteTicket);
 
 export default router;
