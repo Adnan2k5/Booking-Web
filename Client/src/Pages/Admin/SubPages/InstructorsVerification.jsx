@@ -23,9 +23,10 @@ import { toast } from "sonner"
 export default function InstructorsPage() {
     const [searchTerm, setSearchTerm] = useState("")
     const [debouncedSearch, setDebouncedSearch] = useState("")
+    const [statusFilter, setStatusFilter] = useState("all")
     const [selectedInstructor, setSelectedInstructor] = useState(null)
     const [showDocuments, setShowDocuments] = useState(false)
-    const { instructors, page, setPage, deleteInstructorById, totalPages, changeDocumentStatus } = useInstructors(debouncedSearch)
+    const { instructors, page, setPage, deleteInstructorById, totalPages, changeDocumentStatus, updateInstructorData } = useInstructors(debouncedSearch, statusFilter)
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -36,7 +37,7 @@ export default function InstructorsPage() {
 
     useEffect(() => {
         setPage((prev) => (prev !== 1 ? 1 : prev))
-    }, [debouncedSearch, setPage])
+    }, [debouncedSearch, statusFilter, setPage])
 
     const handleViewDocuments = (instructor) => {
         setSelectedInstructor(instructor)
@@ -63,6 +64,40 @@ export default function InstructorsPage() {
         }
     }
 
+    const handleUpdateCommission = async (val) => {
+        const percentage = Number(val);
+        if (isNaN(percentage) || percentage < 0 || percentage > 100) {
+            toast.error("Please enter a valid percentage between 0 and 100");
+            return;
+        }
+
+        const loading = toast.loading("Updating commission...");
+        try {
+            if (selectedInstructor?.instructor?._id) {
+                await updateInstructorData(selectedInstructor.instructor._id, {
+                    commissionPercentage: percentage
+                });
+                toast.success("Commission updated successfully", {
+                    id: loading,
+                });
+
+                // Update local selected instructor state to reflect change immediately if needed
+                setSelectedInstructor(prev => ({
+                    ...prev,
+                    instructor: {
+                        ...prev.instructor,
+                        commissionPercentage: percentage
+                    }
+                }));
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to update commission", {
+                id: loading,
+            });
+        }
+    };
+
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
@@ -76,15 +111,27 @@ export default function InstructorsPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 mb-4">
-                <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="Search instructors..."
-                        className="w-full sm:w-[300px] pl-8"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                <div className="relative flex items-center gap-2">
+                    <div className="relative">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search instructors..."
+                            className="w-full sm:w-[300px] pl-8"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <select
+                        className="h-10 w-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="verified">Verified</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
                 </div>
             </div>
 
@@ -104,7 +151,7 @@ export default function InstructorsPage() {
                             {instructors.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                        {debouncedSearch ? `No instructors found for "${searchTerm.trim()}"` : "No instructors yet."}
+                                        {debouncedSearch || statusFilter !== 'all' ? `No instructors found` : "No instructors yet."}
                                     </TableCell>
                                 </TableRow>
                             ) : instructors.map((instructor) => (
@@ -288,12 +335,43 @@ export default function InstructorsPage() {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <div className="mt-6 pt-6 border-t">
+                                            <h3 className="text-sm font-medium text-muted-foreground mb-4">Commission Settings</h3>
+                                            <div className="flex items-end gap-4 max-w-md">
+                                                <div className="flex-1">
+                                                    <label className="text-sm font-medium mb-1 block">Platform Commission (%)</label>
+                                                    <Input
+                                                        type="number"
+                                                        min="0"
+                                                        max="100"
+                                                        placeholder="20"
+                                                        defaultValue={selectedInstructor.instructor.commissionPercentage ?? 20}
+                                                        id="commission-input"
+                                                    />
+                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                        Percentage of booking amount retained by platform.
+                                                    </p>
+                                                </div>
+                                                <Button onClick={() => {
+                                                    const val = document.getElementById("commission-input").value;
+                                                    handleUpdateCommission(val);
+                                                }}>
+                                                    Update
+                                                </Button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </TabsContent>
                             </Tabs>
                             <div className="mt-8 flex justify-end space-x-4 sticky bottom-0 bg-background p-4 border-t">
                                 <Button variant="outline" onClick={() => handleDocumentStatus("rejected")}>Reject Documents</Button>
-                                <Button onClick={() => handleDocumentStatus("verified")}>Approve Documents</Button>
+                                <Button
+                                    onClick={() => handleDocumentStatus("verified")}
+                                    disabled={selectedInstructor.instructor.documentVerified === "verified"}
+                                >
+                                    {selectedInstructor.instructor.documentVerified === "verified" ? "Approved" : "Approve Documents"}
+                                </Button>
                             </div>
                         </div>
                     )}

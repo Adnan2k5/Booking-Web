@@ -65,6 +65,7 @@ function LocationFormModal({ open, onClose, onSubmit, initialData }) {
   const [description, setDescription] = useState(initialData?.description || "");
   const [position, setPosition] = useState(initialData?.position || null);
   const [address, setAddress] = useState(initialData?.address || "");
+  const [instructorLimit, setInstructorLimit] = useState(initialData?.instructorLimit || "");
   const [addressInput, setAddressInput] = useState("");
   const [geoError, setGeoError] = useState("");
 
@@ -82,6 +83,7 @@ function LocationFormModal({ open, onClose, onSubmit, initialData }) {
       setDescription(initialData.description || "");
       setPosition(initialData.position || null);
       setAddress(initialData.address || "");
+      setInstructorLimit(initialData.instructorLimit || "");
       setAddressInput("");
       setGeoError("");
     } else if (open && !initialData) {
@@ -89,6 +91,7 @@ function LocationFormModal({ open, onClose, onSubmit, initialData }) {
       setDescription("");
       setPosition(null);
       setAddress("");
+      setInstructorLimit("");
       setAddressInput("");
       setGeoError("");
     }
@@ -108,6 +111,7 @@ function LocationFormModal({ open, onClose, onSubmit, initialData }) {
       description,
       position,
       address,
+      instructorLimit: instructorLimit === "" ? null : Number(instructorLimit),
     });
   };
 
@@ -126,6 +130,12 @@ function LocationFormModal({ open, onClose, onSubmit, initialData }) {
             placeholder="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+          />
+          <Input
+            type="number"
+            placeholder="Instructor Limit (Leave empty for unlimited)"
+            value={instructorLimit}
+            onChange={(e) => setInstructorLimit(e.target.value)}
           />
           <div>
             <div className="mb-2 font-medium">Pick location on map or search by address:</div>
@@ -188,6 +198,7 @@ export default function LocationsPage() {
             lat: loc.location?.coordinates[1],
             lng: loc.location?.coordinates[0],
             address: loc.address,
+            instructorLimit: loc.instructorLimit,
           }))
         );
       })
@@ -236,6 +247,7 @@ export default function LocationsPage() {
             lat: loc.location?.coordinates[1],
             lng: loc.location?.coordinates[0],
             address: loc.address,
+            instructorLimit: loc.instructorLimit,
           },
         ]);
       } else {
@@ -247,13 +259,14 @@ export default function LocationsPage() {
           prev.map((l, i) =>
             i === editIndex
               ? {
-                  id: updated._id,
-                  name: updated.name,
-                  description: updated.description,
-                  lat: updated.location?.coordinates[1],
-                  lng: updated.location?.coordinates[0],
-                  address: updated.address,
-                }
+                id: updated._id,
+                name: updated.name,
+                description: updated.description,
+                lat: updated.location?.coordinates[1],
+                lng: updated.location?.coordinates[0],
+                address: updated.address,
+                instructorLimit: updated.instructorLimit,
+              }
               : l
           )
         );
@@ -288,6 +301,11 @@ export default function LocationsPage() {
                         Lat: {loc.lat.toFixed(5)}, Lng: {loc.lng.toFixed(5)}
                       </div>
                       <div className="text-xs text-muted-foreground truncate">{loc.address}</div>
+                      {loc.instructorLimit !== null && loc.instructorLimit !== undefined && (
+                        <div className="text-xs text-blue-600 font-medium mt-1">
+                          Limit: {loc.instructorLimit} instructors
+                        </div>
+                      )}
                     </div>
                     <div className="flex gap-2 mt-2 md:mt-0">
                       <Button size="sm" variant="outline" onClick={() => handleEditClick(idx)}>Edit</Button>
@@ -307,11 +325,12 @@ export default function LocationsPage() {
         initialData={
           editIndex !== null
             ? {
-                name: locations[editIndex]?.name,
-                description: locations[editIndex]?.description,
-                position: locations[editIndex] ? [locations[editIndex].lat, locations[editIndex].lng] : null,
-                address: locations[editIndex]?.address,
-              }
+              name: locations[editIndex]?.name,
+              description: locations[editIndex]?.description,
+              position: locations[editIndex] ? [locations[editIndex].lat, locations[editIndex].lng] : null,
+              address: locations[editIndex]?.address,
+              instructorLimit: locations[editIndex]?.instructorLimit,
+            }
             : undefined
         }
       />

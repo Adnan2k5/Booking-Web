@@ -149,14 +149,46 @@ const registerInstructor = asyncHandler(async (req, res) => {
     req.user.profilePicture = profileImage;
   }
 
-  const instructor = await Instructor.create({
-    description: description,
-    adventure: adventure,
-    location: location,
-    portfolioMedias: portfolioMedias,
-    certificate: certificate,
-    governmentId: governmentId,
-  });
+  // Check for location limit
+  const locationDoc = await Location.findById(location);
+  if (!locationDoc) {
+    throw new ApiError(404, "Location not found");
+  }
+
+  let instructor;
+  let isWaitlisted = false;
+
+  const currentCount = await Instructor.countDocuments({ location: location });
+  if (locationDoc.instructorLimit !== null && locationDoc.instructorLimit !== undefined && currentCount >= locationDoc.instructorLimit) {
+    // Limit reached, add to waitlist
+    isWaitlisted = true;
+
+    // Create instructor with no active location (or we can keep location but use another flag, 
+    // but plan was to add to waitingList. Let's create it normally but we know it's in waitlist list)
+    instructor = await Instructor.create({
+      description: description,
+      adventure: adventure,
+      location: location, // Still associating with location
+      portfolioMedias: portfolioMedias,
+      certificate: certificate,
+      governmentId: governmentId,
+    });
+
+    // Add to waiting list
+    locationDoc.waitingList.push(instructor._id);
+    await locationDoc.save();
+
+  } else {
+    // Normal creation
+    instructor = await Instructor.create({
+      description: description,
+      adventure: adventure,
+      location: location,
+      portfolioMedias: portfolioMedias,
+      certificate: certificate,
+      governmentId: governmentId,
+    });
+  }
 
   if (!instructor) {
     throw new ApiError(
@@ -283,8 +315,8 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Email and Password are Required");
   }
 
-  const user = await User.findOne({ email: email }).select(
-    "email phoneNumber name verified role password instructor"
+  let user = await User.findOne({ email: email }).select(
+    "email phoneNumber name verified role password instructor admin"
   );
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -311,6 +343,13 @@ const loginUser = asyncHandler(async (req, res) => {
   user.refreshToken = refreshToken;
 
   await user.save();
+
+  // Populate admin field for admin users to get adminRole
+  if (user.role === "admin" && user.admin) {
+    user = await User.findById(user._id)
+      .select("email phoneNumber name verified role instructor admin")
+      .populate("admin");
+  }
 
   const options = {
     httpOnly: true,
@@ -562,7 +601,7 @@ const signInWithGoogle = asyncHandler(async (req, res) => {
     );
 });
 
-const signInWithApple = asyncHandler(async (req, res) => {});
+const signInWithApple = asyncHandler(async (req, res) => { });
 
 const signInWithLinkedin = asyncHandler(async (req, res) => {
   const { code } = req.body;

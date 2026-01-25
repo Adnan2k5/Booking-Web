@@ -13,12 +13,16 @@ import {
 } from "../controllers/hotel.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { languageMiddleware } from "../middlewares/language.middleware.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyAdmin, requirePermission } from "../middlewares/admin.middleware.js";
+import { PERMISSIONS } from "../config/permissions.js";
 
 const router = express.Router();
 
 // Apply language middleware to all routes
 router.use(languageMiddleware);
 
+// Public routes
 router.route("/").post(
   upload.fields([
     { name: "businessLicense", maxCount: 1 },
@@ -33,11 +37,34 @@ router.route("/").post(
 router.route("/verify").post(verifyHotel);
 router.route("/:id").get(getHotelById);
 router.route("/").get(getHotel);
-router.route("/approve/:id").put(approveHotel);
-router.route("/reject/:id").put(rejectHotel);
-router.route("/rating/:id").put(updateHotelRating);
-router.route("/price/:id").put(updateHotelPrice);
+
+// Admin routes for hotel management (requires MANAGE_HOTELS permission)
+router.route("/approve/:id").put(
+  verifyJWT,
+  verifyAdmin,
+  requirePermission(PERMISSIONS.MANAGE_HOTELS),
+  approveHotel
+);
+router.route("/reject/:id").put(
+  verifyJWT,
+  verifyAdmin,
+  requirePermission(PERMISSIONS.MANAGE_HOTELS),
+  rejectHotel
+);
+router.route("/rating/:id").put(
+  verifyJWT,
+  verifyAdmin,
+  requirePermission(PERMISSIONS.MANAGE_HOTELS),
+  updateHotelRating
+);
+router.route("/price/:id").put(
+  verifyJWT,
+  verifyAdmin,
+  requirePermission(PERMISSIONS.MANAGE_HOTELS),
+  updateHotelPrice
+);
 router.route("/update/:id").put(
+  verifyJWT,
   upload.fields([
     { name: "profileImage", maxCount: 1 },
     { name: "hotelImages", maxCount: 5 },

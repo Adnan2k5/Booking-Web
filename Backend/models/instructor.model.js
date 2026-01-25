@@ -7,6 +7,12 @@ const instructorSchema = new mongoose.Schema(
       enum: ["pending", "verified", "rejected"],
       default: "pending",
     },
+    commissionPercentage: {
+      type: Number,
+      default: 20, // Default 20% platform fee
+      min: 0,
+      max: 100
+    },
     sessions: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -9,7 +9,7 @@ const locationSchema = new moongoose.Schema({
         type: String,
         required: true,
     },
-    location: {  
+    location: {
         type: { type: String, enum: ['Point'], required: true },
         coordinates: { type: [Number], required: true }
     },
@@ -17,6 +17,16 @@ const locationSchema = new moongoose.Schema({
         type: String,
         required: true,
     },
+    instructorLimit: {
+        type: Number,
+        default: null, // null means unlimited
+    },
+    waitingList: [
+        {
+            type: moongoose.Schema.Types.ObjectId,
+            ref: 'Instructor',
+        }
+    ],
 }, {
     timestamps: true,
 });

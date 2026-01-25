@@ -95,11 +95,11 @@ const Dash_Terms = lazy(() => import("./Pages/Admin/SubPages/Terms"))
 const Dash_Declation = lazy(() => import("./Pages/Admin/SubPages/Declaration"))
 const LocationsPage = lazy(() => import("./Pages/Admin/SubPages/Location"))
 const InstructorsPage = lazy(() => import("./Pages/Admin/SubPages/InstructorsVerification"))
-const Managers = lazy(() => import("./Pages/Admin/SubPages/Managers"))
 const EventsPage = lazy(() => import("./Pages/Admin/SubPages/Events"))
 const WebsiteSettings = lazy(() => import("./Pages/Admin/SubPages/WebsiteSettings"))
 const SponsorsPage = lazy(() => import("./Pages/Admin/SubPages/Sponsors"))
 const AchievementRulesPage = lazy(() => import("./Pages/Admin/SubPages/AchievementRules"))
+const RBACManagement = lazy(() => import("./Pages/Admin/SubPages/RBACManagement"))
 
 // Shop - Lazy loaded
 const ItemPage = lazy(() => import("./Pages/Shop/ItemPage").then(module => ({ default: module.ItemPage })))
@@ -349,11 +349,11 @@ const App = () => {
                         <Route path="/admin/terms" element={<Dash_Terms />} />
                         <Route path="/admin/declaration" element={<Dash_Declation />} />
                         <Route path="/admin/locations" element={<LocationsPage />} />
-                        <Route path="/admin/manager" element={<Managers />} />
                         <Route path="/admin/events" element={<EventsPage />} />
                         <Route path="/admin/website-settings" element={<WebsiteSettings />} />
                         <Route path="/admin/sponsors" element={<SponsorsPage />} />
                         <Route path="/admin/achievement-rules" element={<AchievementRulesPage />} />
+                        <Route path="/admin/rbac" element={<RBACManagement />} />
                       </Route>
                     </Routes>
                   </Suspense>
