@@ -15,11 +15,29 @@ import {
   SidebarGroupContent,
 } from '../../components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
-import { BarChart3, BookOpen, ClipboardCheck, Compass, FileCheck, Hotel, LogOut, Mountain, Settings, Store, TicketCheck, User, Award } from 'lucide-react';
+import {
+  BarChart3,
+  BookOpen,
+  ClipboardCheck,
+  Compass,
+  FileCheck,
+  Hotel,
+  LogOut,
+  Mountain,
+  Settings,
+  Store,
+  TicketCheck,
+  User,
+  Award,
+  Shield,
+  Users,
+} from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { userLogout } from '../../Auth/UserAuth.js';
 import { toast } from 'sonner';
+import { RBACProvider, useRBAC } from '../../contexts/RBACContext';
+import { PERMISSIONS } from '../../constants/permissions';
 
 export default function AdminLayout() {
   const location = useLocation();
@@ -35,71 +53,95 @@ export default function AdminLayout() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen overflow-hidden">
-        <AdminSidebar pathname={pathname} />
-        <SidebarInset className="bg-muted/40">
-          <div className="flex h-16 items-center gap-4 border-b bg-background px-6">
-            <div className="flex-1">
-              <h1 className="text-lg font-semibold">Adventure Booking Admin</h1>
+    <RBACProvider>
+      <SidebarProvider>
+        <div className="flex h-screen overflow-hidden">
+          <AdminSidebar pathname={pathname} />
+          <SidebarInset className="bg-muted/40">
+            <div className="flex h-16 items-center gap-4 border-b bg-background px-6">
+              <div className="flex-1">
+                <h1 className="text-lg font-semibold">Adventure Booking Admin</h1>
+              </div>
+              <Avatar className="h-8 w-8">
+                <AvatarImage src="/placeholder-user.jpg" alt="Admin" />
+                <AvatarFallback>AD</AvatarFallback>
+              </Avatar>
             </div>
-            <Avatar className="h-8 w-8">
-              <AvatarImage src="/placeholder-user.jpg" alt="Admin" />
-              <AvatarFallback>AD</AvatarFallback>
-            </Avatar>
-          </div>
-          <main className="lg:w-[83vw] w-full flex-1  overflow-y-auto p-6">
-            <Outlet />
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+            <main className="lg:w-[83vw] w-full flex-1  overflow-y-auto p-6">
+              <Outlet />
+            </main>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    </RBACProvider>
   );
 }
 
 function AdminSidebar({ pathname }) {
-
   const dispatch = useDispatch();
-  // read current user from redux store
-  const user = useSelector((state) => state.user?.user);
-  // admin roles come from the user object under `admin.adminRole` in this app
-  const roles = Array.isArray(user?.admin?.adminRole) ? user.admin.adminRole : [];
+  const {
+    isSuperAdmin,
+    hasPermission,
+    hasAnyPermission,
+    adminRoles,
+    loading
+  } = useRBAC();
 
-  // If roles array is empty, treat as super-admin and allow access to all tabs
-  const isSuperAdmin = roles.length === 0;
-
-  // map logical tabs to allowed roles
-  const roleAccess = {
-    Dashboard: [], // visible to all admin types (handled separately)
-    Locations: [], // general
-    Adventures: ['Instructor'],
-    Bookings: ['Hotel', 'Instructor'],
-    Admins: ['Admin'], // only visible to super-admins by default
-    Users: ['User'],
-    Instructor: ['Instructor'],
-    Stores: [],
-    Hotels: ['Hotel'],
-    Events: [],
-    'Achievement Rules': [],
-    'Tickets & Support': ['User'],
-    'Terms & Condition': [],
-    'User Declaration': [],
-    'Website Settings': [],
-    Sponsors: [],
-  };
-
-  const canSee = (tabKey) => {
-    if (isSuperAdmin) return true;
-    const allowed = roleAccess[tabKey];
-    if (!allowed || allowed.length === 0) return true; // default allow if not restricted
-    return roles.some((r) => allowed.includes(r));
-  };
   const handleLogout = async () => {
     await userLogout(dispatch).then(() => {
       window.location.reload();
     }).catch((error) => {
       toast.error("Logout failed. Please try again.");
     });
+  };
+
+  // Permission-based visibility for sidebar items
+  const canSee = (tabKey) => {
+    // Super admin sees everything
+    if (isSuperAdmin) return true;
+
+    // Permission mappings for each tab
+    const tabPermissions = {
+      Dashboard: [PERMISSIONS.VIEW_DASHBOARD], // All admins can see dashboard
+      Locations: [PERMISSIONS.VIEW_LOCATIONS],
+      Adventures: [PERMISSIONS.VIEW_ADVENTURES],
+      Bookings: [PERMISSIONS.VIEW_BOOKINGS],
+      Admins: [PERMISSIONS.VIEW_ADMINS], // Super admin only (already handled above)
+      'RBAC Management': [PERMISSIONS.MANAGE_ADMINS], // Super admin only
+      Users: [PERMISSIONS.VIEW_USERS],
+      Instructor: [PERMISSIONS.VIEW_INSTRUCTORS],
+      Stores: [PERMISSIONS.VIEW_STORE],
+      Hotels: [PERMISSIONS.VIEW_HOTELS],
+      Events: [PERMISSIONS.VIEW_EVENTS],
+      'Achievement Rules': [PERMISSIONS.VIEW_ACHIEVEMENT_RULES],
+      'Tickets & Support': [PERMISSIONS.VIEW_TICKETS],
+      'Terms & Condition': [PERMISSIONS.VIEW_TERMS],
+      'User Declaration': [PERMISSIONS.VIEW_DECLARATIONS],
+      'Website Settings': [PERMISSIONS.VIEW_SETTINGS],
+      Sponsors: [PERMISSIONS.VIEW_SPONSORS],
+    };
+
+    const requiredPermissions = tabPermissions[tabKey];
+
+    // If no specific permissions defined, show by default
+    if (!requiredPermissions || requiredPermissions.length === 0) {
+      return true;
+    }
+
+    return hasAnyPermission(requiredPermissions);
+  };
+
+  if (loading) {
+    return (
+      <Sidebar>
+        <SidebarHeader className="flex h-16 items-center justify-center border-b px-6">
+          <div className="flex items-center justify-center gap-2 font-semibold">
+            <Mountain className="h-6 w-6" />
+            <span>Loading...</span>
+          </div>
+        </SidebarHeader>
+      </Sidebar>
+    );
   }
 
   return (
@@ -109,6 +151,16 @@ function AdminSidebar({ pathname }) {
           <Mountain className="h-6 w-6" />
           <span>Adventure Admin</span>
         </div>
+        {/* Show role badge */}
+        {isSuperAdmin ? (
+          <span className="ml-2 px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">
+            Super Admin
+          </span>
+        ) : adminRoles.length > 0 && (
+          <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
+            {adminRoles.join(', ')} Admin
+          </span>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -127,7 +179,6 @@ function AdminSidebar({ pathname }) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Other sidebar groups with Link components instead of <a> tags */}
         <SidebarGroup>
           <SidebarGroupLabel>Management</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -165,12 +216,13 @@ function AdminSidebar({ pathname }) {
                 </SidebarMenuItem>
               )}
 
-              {canSee('Admins') && (
+              {/* RBAC Management - Super Admin only */}
+              {isSuperAdmin && (
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={pathname === "/admin/manager"}>
-                    <Link to="/admin/manager">
-                      <User className="h-4 w-4" />
-                      <span>Admins</span>
+                  <SidebarMenuButton asChild isActive={pathname === "/admin/rbac"}>
+                    <Link to="/admin/rbac">
+                      <Shield className="h-4 w-4" />
+                      <span>RBAC Management</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

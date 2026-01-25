@@ -1,4 +1,4 @@
-import { loginStart, loginSuccess, setUser } from '../Store/UserSlice.js';
+import { loginStart, loginSuccess, setUser, logout } from '../Store/UserSlice.js';
 import { axiosClient } from '../AxiosClient/axios.js';
 import { data } from 'react-router-dom';
 

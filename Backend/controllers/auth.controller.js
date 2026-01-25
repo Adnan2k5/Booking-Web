@@ -283,8 +283,8 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Email and Password are Required");
   }
 
-  const user = await User.findOne({ email: email }).select(
-    "email phoneNumber name verified role password instructor"
+  let user = await User.findOne({ email: email }).select(
+    "email phoneNumber name verified role password instructor admin"
   );
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -311,6 +311,13 @@ const loginUser = asyncHandler(async (req, res) => {
   user.refreshToken = refreshToken;
 
   await user.save();
+
+  // Populate admin field for admin users to get adminRole
+  if (user.role === "admin" && user.admin) {
+    user = await User.findById(user._id)
+      .select("email phoneNumber name verified role instructor admin")
+      .populate("admin");
+  }
 
   const options = {
     httpOnly: true,
@@ -562,7 +569,7 @@ const signInWithGoogle = asyncHandler(async (req, res) => {
     );
 });
 
-const signInWithApple = asyncHandler(async (req, res) => {});
+const signInWithApple = asyncHandler(async (req, res) => { });
 
 const signInWithLinkedin = asyncHandler(async (req, res) => {
   const { code } = req.body;
