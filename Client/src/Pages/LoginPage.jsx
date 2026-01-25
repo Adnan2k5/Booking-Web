@@ -385,8 +385,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 relative">
-      <div className="login relative bg-gradient-to-b from-white/80 to-white rounded-2xl shadow-2xl flex flex-col items-center md:py-8 md:px-6 lg:w-1/2 max-w-lg py-6 border border-white/40 backdrop-blur-sm">
-        <Modal open={openOtp} footer={null} onCancel={cancel}>
+      <div className="login relative bg-gradient-to-b from-white/80 to-white rounded-2xl shadow-2xl flex flex-col items-center md:py-8 md:px-6 w-full max-w-md py-6 border border-white/40 backdrop-blur-sm">
+        <Modal open={openOtp} footer={null} onCancel={cancel} transitionName="" maskTransitionName="" animation={false}>
           <div className="space-y-2 flex flex-col items-center gap-4">
             <h1 className="text-lg font-semibold text-center">
               Enter One-Time Password sent to{" "}
@@ -583,7 +583,8 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loader}
-                  className="w-full bg-black text-white py-3 rounded-3xl font-semibold shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="w-full bg-black text-white py-3 rounded-3xl font-semibold shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  style={{ transition: 'none', animation: 'none' }}
                 >
                   {loader ? <Loader btn={true} /> : "Sign Up"}
                 </button>
@@ -593,7 +594,8 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loader}
-                  className="w-full bg-black text-white cursor-pointer py-3 rounded-3xl font-semibold shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="w-full bg-black text-white cursor-pointer py-3 rounded-3xl font-semibold shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  style={{ transition: 'none', animation: 'none' }}
                 >
                   {loader ? <Loader btn={true} /> : "Sign In"}
                 </button>

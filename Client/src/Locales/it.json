@@ -1,7 +1,9 @@
 {
   "explore": "Esplora",
   "shop": "Negozio",
-  "hotels": "Hotel",
+  "hotels": "Sistemazioni",
+  "accommodations": "Sistemazioni",
+  "Accommodations": "Sistemazioni",
   "mission": "La Nostra Missione",
   "level": "Livello",
   "profile": "Profilo",
@@ -53,7 +55,7 @@
   "pleaseLogin": "Effettua l'accesso per continuare",
   "back": "Indietro",
   "bookYourAdventure": "Prenota la Tua Avventura",
-  "hotel": "Hotel",
+  "hotel": "Sistemazione",
   "selectInstructor": "Seleziona Istruttore",
   "groupOf": "Gruppo di",
   "view": "Visualizza",
@@ -90,7 +92,7 @@
   "pleaseSelectLocationAndDate": "Seleziona posizione e data",
   "Joiin As Explorer": "Unisciti come Esploratore",
   "Join As Instructor": "Unisciti come Istruttore",
-  "Join As Hotel": "Unisciti come Hotel",
+  "Join As Hotel": "Unisciti come Sistemazione",
   "Choose Your Account Type": "Scegli il Tuo Tipo di Account",
   "selectAccountType": "Seleziona il tuo tipo di account per continuare",
   "dashboard": {

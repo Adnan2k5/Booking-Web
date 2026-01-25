@@ -41,7 +41,7 @@ export default function CategoryFeatureGrid() {
   return (
     <section className="max-w-7xl mx-auto px-6 py-20">
       <h2 className="text-center text-2xl md:text-3xl font-bold tracking-tight mb-14">Featured Collections</h2>
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-2 gap-3 md:gap-8">
         {featureData.map((f, i) => (
           <div key={i} className="group relative h-[260px] md:h-[300px] overflow-hidden rounded-xl">
             <img src={f.image} alt={f.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1200ms] group-hover:scale-110" />

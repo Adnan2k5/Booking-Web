@@ -124,19 +124,52 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 
   /* Hide scrollbar utility */
-  .hide-scrollbar::-webkit-scrollbar, .no-scrollbar::-webkit-scrollbar { display: none; }
-  .hide-scrollbar, .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .hide-scrollbar::-webkit-scrollbar,
+  .no-scrollbar::-webkit-scrollbar,
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hide-scrollbar,
+  .no-scrollbar,
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 
   /* Brand strip (scoped fallback if CSS import fails) */
-  .brand-marquee { width:100%; overflow:hidden; }
-  .brand-track { display:flex; width:max-content; align-items:center; gap:4rem; animation: brand-scroll 28s linear infinite; }
-  .brand-marquee:hover .brand-track { animation-play-state: paused; }
-  @keyframes brand-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .brand-marquee {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .brand-track {
+    display: flex;
+    width: max-content;
+    align-items: center;
+    gap: 4rem;
+    animation: brand-scroll 28s linear infinite;
+  }
+
+  .brand-marquee:hover .brand-track {
+    animation-play-state: paused;
+  }
+
+  @keyframes brand-scroll {
+    0% {
+      transform: translateX(0);
+    }
+
+    100% {
+      transform: translateX(-50%);
+    }
+  }
 
   /* Gradient Mask for Slider */
   .mask-gradient-x {
@@ -151,17 +184,61 @@
     height: 100%;
     overflow: hidden;
   }
-  
+
   .react-player {
     position: absolute;
     top: 0;
     left: 0;
     object-fit: cover;
   }
-  
+
   .react-player video {
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
+  }
+
+  /* Glassmorphism utilities for mobile */
+  .glass {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Mobile search bar glassmorphism */
+  .mobile-glass-input {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-glass-input:focus-within {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+  }
+
+  /* Fade in animation for hero */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 1s ease-out forwards;
   }
 }

@@ -1,7 +1,9 @@
 {
   "explore": "Explorer",
   "shop": "Boutique",
-  "hotels": "Hôtels",
+  "hotels": "Hébergements",
+  "accommodations": "Hébergements",
+  "Accommodations": "Hébergements",
   "mission": "Notre Mission",
   "level": "Niveau",
   "profile": "Profil",
@@ -50,6 +52,7 @@
   "items": "Articles",
   "groupSize": "Taille du Groupe",
   "accommodation": "Hébergement",
+  "hotel": "Hébergement",
   "instructor": {
     "viewProfile": "Voir le Profil",
     "about": "À Propos",
@@ -227,7 +230,7 @@
   "pleaseSelectLocationAndDate": "Veuillez sélectionner un lieu et une date",
   "Joiin As Explorer": "Rejoindre en tant qu'Explorateur",
   "Join As Instructor": "Rejoindre en tant qu'Instructeur",
-  "Join As Hotel": "Rejoindre en tant qu'Hôtel",
+  "Join As Hotel": "Rejoindre en tant qu'Hébergement",
   "Choose Your Account Type": "Choisissez Votre Type de Compte",
   "selectAccountType": "Sélectionnez votre type de compte pour continuer",
   "dashboard": {

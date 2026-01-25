@@ -7,6 +7,7 @@ export function useHotels({
     limit = 10,
     verified,
     location = null,
+    category = null,
     minPrice = null,
     maxPrice = null,
     minRating = null,
@@ -27,8 +28,9 @@ export function useHotels({
                     search,
                     page,
                     limit,
-                    verified,  // Changed back to 'verified'
+                    verified,
                     location,
+                    category,
                     minPrice,
                     maxPrice,
                     minRating,
@@ -56,7 +58,7 @@ export function useHotels({
             }
         };
         fetchHotels();
-    }, [search, page, limit, verified, location, minPrice, maxPrice, minRating, sortBy, sortOrder]);
+    }, [search, page, limit, verified, location, category, minPrice, maxPrice, minRating, sortBy, sortOrder]);
 
     return { hotels, isLoading, error, total, totalPages };
 }

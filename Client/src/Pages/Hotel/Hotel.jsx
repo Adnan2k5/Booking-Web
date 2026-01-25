@@ -13,6 +13,8 @@ import {
     Zap,
     Users,
     Award,
+    Tent,
+    TreePine,
 } from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
@@ -22,6 +24,14 @@ import { useSearchParams, useNavigate } from "react-router-dom"
 import { useHotels } from "../../hooks/useHotel"
 import { Nav_Landing } from "../../components/Nav_Landing"
 import { fetchLocations } from "../../Api/location.api"
+
+// Stay type categories
+const stayCategories = [
+    { id: '', name: 'All Stays', icon: HotelIcon, description: 'All accommodation types' },
+    { id: 'hotel', name: 'Hotel', icon: HotelIcon, description: 'Traditional hotels & resorts' },
+    { id: 'camping', name: 'Camping', icon: Tent, description: 'Outdoor adventure' },
+    { id: 'glamping', name: 'Glamping', icon: TreePine, description: 'Luxury camping' },
+]
 
 // Lightweight amenity icon detection (keeps previous behavior)
 const amenityIcons = {
@@ -55,6 +65,7 @@ export default function HotelBrowsingPage() {
         checkIn: searchParams.get('checkin') || "",
         checkOut: searchParams.get('checkout') || "",
         guests: parseInt(searchParams.get('guests') || '1'),
+        category: searchParams.get('category') || "",
         page: parseInt(searchParams.get('page') || '1')
     })
 
@@ -64,7 +75,8 @@ export default function HotelBrowsingPage() {
     const { hotels, isLoading, error, total, totalPages } = useHotels({
         page: filters.page,
         limit,
-        location: filters.location || null
+        location: filters.location || null,
+        category: filters.category || null
     })
 
     useEffect(() => {
@@ -85,6 +97,7 @@ export default function HotelBrowsingPage() {
         if (filters.checkIn) params.set('checkin', filters.checkIn)
         if (filters.checkOut) params.set('checkout', filters.checkOut)
         if (filters.guests) params.set('guests', filters.guests.toString())
+        if (filters.category) params.set('category', filters.category)
         params.set('page', filters.page.toString())
         setSearchParams(params)
     }, [filters, setSearchParams])
@@ -109,11 +122,11 @@ export default function HotelBrowsingPage() {
 
             {/* HERO */}
             <header
-                className="relative bg-cover bg-center h-[520px] sm:h-[600px] rounded-b-3xl overflow-hidden shadow-inner z-10"
+                className="relative bg-cover bg-center min-h-[720px] sm:min-h-[680px] md:min-h-[620px] rounded-b-3xl overflow-visible shadow-inner z-10 pt-28 sm:pt-32"
                 style={{ backgroundImage: `url('https://images.unsplash.com/photo-1719466419345-fdb12719ec29?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470')` }}
             >
                 <div className="absolute inset-0 bg-black/45 backdrop-blur-sm z-10"></div>
-                <div className="absolute inset-0 max-w-7xl mx-auto px-6 sm:px-8 flex flex-col justify-center z-20">
+                <div className="absolute inset-0 max-w-7xl mx-auto px-6 sm:px-8 flex flex-col justify-center z-20 pt-24 md:pt-28 pb-10">
                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-lg">Find your perfect stay</h1>
                         <p className="mt-3 text-lg sm:text-xl text-white/90 max-w-2xl">Handpicked hostels, boutique stays and cozy hostels for every kind of traveler. Explore exclusive offers and flexible bookings.</p>
@@ -121,6 +134,28 @@ export default function HotelBrowsingPage() {
 
                     {/* Booking Form (overlay) */}
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 max-w-4xl z-30">
+                        {/* Stay Type Tabs */}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {stayCategories.map((cat) => {
+                                const IconComponent = cat.icon
+                                const isActive = filters.category === cat.id
+                                return (
+                                    <button
+                                        key={cat.id}
+                                        type="button"
+                                        onClick={() => updateFilter('category', cat.id)}
+                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${isActive
+                                                ? 'bg-white text-rose-600 shadow-lg scale-105'
+                                                : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
+                                            }`}
+                                    >
+                                        <IconComponent className={`w-4 h-4 ${isActive ? 'text-rose-600' : 'text-white'}`} />
+                                        <span>{cat.name}</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+
                         <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-2xl border border-white/40">
                             <form className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end" onSubmit={handleBookingSearch}>
                                 <div className="sm:col-span-2">
