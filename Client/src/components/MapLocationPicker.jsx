@@ -384,7 +384,7 @@ export default function MapLocationPicker({
                         value={searchValue}
                         onChange={handleSearchChange}
                         onKeyPress={handleKeyPress}
-                        placeholder="Enter event address"
+                        placeholder="Search Location"
                         className="flex-1"
                         required
                     />

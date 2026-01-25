@@ -1,62 +1,112 @@
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import { Label } from "../../../components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
 import { createAdventure, updateAdventure, getAdventure } from "../../../Api/adventure.api"
-import { fetchLocations } from "../../../Api/location.api"
+import { fetchLocations, createLocation } from "../../../Api/location.api"
 import { toast } from "sonner"
 import { useForm } from "react-hook-form"
 import MediaPreview from "../../../components/MediaPreview"
-import { ArrowLeft, ImageIcon, Video, AlertCircle } from 'lucide-react'
+import { ArrowLeft, ImageIcon, Video, AlertCircle, Info, Upload, MapPin, Plus, Search } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card"
+import { Dialog, DialogContent, DialogTitle } from "../../../components/ui/dialog"
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet"
+import "leaflet/dist/leaflet.css"
+import L from "leaflet"
 
-// Validation helper functions
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_TOTAL_MEDIA_SIZE = 50 * 1024 * 1024; // 50MB
-const MAX_MEDIA_COUNT = 10;
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+const MAX_TOTAL_MEDIA_SIZE = 50 * 1024 * 1024
+const MAX_MEDIA_COUNT = 10
+
+const markerIcon = new L.Icon({
+    iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+    shadowSize: [41, 41],
+})
+
+function LocationPicker({ position, setPosition }) {
+    useMapEvents({
+        click(e) {
+            setPosition([e.latlng.lat, e.latlng.lng])
+        },
+    })
+    return position ? <Marker position={position} icon={markerIcon} /> : null
+}
+
+function FocusMapOnPosition({ position }) {
+    const map = useMap()
+    useEffect(() => {
+        if (position) {
+            map.setView(position, 14, { animate: true })
+        }
+    }, [position, map])
+    return null
+}
+
+function fetchAddressFromCoords(lat, lng, setAddress) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+        .then((res) => res.json())
+        .then((data) => setAddress(data.display_name || "Unknown address"))
+        .catch(() => setAddress("Unknown address"))
+}
+
+function fetchCoordsFromAddress(address, setPosition, setAddress, setError) {
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
+        .then((res) => res.json())
+        .then((data) => {
+            if (data && data[0]) {
+                setPosition([parseFloat(data[0].lat), parseFloat(data[0].lon)])
+                setAddress(data[0].display_name)
+                setError("")
+            } else {
+                setError("Address not found")
+            }
+        })
+        .catch(() => setError("Error fetching coordinates"))
+}
 
 const validateFileType = (file, allowedTypes) => {
-    if (!file) return true;
-    const fileType = file.type.split('/')[0];
-    return allowedTypes.includes(fileType);
+    if (!file) return true
+    const fileType = file.type.split('/')[0]
+    return allowedTypes.includes(fileType)
 }
 
 const validateFileSize = (file, maxSize = MAX_FILE_SIZE) => {
-    if (!file) return true;
-    return file.size <= maxSize;
+    if (!file) return true
+    return file.size <= maxSize
 }
 
 const validateMediaFiles = (files) => {
-    if (!files || !files.length) return { valid: true };
-    
-    // Check number of files
+    if (!files || !files.length) return { valid: true }
+
     if (files.length > MAX_MEDIA_COUNT) {
-        return { valid: false, message: `Maximum ${MAX_MEDIA_COUNT} files allowed` };
+        return { valid: false, message: `Maximum ${MAX_MEDIA_COUNT} files allowed` }
     }
-    
-    // Check total size
-    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0)
     if (totalSize > MAX_TOTAL_MEDIA_SIZE) {
-        return { valid: false, message: `Total file size exceeds ${MAX_TOTAL_MEDIA_SIZE / (1024 * 1024)}MB` };
+        return { valid: false, message: `Total file size exceeds ${MAX_TOTAL_MEDIA_SIZE / (1024 * 1024)}MB` }
     }
-    
-    // Check individual files
+
     for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const fileType = file.type.split('/')[0];
-        
+        const file = files[i]
+        const fileType = file.type.split('/')[0]
+
         if (!['image', 'video'].includes(fileType)) {
-            return { valid: false, message: `File '${file.name}' is not an image or video` };
+            return { valid: false, message: `File '${file.name}' is not an image or video` }
         }
-        
+
         if (file.size > MAX_FILE_SIZE) {
-            return { valid: false, message: `File '${file.name}' exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB` };
+            return { valid: false, message: `File '${file.name}' exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB` }
         }
     }
-    
-    return { valid: true };
+
+    return { valid: true }
 }
 
 const AdventureFormPage = () => {
@@ -70,7 +120,6 @@ const AdventureFormPage = () => {
         reset,
         setValue,
         formState: { errors },
-        watch,
     } = useForm({
         defaultValues: {
             name: "",
@@ -81,7 +130,7 @@ const AdventureFormPage = () => {
             thumbnail: null,
             previewVideo: null,
         },
-        mode: "onBlur" // Validate fields when they lose focus
+        mode: "onBlur"
     })
 
     const [mediaFiles, setMediaFiles] = useState([])
@@ -96,8 +145,14 @@ const AdventureFormPage = () => {
     const [selectedLocations, setSelectedLocations] = useState([])
     const [adventure, setAdventure] = useState(null)
     const [isLoading, setIsLoading] = useState(isEditMode)
+    const [showLocationModal, setShowLocationModal] = useState(false)
+    const [newLocationName, setNewLocationName] = useState("")
+    const [newLocationDesc, setNewLocationDesc] = useState("")
+    const [newLocationPosition, setNewLocationPosition] = useState(null)
+    const [newLocationAddress, setNewLocationAddress] = useState("")
+    const [locationAddressInput, setLocationAddressInput] = useState("")
+    const [locationGeoError, setLocationGeoError] = useState("")
 
-    // Fetch adventure data if in edit mode
     useEffect(() => {
         if (isEditMode) {
             setIsLoading(true)
@@ -119,15 +174,11 @@ const AdventureFormPage = () => {
         }
     }, [id, isEditMode, reset])
 
-    // Generate previews when files are selected or when editing
     useEffect(() => {
         let previews = []
-        // Show existing medias from adventure in edit mode
         if (adventure && adventure.medias && Array.isArray(adventure.medias)) {
             previews = adventure.medias.map((media, idx) => {
-                // Assume media is a URL string or an object with url/type/name
                 if (typeof media === "string") {
-                    // Guess type from extension
                     const ext = media.split(".").pop().toLowerCase()
                     let type = ""
                     if (["jpg", "jpeg", "png", "gif", "webp", "bmp"].includes(ext)) type = "image"
@@ -144,7 +195,6 @@ const AdventureFormPage = () => {
                 }
             })
         }
-        // Add previews for newly selected files
         if (mediaFiles.length) {
             const filePreviews = mediaFiles.map((file) => ({
                 url: URL.createObjectURL(file),
@@ -155,7 +205,6 @@ const AdventureFormPage = () => {
             previews = [...previews, ...filePreviews]
         }
         setMediaPreviews(previews)
-        // Cleanup only for local files
         return () => {
             if (mediaFiles.length) {
                 previews.filter((p) => !p.isServer).forEach((p) => URL.revokeObjectURL(p.url))
@@ -163,14 +212,11 @@ const AdventureFormPage = () => {
         }
     }, [mediaFiles, adventure])
 
-    // Handle thumbnail preview
     useEffect(() => {
-        // Clear previous preview
         if (thumbnailPreview && !thumbnailPreview.isServer) {
             URL.revokeObjectURL(thumbnailPreview.url)
         }
 
-        // Create preview for new thumbnail
         if (thumbnailFile) {
             setThumbnailPreview({
                 url: URL.createObjectURL(thumbnailFile),
@@ -179,7 +225,6 @@ const AdventureFormPage = () => {
                 isServer: false,
             })
         } else if (adventure?.thumbnail) {
-            // Show existing thumbnail from adventure
             setThumbnailPreview({
                 url: adventure.thumbnail,
                 type: "image",
@@ -197,14 +242,11 @@ const AdventureFormPage = () => {
         }
     }, [thumbnailFile, adventure])
 
-    // Handle preview video
     useEffect(() => {
-        // Clear previous preview
         if (previewVideoPreview && !previewVideoPreview.isServer) {
             URL.revokeObjectURL(previewVideoPreview.url)
         }
 
-        // Create preview for new video
         if (previewVideoFile) {
             setPreviewVideoPreview({
                 url: URL.createObjectURL(previewVideoFile),
@@ -213,7 +255,6 @@ const AdventureFormPage = () => {
                 isServer: false,
             })
         } else if (adventure?.previewVideo) {
-            // Show existing preview video from adventure
             setPreviewVideoPreview({
                 url: adventure.previewVideo,
                 type: "video",
@@ -231,7 +272,6 @@ const AdventureFormPage = () => {
         }
     }, [previewVideoFile, adventure])
 
-    // Fetch locations for dropdown
     useEffect(() => {
         fetchLocations()
             .then((res) => {
@@ -241,79 +281,66 @@ const AdventureFormPage = () => {
                 toast.error("Failed to load locations")
                 setLocations([])
             })
-            
-        // Register location field with validation
-        register("location", { 
-            validate: value => (value && value.length > 0) || "At least one location must be selected" 
+
+        register("location", {
+            validate: value => (value && value.length > 0) || "At least one location must be selected"
         })
 
-        // Register thumbnail field with validation
-        register("thumbnail", { 
+        register("thumbnail", {
             validate: value => {
-                // If we're in create mode, thumbnail is required
                 if (!isEditMode && !value && !adventure?.thumbnail) {
-                    return "Thumbnail image is required";
+                    return "Thumbnail image is required"
                 }
-                return true;
+                return true
             }
-        });
-        
-        // Register preview video field with validation
-        register("previewVideo", { 
+        })
+
+        register("previewVideo", {
             validate: value => {
-                // Optional field but if provided, validate it's a video
                 if (value && !validateFileType(value, ['video'])) {
-                    return "Please provide a valid video file";
+                    return "Please provide a valid video file"
                 }
-                return true;
+                return true
             }
-        });
-        
-        // Register media files field with validation
+        })
+
         register("medias", {
             validate: value => {
-                // If editing and there are existing media files, it's optional
                 if (isEditMode && adventure && adventure.medias && adventure.medias.length > 0) {
-                    return true;
+                    return true
                 }
-                
-                // In create mode, at least one media file is required
+
                 if (!isEditMode && (!value || !value.length)) {
-                    return "At least one media file is required";
+                    return "At least one media file is required"
                 }
-                
-                // If there are files, validate them
+
                 if (value && value.length > 0) {
-                    const validation = validateMediaFiles(value);
-                    return validation.valid || validation.message;
+                    const validation = validateMediaFiles(value)
+                    return validation.valid || validation.message
                 }
-                
-                return true;
+
+                return true
             }
-        });
+        })
     }, [])
 
-    // Sync selectedLocations with form value
     useEffect(() => {
-        setValue("location", selectedLocations, { 
-            shouldValidate: true, 
-            shouldDirty: true 
+        setValue("location", selectedLocations, {
+            shouldValidate: true,
+            shouldDirty: true
         })
     }, [selectedLocations, setValue])
 
-    // Remove a selected media file (only local files)
     const handleRemoveMedia = (idx) => {
-        // Only allow removing local files (after server files)
         const serverCount =
             adventure && adventure.medias && Array.isArray(adventure.medias) ? adventure.medias.length : 0
         if (idx >= serverCount) {
             setMediaFiles((files) => {
-                const updatedFiles = files.filter((_, i) => i !== idx - serverCount);
-                setValue('medias', updatedFiles, { shouldValidate: true });
-                return updatedFiles;
-            });
+                const updatedFiles = files.filter((_, i) => i !== idx - serverCount)
+                setValue('medias', updatedFiles, { shouldValidate: true })
+                return updatedFiles
+            })
         }
-        // Optionally, handle server media removal here if backend supports it
     }
 
     const handleRemoveThumbnail = () => {
@@ -330,457 +357,644 @@ const AdventureFormPage = () => {
         setSelectedLocations((prev) => (prev.includes(locId) ? prev.filter((id) => id !== locId) : [...prev, locId]))
     }
 
+    useEffect(() => {
+        if (newLocationPosition) {
+            fetchAddressFromCoords(newLocationPosition[0], newLocationPosition[1], setNewLocationAddress)
+        } else {
+            setNewLocationAddress("")
+        }
+    }, [newLocationPosition])
+
+    const handleLocationAddressSearch = (e) => {
+        e.preventDefault()
+        if (!locationAddressInput.trim()) return
+        fetchCoordsFromAddress(locationAddressInput, setNewLocationPosition, setNewLocationAddress, setLocationGeoError)
+    }
+
+    const handleAddLocationClick = () => {
+        setShowLocationDropdown(false)
+        setShowLocationModal(true)
+        setNewLocationName("")
+        setNewLocationDesc("")
+        setNewLocationPosition(null)
+        setNewLocationAddress("")
+        setLocationAddressInput("")
+        setLocationGeoError("")
+    }
+
+    const handleLocationModalClose = () => {
+        setShowLocationModal(false)
+    }
+
+    const handleLocationModalSubmit = async (e) => {
+        e.preventDefault()
+        if (!newLocationName.trim() || !newLocationPosition) return
+
+        try {
+            const res = await createLocation({
+                name: newLocationName,
+                description: newLocationDesc,
+                position: newLocationPosition,
+                address: newLocationAddress,
+            })
+            const newLoc = res.data
+            const updatedLocations = [
+                ...locations,
+                {
+                    _id: newLoc._id,
+                    name: newLoc.name,
+                    description: newLoc.description,
+                },
+            ]
+            setLocations(updatedLocations)
+            setSelectedLocations((prev) => [...prev, newLoc._id])
+            toast.success("Location created successfully")
+            setShowLocationModal(false)
+        } catch (error) {
+            toast.error("Failed to create location")
+            console.error(error)
+        }
+    }
+
     const onSubmit = async (data) => {
         try {
-            // Run validation checks before submission
             if (!isEditMode && !thumbnailFile && !adventure?.thumbnail) {
-                toast.error("Thumbnail image is required");
-                return;
+                toast.error("Thumbnail image is required")
+                return
             }
-            
+
             if (!isEditMode && (!mediaFiles.length) && (!adventure?.medias || adventure.medias.length === 0)) {
-                toast.error("At least one media file is required");
-                return;
+                toast.error("At least one media file is required")
+                return
             }
-            
-            // Validate thumbnail if exists
+
             if (thumbnailFile && (!validateFileType(thumbnailFile, ['image']) || !validateFileSize(thumbnailFile))) {
-                toast.error("Invalid thumbnail file. Please check size and format.");
-                return;
+                toast.error("Invalid thumbnail file. Please check size and format.")
+                return
             }
-            
-            // Validate preview video if exists
+
             if (previewVideoFile && !validateFileType(previewVideoFile, ['video'])) {
-                toast.error("Invalid preview video. Please check format.");
-                return;
+                toast.error("Invalid preview video. Please check format.")
+                return
             }
-            
-            // Validate media files if exist
+
             if (mediaFiles.length > 0) {
-                const validation = validateMediaFiles(mediaFiles);
+                const validation = validateMediaFiles(mediaFiles)
                 if (!validation.valid) {
-                    toast.error(validation.message);
-                    return;
+                    toast.error(validation.message)
+                    return
                 }
             }
-            
-            // If all validations pass, proceed with form submission
-            setIsSubmitting(true);
-            const toastId = toast.loading(isEditMode ? "Updating adventure..." : "Creating adventure...");
-            
-            const formData = new FormData();
-            formData.append("name", data.name);
-            data.location.forEach((locId) => formData.append("location", locId));
-            formData.append("description", data.description);
-            formData.append("exp", data.exp);
-            
+
+            setIsSubmitting(true)
+            const toastId = toast.loading(isEditMode ? "Updating adventure..." : "Creating adventure...")
+
+            const formData = new FormData()
+            formData.append("name", data.name)
+            data.location.forEach((locId) => formData.append("location", locId))
+            formData.append("description", data.description)
+            formData.append("exp", data.exp)
+
             if (isEditMode && id) {
-                formData.append("_id", id);
+                formData.append("_id", id)
             }
 
-            // Add thumbnail if available
             if (thumbnailFile) {
-                formData.append("thumbnail", thumbnailFile);
+                formData.append("thumbnail", thumbnailFile)
             }
 
-            // Add preview video if available
             if (previewVideoFile) {
-                formData.append("previewVideo", previewVideoFile);
+                formData.append("previewVideo", previewVideoFile)
             }
 
-            // Add regular media files
             mediaFiles.forEach((file) => {
-                formData.append("medias", file);
-            });
+                formData.append("medias", file)
+            })
 
             if (isEditMode) {
-                await updateAdventure(formData);
-                toast.success("Adventure updated successfully", { id: toastId });
+                await updateAdventure(formData)
+                toast.success("Adventure updated successfully", { id: toastId })
             } else {
-                await createAdventure(formData);
-                toast.success("Adventure created successfully", { id: toastId });
+                await createAdventure(formData)
+                toast.success("Adventure created successfully", { id: toastId })
             }
-            navigate("/admin/adventures");
+            navigate("/admin/adventures")
         } catch (error) {
-            toast.error(error.response?.data?.message || "Error saving adventure");
-            console.error(error);
+            toast.error(error.response?.data?.message || "Error saving adventure")
+            console.error(error)
         } finally {
-            setIsSubmitting(false);
+            setIsSubmitting(false)
         }
     }
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
+            <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="relative w-16 h-16">
+                        <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-black border-t-transparent animate-spin"></div>
+                    </div>
+                    <p className="text-gray-600 font-medium">Loading adventure...</p>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="container mx-auto py-6">
-            <div className="flex items-center mb-6">
-                <Button
-                    variant="ghost"
-                    onClick={() => navigate("/admin/adventures")}
-                    className="mr-4 p-2"
-                    aria-label="Go back"
-                >
-                    <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <h1 className="text-2xl font-bold">{isEditMode ? "Edit Adventure" : "Create New Adventure"}</h1>
-            </div>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-5xl mx-auto">
+                <div className="flex items-center gap-4 mb-8">
+                    <Button
+                        variant="ghost"
+                        onClick={() => navigate("/admin/adventures")}
+                        className="p-2 hover:bg-white/80 transition-all duration-200"
+                        aria-label="Go back"
+                    >
+                        <ArrowLeft className="h-6 w-6" />
+                    </Button>
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">
+                            {isEditMode ? "Edit Adventure" : "Create New Adventure"}
+                        </h1>
+                        <p className="text-gray-600 mt-1">
+                            {isEditMode ? "Update adventure details and media" : "Add a new adventure experience"}
+                        </p>
+                    </div>
+                </div>
 
-            <Card className="bg-white shadow-md">
-                <CardHeader>
-                    <CardTitle className="text-xl">
-                        {isEditMode ? "Update adventure details" : "Enter adventure details"}
-                        <br />
-                        <span className="text-muted-foreground text-sm">Please also add Media to submit the adventure</span>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                        <Tabs defaultValue="basic" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2 mb-6">
-                                <TabsTrigger value="basic" className="text-base py-3">
-                                    Basic Info
-                                </TabsTrigger>
-                                <TabsTrigger value="media" className="text-base py-3">
-                                    Media
-                                </TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="basic" className="space-y-6 pt-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="name" className="text-base">
-                                            Adventure Name
-                                        </Label>
-                                        <Input
-                                            id="name"
-                                            placeholder="Enter adventure name"
-                                            disabled={isSubmitting}
-                                            {...register("name", { 
-                                                required: "Adventure name is required",
-                                                minLength: { value: 3, message: "Name must be at least 3 characters" },
-                                                maxLength: { value: 100, message: "Name must be less than 100 characters" }
-                                            })}
-                                            className={`w-full p-3 ${errors.name ? "border-red-500" : ""}`}
-                                        />
-                                        {errors.name && (
-                                            <div className="flex items-center text-red-500 text-sm mt-1">
-                                                <AlertCircle className="h-4 w-4 mr-1" />
-                                                <span>{errors.name.message}</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="exp" className="text-base">
-                                            Experience Points
-                                        </Label>
-                                        <Input
-                                            id="exp"
-                                            placeholder="Enter experience points"
-                                            type="number"
-                                            disabled={isSubmitting}
-                                            {...register("exp", { 
-                                                required: "Experience points are required",
-                                                min: { value: 0, message: "Experience points must be positive" },
-                                                max: { value: 10000, message: "Experience points cannot exceed 10,000" },
-                                                valueAsNumber: true
-                                            })}
-                                            className={`w-full p-3 ${errors.exp ? "border-red-500" : ""}`}
-                                        />
-                                        {errors.exp && (
-                                            <div className="flex items-center text-red-500 text-sm mt-1">
-                                                <AlertCircle className="h-4 w-4 mr-1" />
-                                                <span>{errors.exp.message}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="location" className="text-base">
-                                        Location
-                                    </Label>
-                                    <div
-                                        className={`block w-full border ${errors.location ? "border-red-500" : ""} rounded-md p-3 bg-white cursor-pointer select-none`}
-                                        onClick={() => setShowLocationDropdown((v) => !v)}
+                <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+                    <CardContent className="p-8">
+                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                            <Tabs defaultValue="basic" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2 mb-8 p-1 bg-gray-100 rounded-lg h-auto">
+                                    <TabsTrigger
+                                        value="basic"
+                                        className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md py-3 px-6 font-semibold transition-all duration-200 flex items-center justify-center gap-2"
                                     >
-                                        {selectedLocations.length === 0
-                                            ? "Select location(s)"
-                                            : locations
-                                                .filter((loc) => selectedLocations.includes(loc._id))
-                                                .map((loc) => loc.name)
-                                                .join(", ")}
-                                    </div>
-                                    {showLocationDropdown && (
-                                        <div className="absolute z-10 bg-white border rounded-md mt-1 w-full max-w-2xl max-h-60 overflow-auto shadow-lg">
-                                            {locations.length === 0 ? (
-                                                <div className="px-4 py-3 text-gray-500">No locations available</div>
-                                            ) : (
-                                                locations.map((loc) => (
-                                                    <div
-                                                        key={loc._id}
-                                                        className="flex items-center px-4 py-3 hover:bg-gray-100 cursor-pointer"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            toggleLocation(loc._id)
-                                                        }}
-                                                    >
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedLocations.includes(loc._id)}
-                                                            readOnly
-                                                            className="mr-3"
-                                                        />
-                                                        <span>{loc.name}</span>
-                                                    </div>
-                                                ))
+                                        <Info className="h-4 w-4" />
+                                        Basic Info
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="media"
+                                        className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md py-3 px-6 font-semibold transition-all duration-200 flex items-center justify-center gap-2"
+                                    >
+                                        <Upload className="h-4 w-4" />
+                                        Media
+                                    </TabsTrigger>
+                                </TabsList>
+
+                                <TabsContent value="basic" className="space-y-6 mt-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="name" className="text-sm font-semibold text-gray-900">
+                                                Adventure Name <span className="text-red-500">*</span>
+                                            </Label>
+                                            <Input
+                                                id="name"
+                                                placeholder="Enter adventure name"
+                                                disabled={isSubmitting}
+                                                {...register("name", {
+                                                    required: "Adventure name is required",
+                                                    minLength: { value: 3, message: "Name must be at least 3 characters" },
+                                                    maxLength: { value: 100, message: "Name must be less than 100 characters" }
+                                                })}
+                                                className={`h-11 transition-all duration-200 ${errors.name ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "focus:border-black focus:ring-black"}`}
+                                            />
+                                            {errors.name && (
+                                                <div className="flex items-center gap-1.5 text-red-600 text-sm mt-1.5">
+                                                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                                    <span>{errors.name.message}</span>
+                                                </div>
                                             )}
                                         </div>
-                                    )}
-                                    {errors.location && (
-                                        <div className="flex items-center text-red-500 text-sm mt-1">
-                                            <AlertCircle className="h-4 w-4 mr-1" />
-                                            <span>{errors.location.message}</span>
-                                        </div>
-                                    )}
-                                </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="description" className="text-base">
-                                        Description
-                                    </Label>
-                                    <Input
-                                        id="description"
-                                        placeholder="Enter adventure description"
-                                        disabled={isSubmitting}
-                                        {...register("description", { 
-                                            required: "Description is required",
-                                            minLength: { value: 20, message: "Description must be at least 20 characters" },
-                                            maxLength: { value: 500, message: "Description must be less than 500 characters" }
-                                        })}
-                                        className={`w-full p-3 ${errors.description ? "border-red-500" : ""}`}
-                                    />
-                                    {errors.description && (
-                                        <div className="flex items-center text-red-500 text-sm mt-1">
-                                            <AlertCircle className="h-4 w-4 mr-1" />
-                                            <span>{errors.description.message}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </TabsContent>
-
-                            <TabsContent value="media" className="space-y-8 pt-4">
-                                {/* Thumbnail Image */}
-                                <div className="space-y-3">
-                                    <Label className="flex items-center gap-2 text-base font-medium">
-                                        <ImageIcon size={18} /> Thumbnail Image {!isEditMode && <span className="text-red-500">*</span>}
-                                    </Label>
-                                    <Input
-                                        id="thumbnail-input"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => {
-                                            const file = e.target.files[0];
-                                            if (file) {
-                                                // Validate file type
-                                                if (!validateFileType(file, ['image'])) {
-                                                    toast.error('Please select an image file');
-                                                    e.target.value = '';
-                                                    return;
-                                                }
-                                                
-                                                // Validate file size
-                                                if (!validateFileSize(file)) {
-                                                    toast.error(`Thumbnail image must be less than ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
-                                                    e.target.value = '';
-                                                    return;
-                                                }
-                                                
-                                                setThumbnailFile(file);
-                                                setValue('thumbnail', file, { shouldValidate: true });
-                                            }
-                                        }}
-                                        className={`block w-full p-3 ${errors.thumbnail ? "border-red-500" : ""}`}
-                                        disabled={isSubmitting}
-                                    />
-                                    {errors.thumbnail && (
-                                        <div className="flex items-center text-red-500 text-sm mt-1">
-                                            <AlertCircle className="h-4 w-4 mr-1" />
-                                            <span>{errors.thumbnail.message}</span>
-                                        </div>
-                                    )}
-                                    {thumbnailPreview && (
-                                        <div className="relative mt-3 inline-block">
-                                            <img
-                                                src={thumbnailPreview.url || "/placeholder.svg"}
-                                                alt="Thumbnail preview"
-                                                className="h-48 w-auto object-cover rounded-md border border-gray-200"
+                                        <div className="space-y-2">
+                                            <Label htmlFor="exp" className="text-sm font-semibold text-gray-900">
+                                                Experience Points <span className="text-red-500">*</span>
+                                            </Label>
+                                            <Input
+                                                id="exp"
+                                                placeholder="Enter experience points"
+                                                type="number"
+                                                disabled={isSubmitting}
+                                                {...register("exp", {
+                                                    required: "Experience points are required",
+                                                    min: { value: 0, message: "Experience points must be positive" },
+                                                    max: { value: 10000, message: "Experience points cannot exceed 10,000" },
+                                                    valueAsNumber: true
+                                                })}
+                                                className={`h-11 transition-all duration-200 ${errors.exp ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "focus:border-black focus:ring-black"}`}
                                             />
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                size="sm"
-                                                className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full"
-                                                onClick={() => {
-                                                    handleRemoveThumbnail();
-                                                    setValue('thumbnail', null, { shouldValidate: true });
-                                                    document.getElementById('thumbnail-input').value = '';
-                                                }}
-                                            >
-                                                ×
-                                            </Button>
+                                            {errors.exp && (
+                                                <div className="flex items-center gap-1.5 text-red-600 text-sm mt-1.5">
+                                                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                                    <span>{errors.exp.message}</span>
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-
-                                {/* Preview Video */}
-                                <div className="space-y-3">
-                                    <Label className="flex items-center gap-2 text-base font-medium">
-                                        <Video size={18} /> Preview Video
-                                    </Label>
-                                    <Input
-                                        id="preview-video-input"
-                                        type="file"
-                                        accept="video/*"
-                                        onChange={(e) => {
-                                            const file = e.target.files[0];
-                                            if (file) {
-                                                // Validate file type
-                                                if (!validateFileType(file, ['video'])) {
-                                                    toast.error('Please select a video file');
-                                                    e.target.value = '';
-                                                    return;
-                                                }
-                                                
-                                                // Validate file size (videos can be larger)
-                                                const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
-                                                if (file.size > MAX_VIDEO_SIZE) {
-                                                    toast.error(`Preview video must be less than ${MAX_VIDEO_SIZE / (1024 * 1024)}MB`);
-                                                    e.target.value = '';
-                                                    return;
-                                                }
-                                                
-                                                setPreviewVideoFile(file);
-                                                setValue('previewVideo', file, { shouldValidate: true });
-                                            }
-                                        }}
-                                        className={`block w-full p-3 ${errors.previewVideo ? "border-red-500" : ""}`}
-                                        disabled={isSubmitting}
-                                    />
-                                    {errors.previewVideo && (
-                                        <div className="flex items-center text-red-500 text-sm mt-1">
-                                            <AlertCircle className="h-4 w-4 mr-1" />
-                                            <span>{errors.previewVideo.message}</span>
-                                        </div>
-                                    )}
-                                    {previewVideoPreview && (
-                                        <div className="relative mt-3 inline-block">
-                                            <video
-                                                src={previewVideoPreview.url}
-                                                controls
-                                                className="h-48 w-auto object-cover rounded-md border border-gray-200"
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                size="sm"
-                                                className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full"
-                                                onClick={() => {
-                                                    handleRemovePreviewVideo();
-                                                    setValue('previewVideo', null);
-                                                    document.getElementById('preview-video-input').value = '';
-                                                }}
-                                            >
-                                                ×
-                                            </Button>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Regular Media Files */}
-                                <div className="space-y-3">
-                                    <Label className="text-base font-medium">Additional Media (images/videos) {!isEditMode && <span className="text-red-500">*</span>}</Label>
-                                    <Input
-                                        id="media-files-input"
-                                        type="file"
-                                        accept="image/*,video/*"
-                                        multiple
-                                        onChange={(e) => {
-                                            const files = Array.from(e.target.files);
-                                            if (files && files.length > 0) {
-                                                // Validate using the helper function
-                                                const validation = validateMediaFiles(files);
-                                                if (!validation.valid) {
-                                                    toast.error(validation.message);
-                                                    e.target.value = '';
-                                                    return;
-                                                }
-                                                
-                                                setMediaFiles(files);
-                                                setValue('medias', files, { shouldValidate: true });
-                                            }
-                                        }}
-                                        className={`block w-full p-3 ${errors.medias ? "border-red-500" : ""}`}
-                                        disabled={isSubmitting}
-                                    />
-                                    {errors.medias && (
-                                        <div className="flex items-center text-red-500 text-sm mt-1">
-                                            <AlertCircle className="h-4 w-4 mr-1" />
-                                            <span>{errors.medias.message}</span>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Display stats about media */}
-                                    {mediaFiles.length > 0 && (
-                                        <div className="text-sm text-gray-600 mt-2">
-                                            {mediaFiles.length} file(s) selected. 
-                                            Total size: {(mediaFiles.reduce((sum, file) => sum + file.size, 0) / (1024 * 1024)).toFixed(2)}MB
-                                        </div>
-                                    )}
-                                    
-                                    <div className="mt-4">
-                                        <MediaPreview mediaPreviews={mediaPreviews} onRemove={handleRemoveMedia} isSubmitting={isSubmitting} />
                                     </div>
-                                </div>
-                            </TabsContent>
-                        </Tabs>
 
-                        <div className="flex justify-end space-x-4 pt-6 mt-6 border-t">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => navigate("/admin/adventures")}
-                                disabled={isSubmitting}
-                                className="px-6 py-2.5"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={isSubmitting || Object.keys(errors).length > 0}
-                                className="px-8 py-2.5 bg-black hover:bg-gray-800 text-white"
-                            >
-                                {isSubmitting ? (
-                                    <span className="flex items-center">
-                                        <span className="animate-spin mr-2 h-4 w-4 border-t-2 border-b-2 border-white rounded-full"></span>
-                                        {isEditMode ? "Updating..." : "Creating..."}
-                                    </span>
-                                ) : isEditMode ? (
-                                    "Update Adventure"
-                                ) : (
-                                    "Create Adventure"
+                                    <div className="space-y-2">
+                                        <Label htmlFor="location" className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                                            <MapPin className="h-4 w-4" />
+                                            Location <span className="text-red-500">*</span>
+                                        </Label>
+                                        <div className="relative">
+                                            <div
+                                                className={`block w-full border rounded-lg p-3 bg-white cursor-pointer select-none transition-all duration-200 hover:border-gray-400 ${errors.location ? "border-red-500" : "border-gray-300"}`}
+                                                onClick={() => setShowLocationDropdown((v) => !v)}
+                                            >
+                                                {selectedLocations.length === 0
+                                                    ? <span className="text-gray-500">Select location(s)</span>
+                                                    : <span className="text-gray-900">{locations
+                                                        .filter((loc) => selectedLocations.includes(loc._id))
+                                                        .map((loc) => loc.name)
+                                                        .join(", ")}</span>}
+                                            </div>
+                                            {showLocationDropdown && (
+                                                <div className="absolute left-0 right-0 z-50 bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                                    {locations.length === 0 ? (
+                                                        <div className="px-4 py-3 text-gray-500">No locations available</div>
+                                                    ) : (
+                                                        locations.map((loc) => (
+                                                            <div
+                                                                key={loc._id}
+                                                                className="flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    toggleLocation(loc._id)
+                                                                }}
+                                                            >
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={selectedLocations.includes(loc._id)}
+                                                                    readOnly
+                                                                    className="mr-3 h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                                                                />
+                                                                <span className="text-gray-900">{loc.name}</span>
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                    <div className="border-t border-gray-200">
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                handleAddLocationClick()
+                                                            }}
+                                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-black font-medium hover:bg-gray-50 transition-colors duration-150"
+                                                        >
+                                                            <Plus className="h-4 w-4" />
+                                                            Add New Location
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {errors.location && (
+                                            <div className="flex items-center gap-1.5 text-red-600 text-sm mt-1.5">
+                                                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                                <span>{errors.location.message}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="description" className="text-sm font-semibold text-gray-900">
+                                            Description <span className="text-red-500">*</span>
+                                        </Label>
+                                        <textarea
+                                            id="description"
+                                            placeholder="Enter adventure description"
+                                            disabled={isSubmitting}
+                                            {...register("description", {
+                                                required: "Description is required",
+                                                minLength: { value: 20, message: "Description must be at least 20 characters" },
+                                                maxLength: { value: 500, message: "Description must be less than 500 characters" }
+                                            })}
+                                            className={`w-full min-h-[120px] p-3 border rounded-lg transition-all duration-200 resize-none ${errors.description ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-black focus:ring-black"}`}
+                                        />
+                                        {errors.description && (
+                                            <div className="flex items-center gap-1.5 text-red-600 text-sm mt-1.5">
+                                                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                                <span>{errors.description.message}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
+
+                                <TabsContent value="media" className="space-y-8 mt-6">
+                                    <div className="space-y-3">
+                                        <Label className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                                            <ImageIcon className="h-4 w-4" />
+                                            Thumbnail Image
+                                            {!isEditMode && <span className="text-red-500">*</span>}
+                                        </Label>
+                                        <div className="relative">
+                                            <Input
+                                                id="thumbnail-input"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0]
+                                                    if (file) {
+                                                        if (!validateFileType(file, ['image'])) {
+                                                            toast.error('Please select an image file')
+                                                            e.target.value = ''
+                                                            return
+                                                        }
+
+                                                        if (!validateFileSize(file)) {
+                                                            toast.error(`Thumbnail image must be less than ${MAX_FILE_SIZE / (1024 * 1024)}MB`)
+                                                            e.target.value = ''
+                                                            return
+                                                        }
+
+                                                        setThumbnailFile(file)
+                                                        setValue('thumbnail', file, { shouldValidate: true })
+                                                    }
+                                                }}
+                                                className={`h-11 transition-all duration-200 ${errors.thumbnail ? "border-red-500" : ""}`}
+                                                disabled={isSubmitting}
+                                            />
+                                        </div>
+                                        {errors.thumbnail && (
+                                            <div className="flex items-center gap-1.5 text-red-600 text-sm mt-1.5">
+                                                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                                <span>{errors.thumbnail.message}</span>
+                                            </div>
+                                        )}
+                                        {thumbnailPreview && (
+                                            <div className="relative inline-block mt-4">
+                                                <img
+                                                    src={thumbnailPreview.url || "/placeholder.svg"}
+                                                    alt="Thumbnail preview"
+                                                    className="h-48 w-auto object-cover rounded-lg border-2 border-gray-200 shadow-md"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    className="absolute -top-2 -right-2 h-8 w-8 p-0 rounded-full shadow-lg"
+                                                    onClick={() => {
+                                                        handleRemoveThumbnail()
+                                                        setValue('thumbnail', null, { shouldValidate: true })
+                                                        document.getElementById('thumbnail-input').value = ''
+                                                    }}
+                                                >
+                                                    ×
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <Label className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                                            <Video className="h-4 w-4" />
+                                            Preview Video
+                                        </Label>
+                                        <Input
+                                            id="preview-video-input"
+                                            type="file"
+                                            accept="video/*"
+                                            onChange={(e) => {
+                                                const file = e.target.files[0]
+                                                if (file) {
+                                                    if (!validateFileType(file, ['video'])) {
+                                                        toast.error('Please select a video file')
+                                                        e.target.value = ''
+                                                        return
+                                                    }
+
+                                                    const MAX_VIDEO_SIZE = 50 * 1024 * 1024
+                                                    if (file.size > MAX_VIDEO_SIZE) {
+                                                        toast.error(`Preview video must be less than ${MAX_VIDEO_SIZE / (1024 * 1024)}MB`)
+                                                        e.target.value = ''
+                                                        return
+                                                    }
+
+                                                    setPreviewVideoFile(file)
+                                                    setValue('previewVideo', file, { shouldValidate: true })
+                                                }
+                                            }}
+                                            className={`h-11 transition-all duration-200 ${errors.previewVideo ? "border-red-500" : ""}`}
+                                            disabled={isSubmitting}
+                                        />
+                                        {errors.previewVideo && (
+                                            <div className="flex items-center gap-1.5 text-red-600 text-sm mt-1.5">
+                                                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                                <span>{errors.previewVideo.message}</span>
+                                            </div>
+                                        )}
+                                        {previewVideoPreview && (
+                                            <div className="relative inline-block mt-4">
+                                                <video
+                                                    src={previewVideoPreview.url}
+                                                    controls
+                                                    className="h-48 w-auto object-cover rounded-lg border-2 border-gray-200 shadow-md"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    className="absolute -top-2 -right-2 h-8 w-8 p-0 rounded-full shadow-lg"
+                                                    onClick={() => {
+                                                        handleRemovePreviewVideo()
+                                                        setValue('previewVideo', null)
+                                                        document.getElementById('preview-video-input').value = ''
+                                                    }}
+                                                >
+                                                    ×
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <Label className="text-sm font-semibold text-gray-900">
+                                            Additional Media (images/videos)
+                                            {!isEditMode && <span className="text-red-500">*</span>}
+                                        </Label>
+                                        <Input
+                                            id="media-files-input"
+                                            type="file"
+                                            accept="image/*,video/*"
+                                            multiple
+                                            onChange={(e) => {
+                                                const files = Array.from(e.target.files)
+                                                if (files && files.length > 0) {
+                                                    const validation = validateMediaFiles(files)
+                                                    if (!validation.valid) {
+                                                        toast.error(validation.message)
+                                                        e.target.value = ''
+                                                        return
+                                                    }
+
+                                                    setMediaFiles(files)
+                                                    setValue('medias', files, { shouldValidate: true })
+                                                }
+                                            }}
+                                            className={`h-11 transition-all duration-200 ${errors.medias ? "border-red-500" : ""}`}
+                                            disabled={isSubmitting}
+                                        />
+                                        {errors.medias && (
+                                            <div className="flex items-center gap-1.5 text-red-600 text-sm mt-1.5">
+                                                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                                <span>{errors.medias.message}</span>
+                                            </div>
+                                        )}
+
+                                        {mediaFiles.length > 0 && (
+                                            <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700">
+                                                <span className="font-semibold">{mediaFiles.length}</span> file(s) selected •
+                                                Total size: <span className="font-semibold">{(mediaFiles.reduce((sum, file) => sum + file.size, 0) / (1024 * 1024)).toFixed(2)}MB</span>
+                                            </div>
+                                        )}
+
+                                        <div className="mt-4">
+                                            <MediaPreview mediaPreviews={mediaPreviews} onRemove={handleRemoveMedia} isSubmitting={isSubmitting} />
+                                        </div>
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
+
+                            <div className="flex justify-end gap-4 pt-6 mt-6 border-t border-gray-200">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => navigate("/admin/adventures")}
+                                    disabled={isSubmitting}
+                                    className="px-6 border-gray-300 hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={isSubmitting || Object.keys(errors).length > 0}
+                                    className="px-8 bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                                >
+                                    {isSubmitting ? (
+                                        <span className="flex items-center gap-2">
+                                            <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                                            {isEditMode ? "Updating..." : "Creating..."}
+                                        </span>
+                                    ) : isEditMode ? (
+                                        "Update Adventure"
+                                    ) : (
+                                        "Create Adventure"
+                                    )}
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                <Dialog open={showLocationModal} onOpenChange={handleLocationModalClose}>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                            <MapPin className="h-6 w-6" />
+                            Add New Location
+                        </DialogTitle>
+                        <form onSubmit={handleLocationModalSubmit} className="flex flex-col gap-6 mt-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-gray-900">
+                                    Location Name <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                    placeholder="Enter location name"
+                                    value={newLocationName}
+                                    onChange={(e) => setNewLocationName(e.target.value)}
+                                    required
+                                    className="h-11"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-gray-900">Description</label>
+                                <Input
+                                    placeholder="Enter description (optional)"
+                                    value={newLocationDesc}
+                                    onChange={(e) => setNewLocationDesc(e.target.value)}
+                                    className="h-11"
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-sm font-semibold text-gray-900">
+                                    Map Location <span className="text-red-500">*</span>
+                                </label>
+                                <p className="text-sm text-gray-600">Click on the map or search by address</p>
+
+                                <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <Input
+                                            placeholder="Search address..."
+                                            value={locationAddressInput}
+                                            onChange={(e) => setLocationAddressInput(e.target.value)}
+                                            className="pl-10 h-11"
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        onClick={handleLocationAddressSearch}
+                                        variant="outline"
+                                        className="px-6"
+                                    >
+                                        Find
+                                    </Button>
+                                </div>
+
+                                {locationGeoError && (
+                                    <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">
+                                        {locationGeoError}
+                                    </div>
                                 )}
-                            </Button>
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
+
+                                <div className="rounded-lg overflow-hidden border-2 border-gray-200 shadow-md">
+                                    <MapContainer
+                                        center={newLocationPosition || [27.7, 85.3]}
+                                        zoom={newLocationPosition ? 14 : 6}
+                                        style={{ height: "350px", width: "100%" }}
+                                    >
+                                        <TileLayer
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                            attribution="&copy; OpenStreetMap contributors"
+                                        />
+                                        <FocusMapOnPosition position={newLocationPosition} />
+                                        <LocationPicker position={newLocationPosition} setPosition={setNewLocationPosition} />
+                                    </MapContainer>
+                                </div>
+
+                                {newLocationPosition && (
+                                    <div className="bg-gray-50 rounded-lg p-4 space-y-1">
+                                        <div className="text-sm font-medium text-gray-900">
+                                            Coordinates: {newLocationPosition[0].toFixed(5)}, {newLocationPosition[1].toFixed(5)}
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                            {newLocationAddress || "Loading address..."}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3 justify-end pt-4 border-t">
+                                <Button type="button" variant="outline" onClick={handleLocationModalClose} className="px-6">
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={!newLocationPosition || !newLocationName.trim()}
+                                    className="px-8 bg-black hover:bg-gray-800 text-white"
+                                >
+                                    Add Location
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            </div>
         </div>
     )
 }

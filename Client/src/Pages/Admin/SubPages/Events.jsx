@@ -1,7 +1,5 @@
-
 import { useState, useRef, useEffect } from "react"
-import { motion } from "framer-motion"
-import { Search, Plus, Calendar, MapPin, Clock, Eye, Edit, Trash2, Star, Compass, X } from "lucide-react"
+import { Search, Plus, Calendar, MapPin, Clock, Eye, Edit, Trash2, Star, Compass, X, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../components/ui/card"
@@ -24,6 +22,29 @@ import { useAdventures } from "../../../hooks/useAdventure"
 import MediaPreview from "../../../components/MediaPreview"
 import MapLocationPicker from "../../../components/MapLocationPicker"
 
+const INITIAL_FORM_STATE = {
+    title: "",
+    description: "",
+    date: "",
+    startTime: "",
+    endTime: "",
+    location: "",
+    city: "",
+    country: "",
+    coordinates: { latitude: null, longitude: null },
+    mapEmbedUrl: "",
+    level: 1,
+    price: "",
+    images: [],
+    adventures: [],
+    isNftEvent: false,
+    nftReward: { nftName: "", nftDescription: "", nftImage: "" },
+}
+
+const MAX_IMAGES = 6
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024
+const VALID_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
+
 export default function EventsPage() {
     const [searchTerm, setSearchTerm] = useState("")
     const [page, setPage] = useState(1)
@@ -31,51 +52,21 @@ export default function EventsPage() {
     const [showEditModal, setShowEditModal] = useState(false)
     const [showDetailsModal, setShowDetailsModal] = useState(false)
     const [selectedEvent, setSelectedEvent] = useState(null)
-    const [formData, setFormData] = useState({
-        title: "",
-        description: "",
-        date: "",
-        startTime: "",
-        endTime: "",
-        location: "",
-        city: "",
-        country: "",
-        coordinates: {
-            latitude: null,
-            longitude: null,
-        },
-        mapEmbedUrl: "",
-        level: 1,
-        price: 0,
-        images: [],
-        adventures: [], // Array of adventure IDs
-        isNftEvent: false,
-        nftReward: {
-            nftName: "",
-            nftDescription: "",
-            nftImage: "",
-        },
-    })
-    const [selectedAdventures, setSelectedAdventures] = useState([]) // For UI display
+    const [formData, setFormData] = useState(INITIAL_FORM_STATE)
+    const [selectedAdventures, setSelectedAdventures] = useState([])
     const [showAdventureSelection, setShowAdventureSelection] = useState(false)
     const [mediaPreviews, setMediaPreviews] = useState([])
     const [isSubmitting, setIsSubmitting] = useState(false)
     const fileInputRef = useRef(null)
     const limit = 12
 
-    const { events, isLoading, totalPages, error } = useEvents({
-        search: searchTerm,
-        page,
-        limit,
-    })
-
+    const { events, isLoading, totalPages, error } = useEvents({ search: searchTerm, page, limit })
     const { adventures, isLoading: adventuresLoading } = useAdventures()
 
-    // Cleanup function to revoke object URLs on unmount
     useEffect(() => {
         return () => {
             mediaPreviews.forEach((preview) => {
-                if (preview.url && preview.url.startsWith("blob:")) {
+                if (preview.url?.startsWith("blob:")) {
                     URL.revokeObjectURL(preview.url)
                 }
             })
@@ -83,31 +74,7 @@ export default function EventsPage() {
     }, [mediaPreviews])
 
     const resetForm = () => {
-        setFormData({
-            title: "",
-            description: "",
-            date: "",
-            startTime: "",
-            endTime: "",
-            location: "",
-            city: "",
-            country: "",
-            coordinates: {
-                latitude: null,
-                longitude: null,
-            },
-            mapEmbedUrl: "",
-            level: 1,
-            price: 0,
-            images: [],
-            adventures: [],
-            isNftEvent: false,
-            nftReward: {
-                nftName: "",
-                nftDescription: "",
-                nftImage: "",
-            },
-        })
+        setFormData(INITIAL_FORM_STATE)
         setSelectedAdventures([])
         setMediaPreviews([])
         if (fileInputRef.current) {
@@ -117,21 +84,18 @@ export default function EventsPage() {
 
     const handleImageUpload = (e) => {
         const files = Array.from(e.target.files)
-        const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
-        const maxSize = 10 * 1024 * 1024 // 10MB
-        const maxImages = 6 // Maximum number of images
 
-        if (formData.images.length + files.length > maxImages) {
-            toast.error(`You can upload up to ${maxImages} images only`)
+        if (formData.images.length + files.length > MAX_IMAGES) {
+            toast.error(`You can upload up to ${MAX_IMAGES} images only`)
             return
         }
 
         const validFiles = files.filter((file) => {
-            if (!validTypes.includes(file.type)) {
+            if (!VALID_IMAGE_TYPES.includes(file.type)) {
                 toast.error(`${file.name} is not a valid image type`)
                 return false
             }
-            if (file.size > maxSize) {
+            if (file.size > MAX_IMAGE_SIZE) {
                 toast.error(`${file.name} is too large (max 10MB)`)
                 return false
             }
@@ -146,10 +110,7 @@ export default function EventsPage() {
             }))
 
             setMediaPreviews((prev) => [...prev, ...newPreviews])
-            setFormData((prev) => ({
-                ...prev,
-                images: [...prev.images, ...validFiles],
-            }))
+            setFormData((prev) => ({ ...prev, images: [...prev.images, ...validFiles] }))
         }
     }
 
@@ -158,7 +119,6 @@ export default function EventsPage() {
             const newPreviews = [...prev]
             const removedItem = newPreviews[index]
 
-            // Clean up the object URL to prevent memory leaks (only for newly uploaded files)
             if (removedItem?.url?.startsWith("blob:")) {
                 URL.revokeObjectURL(removedItem.url)
             }
@@ -167,55 +127,36 @@ export default function EventsPage() {
             return newPreviews
         })
 
-        // Only remove from images array if it's a new upload (not existing)
         setFormData((prev) => {
             const imageToRemove = mediaPreviews[index]
             if (imageToRemove && !imageToRemove.isExisting) {
-                // Find the corresponding file in the images array and remove it
                 return {
                     ...prev,
-                    images: prev.images.filter((_, i) => {
-                        // This is a simplified approach - in a real app you might want better tracking
-                        return i !== index - mediaPreviews.filter((p) => p.isExisting).length
-                    }),
+                    images: prev.images.filter((_, i) => i !== index - mediaPreviews.filter((p) => p.isExisting).length),
                 }
             }
             return prev
         })
     }
 
-    // Adventure selection handlers
     const handleAdventureToggle = (adventure) => {
-        const isSelected = selectedAdventures.some(a => a._id === adventure._id)
-        if (isSelected) {
-            const updated = selectedAdventures.filter(a => a._id !== adventure._id)
-            setSelectedAdventures(updated)
-            setFormData(prev => ({
-                ...prev,
-                adventures: updated.map(a => a._id)
-            }))
-        } else {
-            const updated = [...selectedAdventures, adventure]
-            setSelectedAdventures(updated)
-            setFormData(prev => ({
-                ...prev,
-                adventures: updated.map(a => a._id)
-            }))
-        }
+        const isSelected = selectedAdventures.some((a) => a._id === adventure._id)
+        const updated = isSelected
+            ? selectedAdventures.filter((a) => a._id !== adventure._id)
+            : [...selectedAdventures, adventure]
+
+        setSelectedAdventures(updated)
+        setFormData((prev) => ({ ...prev, adventures: updated.map((a) => a._id) }))
     }
 
     const removeSelectedAdventure = (adventureId) => {
-        const updated = selectedAdventures.filter(a => a._id !== adventureId)
+        const updated = selectedAdventures.filter((a) => a._id !== adventureId)
         setSelectedAdventures(updated)
-        setFormData(prev => ({
-            ...prev,
-            adventures: updated.map(a => a._id)
-        }))
+        setFormData((prev) => ({ ...prev, adventures: updated.map((a) => a._id) }))
     }
 
     const handleCreateEvent = async (e) => {
         e.preventDefault()
-        // Ensure at least one adventure selected
         if (!formData.adventures || formData.adventures.length === 0) {
             toast.error("Please select at least one adventure for this event.")
             return
@@ -226,7 +167,7 @@ export default function EventsPage() {
             toast.success("Event created successfully")
             setShowCreateModal(false)
             resetForm()
-            window.location.reload() // Refresh events list
+            window.location.reload()
         } catch (error) {
             toast.error("Failed to create event")
             console.error("Create event error:", error)
@@ -237,7 +178,6 @@ export default function EventsPage() {
 
     const handleUpdateEvent = async (e) => {
         e.preventDefault()
-        // Ensure at least one adventure selected
         if (!formData.adventures || formData.adventures.length === 0) {
             toast.error("Please select at least one adventure for this event.")
             return
@@ -249,7 +189,7 @@ export default function EventsPage() {
             setShowEditModal(false)
             resetForm()
             setSelectedEvent(null)
-            window.location.reload() // Refresh events list
+            window.location.reload()
         } catch (error) {
             toast.error("Failed to update event")
             console.error("Update event error:", error)
@@ -263,7 +203,7 @@ export default function EventsPage() {
             try {
                 await deleteEvent(eventId)
                 toast.success("Event deleted successfully")
-                window.location.reload() // Refresh events list
+                window.location.reload()
             } catch (error) {
                 toast.error("Failed to delete event")
             }
@@ -275,7 +215,7 @@ export default function EventsPage() {
         setFormData({
             title: event.title,
             description: event.description,
-            date: event.date.split("T")[0], // Format date for input
+            date: event.date.split("T")[0],
             startTime: event.startTime || "",
             endTime: event.endTime || "",
             location: event.location,
@@ -288,8 +228,8 @@ export default function EventsPage() {
             mapEmbedUrl: event.mapEmbedUrl || "",
             level: event.level || 1,
             price: event.price || 0,
-            images: [], // Reset images array for new uploads
-            adventures: event.adventures?.map(a => a._id || a) || [],
+            images: [],
+            adventures: event.adventures?.map((a) => a._id || a) || [],
             isNftEvent: event.isNftEvent || false,
             nftReward: {
                 nftName: event.nftReward?.nftName || "",
@@ -298,14 +238,12 @@ export default function EventsPage() {
             },
         })
 
-        // Set selected adventures for UI
         if (event.adventures && event.adventures.length > 0) {
             setSelectedAdventures(event.adventures)
         } else {
             setSelectedAdventures([])
         }
 
-        // Set existing images in preview (if any)
         if (event.medias && event.medias.length > 0) {
             const existingPreviews = event.medias.map((imageUrl, index) => ({
                 name: `existing-image-${index}`,
@@ -345,7 +283,10 @@ export default function EventsPage() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+                <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-black border-t-transparent animate-spin"></div>
+                </div>
             </div>
         )
     }
@@ -354,7 +295,7 @@ export default function EventsPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen">
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Events</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Events</h2>
                     <p className="text-gray-600 mb-4">{error.message || "Failed to load events"}</p>
                     <Button onClick={() => window.location.reload()} variant="outline">
                         Try Again
@@ -363,56 +304,50 @@ export default function EventsPage() {
             </div>
         )
     }
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="container mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 max-w-full lg:max-w-7xl"
-        >
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-4 gap-3">
-                <div className="flex-1">
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Events Management</h1>
-                    <p className="text-muted-foreground mt-1 text-sm sm:text-base">Create and manage your events</p>
-                </div>
-                <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Event
-                </Button>
-            </div>
 
-            {/* Search */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+            <div className="max-w-7xl mx-auto space-y-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 className="text-4xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
+                            <Calendar className="h-10 w-10" />
+                            Events
+                        </h1>
+                        <p className="text-gray-600 mt-2">Create and manage adventure events</p>
+                    </div>
+                    <Button
+                        onClick={() => setShowCreateModal(true)}
+                        className="bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 group"
+                    >
+                        <Plus className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform duration-200" />
+                        Create Event
+                    </Button>
+                </div>
+
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <Input
                         type="search"
                         placeholder="Search events..."
-                        className="pl-8"
+                        className="pl-11 h-12 bg-white border-gray-300 focus:border-black focus:ring-black"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value)
+                            setPage(1)
+                        }}
                     />
                 </div>
-            </div>
 
-            {events && events.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-4 mb-4">
-                    {events.map((event) => (
-                        <motion.div
-                            key={event._id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="w-full"
-                        >
-                            <Card className="h-fit flex flex-col hover:shadow-lg transition-shadow duration-200">
-                                {/* Event Image */}
-                                <div className="relative h-36 sm:h-40 overflow-hidden rounded-t-lg bg-gray-100">
+                {events && events.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {events.map((event) => (
+                            <Card key={event._id} className="border-0 shadow-xl bg-white/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-200">
+                                <div className="relative h-48 overflow-hidden rounded-t-lg bg-gray-100">
                                     {event.medias && event.medias.length > 0 ? (
                                         <>
                                             <img
-                                                src={event.medias[0] || "/placeholder.svg"}
+                                                src={event.medias[0]}
                                                 alt={event.title}
                                                 className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                                                 onError={(e) => {
@@ -420,395 +355,397 @@ export default function EventsPage() {
                                                     e.target.nextSibling.style.display = "flex"
                                                 }}
                                             />
-                                            <div
-                                                className="hidden w-full h-full items-center justify-center bg-gray-100 text-gray-400"
-                                                style={{ display: "none" }}
-                                            >
-                                                <Calendar className="h-8 w-8" />
+                                            <div className="hidden w-full h-full items-center justify-center bg-gray-100 text-gray-400">
+                                                <Calendar className="h-12 w-12" />
                                             </div>
                                             {event.medias.length > 1 && (
-                                                <div className="absolute top-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded-md text-xs font-medium">
+                                                <div className="absolute top-3 right-3 bg-black/75 text-white px-3 py-1.5 rounded-md text-sm font-medium">
                                                     +{event.medias.length - 1} more
                                                 </div>
                                             )}
                                         </>
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-                                            <Calendar className="h-8 w-8" />
+                                            <Calendar className="h-12 w-12" />
                                         </div>
                                     )}
                                 </div>
 
-                                <CardHeader className="flex-shrink-0 p-3 sm:p-4">
-                                    <CardTitle className="line-clamp-2 text-sm sm:text-base font-semibold leading-tight">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="line-clamp-2 text-lg font-semibold text-gray-900">
                                         {event.title}
                                     </CardTitle>
-                                    <CardDescription className="line-clamp-2 text-xs sm:text-sm mt-1">
+                                    <CardDescription className="line-clamp-2 text-sm">
                                         {event.description}
                                     </CardDescription>
                                 </CardHeader>
 
-                                <CardContent className="flex-1 p-3 sm:p-4 pt-0">
-                                    <div className="space-y-2">
-                                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-                                            <Calendar className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                                            <span className="truncate">{formatDisplayDate(event.date)}</span>
-                                        </div>
-                                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-                                            <Clock className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                                            <span className="truncate">{formatDisplayTime(event.startTime)}</span>
-                                        </div>
-                                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-                                            <MapPin className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                                            <span className="truncate">{event.location}</span>
-                                        </div>
-                                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-                                            <Star className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                                            <span className="truncate">Level {event.level || 1}</span>
-                                        </div>
-
-                                        {/* Adventures indicator */}
-                                        {event.adventures && event.adventures.length > 0 && (
-                                            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-                                                <Compass className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                                                <span className="truncate">
-                                                    {event.adventures.length} adventure{event.adventures.length > 1 ? 's' : ''}
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {/* NFT indicator */}
-                                        {event.isNftEvent && (
-                                            <div className="flex items-center justify-between">
-                                                <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800">
-                                                    <Star className="mr-1 h-3 w-3" />
-                                                    NFT Event
-                                                </Badge>
-                                            </div>
-                                        )}
+                                <CardContent className="pb-3 space-y-2">
+                                    <div className="flex items-center text-sm text-gray-600">
+                                        <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
+                                        <span className="truncate">{formatDisplayDate(event.date)}</span>
                                     </div>
+                                    <div className="flex items-center text-sm text-gray-600">
+                                        <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
+                                        <span className="truncate">{formatDisplayTime(event.startTime)}</span>
+                                    </div>
+                                    <div className="flex items-center text-sm text-gray-600">
+                                        <MapPin className="mr-2 h-4 w-4 flex-shrink-0" />
+                                        <span className="truncate">{event.location}</span>
+                                    </div>
+                                    <div className="flex items-center text-sm text-gray-600">
+                                        <Star className="mr-2 h-4 w-4 flex-shrink-0" />
+                                        <span className="truncate">Level {event.level || 1}</span>
+                                    </div>
+
+                                    {event.adventures && event.adventures.length > 0 && (
+                                        <div className="flex items-center text-sm text-gray-600">
+                                            <Compass className="mr-2 h-4 w-4 flex-shrink-0" />
+                                            <span className="truncate">
+                                                {event.adventures.length} adventure{event.adventures.length > 1 ? "s" : ""}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {event.isNftEvent && (
+                                        <Badge variant="secondary" className="bg-gray-900 text-white hover:bg-gray-800">
+                                            <Star className="mr-1 h-3 w-3" />
+                                            NFT Event
+                                        </Badge>
+                                    )}
                                 </CardContent>
 
-                                <CardFooter className="flex flex-row sm:flex-col items-start gap-2 p-3 sm:p-4 pt-0">
+                                <CardFooter className="flex flex-col gap-2 pt-0">
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={() => openDetailsModal(event)}
-                                        className="w-full sm:w-auto text-xs sm:text-sm"
+                                        className="w-full border-gray-300 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all duration-200"
                                     >
-                                        <Eye className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                        View
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        View Details
                                     </Button>
-                                    <div className="flex gap-1 sm:gap-2 w-full sm:w-auto">
+                                    <div className="flex gap-2 w-full">
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             onClick={() => openEditModal(event)}
-                                            className="flex-1 sm:flex-none text-xs sm:text-sm"
+                                            className="flex-1 border-gray-300 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all duration-200"
                                         >
-                                            <Edit className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                            <span className="hidden sm:inline">Edit</span>
+                                            <Edit className="mr-2 h-4 w-4" />
+                                            Edit
                                         </Button>
                                         <Button
-                                            variant="destructive"
+                                            variant="outline"
                                             size="sm"
                                             onClick={() => handleDeleteEvent(event._id)}
-                                            className="flex-1 sm:flex-none text-xs sm:text-sm"
+                                            className="flex-1 border-gray-300 text-gray-900 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all duration-200"
                                         >
-                                            <Trash2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                            <span className="hidden sm:inline">Delete</span>
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Delete
                                         </Button>
                                     </div>
                                 </CardFooter>
                             </Card>
-                        </motion.div>
-                    ))}
-                </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center py-6 sm:py-8 px-4">
-                    <div className="text-center max-w-md">
-                        <Calendar className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                        <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No events found</h3>
-                        <p className="text-sm text-gray-500 mb-3">
-                            {searchTerm ? `No events match your search "${searchTerm}"` : "You haven't created any events yet."}
-                        </p>
+                        ))}
                     </div>
-                </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="flex justify-center items-center space-x-2 flex-wrap gap-2 mt-4">
-                    <Button
-                        variant="outline"
-                        onClick={() => setPage(Math.max(1, page - 1))}
-                        disabled={page === 1}
-                        className="text-xs sm:text-sm"
-                    >
-                        Previous
-                    </Button>
-
-                    <span className="text-xs sm:text-sm text-muted-foreground px-2">
-                        Page {page} of {totalPages}
-                    </span>
-
-                    <Button
-                        variant="outline"
-                        onClick={() => setPage(Math.min(totalPages, page + 1))}
-                        disabled={page === totalPages}
-                        className="text-xs sm:text-sm"
-                    >
-                        Next
-                    </Button>
-                </div>
-            )}
-
-            {/* Create Event Modal */}
-            <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-                <DialogContent className="sm:max-w-md max-w-[95vw] max-h-[90vh] overflow-y-auto p-3 sm:p-4">
-                    <DialogHeader>
-                        <DialogTitle className="text-lg sm:text-xl">Create New Event</DialogTitle>
-                        <DialogDescription className="text-sm">Fill in the details to create a new event.</DialogDescription>
-                    </DialogHeader>
-
-                    <form onSubmit={handleCreateEvent} className="space-y-3">
-                        <div>
-                            <Label htmlFor="title" className="text-sm font-medium">
-                                Event Title *
-                            </Label>
-                            <Input
-                                id="title"
-                                value={formData.title}
-                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                required
-                                placeholder="Enter event title"
-                                className="mt-1"
-                            />
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-16 gap-4">
+                        <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
+                            <Calendar className="h-10 w-10 text-gray-400" />
                         </div>
-
-                        <div>
-                            <Label htmlFor="description" className="text-sm font-medium">
-                                Description *
-                            </Label>
-                            <Textarea
-                                id="description"
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                required
-                                placeholder="Enter event description"
-                                rows={3}
-                                className="mt-1 resize-none"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div>
-                                <Label htmlFor="date" className="text-sm font-medium">
-                                    Date *
-                                </Label>
-                                <Input
-                                    id="date"
-                                    type="date"
-                                    value={formData.date}
-                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                    required
-                                    className="mt-1"
-                                />
-                            </div>
-
-                            <div>
-                                <Label htmlFor="startTime" className="text-sm font-medium">
-                                    Start Time *
-                                </Label>
-                                <Input
-                                    id="startTime"
-                                    type="time"
-                                    value={formData.startTime}
-                                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                                    required
-                                    className="mt-1"
-                                />
-                            </div>
-
-                            <div>
-                                <Label htmlFor="endTime" className="text-sm font-medium">
-                                    End Time *
-                                </Label>
-                                <Input
-                                    id="endTime"
-                                    type="time"
-                                    value={formData.endTime}
-                                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                                    required
-                                    className="mt-1"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <Label className="text-sm font-medium">
-                                Event Location *
-                            </Label>
-                            <div className="mt-2">
-                                <MapLocationPicker
-                                    coordinates={formData.coordinates}
-                                    address={formData.location}
-                                    onCoordinatesChange={(coords) => setFormData({
-                                        ...formData,
-                                        coordinates: coords
-                                    })}
-                                    onAddressChange={(address) => setFormData({
-                                        ...formData,
-                                        location: address
-                                    })}
-                                    onLocationDetailsChange={(details) => setFormData({
-                                        ...formData,
-                                        city: details.city || "",
-                                        country: details.country || ""
-                                    })}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <Label htmlFor="mapEmbedUrl" className="text-sm font-medium">
-                                Map Embed URL (Optional)
-                            </Label>
-                            <Input
-                                id="mapEmbedUrl"
-                                value={formData.mapEmbedUrl}
-                                onChange={(e) => setFormData({ ...formData, mapEmbedUrl: e.target.value })}
-                                placeholder="Enter Google Maps embed URL"
-                                className="mt-1"
-                            />
-                        </div>
-
-                        {/* Adventures Selection */}
-                        <div>
-                            <Label className="text-sm font-medium">
-                                Adventures *
-                            </Label>
-                            <div className="mt-2 space-y-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => setShowAdventureSelection(!showAdventureSelection)}
-                                    className="w-full justify-between"
-                                >
-                                    <span>
-                                        {selectedAdventures.length > 0
-                                            ? `${selectedAdventures.length} adventure${selectedAdventures.length > 1 ? 's' : ''} selected`
-                                            : 'Select adventures'
-                                        }
-                                    </span>
-                                    <Compass className="h-4 w-4" />
-                                </Button>
-
-                                {selectedAdventures.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                        {selectedAdventures.map((adventure) => (
-                                            <Badge key={adventure._id} variant="secondary" className="flex items-center gap-1">
-                                                {adventure.name}
-                                                <X
-                                                    className="h-3 w-3 cursor-pointer hover:text-red-500"
-                                                    onClick={() => removeSelectedAdventure(adventure._id)}
-                                                />
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {showAdventureSelection && (
-                                    <div className="border rounded-md max-h-40 overflow-y-auto p-2">
-                                        {adventuresLoading ? (
-                                            <div className="text-sm text-gray-500 p-2">Loading adventures...</div>
-                                        ) : adventures.length === 0 ? (
-                                            <div className="text-sm text-gray-500 p-2">No adventures available</div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {adventures.map((adventure) => (
-                                                    <div key={adventure._id} className="flex items-center space-x-2">
-                                                        <Checkbox
-                                                            id={`adventure-${adventure._id}`}
-                                                            checked={selectedAdventures.some(a => a._id === adventure._id)}
-                                                            onCheckedChange={() => handleAdventureToggle(adventure)}
-                                                        />
-                                                        <Label
-                                                            htmlFor={`adventure-${adventure._id}`}
-                                                            className="flex-1 text-sm cursor-pointer"
-                                                        >
-                                                            {adventure.name}
-                                                        </Label>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* NFT Event Toggle */}
-                        <div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="isNftEvent"
-                                    checked={formData.isNftEvent}
-                                    onCheckedChange={(checked) => setFormData({ ...formData, isNftEvent: checked })}
-                                />
-                                <Label htmlFor="isNftEvent" className="text-sm font-medium flex items-center">
-                                    <Star className="h-4 w-4 mr-1 text-purple-600" />
-                                    NFT Event
-                                </Label>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Enable to award NFT rewards for completing all adventures
+                        <div className="text-center">
+                            <p className="text-gray-900 font-semibold text-lg">No events found</p>
+                            <p className="text-gray-500 text-sm mt-1">
+                                {searchTerm ? `No events match "${searchTerm}"` : "Get started by creating your first event"}
                             </p>
                         </div>
+                        {!searchTerm && (
+                            <Button onClick={() => setShowCreateModal(true)} className="mt-2 bg-black hover:bg-gray-800 text-white">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Create Event
+                            </Button>
+                        )}
+                    </div>
+                )}
 
-                        {/* NFT Reward Details */}
-                        {formData.isNftEvent && (
-                            <div className="space-y-3 p-4 border rounded-lg bg-purple-50">
-                                <h4 className="text-sm font-medium text-purple-900">NFT Reward Details</h4>
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setPage(Math.max(1, page - 1))}
+                            disabled={page === 1}
+                            className="border-gray-300 hover:bg-gray-900 hover:text-white hover:border-gray-900"
+                        >
+                            <ChevronLeft className="h-4 w-4 mr-1" />
+                            Previous
+                        </Button>
 
-                                <div>
-                                    <Label htmlFor="nftName" className="text-sm font-medium">
-                                        NFT Name
-                                    </Label>
-                                    <Input
-                                        id="nftName"
-                                        value={formData.nftReward.nftName}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            nftReward: { ...formData.nftReward, nftName: e.target.value }
-                                        })}
-                                        placeholder="Enter NFT name"
-                                        className="mt-1"
-                                    />
-                                </div>
+                        <span className="text-sm text-gray-600 font-medium">
+                            Page {page} of {totalPages}
+                        </span>
 
-                                <div>
-                                    <Label htmlFor="nftDescription" className="text-sm font-medium">
-                                        NFT Description
-                                    </Label>
-                                    <Textarea
-                                        id="nftDescription"
-                                        value={formData.nftReward.nftDescription}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            nftReward: { ...formData.nftReward, nftDescription: e.target.value }
-                                        })}
-                                        placeholder="Describe the NFT reward"
-                                        rows={2}
-                                        className="mt-1 resize-none"
-                                    />
-                                </div>
+                        <Button
+                            variant="outline"
+                            onClick={() => setPage(Math.min(totalPages, page + 1))}
+                            disabled={page === totalPages}
+                            className="border-gray-300 hover:bg-gray-900 hover:text-white hover:border-gray-900"
+                        >
+                            Next
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                    </div>
+                )}
+            </div>
+
+            <EventFormModal
+                open={showCreateModal}
+                onClose={() => {
+                    setShowCreateModal(false)
+                    resetForm()
+                }}
+                onSubmit={handleCreateEvent}
+                formData={formData}
+                setFormData={setFormData}
+                selectedAdventures={selectedAdventures}
+                setSelectedAdventures={setSelectedAdventures}
+                showAdventureSelection={showAdventureSelection}
+                setShowAdventureSelection={setShowAdventureSelection}
+                mediaPreviews={mediaPreviews}
+                handleImageUpload={handleImageUpload}
+                removeImage={removeImage}
+                handleAdventureToggle={handleAdventureToggle}
+                removeSelectedAdventure={removeSelectedAdventure}
+                isSubmitting={isSubmitting}
+                fileInputRef={fileInputRef}
+                adventures={adventures}
+                adventuresLoading={adventuresLoading}
+                isEdit={false}
+            />
+
+            <EventFormModal
+                open={showEditModal}
+                onClose={() => {
+                    setShowEditModal(false)
+                    resetForm()
+                    setSelectedEvent(null)
+                }}
+                onSubmit={handleUpdateEvent}
+                formData={formData}
+                setFormData={setFormData}
+                selectedAdventures={selectedAdventures}
+                setSelectedAdventures={setSelectedAdventures}
+                showAdventureSelection={showAdventureSelection}
+                setShowAdventureSelection={setShowAdventureSelection}
+                mediaPreviews={mediaPreviews}
+                handleImageUpload={handleImageUpload}
+                removeImage={removeImage}
+                handleAdventureToggle={handleAdventureToggle}
+                removeSelectedAdventure={removeSelectedAdventure}
+                isSubmitting={isSubmitting}
+                fileInputRef={fileInputRef}
+                adventures={adventures}
+                adventuresLoading={adventuresLoading}
+                isEdit={true}
+            />
+
+            <EventDetailsModal
+                open={showDetailsModal}
+                onClose={() => {
+                    setShowDetailsModal(false)
+                    setSelectedEvent(null)
+                }}
+                event={selectedEvent}
+                formatDisplayDate={formatDisplayDate}
+                formatDisplayTime={formatDisplayTime}
+            />
+        </div>
+    )
+}
+
+function EventFormModal({
+    open,
+    onClose,
+    onSubmit,
+    formData,
+    setFormData,
+    selectedAdventures,
+    showAdventureSelection,
+    setShowAdventureSelection,
+    mediaPreviews,
+    handleImageUpload,
+    removeImage,
+    handleAdventureToggle,
+    removeSelectedAdventure,
+    isSubmitting,
+    fileInputRef,
+    adventures,
+    adventuresLoading,
+    isEdit,
+}) {
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold">
+                        {isEdit ? "Edit Event" : "Create New Event"}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {isEdit ? "Update the event details" : "Fill in the details to create a new event"}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={onSubmit} className="space-y-6 mt-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="title" className="text-sm font-semibold text-gray-900">
+                            Event Title <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                            id="title"
+                            value={formData.title}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            required
+                            placeholder="Enter event title"
+                            className="h-11"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="description" className="text-sm font-semibold text-gray-900">
+                            Description <span className="text-red-500">*</span>
+                        </Label>
+                        <Textarea
+                            id="description"
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            required
+                            placeholder="Enter event description"
+                            rows={3}
+                            className="resize-none"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="date" className="text-sm font-semibold text-gray-900">
+                                Date <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                                id="date"
+                                type="date"
+                                value={formData.date}
+                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                required
+                                className="h-11"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="startTime" className="text-sm font-semibold text-gray-900">
+                                Start Time <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                                id="startTime"
+                                type="time"
+                                value={formData.startTime}
+                                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                                required
+                                className="h-11"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="endTime" className="text-sm font-semibold text-gray-900">
+                                End Time <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                                id="endTime"
+                                type="time"
+                                value={formData.endTime}
+                                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                                required
+                                className="h-11"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-900">
+                            Event Location <span className="text-red-500">*</span>
+                        </Label>
+                        <MapLocationPicker
+                            coordinates={formData.coordinates}
+                            address={formData.location}
+                            onCoordinatesChange={(coords) => setFormData({ ...formData, coordinates: coords })}
+                            onAddressChange={(address) => setFormData({ ...formData, location: address })}
+                            onLocationDetailsChange={(details) =>
+                                setFormData({ ...formData, city: details.city || "", country: details.country || "" })
+                            }
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-900">
+                            Adventures <span className="text-red-500">*</span>
+                        </Label>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowAdventureSelection(!showAdventureSelection)}
+                            className="w-full justify-between h-11"
+                        >
+                            <span>
+                                {selectedAdventures.length > 0
+                                    ? `${selectedAdventures.length} adventure${selectedAdventures.length > 1 ? "s" : ""} selected`
+                                    : "Select adventures"}
+                            </span>
+                            <Compass className="h-4 w-4" />
+                        </Button>
+
+                        {selectedAdventures.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                                {selectedAdventures.map((adventure) => (
+                                    <Badge key={adventure._id} variant="secondary" className="flex items-center gap-1">
+                                        {adventure.name}
+                                        <X
+                                            className="h-3 w-3 cursor-pointer hover:text-red-500"
+                                            onClick={() => removeSelectedAdventure(adventure._id)}
+                                        />
+                                    </Badge>
+                                ))}
                             </div>
                         )}
 
-                        <div>
-                            <Label htmlFor="level" className="text-sm font-medium">
-                                Required Level (1-10) *
+                        {showAdventureSelection && (
+                            <div className="border rounded-md max-h-40 overflow-y-auto p-2">
+                                {adventuresLoading ? (
+                                    <div className="text-sm text-gray-500 p-2">Loading adventures...</div>
+                                ) : adventures.length === 0 ? (
+                                    <div className="text-sm text-gray-500 p-2">No adventures available</div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {adventures.map((adventure) => (
+                                            <div key={adventure._id} className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id={`adventure-${adventure._id}`}
+                                                    checked={selectedAdventures.some((a) => a._id === adventure._id)}
+                                                    onCheckedChange={() => handleAdventureToggle(adventure)}
+                                                />
+                                                <Label htmlFor={`adventure-${adventure._id}`} className="flex-1 text-sm cursor-pointer">
+                                                    {adventure.name}
+                                                </Label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="level" className="text-sm font-semibold text-gray-900">
+                                Required Level (1-10) <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="level"
@@ -818,17 +755,13 @@ export default function EventsPage() {
                                 value={formData.level}
                                 onChange={(e) => setFormData({ ...formData, level: parseInt(e.target.value) })}
                                 required
-                                placeholder="Enter required level"
-                                className="mt-1"
+                                className="h-11"
                             />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Users must have this level or higher to book this event
-                            </p>
                         </div>
 
-                        <div>
-                            <Label htmlFor="price" className="text-sm font-medium">
-                                Event Price (£) - Optional
+                        <div className="space-y-2">
+                            <Label htmlFor="price" className="text-sm font-semibold text-gray-900">
+                                Price (£)
                             </Label>
                             <Input
                                 id="price"
@@ -836,504 +769,208 @@ export default function EventsPage() {
                                 min="0"
                                 step="0.01"
                                 value={formData.price}
-                                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                                placeholder="Enter event price (0 for free)"
-                                className="mt-1"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Set 0 or leave empty for free events
-                            </p>
-                        </div>
-
-                        <div>
-                            <Label htmlFor="images" className="text-sm font-medium">
-                                Event Images
-                            </Label>
-                            <div className="space-y-2 mt-1">
-                                <Input
-                                    id="images"
-                                    type="file"
-                                    multiple
-                                    accept="image/*"
-                                    onChange={handleImageUpload}
-                                    ref={fileInputRef}
-                                    className="cursor-pointer"
-                                />
-                                <p className="text-xs text-muted-foreground">Upload images (JPEG, PNG, GIF, WebP - Max 10MB each)</p>
-                            </div>
-
-                            {mediaPreviews.length > 0 && (
-                                <div className="mt-2">
-                                    <MediaPreview mediaPreviews={mediaPreviews} onRemove={removeImage} isSubmitting={isSubmitting} />
-                                </div>
-                            )}
-                        </div>
-
-                        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setShowCreateModal(false)}
-                                disabled={isSubmitting}
-                                className="w-full sm:w-auto"
-                            >
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-                                {isSubmitting ? "Creating..." : "Create Event"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* Edit Event Modal */}
-            <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-                <DialogContent className="sm:max-w-md max-w-[95vw] max-h-[90vh] overflow-y-auto p-3 sm:p-4">
-                    <DialogHeader>
-                        <DialogTitle className="text-lg sm:text-xl">Edit Event</DialogTitle>
-                        <DialogDescription className="text-sm">Update the event details.</DialogDescription>
-                    </DialogHeader>
-
-                    <form onSubmit={handleUpdateEvent} className="space-y-3">
-                        <div>
-                            <Label htmlFor="edit-title" className="text-sm font-medium">
-                                Event Title *
-                            </Label>
-                            <Input
-                                id="edit-title"
-                                value={formData.title}
-                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                required
-                                placeholder="Enter event title"
-                                className="mt-1"
+                                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                placeholder="0"
+                                className="h-11"
                             />
                         </div>
+                    </div>
 
-                        <div>
-                            <Label htmlFor="edit-description" className="text-sm font-medium">
-                                Description *
-                            </Label>
-                            <Textarea
-                                id="edit-description"
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                required
-                                placeholder="Enter event description"
-                                rows={3}
-                                className="mt-1 resize-none"
+                    <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="isNftEvent"
+                                checked={formData.isNftEvent}
+                                onCheckedChange={(checked) => setFormData({ ...formData, isNftEvent: checked })}
                             />
+                            <Label htmlFor="isNftEvent" className="text-sm font-semibold text-gray-900 flex items-center">
+                                <Star className="h-4 w-4 mr-1" />
+                                NFT Event
+                            </Label>
                         </div>
+                        <p className="text-xs text-gray-500">Enable to award NFT rewards for completing all adventures</p>
+                    </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div>
-                                <Label htmlFor="edit-date" className="text-sm font-medium">
-                                    Date *
+                    {formData.isNftEvent && (
+                        <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                            <h4 className="text-sm font-semibold text-gray-900">NFT Reward Details</h4>
+                            <div className="space-y-2">
+                                <Label htmlFor="nftName" className="text-sm font-semibold text-gray-900">
+                                    NFT Name
                                 </Label>
                                 <Input
-                                    id="edit-date"
-                                    type="date"
-                                    value={formData.date}
-                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                    required
-                                    className="mt-1"
+                                    id="nftName"
+                                    value={formData.nftReward.nftName}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, nftReward: { ...formData.nftReward, nftName: e.target.value } })
+                                    }
+                                    placeholder="Enter NFT name"
+                                    className="h-11"
                                 />
                             </div>
-
-                            <div>
-                                <Label htmlFor="edit-startTime" className="text-sm font-medium">
-                                    Start Time *
+                            <div className="space-y-2">
+                                <Label htmlFor="nftDescription" className="text-sm font-semibold text-gray-900">
+                                    NFT Description
                                 </Label>
-                                <Input
-                                    id="edit-startTime"
-                                    type="time"
-                                    value={formData.startTime}
-                                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                                    required
-                                    className="mt-1"
+                                <Textarea
+                                    id="nftDescription"
+                                    value={formData.nftReward.nftDescription}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, nftReward: { ...formData.nftReward, nftDescription: e.target.value } })
+                                    }
+                                    placeholder="Describe the NFT reward"
+                                    rows={2}
+                                    className="resize-none"
                                 />
                             </div>
-
-                            <div>
-                                <Label htmlFor="edit-endTime" className="text-sm font-medium">
-                                    End Time *
-                                </Label>
-                                <Input
-                                    id="edit-endTime"
-                                    type="time"
-                                    value={formData.endTime}
-                                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                                    required
-                                    className="mt-1"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <Label className="text-sm font-medium">
-                                Event Location *
-                            </Label>
-                            <div className="mt-2">
-                                <MapLocationPicker
-                                    coordinates={formData.coordinates}
-                                    address={formData.location}
-                                    onCoordinatesChange={(coords) => setFormData({
-                                        ...formData,
-                                        coordinates: coords
-                                    })}
-                                    onAddressChange={(address) => setFormData({
-                                        ...formData,
-                                        location: address
-                                    })}
-                                    onLocationDetailsChange={(details) => setFormData({
-                                        ...formData,
-                                        city: details.city || "",
-                                        country: details.country || ""
-                                    })}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <Label htmlFor="edit-mapEmbedUrl" className="text-sm font-medium">
-                                Map Embed URL (Optional)
-                            </Label>
-                            <Input
-                                id="edit-mapEmbedUrl"
-                                value={formData.mapEmbedUrl}
-                                onChange={(e) => setFormData({ ...formData, mapEmbedUrl: e.target.value })}
-                                placeholder="Enter Google Maps embed URL"
-                                className="mt-1"
-                            />
-                        </div>
-
-                        <div>
-                            <Label htmlFor="edit-level" className="text-sm font-medium">
-                                Required Level (1-10) *
-                            </Label>
-                            <Input
-                                id="edit-level"
-                                type="number"
-                                min="1"
-                                max="10"
-                                value={formData.level}
-                                onChange={(e) => setFormData({ ...formData, level: parseInt(e.target.value) })}
-                                required
-                                placeholder="Enter required level"
-                                className="mt-1"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Users must have this level or higher to book this event
-                            </p>
-                        </div>
-
-                        <div>
-                            <Label htmlFor="edit-price" className="text-sm font-medium">
-                                Event Price (£) - Optional
-                            </Label>
-                            <Input
-                                id="edit-price"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={formData.price}
-                                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                                placeholder="Enter event price (0 for free)"
-                                className="mt-1"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Set 0 or leave empty for free events
-                            </p>
-                        </div>
-
-                        {/* Adventures Selection */}
-                        <div>
-                            <Label className="text-sm font-medium">
-                                Adventures *
-                            </Label>
-                            <div className="mt-2 space-y-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => setShowAdventureSelection(!showAdventureSelection)}
-                                    className="w-full justify-between"
-                                >
-                                    <span>
-                                        {selectedAdventures.length > 0
-                                            ? `${selectedAdventures.length} adventure${selectedAdventures.length > 1 ? 's' : ''} selected`
-                                            : 'Select adventures'
-                                        }
-                                    </span>
-                                    <Compass className="h-4 w-4" />
-                                </Button>
-
-                                {selectedAdventures.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                        {selectedAdventures.map((adventure) => (
-                                            <Badge key={adventure._id} variant="secondary" className="flex items-center gap-1">
-                                                {adventure.name}
-                                                <X
-                                                    className="h-3 w-3 cursor-pointer hover:text-red-500"
-                                                    onClick={() => removeSelectedAdventure(adventure._id)}
-                                                />
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {showAdventureSelection && (
-                                    <div className="border rounded-md max-h-40 overflow-y-auto p-2">
-                                        {adventuresLoading ? (
-                                            <div className="text-sm text-gray-500 p-2">Loading adventures...</div>
-                                        ) : adventures.length === 0 ? (
-                                            <div className="text-sm text-gray-500 p-2">No adventures available</div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {adventures.map((adventure) => (
-                                                    <div key={adventure._id} className="flex items-center space-x-2">
-                                                        <Checkbox
-                                                            id={`edit-adventure-${adventure._id}`}
-                                                            checked={selectedAdventures.some(a => a._id === adventure._id)}
-                                                            onCheckedChange={() => handleAdventureToggle(adventure)}
-                                                        />
-                                                        <Label
-                                                            htmlFor={`edit-adventure-${adventure._id}`}
-                                                            className="flex-1 text-sm cursor-pointer"
-                                                        >
-                                                            {adventure.name}
-                                                        </Label>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* NFT Event Toggle */}
-                        <div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="edit-isNftEvent"
-                                    checked={formData.isNftEvent}
-                                    onCheckedChange={(checked) => setFormData({ ...formData, isNftEvent: checked })}
-                                />
-                                <Label htmlFor="edit-isNftEvent" className="text-sm font-medium flex items-center">
-                                    <Star className="h-4 w-4 mr-1 text-purple-600" />
-                                    NFT Event
-                                </Label>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Enable to award NFT rewards for completing all adventures
-                            </p>
-                        </div>
-
-                        {/* NFT Reward Details */}
-                        {formData.isNftEvent && (
-                            <div className="space-y-3 p-4 border rounded-lg bg-purple-50">
-                                <h4 className="text-sm font-medium text-purple-900">NFT Reward Details</h4>
-
-                                <div>
-                                    <Label htmlFor="edit-nftName" className="text-sm font-medium">
-                                        NFT Name
-                                    </Label>
-                                    <Input
-                                        id="edit-nftName"
-                                        value={formData.nftReward.nftName}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            nftReward: { ...formData.nftReward, nftName: e.target.value }
-                                        })}
-                                        placeholder="Enter NFT name"
-                                        className="mt-1"
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label htmlFor="edit-nftDescription" className="text-sm font-medium">
-                                        NFT Description
-                                    </Label>
-                                    <Textarea
-                                        id="edit-nftDescription"
-                                        value={formData.nftReward.nftDescription}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            nftReward: { ...formData.nftReward, nftDescription: e.target.value }
-                                        })}
-                                        placeholder="Describe the NFT reward"
-                                        rows={2}
-                                        className="mt-1 resize-none"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        <div>
-                            <Label htmlFor="edit-images" className="text-sm font-medium">
-                                Event Images
-                            </Label>
-                            <div className="space-y-2 mt-1">
-                                <Input
-                                    id="edit-images"
-                                    type="file"
-                                    multiple
-                                    accept="image/*"
-                                    onChange={handleImageUpload}
-                                    className="cursor-pointer"
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    Upload new images (JPEG, PNG, GIF, WebP - Max 10MB each)
-                                </p>
-                            </div>
-
-                            {mediaPreviews.length > 0 && (
-                                <div className="mt-2">
-                                    <MediaPreview mediaPreviews={mediaPreviews} onRemove={removeImage} isSubmitting={isSubmitting} />
-                                </div>
-                            )}
-                        </div>
-
-                        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setShowEditModal(false)}
-                                disabled={isSubmitting}
-                                className="w-full sm:w-auto"
-                            >
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-                                {isSubmitting ? "Updating..." : "Update Event"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* Event Details Modal */}
-            <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
-                <DialogContent className="sm:max-w-lg max-w-[95vw] max-h-[90vh] overflow-y-auto p-3 sm:p-4">
-                    <DialogHeader>
-                        <DialogTitle className="text-lg sm:text-xl line-clamp-2">{selectedEvent?.title}</DialogTitle>
-                        <DialogDescription className="text-sm">Event Details</DialogDescription>
-                    </DialogHeader>
-
-                    {selectedEvent && (
-                        <div className="space-y-3">
-                            {/* Event Images */}
-                            {selectedEvent.medias && selectedEvent.medias.length > 0 && (
-                                <div>
-                                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Event Images</h4>
-                                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 mb-3">
-                                        {selectedEvent.medias.map((imageUrl, index) => (
-                                            <div key={index} className="relative aspect-video rounded-md overflow-hidden bg-gray-100">
-                                                <img
-                                                    src={imageUrl || "/placeholder.svg"}
-                                                    alt={`Event image ${index + 1}`}
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => {
-                                                        e.target.style.display = "none"
-                                                        e.target.nextSibling.style.display = "flex"
-                                                    }}
-                                                />
-                                                <div
-                                                    className="hidden w-full h-full items-center justify-center bg-gray-100 text-gray-400 text-xs"
-                                                    style={{ display: "none" }}
-                                                >
-                                                    Image not available
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div>
-                                <h4 className="font-medium text-sm text-muted-foreground mb-1">Description</h4>
-                                <p className="text-sm leading-relaxed">{selectedEvent.description}</p>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <h4 className="font-medium text-sm text-muted-foreground mb-1">Date</h4>
-                                    <p className="text-sm">{formatDisplayDate(selectedEvent.date)}</p>
-                                </div>
-
-                                <div>
-                                    <h4 className="font-medium text-sm text-muted-foreground mb-1">Time</h4>
-                                    <p className="text-sm">{formatDisplayTime(selectedEvent.time)}</p>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h4 className="font-medium text-sm text-muted-foreground mb-1">Location</h4>
-                                <p className="text-sm">{selectedEvent.location}</p>
-                            </div>
-
-                            <div>
-                                <h4 className="font-medium text-sm text-muted-foreground mb-1">Required Level</h4>
-                                <p className="text-sm">Level {selectedEvent.level || 1}</p>
-                            </div>
-
-                            {/* Adventures Section */}
-                            {selectedEvent.adventures && selectedEvent.adventures.length > 0 && (
-                                <div>
-                                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Adventures</h4>
-                                    <div className="space-y-2">
-                                        {selectedEvent.adventures.map((adventure, index) => (
-                                            <div key={adventure._id || index} className="flex items-center space-x-2 p-2 bg-gray-50 rounded-md">
-                                                <Compass className="h-4 w-4 text-blue-500" />
-                                                <span className="text-sm font-medium">{adventure.name}</span>
-                                                {adventure.exp && (
-                                                    <Badge variant="outline" className="text-xs">
-                                                        {adventure.exp} XP
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* NFT Event Info */}
-                            {selectedEvent.isNftEvent && (
-                                <div>
-                                    <h4 className="font-medium text-sm text-muted-foreground mb-2">NFT Reward</h4>
-                                    <div className="p-3 bg-purple-50 rounded-md border border-purple-200">
-                                        <div className="flex items-center space-x-2 mb-2">
-                                            <Star className="h-4 w-4 text-purple-600" />
-                                            <span className="text-sm font-medium text-purple-900">NFT Event</span>
-                                        </div>
-                                        {selectedEvent.nftReward?.nftName && (
-                                            <div className="space-y-1">
-                                                <p className="text-sm font-medium text-purple-900">
-                                                    {selectedEvent.nftReward.nftName}
-                                                </p>
-                                                {selectedEvent.nftReward.nftDescription && (
-                                                    <p className="text-xs text-purple-700">
-                                                        {selectedEvent.nftReward.nftDescription}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        )}
-                                        <p className="text-xs text-purple-600 mt-2">
-                                            Complete all adventures to earn this NFT!
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     )}
 
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowDetailsModal(false)} className="w-full sm:w-auto">
-                            Close
+                    <div className="space-y-2">
+                        <Label htmlFor="images" className="text-sm font-semibold text-gray-900">
+                            Event Images
+                        </Label>
+                        <Input
+                            id="images"
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            ref={fileInputRef}
+                            className="cursor-pointer h-11"
+                        />
+                        <p className="text-xs text-gray-500">Upload up to 6 images (JPEG, PNG, GIF, WebP - Max 10MB each)</p>
+
+                        {mediaPreviews.length > 0 && (
+                            <div className="mt-2">
+                                <MediaPreview mediaPreviews={mediaPreviews} onRemove={removeImage} isSubmitting={isSubmitting} />
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter className="flex gap-3 pt-4 border-t">
+                        <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting} className="px-6">
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={isSubmitting} className="px-8 bg-black hover:bg-gray-800 text-white">
+                            {isSubmitting ? (isEdit ? "Updating..." : "Creating...") : isEdit ? "Update Event" : "Create Event"}
                         </Button>
                     </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </motion.div>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+function EventDetailsModal({ open, onClose, event, formatDisplayDate, formatDisplayTime }) {
+    if (!event) return null
+
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold line-clamp-2">{event.title}</DialogTitle>
+                    <DialogDescription>Event Details</DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-6 mt-4">
+                    {event.medias && event.medias.length > 0 && (
+                        <div>
+                            <h4 className="font-semibold text-sm text-gray-900 mb-3">Event Images</h4>
+                            <div className="grid grid-cols-2 gap-3">
+                                {event.medias.map((imageUrl, index) => (
+                                    <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                                        <img
+                                            src={imageUrl}
+                                            alt={`Event image ${index + 1}`}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.target.style.display = "none"
+                                                e.target.nextSibling.style.display = "flex"
+                                            }}
+                                        />
+                                        <div className="hidden w-full h-full items-center justify-center bg-gray-100 text-gray-400 text-xs">
+                                            Image not available
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div>
+                        <h4 className="font-semibold text-sm text-gray-900 mb-2">Description</h4>
+                        <p className="text-sm text-gray-600 leading-relaxed">{event.description}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <h4 className="font-semibold text-sm text-gray-900 mb-1">Date</h4>
+                            <p className="text-sm text-gray-600">{formatDisplayDate(event.date)}</p>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-sm text-gray-900 mb-1">Time</h4>
+                            <p className="text-sm text-gray-600">{formatDisplayTime(event.startTime)}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 className="font-semibold text-sm text-gray-900 mb-1">Location</h4>
+                        <p className="text-sm text-gray-600">{event.location}</p>
+                    </div>
+
+                    <div>
+                        <h4 className="font-semibold text-sm text-gray-900 mb-1">Required Level</h4>
+                        <p className="text-sm text-gray-600">Level {event.level || 1}</p>
+                    </div>
+
+                    {event.adventures && event.adventures.length > 0 && (
+                        <div>
+                            <h4 className="font-semibold text-sm text-gray-900 mb-3">Adventures</h4>
+                            <div className="space-y-2">
+                                {event.adventures.map((adventure, index) => (
+                                    <div key={adventure._id || index} className="flex items-center space-x-2 p-3 bg-gray-50 rounded-md">
+                                        <Compass className="h-4 w-4 text-gray-900" />
+                                        <span className="text-sm font-medium text-gray-900">{adventure.name}</span>
+                                        {adventure.exp && (
+                                            <Badge variant="outline" className="text-xs">
+                                                {adventure.exp} XP
+                                            </Badge>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {event.isNftEvent && (
+                        <div>
+                            <h4 className="font-semibold text-sm text-gray-900 mb-3">NFT Reward</h4>
+                            <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <Star className="h-4 w-4 text-gray-900" />
+                                    <span className="text-sm font-semibold text-gray-900">NFT Event</span>
+                                </div>
+                                {event.nftReward?.nftName && (
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-gray-900">{event.nftReward.nftName}</p>
+                                        {event.nftReward.nftDescription && (
+                                            <p className="text-xs text-gray-600">{event.nftReward.nftDescription}</p>
+                                        )}
+                                    </div>
+                                )}
+                                <p className="text-xs text-gray-600 mt-2">Complete all adventures to earn this NFT!</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <DialogFooter className="pt-4 border-t">
+                    <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+                        Close
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     )
 }
