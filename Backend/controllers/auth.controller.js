@@ -149,14 +149,46 @@ const registerInstructor = asyncHandler(async (req, res) => {
     req.user.profilePicture = profileImage;
   }
 
-  const instructor = await Instructor.create({
-    description: description,
-    adventure: adventure,
-    location: location,
-    portfolioMedias: portfolioMedias,
-    certificate: certificate,
-    governmentId: governmentId,
-  });
+  // Check for location limit
+  const locationDoc = await Location.findById(location);
+  if (!locationDoc) {
+    throw new ApiError(404, "Location not found");
+  }
+
+  let instructor;
+  let isWaitlisted = false;
+
+  const currentCount = await Instructor.countDocuments({ location: location });
+  if (locationDoc.instructorLimit !== null && locationDoc.instructorLimit !== undefined && currentCount >= locationDoc.instructorLimit) {
+    // Limit reached, add to waitlist
+    isWaitlisted = true;
+
+    // Create instructor with no active location (or we can keep location but use another flag, 
+    // but plan was to add to waitingList. Let's create it normally but we know it's in waitlist list)
+    instructor = await Instructor.create({
+      description: description,
+      adventure: adventure,
+      location: location, // Still associating with location
+      portfolioMedias: portfolioMedias,
+      certificate: certificate,
+      governmentId: governmentId,
+    });
+
+    // Add to waiting list
+    locationDoc.waitingList.push(instructor._id);
+    await locationDoc.save();
+
+  } else {
+    // Normal creation
+    instructor = await Instructor.create({
+      description: description,
+      adventure: adventure,
+      location: location,
+      portfolioMedias: portfolioMedias,
+      certificate: certificate,
+      governmentId: governmentId,
+    });
+  }
 
   if (!instructor) {
     throw new ApiError(
