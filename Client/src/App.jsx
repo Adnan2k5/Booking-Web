@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { lazy, Suspense } from "react"
 import { Toaster } from "sonner"
 import { ResetPass } from "./Pages/ResetPass"
@@ -144,6 +144,19 @@ const LanguageInitializer = () => {
   return null;
 };
 
+const ConditionalChatWidget = () => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isInstructorRoute = location.pathname.startsWith('/instructor');
+
+  if (isAdminRoute || isInstructorRoute) {
+    return null;
+  }
+
+  return <ChatWidget />;
+};
+
+
 const App = () => {
   return (
     <I18nextProvider i18n={i18n}>
@@ -155,7 +168,7 @@ const App = () => {
                 <LanguageInitializer />
                 <BrowserRouter>
                   <ConnectionSpeedIndicator />
-                  <ChatWidget />
+                  <ConditionalChatWidget />
                   <Suspense fallback={<Loader />}>
                     <Toaster />
                     <Routes>
