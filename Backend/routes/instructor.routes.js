@@ -10,6 +10,7 @@ import {
   getInstructorById,
   addPortfolioMedia,
   removePortfolioMedia,
+  updateInstructor,
 } from "../controllers/instructor.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -29,5 +30,6 @@ router.delete("/portfolio", removePortfolioMedia);
 // Admin routes for instructor management (requires MANAGE_INSTRUCTORS permission)
 router.delete("/:id", verifyAdmin, requirePermission(PERMISSIONS.MANAGE_INSTRUCTORS), deleteInstructor);
 router.put("/:id", verifyAdmin, requirePermission(PERMISSIONS.MANAGE_INSTRUCTORS), changeDocumentStatusById);
+router.patch("/:id", verifyAdmin, requirePermission(PERMISSIONS.MANAGE_INSTRUCTORS), updateInstructor);
 
 export default router;

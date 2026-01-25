@@ -1,4 +1,4 @@
-import { getAllInstructors, deleteInstructor, changeDocumentStatusById, getInstructorById } from "../Api/instructor.api";
+import { getAllInstructors, deleteInstructor, changeDocumentStatusById, getInstructorById, updateInstructor } from "../Api/instructor.api";
 import { useState, useEffect } from "react";
 
 export function useInstructors(searchTerm = "", statusFilter = "all") {
@@ -91,5 +91,21 @@ export function useInstructors(searchTerm = "", statusFilter = "all") {
         }
     }
 
-    return { instructors, isLoading, getProfile, error, page, setPage, total, limit, deleteInstructorById, checkInstructorStatus, totalPages, changeDocumentStatus };
+    const updateInstructorData = async (id, data) => {
+        setIsLoading(true);
+        try {
+            await updateInstructor(id, data);
+
+            // Optimistically update or re-fetch
+            getProfile();
+            setError(null);
+        } catch (err) {
+            setError(err);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    return { instructors, isLoading, getProfile, error, page, setPage, total, limit, deleteInstructorById, checkInstructorStatus, totalPages, changeDocumentStatus, updateInstructorData };
 }

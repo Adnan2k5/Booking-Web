@@ -58,10 +58,14 @@ const getConfirmedBookings = async () => {
   })
     .populate("user", "name email")
     .populate("event", "title instructor")
-    .populate(
-      "adventureInstructors.instructor",
-      "name email paypalPayerId paypalEmail"
-    )
+    .populate({
+      path: "adventureInstructors.instructor",
+      select: "name email paypalPayerId paypalEmail instructor",
+      populate: {
+        path: "instructor",
+        select: "commissionPercentage"
+      }
+    })
     .lean();
 
   // Get confirmed item bookings
@@ -93,7 +97,15 @@ const getConfirmedBookings = async () => {
       })
         .populate("user", "name email")
         .populate("session", "title instructor")
-        .populate("session.instructor", "name email paypalPayerId paypalEmail")
+        .populate("session", "title instructor")
+        .populate({
+          path: "session.instructor",
+          select: "name email paypalPayerId paypalEmail instructor",
+          populate: {
+            path: "instructor",
+            select: "commissionPercentage"
+          }
+        })
         .lean();
 
       bookings.push(
@@ -121,7 +133,11 @@ const getConfirmedBookings = async () => {
         sessionBookings.map(async (booking) => {
           if (booking.session?.instructor) {
             const instructor = await User.findById(booking.session.instructor)
-              .select("name email paypalPayerId paypalEmail")
+              .select("name email paypalPayerId paypalEmail instructor")
+              .populate({
+                path: "instructor",
+                select: "commissionPercentage"
+              })
               .lean();
             return {
               ...booking,
@@ -243,7 +259,17 @@ const groupBookingsByProvider = async (bookings) => {
     // Calculate payout amount
     const bookingAmount =
       booking.proportionalAmount || booking.itemAmount || booking.amount || 0;
-    const payoutAmount = bookingAmount * PAYOUT_PERCENTAGE;
+
+    // Determine commission percentage
+    // Default is 20% (so 80% payout) if not specified
+    let payoutPercentage = PAYOUT_PERCENTAGE;
+
+    if (providerData.provider.instructor && providerData.provider.instructor.commissionPercentage !== undefined) {
+      // Commission is platform fee. Payout is 100 - commission
+      payoutPercentage = (100 - providerData.provider.instructor.commissionPercentage) / 100;
+    }
+
+    const payoutAmount = bookingAmount * payoutPercentage;
     providerData.totalAmount += payoutAmount;
   });
 

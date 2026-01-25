@@ -46,7 +46,7 @@ export const getAllInstructors = asyncHandler(async (req, res) => {
           select: "name",
         },
       ],
-      select: "documentVerified certificate governmentId avgReview",
+      select: "documentVerified certificate governmentId avgReview commissionPercentage",
     })
     .select("email name phoneNumber profilePicture instructor");
 
@@ -60,6 +60,8 @@ export const getAllInstructors = asyncHandler(async (req, res) => {
         instructors,
         total,
         totalPages,
+        page: pageNumber,
+        limit: pageSize
       },
       "Instructors retrieved successfully"
     )
@@ -84,7 +86,7 @@ export const getInstructorById = asyncHandler(async (req, res) => {
           select: "name",
         },
       ],
-      select: "documentVerified certificate governmentId avgReview",
+      select: "documentVerified certificate governmentId avgReview commissionPercentage",
     })
     .select("email name phoneNumber profilePicture instructor");
 
@@ -138,6 +140,33 @@ export const changeDocumentStatusById = asyncHandler(async (req, res) => {
         "Instructor document status updated successfully"
       )
     );
+});
+
+export const updateInstructor = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { commissionPercentage } = req.body;
+
+  const instructor = await Instructor.findById(id);
+  if (!instructor) {
+    throw new ApiError(404, "Instructor not found");
+  }
+
+  if (commissionPercentage !== undefined) {
+    if (commissionPercentage < 0 || commissionPercentage > 100) {
+      throw new ApiError(400, "Commission percentage must be between 0 and 100");
+    }
+    instructor.commissionPercentage = commissionPercentage;
+  }
+
+  await instructor.save();
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      instructor,
+      "Instructor updated successfully"
+    )
+  );
 });
 
 export const addPortfolioMedia = asyncHandler(async (req, res) => {

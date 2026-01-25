@@ -627,6 +627,17 @@ const InstructorDashboard = () => {
                                                 </p>
                                             </div>
                                         </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-3 bg-indigo-100 rounded-lg">
+                                                <DollarSign className="h-5 w-5 text-indigo-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-slate-600">Platform Fee</p>
+                                                <p className="text-xl font-bold text-slate-900">
+                                                    {user?.user?.instructor?.commissionPercentage ?? 20}%
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

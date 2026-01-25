@@ -26,7 +26,7 @@ export default function InstructorsPage() {
     const [statusFilter, setStatusFilter] = useState("all")
     const [selectedInstructor, setSelectedInstructor] = useState(null)
     const [showDocuments, setShowDocuments] = useState(false)
-    const { instructors, page, setPage, deleteInstructorById, totalPages, changeDocumentStatus } = useInstructors(debouncedSearch, statusFilter)
+    const { instructors, page, setPage, deleteInstructorById, totalPages, changeDocumentStatus, updateInstructorData } = useInstructors(debouncedSearch, statusFilter)
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -63,6 +63,40 @@ export default function InstructorsPage() {
             setSelectedInstructor(null)
         }
     }
+
+    const handleUpdateCommission = async (val) => {
+        const percentage = Number(val);
+        if (isNaN(percentage) || percentage < 0 || percentage > 100) {
+            toast.error("Please enter a valid percentage between 0 and 100");
+            return;
+        }
+
+        const loading = toast.loading("Updating commission...");
+        try {
+            if (selectedInstructor?.instructor?._id) {
+                await updateInstructorData(selectedInstructor.instructor._id, {
+                    commissionPercentage: percentage
+                });
+                toast.success("Commission updated successfully", {
+                    id: loading,
+                });
+
+                // Update local selected instructor state to reflect change immediately if needed
+                setSelectedInstructor(prev => ({
+                    ...prev,
+                    instructor: {
+                        ...prev.instructor,
+                        commissionPercentage: percentage
+                    }
+                }));
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to update commission", {
+                id: loading,
+            });
+        }
+    };
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-6">
@@ -299,6 +333,32 @@ export default function InstructorsPage() {
                                                         </Badge>
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-6 pt-6 border-t">
+                                            <h3 className="text-sm font-medium text-muted-foreground mb-4">Commission Settings</h3>
+                                            <div className="flex items-end gap-4 max-w-md">
+                                                <div className="flex-1">
+                                                    <label className="text-sm font-medium mb-1 block">Platform Commission (%)</label>
+                                                    <Input
+                                                        type="number"
+                                                        min="0"
+                                                        max="100"
+                                                        placeholder="20"
+                                                        defaultValue={selectedInstructor.instructor.commissionPercentage ?? 20}
+                                                        id="commission-input"
+                                                    />
+                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                        Percentage of booking amount retained by platform.
+                                                    </p>
+                                                </div>
+                                                <Button onClick={() => {
+                                                    const val = document.getElementById("commission-input").value;
+                                                    handleUpdateCommission(val);
+                                                }}>
+                                                    Update
+                                                </Button>
                                             </div>
                                         </div>
                                     </div>

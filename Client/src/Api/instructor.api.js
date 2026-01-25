@@ -83,6 +83,16 @@ export const changeDocumentStatusById = async (id, status) => {
   }
 };
 
+export const updateInstructor = async (id, data) => {
+  try {
+    const res = await axiosClient.patch(`/api/instructor/${id}`, data);
+    return res;
+  } catch (error) {
+    console.error('Error updating instructor:', error);
+    throw error;
+  }
+};
+
 // Get instructor's own sessions with booking details
 export const getInstructorSessionsWithBookings = async (queryParams = {}) => {
   try {
