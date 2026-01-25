@@ -366,7 +366,12 @@ export default function InstructorsPage() {
                             </Tabs>
                             <div className="mt-8 flex justify-end space-x-4 sticky bottom-0 bg-background p-4 border-t">
                                 <Button variant="outline" onClick={() => handleDocumentStatus("rejected")}>Reject Documents</Button>
-                                <Button onClick={() => handleDocumentStatus("verified")}>Approve Documents</Button>
+                                <Button
+                                    onClick={() => handleDocumentStatus("verified")}
+                                    disabled={selectedInstructor.instructor.documentVerified === "verified"}
+                                >
+                                    {selectedInstructor.instructor.documentVerified === "verified" ? "Approved" : "Approve Documents"}
+                                </Button>
                             </div>
                         </div>
                     )}
