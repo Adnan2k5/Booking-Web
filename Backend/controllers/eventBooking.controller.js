@@ -580,6 +580,20 @@ export const getAllEventBookings = asyncHandler(async (req, res) => {
   );
 });
 
+// Admin: Delete event booking
+export const deleteEventBooking = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const booking = await EventBooking.findByIdAndDelete(id);
+
+  if (!booking) {
+    throw new ApiError(404, "Booking not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, booking, "Event booking deleted successfully")
+  );
+});
+
 // Mark adventure as completed for a specific booking
 export const completeAdventure = asyncHandler(async (req, res) => {
   const { bookingId, adventureId } = req.params;

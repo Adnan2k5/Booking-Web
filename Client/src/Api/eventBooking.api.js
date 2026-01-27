@@ -95,3 +95,17 @@ export const cancelEventBooking = async (id, cancelReason) => {
     throw error;
   }
 };
+// Delete event booking (admin only)
+export const deleteEventBooking = async (id) => {
+  try {
+    const { data } = await axiosClient.delete(
+      `/api/event-bookings/${id}`,
+      {
+        withCredentials: true,
+      }
+    );
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};

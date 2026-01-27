@@ -321,7 +321,6 @@ export const evaluateAndAwardForInstructor = async (instructorUserId) => {
           category: rule.label || "instructor",
           level: 1,
           earnedAt: new Date(),
-          icon: rule.icon,
           criteria: {
             rating: currentRating,
             monthsSinceJoining,

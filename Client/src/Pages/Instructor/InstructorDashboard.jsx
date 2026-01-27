@@ -443,6 +443,7 @@ const InstructorDashboard = () => {
                             <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                                 <Calendar className="h-5 w-5 text-slate-700" />
                                 Session Calendar
+                                <HintTooltip content="View and manage your sessions. Click on a date to create a new session. You can set the time, duration, max participants, and pricing. Sessions appear on your calendar and are available for users to book." />
                             </h3>
                         </div>
                         <div className="p-4 md:p-6">
@@ -467,6 +468,7 @@ const InstructorDashboard = () => {
                             <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                                 <Users className="h-5 w-5 text-slate-700" />
                                 Upcoming Bookings
+                                <HintTooltip content="List of confirmed bookings from users for your upcoming sessions. You can view participant details and manage bookings." />
                             </h3>
                         </div>
                         <div className="p-4 md:p-6">
@@ -486,6 +488,7 @@ const InstructorDashboard = () => {
                             <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                                 <Award className="h-5 w-5 text-slate-700" />
                                 {t("Achievements")}
+                                <HintTooltip content="Your instructor achievements, badges, and performance metrics. Earn achievements by maintaining high ratings, receiving bookings, and growing your experience on the platform." />
                             </h3>
                             {achievementsLoading && <Loader2 className="h-5 w-5 animate-spin text-slate-600" />}
                         </div>
@@ -501,7 +504,10 @@ const InstructorDashboard = () => {
                                             <div className="text-3xl font-bold text-blue-900">
                                                 {instructorAchievements.level || 0}
                                             </div>
-                                            <div className="text-sm text-blue-700 font-medium mt-1">Level</div>
+                                            <div className="text-sm text-blue-700 font-medium mt-1 flex items-center justify-center gap-1">
+                                                Level
+                                                <HintTooltip content="Your instructor level based on achievements and experience." />
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
@@ -509,7 +515,10 @@ const InstructorDashboard = () => {
                                             <div className="text-3xl font-bold text-purple-900">
                                                 {instructorAchievements.achievements?.length || 0}
                                             </div>
-                                            <div className="text-sm text-purple-700 font-medium mt-1">Achievements</div>
+                                            <div className="text-sm text-purple-700 font-medium mt-1 flex items-center justify-center gap-1">
+                                                Achievements
+                                                <HintTooltip content="Total number of achievement badges you have earned." />
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200">
@@ -517,7 +526,10 @@ const InstructorDashboard = () => {
                                             <div className="text-3xl font-bold text-amber-900">
                                                 {instructorAchievements.currentRating?.toFixed(1) || "0.0"}
                                             </div>
-                                            <div className="text-sm text-amber-700 font-medium mt-1">Rating</div>
+                                            <div className="text-sm text-amber-700 font-medium mt-1 flex items-center justify-center gap-1">
+                                                Rating
+                                                <HintTooltip content="Your average rating from completed bookings (0-5 scale)." />
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
@@ -525,7 +537,10 @@ const InstructorDashboard = () => {
                                             <div className="text-3xl font-bold text-green-900">
                                                 {instructorAchievements.totalExperiencePoints || 0}
                                             </div>
-                                            <div className="text-sm text-green-700 font-medium mt-1">XP</div>
+                                            <div className="text-sm text-green-700 font-medium mt-1 flex items-center justify-center gap-1">
+                                                XP
+                                                <HintTooltip content="Total experience points earned from achievements and milestones." />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -540,9 +555,7 @@ const InstructorDashboard = () => {
                                                     key={index}
                                                     className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-200 hover:shadow-md transition-all duration-200"
                                                 >
-                                                    <div className="text-4xl">
-                                                        {achievement.icon || "🏆"}
-                                                    </div>
+
                                                     <div className="flex-1">
                                                         <div className="font-semibold text-slate-900">
                                                             {achievement.name}
@@ -600,7 +613,10 @@ const InstructorDashboard = () => {
                                                 <Users className="h-5 w-5 text-blue-600" />
                                             </div>
                                             <div>
-                                                <p className="text-sm text-slate-600">Total Bookings</p>
+                                                <p className="text-sm text-slate-600 flex items-center gap-1">
+                                                    Total Bookings
+                                                    <HintTooltip content="Total number of bookings you have received from users." />
+                                                </p>
                                                 <p className="text-xl font-bold text-slate-900">{instructorAchievements.totalBookingsReceived || 0}</p>
                                             </div>
                                         </div>
@@ -609,7 +625,10 @@ const InstructorDashboard = () => {
                                                 <Calendar className="h-5 w-5 text-purple-600" />
                                             </div>
                                             <div>
-                                                <p className="text-sm text-slate-600">Experience</p>
+                                                <p className="text-sm text-slate-600 flex items-center gap-1">
+                                                    Experience
+                                                    <HintTooltip content="Number of months since you joined the platform as an instructor." />
+                                                </p>
                                                 <p className="text-xl font-bold text-slate-900">{instructorAchievements.monthsSinceJoining || 0} months</p>
                                             </div>
                                         </div>
@@ -618,7 +637,10 @@ const InstructorDashboard = () => {
                                                 <Star className="h-5 w-5 text-green-600" />
                                             </div>
                                             <div>
-                                                <p className="text-sm text-slate-600">Last Evaluated</p>
+                                                <p className="text-sm text-slate-600 flex items-center gap-1">
+                                                    Last Evaluated
+                                                    <HintTooltip content="The last time your achievements were evaluated and updated." />
+                                                </p>
                                                 <p className="text-xl font-bold text-slate-900">
                                                     {instructorAchievements.stats?.lastEvaluated
                                                         ? new Date(instructorAchievements.stats.lastEvaluated).toLocaleDateString()
@@ -632,7 +654,10 @@ const InstructorDashboard = () => {
                                                 <DollarSign className="h-5 w-5 text-indigo-600" />
                                             </div>
                                             <div>
-                                                <p className="text-sm text-slate-600">Platform Fee</p>
+                                                <p className="text-sm text-slate-600 flex items-center gap-1">
+                                                    Platform Fee
+                                                    <HintTooltip content="The percentage of booking revenue taken as platform commission. You receive the remaining amount." />
+                                                </p>
                                                 <p className="text-xl font-bold text-slate-900">
                                                     {user?.user?.instructor?.commissionPercentage ?? 20}%
                                                 </p>

@@ -131,6 +131,24 @@ export const getAllHotelBookings = async (queryParams = {}) => {
   return res;
 }
 
+// Delete hotel booking (admin only)
+export const deleteHotelBooking = async (bookingId) => {
+  if (!bookingId) throw new Error('Booking ID is required');
+  const res = await axiosClient.delete(`/api/hotelBooking/${bookingId}`, {
+    withCredentials: true,
+  });
+  return res;
+}
+
+// Delete item booking (admin only)
+export const deleteItemBooking = async (bookingId) => {
+  if (!bookingId) throw new Error('Booking ID is required');
+  const res = await axiosClient.delete(`/api/itemBooking/${bookingId}`, {
+    withCredentials: true,
+  });
+  return res;
+}
+
 // Get all item bookings (admin only)
 export const getAllItemBookings = async (queryParams = {}) => {
   const params = new URLSearchParams(queryParams).toString();

@@ -28,7 +28,8 @@ import {
   Store,
   TicketCheck,
   User,
-  Award
+  Award,
+  Shield
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { useDispatch, useSelector } from 'react-redux'
@@ -53,6 +54,7 @@ const ROLE_ACCESS_CONFIG = {
   'User Declaration': [],
   'Website Settings': [],
   Sponsors: [],
+  'System Admins': [],
 }
 
 const SIDEBAR_ITEMS = [
@@ -71,6 +73,7 @@ const SIDEBAR_ITEMS = [
   { key: 'User Declaration', path: '/admin/declaration', icon: ClipboardCheck, label: 'User Declaration' },
   { key: 'Users', path: '/admin/users', icon: User, label: 'Users' },
   { key: 'Website Settings', path: '/admin/website-settings', icon: Settings, label: 'Website Settings' },
+  { key: 'System Admins', path: '/admin/rbac', icon: Shield, label: 'System Admins' },
 ]
 
 export default function AdminLayout() {
