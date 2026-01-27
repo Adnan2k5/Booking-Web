@@ -17,6 +17,7 @@ import { Link } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { getCurrentUserSessionBookings } from "../../Api/booking.api"
 import { getUserAdventureExperiences, getUserAdventures, getUserAchievements, evaluateMyAchievements } from "../../Api/user.api"
+import HintTooltip from "../../components/HintTooltip";
 
 export default function UserDashboardPage() {
     const { user } = useAuth();
@@ -261,7 +262,10 @@ export default function UserDashboardPage() {
                         {/* Level Card */}
                         <Card className="rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group">
                             <CardHeader className="pb-3">
-                                <CardTitle className="text-lg font-semibold text-gray-900">Overall Adventure Level</CardTitle>
+                                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                    Overall Adventure Level
+                                    <HintTooltip content="Your overall level based on total experience points earned across all adventures." />
+                                </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex items-center gap-4">
@@ -302,7 +306,10 @@ export default function UserDashboardPage() {
                         {/* Completed Adventures */}
                         <Card className="rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group hover:scale-105">
                             <CardHeader className="pb-3">
-                                <CardTitle className="text-lg font-semibold text-gray-900">Completed Adventures</CardTitle>
+                                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                    Completed Adventures
+                                    <HintTooltip content="Total number of adventure sessions you have completed." />
+                                </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex items-center gap-4">
@@ -325,7 +332,10 @@ export default function UserDashboardPage() {
                         {/* Upcoming Adventures */}
                         <Card className="rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group hover:scale-105">
                             <CardHeader className="pb-3">
-                                <CardTitle className="text-lg font-semibold text-gray-900">Upcoming Adventures</CardTitle>
+                                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                    Upcoming Adventures
+                                    <HintTooltip content="Number of adventure sessions you have scheduled for the future." />
+                                </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex items-center gap-4">
@@ -350,7 +360,10 @@ export default function UserDashboardPage() {
                         <div className="lg:col-span-2">
                             <Card className="rounded-2xl border-0 shadow-xl bg-white">
                                 <CardHeader>
-                                    <CardTitle>Level Overview</CardTitle>
+                                    <CardTitle className="flex items-center gap-2">
+                                        Level Overview
+                                        <HintTooltip content="Your progression summary showing experience points, level, and achievements earned." />
+                                    </CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-6">
@@ -409,19 +422,31 @@ export default function UserDashboardPage() {
                                         ) : userAchievements ? (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                                 <div className="p-4 rounded-xl bg-gray-50">
-                                                    <div className="text-sm text-gray-600">Total Completed Adventures</div>
+                                                    <div className="text-sm text-gray-600 flex items-center gap-2">
+                                                        Total Completed Adventures
+                                                        <HintTooltip content="Total number of adventure sessions you have successfully completed." />
+                                                    </div>
                                                     <div className="text-2xl font-semibold text-gray-900">{userAchievements.totalCompletedAdventures || 0}</div>
                                                 </div>
                                                 <div className="p-4 rounded-xl bg-gray-50">
-                                                    <div className="text-sm text-gray-600">Overall Level</div>
+                                                    <div className="text-sm text-gray-600 flex items-center gap-2">
+                                                        Overall Level
+                                                        <HintTooltip content="Your current level calculated from total experience points (100 XP per level)." />
+                                                    </div>
                                                     <div className="text-2xl font-semibold text-gray-900">{normalizedLevel}</div>
                                                 </div>
                                                 <div className="p-4 rounded-xl bg-gray-50">
-                                                    <div className="text-sm text-gray-600">Total XP</div>
+                                                    <div className="text-sm text-gray-600 flex items-center gap-2">
+                                                        Total XP
+                                                        <HintTooltip content="Total experience points earned across all your adventures." />
+                                                    </div>
                                                     <div className="text-2xl font-semibold text-gray-900">{totalXP}</div>
                                                 </div>
                                                 <div className="p-4 rounded-xl bg-gray-50">
-                                                    <div className="text-sm text-gray-600">Unique Categories</div>
+                                                    <div className="text-sm text-gray-600 flex items-center gap-2">
+                                                        Unique Categories
+                                                        <HintTooltip content="Number of different adventure categories you have tried." />
+                                                    </div>
                                                     <div className="text-2xl font-semibold text-gray-900">{userAchievements?.adventureStats?.uniqueCategories || 0}</div>
                                                 </div>
                                             </div>

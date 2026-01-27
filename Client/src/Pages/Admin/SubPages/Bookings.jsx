@@ -17,14 +17,26 @@ import {
   getAllSessionBookings,
   getAllHotelBookings,
   getAllItemBookings,
+  deleteSessionBooking,
+  deleteHotelBooking,
+  deleteItemBooking
 } from "../../../Api/booking.api"
-import { getAllEventBookings } from "../../../Api/eventBooking.api"
+import { getAllEventBookings, deleteEventBooking } from "../../../Api/eventBooking.api"
+import { toast } from "sonner"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../../components/ui/dialog"
 
 export default function Dash_Bookings() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [activeTab, setActiveTab] = useState("items")
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState({
     items: 1,
@@ -33,12 +45,12 @@ export default function Dash_Bookings() {
     events: 1
   })
   const [itemsPerPage] = useState(10)
-    // State for different booking types
+  // State for different booking types
   const [itemBookings, setItemBookings] = useState([])
   const [sessionBookings, setSessionBookings] = useState([])
   const [hotelBookings, setHotelBookings] = useState([])
   const [eventBookings, setEventBookings] = useState([])
-  
+
   // Pagination metadata from backend
   const [paginationMeta, setPaginationMeta] = useState({
     items: { total: 0, totalPages: 0, currentPage: 1 },
@@ -46,7 +58,7 @@ export default function Dash_Bookings() {
     hotels: { total: 0, totalPages: 0, currentPage: 1 }
     , events: { total: 0, totalPages: 0, currentPage: 1 }
   })
-  
+
   const [loading, setLoading] = useState({
     items: false,
     sessions: false,
@@ -95,23 +107,23 @@ export default function Dash_Bookings() {
         sortBy: 'createdAt',
         sortOrder: 'desc'
       }
-      
+
       if (statusFilter !== 'all') {
         params.status = statusFilter
       }
-      
+
       const response = await getAllItemBookings(params)
-      
+
       const bookingsData = response?.data?.data?.data || []
       const meta = {
         total: response?.data?.data?.total || 0,
         totalPages: response?.data?.data?.totalPages || 0,
         currentPage: response?.data?.data?.page || 1
       }
-      
+
       setItemBookings(Array.isArray(bookingsData) ? bookingsData : [])
       setPaginationMeta(prev => ({ ...prev, items: meta }))
-    } catch (error) { 
+    } catch (error) {
       setItemBookings([])
       setPaginationMeta(prev => ({ ...prev, items: { total: 0, totalPages: 0, currentPage: 1 } }))
     } finally {
@@ -128,11 +140,11 @@ export default function Dash_Bookings() {
         sortBy: 'createdAt',
         sortOrder: 'desc'
       }
-      
+
       if (statusFilter !== 'all') {
         params.status = statusFilter
       }
-      
+
       const response = await getAllSessionBookings(params)
       // Backend returns { bookings, total, page, totalPages } inside response.data.data
       const bookingsData = response?.data?.data?.bookings || []
@@ -160,21 +172,21 @@ export default function Dash_Bookings() {
         sortBy: 'createdAt',
         sortOrder: 'desc'
       }
-      
+
       if (statusFilter !== 'all') {
         params.status = statusFilter
       }
-      
+
       const response = await getAllHotelBookings(params)
 
-      
+
       const bookingsData = response?.data?.data?.bookings || []
       const meta = {
         total: response?.data?.data?.total || 0,
         totalPages: response?.data?.data?.totalPages || 0,
         currentPage: response?.data?.data?.page || 1
       }
-      
+
       setHotelBookings(Array.isArray(bookingsData) ? bookingsData : [])
       setPaginationMeta(prev => ({ ...prev, hotels: meta }))
     } catch (error) {
@@ -221,7 +233,7 @@ export default function Dash_Bookings() {
       ...prev,
       [type]: page
     }))
-    
+
     // Fetch new data for the specific type
     if (type === 'items') {
       fetchItemBookings(page)
@@ -234,24 +246,69 @@ export default function Dash_Bookings() {
     }
   }
 
+
+  // Delete handling
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [bookingToDelete, setBookingToDelete] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const initiateDelete = (booking, type) => {
+    setBookingToDelete({ ...booking, type })
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!bookingToDelete) return
+
+    setIsDeleting(true)
+    try {
+      const id = bookingToDelete._id || bookingToDelete.id
+
+      if (bookingToDelete.type === 'item') {
+        await deleteItemBooking(id)
+        toast.success("Item booking deleted successfully")
+        fetchItemBookings(currentPage.items)
+      } else if (bookingToDelete.type === 'session') {
+        await deleteSessionBooking(id)
+        toast.success("Session booking deleted successfully")
+        fetchSessionBookings(currentPage.sessions)
+      } else if (bookingToDelete.type === 'hotel') {
+        await deleteHotelBooking(id)
+        toast.success("Hotel booking deleted successfully")
+        fetchHotelBookings(currentPage.hotels)
+      } else if (bookingToDelete.type === 'event') {
+        await deleteEventBooking(id)
+        toast.success("Event booking deleted successfully")
+        fetchEventBookings(currentPage.events)
+      }
+    } catch (error) {
+      console.error("Delete error:", error)
+      toast.error(error.message || "Failed to delete booking")
+    } finally {
+      setIsDeleting(false)
+      setDeleteDialogOpen(false)
+      setBookingToDelete(null)
+    }
+  }
+
   // Filter bookings based on search term (now done on backend, but keeping for client-side if needed)
   const getFilteredBookings = (bookings) => {
     if (!searchTerm) return bookings
-    
+
     if (!Array.isArray(bookings)) {
       return []
     }
-    
+
     return bookings.filter((booking) => {
       if (!booking) return false
-      
+
       const bookingData = booking.user?.name || booking.customerName || ''
       const activityName = booking.item?.name || booking.session?.title || booking.hotel?.name || booking.adventure || ''
-      
+
       const matchesSearch =
         bookingData.toLowerCase().includes(searchTerm.toLowerCase()) ||
         activityName.toLowerCase().includes(searchTerm.toLowerCase())
-      
+
       return matchesSearch
     })
   }
@@ -310,7 +367,7 @@ export default function Dash_Bookings() {
               <DropdownMenuItem onClick={() => setStatusFilter("completed")}>Completed Bookings</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setStatusFilter("cancelled")}>Cancelled Bookings</DropdownMenuItem>
             </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenu>
 
           <Button variant="outline" size="sm">
             <Download className="mr-2 h-4 w-4" />
@@ -326,10 +383,11 @@ export default function Dash_Bookings() {
           <TabsTrigger value="hotels">Hotel Bookings</TabsTrigger>
           <TabsTrigger value="events">Event Bookings</TabsTrigger>
         </TabsList>        <TabsContent value="items">
-          <BookingsTable 
-            bookings={filteredItemBookings} 
-            loading={loading.items} 
-            type="item" 
+          <BookingsTable
+            bookings={filteredItemBookings}
+            loading={loading.items}
+            type="item"
+            onDelete={(booking) => initiateDelete(booking, 'item')}
           />
           <PaginationControls
             currentPage={paginationMeta.items.currentPage}
@@ -339,12 +397,13 @@ export default function Dash_Bookings() {
             itemsPerPage={itemsPerPage}
           />
         </TabsContent>
-        
+
         <TabsContent value="sessions">
-          <BookingsTable 
-            bookings={filteredSessionBookings} 
-            loading={loading.sessions} 
-            type="session" 
+          <BookingsTable
+            bookings={filteredSessionBookings}
+            loading={loading.sessions}
+            type="session"
+            onDelete={(booking) => initiateDelete(booking, 'session')}
           />
           <PaginationControls
             currentPage={paginationMeta.sessions.currentPage}
@@ -354,12 +413,13 @@ export default function Dash_Bookings() {
             itemsPerPage={itemsPerPage}
           />
         </TabsContent>
-        
+
         <TabsContent value="hotels">
-          <BookingsTable 
-            bookings={filteredHotelBookings} 
-            loading={loading.hotels} 
-            type="hotel" 
+          <BookingsTable
+            bookings={filteredHotelBookings}
+            loading={loading.hotels}
+            type="hotel"
+            onDelete={(booking) => initiateDelete(booking, 'hotel')}
           />
           <PaginationControls
             currentPage={paginationMeta.hotels.currentPage}
@@ -369,12 +429,13 @@ export default function Dash_Bookings() {
             itemsPerPage={itemsPerPage}
           />
         </TabsContent>
-        
+
         <TabsContent value="events">
-          <BookingsTable 
-            bookings={filteredEventBookings} 
-            loading={loading.events} 
-            type="event" 
+          <BookingsTable
+            bookings={filteredEventBookings}
+            loading={loading.events}
+            type="event"
+            onDelete={(booking) => initiateDelete(booking, 'event')}
           />
           <PaginationControls
             currentPage={paginationMeta.events.currentPage}
@@ -385,277 +446,311 @@ export default function Dash_Bookings() {
           />
         </TabsContent>
       </Tabs>
-    </motion.div>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you sure?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete the booking
+              {bookingToDelete && (
+                <span className="font-medium block mt-2">
+                  ID: {bookingToDelete._id || bookingToDelete.id}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>Cancel</Button>
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteConfirm();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+    </motion.div >
   )
-}
 
-// Reusable component for bookings tables
-function BookingsTable({ bookings, loading, type }) {
-  // Ensure bookings is always an array
-  const safeBookings = Array.isArray(bookings) ? bookings : []
-  
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-6 flex justify-center items-center">
-          <p>Loading {type} bookings...</p>
-        </CardContent>
-      </Card>
-    )
-  }
+  // Reusable component for bookings tables
+  function BookingsTable({ bookings, loading, type, onDelete }) {
+    // Ensure bookings is always an array
+    const safeBookings = Array.isArray(bookings) ? bookings : []
 
-  if (safeBookings.length === 0) {
-    return (
-      <Card>
-        <CardContent className="p-6 flex justify-center items-center">
-          <p>No {type} bookings found.</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  const getTableHeaders = () => {
-    const commonHeaders = [
-      <TableHead key="customer">Customer</TableHead>,
-      <TableHead key="date">Date</TableHead>,
-      <TableHead key="amount">Amount</TableHead>,
-      <TableHead key="status">Status</TableHead>,
-      <TableHead key="actions" className="text-right">Actions</TableHead>
-    ]
-
-    if (type === "item") {
-      return [
-        <TableHead key="item">Booking Id</TableHead>,
-        ...commonHeaders
-      ]
-    } else if (type === "session") {
-      return [
-        <TableHead key="session">Session</TableHead>,
-        <TableHead key="sessionId">Session ID</TableHead>,
-        ...commonHeaders,
-        <TableHead key="participants">Participants</TableHead>
-      ]
-    } else if (type === "hotel") {
-      return [
-        <TableHead key="hotel">Hotel</TableHead>,
-        ...commonHeaders,
-        <TableHead key="checkin">Check-in</TableHead>,
-        <TableHead key="checkout">Check-out</TableHead>
-      ]
-    } else if (type === "event") {
-      return [
-        <TableHead key="event">Event</TableHead>,
-        <TableHead key="eventId">Event ID</TableHead>,
-        ...commonHeaders,
-        <TableHead key="participants">Participants</TableHead>
-      ]
-    }
-    
-    return commonHeaders
-  }
-
-  const renderTableRow = (booking) => {
-    if (!booking) return null
-    
-    const userName = booking.user?.name || booking.customerName || 'N/A'
-    const bookingDate = booking.createdAt || booking.bookingDate || booking.date
-    const formattedDate = bookingDate ? new Date(bookingDate).toLocaleDateString() : 'N/A'
-    const bookingStatus = booking.status || 'pending'
-    const amount = booking.totalAmount || booking.amount || 0
-    
-    const getStatusVariant = (status) => {
-      switch (status.toLowerCase()) {
-        case 'confirmed': return 'default'
-        case 'pending': return 'outline'
-        case 'completed': return 'secondary'
-        case 'cancelled': return 'destructive'
-        default: return 'outline'
-      }
-    }
-
-    const commonCells = [
-      <TableCell key="customer" className="font-medium">{userName}</TableCell>,
-      <TableCell key="date">{formattedDate}</TableCell>,
-      <TableCell key="amount">${amount}</TableCell>,
-      <TableCell key="status">
-        <Badge variant={getStatusVariant(bookingStatus)}>
-          {bookingStatus.charAt(0).toUpperCase() + bookingStatus.slice(1)}
-        </Badge>
-      </TableCell>,
-      <TableCell key="actions" className="text-right">
-        <div className="flex justify-end space-x-2">
-          <Button variant="ghost" size="icon">
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </TableCell>
-    ]
-
-    if (type === "item") {
-      const itemName = booking._id;
+    if (loading) {
       return (
-        <TableRow key={booking._id || booking.id}>
-          <TableCell>{itemName}</TableCell>
-          {commonCells}
-        </TableRow>
-      )
-    } else if (type === "session") {
-      const sessionTitle = booking.session?.title || 'N/A'
-      // Fallback: if session._id is missing, show booking.session (ObjectId)
-      let sessionId = 'N/A';
-      if (booking.session && typeof booking.session === 'object' && booking.session._id) {
-        sessionId = booking.session._id;
-      } else if (booking.session && typeof booking.session === 'string') {
-        sessionId = booking.session;
-      }
-      const participants = booking.participants || booking.bookedSeats || 1
-      return (
-        <TableRow key={booking._id || booking.id}>
-          <TableCell>{sessionTitle}</TableCell>
-          <TableCell>{sessionId}</TableCell>
-          {commonCells}
-          <TableCell>{participants}</TableCell>
-        </TableRow>
-      )
-    } else if (type === "hotel") {
-      const hotelName = booking.hotel?.name || 'N/A'
-      const checkIn = booking.checkInDate ? new Date(booking.checkInDate).toLocaleDateString() : 'N/A'
-      const checkOut = booking.checkOutDate ? new Date(booking.checkOutDate).toLocaleDateString() : 'N/A'
-      return (
-        <TableRow key={booking._id || booking.id}>
-          <TableCell>{hotelName}</TableCell>
-          {commonCells}
-          <TableCell>{checkIn}</TableCell>
-          <TableCell>{checkOut}</TableCell>
-        </TableRow>
-      )
-    } else if (type === "event") {
-      const eventTitle = booking.event?.title || 'N/A'
-      let eventId = 'N/A'
-      if (booking.event && typeof booking.event === 'object' && booking.event._id) {
-        eventId = booking.event._id
-      } else if (booking.event && typeof booking.event === 'string') {
-        eventId = booking.event
-      }
-      const participants = booking.participants || 1
-      return (
-        <TableRow key={booking._id || booking.id}>
-          <TableCell>{eventTitle}</TableCell>
-          <TableCell>{eventId}</TableCell>
-          {commonCells}
-          <TableCell>{participants}</TableCell>
-        </TableRow>
+        <Card>
+          <CardContent className="p-6 flex justify-center items-center">
+            <p>Loading {type} bookings...</p>
+          </CardContent>
+        </Card>
       )
     }
-    
-    return null
-  }
 
-  return (
-    <Card>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {getTableHeaders()}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {safeBookings.map(renderTableRow)}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  )
-}
+    if (safeBookings.length === 0) {
+      return (
+        <Card>
+          <CardContent className="p-6 flex justify-center items-center">
+            <p>No {type} bookings found.</p>
+          </CardContent>
+        </Card>
+      )
+    }
 
-// Pagination Controls Component
-function PaginationControls({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }) {
-  if (totalPages <= 1) return null
+    const getTableHeaders = () => {
+      const commonHeaders = [
+        <TableHead key="customer">Customer</TableHead>,
+        <TableHead key="date">Date</TableHead>,
+        <TableHead key="amount">Amount</TableHead>,
+        <TableHead key="status">Status</TableHead>,
+        <TableHead key="actions" className="text-right">Actions</TableHead>
+      ]
 
-  const startItem = (currentPage - 1) * itemsPerPage + 1
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems)
-
-  const getPageNumbers = () => {
-    const pages = []
-    const maxVisiblePages = 5
-    
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i)
+      if (type === "item") {
+        return [
+          <TableHead key="item">Booking Id</TableHead>,
+          ...commonHeaders
+        ]
+      } else if (type === "session") {
+        return [
+          <TableHead key="session">Session</TableHead>,
+          <TableHead key="sessionId">Session ID</TableHead>,
+          ...commonHeaders,
+          <TableHead key="participants">Participants</TableHead>
+        ]
+      } else if (type === "hotel") {
+        return [
+          <TableHead key="hotel">Hotel</TableHead>,
+          ...commonHeaders,
+          <TableHead key="checkin">Check-in</TableHead>,
+          <TableHead key="checkout">Check-out</TableHead>
+        ]
+      } else if (type === "event") {
+        return [
+          <TableHead key="event">Event</TableHead>,
+          <TableHead key="eventId">Event ID</TableHead>,
+          ...commonHeaders,
+          <TableHead key="participants">Participants</TableHead>
+        ]
       }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pages.push(i)
+
+      return commonHeaders
+    }
+
+    const renderTableRow = (booking) => {
+      if (!booking) return null
+
+      const userName = booking.user?.name || booking.customerName || 'N/A'
+      const bookingDate = booking.createdAt || booking.bookingDate || booking.date
+      const formattedDate = bookingDate ? new Date(bookingDate).toLocaleDateString() : 'N/A'
+      const bookingStatus = booking.status || 'pending'
+      const amount = booking.totalAmount || booking.amount || 0
+
+      const getStatusVariant = (status) => {
+        switch (status.toLowerCase()) {
+          case 'confirmed': return 'default'
+          case 'pending': return 'outline'
+          case 'completed': return 'secondary'
+          case 'cancelled': return 'destructive'
+          default: return 'outline'
         }
-        pages.push('...')
-        pages.push(totalPages)
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1)
-        pages.push('...')
-        for (let i = totalPages - 3; i <= totalPages; i++) {
+      }
+
+      const commonCells = [
+        <TableCell key="customer" className="font-medium">{userName}</TableCell>,
+        <TableCell key="date">{formattedDate}</TableCell>,
+        <TableCell key="amount">${amount}</TableCell>,
+        <TableCell key="status">
+          <Badge variant={getStatusVariant(bookingStatus)}>
+            {bookingStatus.charAt(0).toUpperCase() + bookingStatus.slice(1)}
+          </Badge>
+        </TableCell>,
+        <TableCell key="actions" className="text-right">
+          <div className="flex justify-end space-x-2">
+            <Button variant="ghost" size="icon">
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete && onDelete(booking)}
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </TableCell>
+      ]
+
+      if (type === "item") {
+        const itemName = booking._id;
+        return (
+          <TableRow key={booking._id || booking.id}>
+            <TableCell>{itemName}</TableCell>
+            {commonCells}
+          </TableRow>
+        )
+      } else if (type === "session") {
+        const sessionTitle = booking.session?.title || 'N/A'
+        // Fallback: if session._id is missing, show booking.session (ObjectId)
+        let sessionId = 'N/A';
+        if (booking.session && typeof booking.session === 'object' && booking.session._id) {
+          sessionId = booking.session._id;
+        } else if (booking.session && typeof booking.session === 'string') {
+          sessionId = booking.session;
+        }
+        const participants = booking.participants || booking.bookedSeats || 1
+        return (
+          <TableRow key={booking._id || booking.id}>
+            <TableCell>{sessionTitle}</TableCell>
+            <TableCell>{sessionId}</TableCell>
+            {commonCells}
+            <TableCell>{participants}</TableCell>
+          </TableRow>
+        )
+      } else if (type === "hotel") {
+        const hotelName = booking.hotel?.name || 'N/A'
+        const checkIn = booking.checkInDate ? new Date(booking.checkInDate).toLocaleDateString() : 'N/A'
+        const checkOut = booking.checkOutDate ? new Date(booking.checkOutDate).toLocaleDateString() : 'N/A'
+        return (
+          <TableRow key={booking._id || booking.id}>
+            <TableCell>{hotelName}</TableCell>
+            {commonCells}
+            <TableCell>{checkIn}</TableCell>
+            <TableCell>{checkOut}</TableCell>
+          </TableRow>
+        )
+      } else if (type === "event") {
+        const eventTitle = booking.event?.title || 'N/A'
+        let eventId = 'N/A'
+        if (booking.event && typeof booking.event === 'object' && booking.event._id) {
+          eventId = booking.event._id
+        } else if (booking.event && typeof booking.event === 'string') {
+          eventId = booking.event
+        }
+        const participants = booking.participants || 1
+        return (
+          <TableRow key={booking._id || booking.id}>
+            <TableCell>{eventTitle}</TableCell>
+            <TableCell>{eventId}</TableCell>
+            {commonCells}
+            <TableCell>{participants}</TableCell>
+          </TableRow>
+        )
+      }
+
+      return null
+    }
+
+    return (
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {getTableHeaders()}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {safeBookings.map(renderTableRow)}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Pagination Controls Component
+  function PaginationControls({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }) {
+    if (totalPages <= 1) return null
+
+    const startItem = (currentPage - 1) * itemsPerPage + 1
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems)
+
+    const getPageNumbers = () => {
+      const pages = []
+      const maxVisiblePages = 5
+
+      if (totalPages <= maxVisiblePages) {
+        for (let i = 1; i <= totalPages; i++) {
           pages.push(i)
         }
       } else {
-        pages.push(1)
-        pages.push('...')
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pages.push(i)
+        if (currentPage <= 3) {
+          for (let i = 1; i <= 4; i++) {
+            pages.push(i)
+          }
+          pages.push('...')
+          pages.push(totalPages)
+        } else if (currentPage >= totalPages - 2) {
+          pages.push(1)
+          pages.push('...')
+          for (let i = totalPages - 3; i <= totalPages; i++) {
+            pages.push(i)
+          }
+        } else {
+          pages.push(1)
+          pages.push('...')
+          for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+            pages.push(i)
+          }
+          pages.push('...')
+          pages.push(totalPages)
         }
-        pages.push('...')
-        pages.push(totalPages)
       }
-    }
-    
-    return pages
-  }
 
-  return (
-    <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
-      {/* Left side - Results info */}
-      <div className="flex items-center space-x-4">
-        <div className="text-sm text-muted-foreground">
-          Showing <span className="font-medium">{startItem}</span> to{' '}
-          <span className="font-medium">{endItem}</span> of{' '}
-          <span className="font-medium">{totalItems}</span> results
+      return pages
+    }
+
+    return (
+      <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
+        {/* Left side - Results info */}
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-muted-foreground">
+            Showing <span className="font-medium">{startItem}</span> to{' '}
+            <span className="font-medium">{endItem}</span> of{' '}
+            <span className="font-medium">{totalItems}</span> results
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Page <span className="font-medium">{currentPage}</span> of{' '}
+            <span className="font-medium">{totalPages}</span>
+          </div>
         </div>
-        <div className="text-sm text-muted-foreground">
-          Page <span className="font-medium">{currentPage}</span> of{' '}
-          <span className="font-medium">{totalPages}</span>
-        </div>
-      </div>
-      
-      {/* Right side - Navigation controls */}
-      <div className="flex items-center space-x-2">
-        {/* Previous button */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="flex items-center space-x-1"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          <span>Previous</span>
-        </Button>
-        
-        {/* Page numbers */}
-        <div className="flex items-center space-x-1">
-          {getPageNumbers().map((page, index) => (
-            page === '...'
-              ? (
+
+        {/* Right side - Navigation controls */}
+        <div className="flex items-center space-x-2">
+          {/* Previous button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="flex items-center space-x-1"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span>Previous</span>
+          </Button>
+
+          {/* Page numbers */}
+          <div className="flex items-center space-x-1">
+            {getPageNumbers().map((page, index) => (
+              page === '...'
+                ? (
                   <span key={`ellipsis-${index}`} className="px-2 text-muted-foreground">
                     ...
                   </span>
                 )
-              : (
+                : (
                   <Button
                     key={`page-${page}`}
                     variant={currentPage === page ? "default" : "outline"}
@@ -666,22 +761,23 @@ function PaginationControls({ currentPage, totalPages, onPageChange, totalItems,
                     {page}
                   </Button>
                 )
-          ))}
-        </div>
-        
-        {/* Next button */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="flex items-center space-x-1"
-        >
-          <span>Next</span>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
-}
+            ))}
+          </div>
 
+          {/* Next button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="flex items-center space-x-1"
+          >
+            <span>Next</span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+}

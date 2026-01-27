@@ -9,11 +9,11 @@ import { Switch } from "../../../components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { Badge } from "../../../components/ui/badge";
 import { fetchAllAdventures } from "../../../Api/adventure.api";
-import { 
+import {
   // User achievement rules
-  createAchievementRule, 
-  deleteAchievementRule, 
-  listAchievementRules, 
+  createAchievementRule,
+  deleteAchievementRule,
+  listAchievementRules,
   updateAchievementRule,
   evaluateMyAchievements,
   // Instructor achievement rules
@@ -24,6 +24,7 @@ import {
   evaluateAllInstructors
 } from "../../../Api/user.api";
 import { Trash2, Save, Plus, Play, Users, GraduationCap } from "lucide-react";
+import HintTooltip from "../../../components/HintTooltip";
 
 export default function AchievementRulesPage() {
   const GLOBAL_ALL = "__GLOBAL__";
@@ -58,7 +59,6 @@ export default function AchievementRulesPage() {
       minMonthsSinceJoining: 0,
       minBookings: 0,
     },
-    icon: "",
     active: true,
   });
 
@@ -115,30 +115,29 @@ export default function AchievementRulesPage() {
     loadData();
   }, []);
 
-  const resetUserForm = () => setUserForm({ 
-    name: "", 
-    description: "", 
-    label: "", 
-    adventure: GLOBAL_ALL, 
-    metric: "completedSessions", 
-    threshold: 1, 
-    active: true 
+  const resetUserForm = () => setUserForm({
+    name: "",
+    description: "",
+    label: "",
+    adventure: GLOBAL_ALL,
+    metric: "completedSessions",
+    threshold: 1,
+    active: true
   });
 
-  const resetInstructorForm = () => setInstructorForm({ 
-    name: "", 
-    description: "", 
-    label: "", 
-    adventure: GLOBAL_ALL, 
-    metric: "rating", 
+  const resetInstructorForm = () => setInstructorForm({
+    name: "",
+    description: "",
+    label: "",
+    adventure: GLOBAL_ALL,
+    metric: "rating",
     threshold: 4.0,
     instructorCriteria: {
       minRating: 4.0,
       minMonthsSinceJoining: 0,
       minBookings: 0,
     },
-    icon: "", 
-    active: true 
+    active: true
   });
 
   const onCreateUser = async () => {
@@ -163,7 +162,7 @@ export default function AchievementRulesPage() {
   const onCreateInstructor = async () => {
     if (!instructorForm.name?.trim()) return toast.error("Name is required");
     if (!instructorForm.threshold || instructorForm.threshold < 0) return toast.error("Threshold must be >= 0");
-    
+
     // Validation based on metric type
     if (instructorForm.metric === "rating" && (!instructorForm.instructorCriteria.minRating || instructorForm.instructorCriteria.minRating < 0 || instructorForm.instructorCriteria.minRating > 5)) {
       return toast.error("Minimum rating must be between 0 and 5");
@@ -313,31 +312,43 @@ export default function AchievementRulesPage() {
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div>
-                <label className="text-sm font-medium">Name</label>
-                <Input 
-                  value={userForm.name} 
-                  onChange={(e) => setUserForm({ ...userForm, name: e.target.value })} 
-                  placeholder="Adventure Explorer" 
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Name
+                  <HintTooltip content="The display name for this achievement that users will see when they earn it." />
+                </label>
+                <Input
+                  value={userForm.name}
+                  onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                  placeholder="Adventure Explorer"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Label (Category)</label>
-                <Input 
-                  value={userForm.label} 
-                  onChange={(e) => setUserForm({ ...userForm, label: e.target.value })} 
-                  placeholder="Tree Climbing" 
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Label (Category)
+                  <HintTooltip content="Category or tag for grouping similar achievements together." />
+                </label>
+                <Input
+                  value={userForm.label}
+                  onChange={(e) => setUserForm({ ...userForm, label: e.target.value })}
+                  placeholder="Tree Climbing"
                 />
               </div>
               <div className="md:col-span-2 lg:col-span-3">
-                <label className="text-sm font-medium">Description</label>
-                <Input 
-                  value={userForm.description} 
-                  onChange={(e) => setUserForm({ ...userForm, description: e.target.value })} 
-                  placeholder="Complete 10 climbs" 
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Description
+                  <HintTooltip content="A brief description explaining what the user needs to do to earn this achievement." />
+                </label>
+                <Input
+                  value={userForm.description}
+                  onChange={(e) => setUserForm({ ...userForm, description: e.target.value })}
+                  placeholder="Complete 10 climbs"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Adventure (optional)</label>
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Adventure (optional)
+                  <HintTooltip content="Specify a specific adventure this achievement applies to, or leave as Global for all adventures." />
+                </label>
                 <Select value={userForm.adventure} onValueChange={(v) => setUserForm({ ...userForm, adventure: v })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Global (All)" />
@@ -351,7 +362,10 @@ export default function AchievementRulesPage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium">Metric</label>
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Metric
+                  <HintTooltip content="The metric to track: Completed Sessions (finished bookings) or Confirmed Bookings (scheduled bookings)." />
+                </label>
                 <Select value={userForm.metric} onValueChange={(v) => setUserForm({ ...userForm, metric: v })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -362,20 +376,26 @@ export default function AchievementRulesPage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium">Threshold</label>
-                <Input 
-                  type="number" 
-                  min={1} 
-                  value={userForm.threshold} 
-                  onChange={(e) => setUserForm({ ...userForm, threshold: Number(e.target.value) })} 
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Threshold
+                  <HintTooltip content="The minimum number required to earn this achievement (e.g., 10 for 'Complete 10 sessions')." />
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={userForm.threshold}
+                  onChange={(e) => setUserForm({ ...userForm, threshold: Number(e.target.value) })}
                 />
               </div>
               <div className="flex items-center gap-2 mt-6">
-                <Switch 
-                  checked={userForm.active} 
-                  onCheckedChange={(v) => setUserForm({ ...userForm, active: v })} 
+                <Switch
+                  checked={userForm.active}
+                  onCheckedChange={(v) => setUserForm({ ...userForm, active: v })}
                 />
-                <span>Active</span>
+                <span className="flex items-center gap-2">
+                  Active
+                  <HintTooltip content="Enable or disable this achievement rule. Inactive rules won't be evaluated." />
+                </span>
               </div>
               <div className="md:col-span-2 lg:col-span-3 flex gap-2">
                 <Button onClick={onCreateUser} disabled={saving} className="bg-black text-white">
@@ -449,39 +469,43 @@ export default function AchievementRulesPage() {
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div>
-                <label className="text-sm font-medium">Name</label>
-                <Input 
-                  value={instructorForm.name} 
-                  onChange={(e) => setInstructorForm({ ...instructorForm, name: e.target.value })} 
-                  placeholder="Elite Instructor" 
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Name
+                  <HintTooltip content="The display name for this instructor achievement badge." />
+                </label>
+                <Input
+                  value={instructorForm.name}
+                  onChange={(e) => setInstructorForm({ ...instructorForm, name: e.target.value })}
+                  placeholder="Elite Instructor"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Label (Category)</label>
-                <Input 
-                  value={instructorForm.label} 
-                  onChange={(e) => setInstructorForm({ ...instructorForm, label: e.target.value })} 
-                  placeholder="Expert Guide" 
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Icon</label>
-                <Input 
-                  value={instructorForm.icon} 
-                  onChange={(e) => setInstructorForm({ ...instructorForm, icon: e.target.value })} 
-                  placeholder="👑" 
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Label (Category)
+                  <HintTooltip content="Category or tier for this instructor achievement." />
+                </label>
+                <Input
+                  value={instructorForm.label}
+                  onChange={(e) => setInstructorForm({ ...instructorForm, label: e.target.value })}
+                  placeholder="Expert Guide"
                 />
               </div>
               <div className="md:col-span-2 lg:col-span-3">
-                <label className="text-sm font-medium">Description</label>
-                <Input 
-                  value={instructorForm.description} 
-                  onChange={(e) => setInstructorForm({ ...instructorForm, description: e.target.value })} 
-                  placeholder="Achieve 4.8+ rating with 100+ bookings" 
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Description
+                  <HintTooltip content="A brief description of what instructors need to achieve to earn this badge." />
+                </label>
+                <Input
+                  value={instructorForm.description}
+                  onChange={(e) => setInstructorForm({ ...instructorForm, description: e.target.value })}
+                  placeholder="Achieve 4.8+ rating with 100+ bookings"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Adventure (optional)</label>
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Adventure (optional)
+                  <HintTooltip content="Limit this achievement to a specific adventure, or leave as Global for all adventures." />
+                </label>
                 <Select value={instructorForm.adventure} onValueChange={(v) => setInstructorForm({ ...instructorForm, adventure: v })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Global (All)" />
@@ -495,7 +519,10 @@ export default function AchievementRulesPage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium">Primary Metric</label>
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Primary Metric
+                  <HintTooltip content="The main metric to evaluate: Average Rating (0-5), Months Since Joining, or Total Bookings Received." />
+                </label>
                 <Select value={instructorForm.metric} onValueChange={(v) => setInstructorForm({ ...instructorForm, metric: v })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -506,76 +533,94 @@ export default function AchievementRulesPage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium">Primary Threshold</label>
-                <Input 
-                  type="number" 
-                  min={0} 
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Primary Threshold
+                  <HintTooltip content="The minimum value required for the primary metric to earn this achievement." />
+                </label>
+                <Input
+                  type="number"
+                  min={0}
                   step={instructorForm.metric === "rating" ? 0.1 : 1}
-                  value={instructorForm.threshold} 
-                  onChange={(e) => setInstructorForm({ ...instructorForm, threshold: Number(e.target.value) })} 
+                  value={instructorForm.threshold}
+                  onChange={(e) => setInstructorForm({ ...instructorForm, threshold: Number(e.target.value) })}
                 />
               </div>
-              
+
               {/* Instructor Criteria Fields */}
               <div className="md:col-span-2 lg:col-span-3">
-                <h4 className="text-sm font-medium mb-2">Additional Criteria (Optional)</h4>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                  Additional Criteria (Optional)
+                  <HintTooltip content="Set additional requirements that instructors must meet alongside the primary metric." />
+                </h4>
                 <div className="grid gap-4 md:grid-cols-3">
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Min Rating (0-5)</label>
-                    <Input 
-                      type="number" 
-                      min={0} 
-                      max={5} 
+                    <label className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                      Min Rating (0-5)
+                      <HintTooltip content="Minimum average rating the instructor must have (0-5 scale)." />
+                    </label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={5}
                       step={0.1}
-                      value={instructorForm.instructorCriteria.minRating} 
-                      onChange={(e) => setInstructorForm({ 
-                        ...instructorForm, 
-                        instructorCriteria: { 
-                          ...instructorForm.instructorCriteria, 
-                          minRating: Number(e.target.value) 
-                        } 
-                      })} 
+                      value={instructorForm.instructorCriteria.minRating}
+                      onChange={(e) => setInstructorForm({
+                        ...instructorForm,
+                        instructorCriteria: {
+                          ...instructorForm.instructorCriteria,
+                          minRating: Number(e.target.value)
+                        }
+                      })}
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Min Months Since Joining</label>
-                    <Input 
-                      type="number" 
-                      min={0} 
-                      value={instructorForm.instructorCriteria.minMonthsSinceJoining} 
-                      onChange={(e) => setInstructorForm({ 
-                        ...instructorForm, 
-                        instructorCriteria: { 
-                          ...instructorForm.instructorCriteria, 
-                          minMonthsSinceJoining: Number(e.target.value) 
-                        } 
-                      })} 
+                    <label className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                      Min Months Since Joining
+                      <HintTooltip content="Minimum number of months the instructor must have been on the platform." />
+                    </label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={instructorForm.instructorCriteria.minMonthsSinceJoining}
+                      onChange={(e) => setInstructorForm({
+                        ...instructorForm,
+                        instructorCriteria: {
+                          ...instructorForm.instructorCriteria,
+                          minMonthsSinceJoining: Number(e.target.value)
+                        }
+                      })}
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Min Bookings Received</label>
-                    <Input 
-                      type="number" 
-                      min={0} 
-                      value={instructorForm.instructorCriteria.minBookings} 
-                      onChange={(e) => setInstructorForm({ 
-                        ...instructorForm, 
-                        instructorCriteria: { 
-                          ...instructorForm.instructorCriteria, 
-                          minBookings: Number(e.target.value) 
-                        } 
-                      })} 
+                    <label className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                      Min Bookings Received
+                      <HintTooltip content="Minimum total number of bookings the instructor must have received." />
+                    </label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={instructorForm.instructorCriteria.minBookings}
+                      onChange={(e) => setInstructorForm({
+                        ...instructorForm,
+                        instructorCriteria: {
+                          ...instructorForm.instructorCriteria,
+                          minBookings: Number(e.target.value)
+                        }
+                      })}
                     />
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 mt-6">
-                <Switch 
-                  checked={instructorForm.active} 
-                  onCheckedChange={(v) => setInstructorForm({ ...instructorForm, active: v })} 
+                <Switch
+                  checked={instructorForm.active}
+                  onCheckedChange={(v) => setInstructorForm({ ...instructorForm, active: v })}
                 />
-                <span>Active</span>
+                <span className="flex items-center gap-2">
+                  Active
+                  <HintTooltip content="Enable or disable this instructor achievement rule. Inactive rules won't be evaluated." />
+                </span>
               </div>
               <div className="md:col-span-2 lg:col-span-3 flex gap-2">
                 <Button onClick={onCreateInstructor} disabled={saving} className="bg-black text-white">
@@ -614,10 +659,7 @@ export default function AchievementRulesPage() {
                     instructorRules.map((r) => (
                       <TableRow key={r._id}>
                         <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {r.icon && <span>{r.icon}</span>}
-                            {r.name || r.title}
-                          </div>
+                          {r.name || r.title}
                         </TableCell>
                         <TableCell>{r.label || "-"}</TableCell>
                         <TableCell>{r.adventure ? (Array.isArray(adventures) ? adventures.find(a => a._id === r.adventure)?.name : null) || r.adventure : "Global"}</TableCell>

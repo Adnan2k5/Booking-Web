@@ -331,6 +331,19 @@ export const getAllItemBookings = asyncHandler(async (req, res) => {
     );
 });
 
+export const deleteItemBooking = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const booking = await ItemBooking.findByIdAndDelete(id);
+
+    if (!booking) {
+        throw new ApiError(404, "Booking not found");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, booking, "Item booking deleted successfully")
+    );
+});
+
 export const approveBooking = asyncHandler(async (req, res) => {
     const { orderId } = req.params;
     const { payerId } = req.body;

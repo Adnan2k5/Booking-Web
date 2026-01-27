@@ -122,47 +122,44 @@ export default function ChatWidget() {
 
     return (
         <>
-            {/* Chat button */}
             <motion.div
-                className="fixed bottom-8 right-8 z-[9999]"
+                className="fixed bottom-6 right-6 z-[9999]"
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 1 }}
             >
                 <button
                     onClick={toggleChat}
-                    className="group relative flex items-center justify-center w-16 h-16 bg-black text-white rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
+                    className="group relative flex items-center justify-center w-12 h-12 bg-black text-white rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
                     aria-label="Customer Support"
                 >
                     <div className="absolute inset-0 rounded-full border border-white/10" />
                     {isOpen ? (
-                        <X size={28} className="transition-transform duration-300 group-hover:rotate-90" />
+                        <X size={20} className="transition-transform duration-300 group-hover:rotate-90" />
                     ) : (
-                        <MessageSquare size={28} className="" />
+                        <MessageSquare size={20} className="" />
                     )}
 
-                    {/* Minimal Notification Indicator */}
                     {!isOpen && (
-                        <span className="absolute top-0 right-0 flex h-3 w-3">
+                        <span className="absolute top-0 right-0 flex h-2.5 w-2.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
                         </span>
                     )}
                 </button>
             </motion.div>
 
-            {/* Chat window */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        className="fixed bottom-28 right-8 w-96 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl overflow-hidden z-[9999] flex flex-col border border-gray-100"
-                        style={{ height: isMinimized ? "auto" : "500px" }}
+                        className="fixed bottom-20 right-6 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl overflow-hidden z-[9999] flex flex-col border border-gray-100"
+                        style={{ height: isMinimized ? "auto" : "400px" }}
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{
                             opacity: 1,
                             y: 0,
                             scale: 1,
-                            height: isMinimized ? "auto" : "500px",
+                            height: isMinimized ? "auto" : "400px",
                             transition: { duration: 0.2, ease: "easeOut" },
                         }}
                         exit={{ opacity: 0, y: 20, scale: 0.95, transition: { duration: 0.15 } }}
@@ -213,8 +210,8 @@ export default function ChatWidget() {
 
                                             <div
                                                 className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${message.sender === "user"
-                                                        ? "bg-black text-white rounded-br-none"
-                                                        : "bg-gray-100 text-gray-900 rounded-bl-none"
+                                                    ? "bg-black text-white rounded-br-none"
+                                                    : "bg-gray-100 text-gray-900 rounded-bl-none"
                                                     }`}
                                             >
                                                 {message.content}

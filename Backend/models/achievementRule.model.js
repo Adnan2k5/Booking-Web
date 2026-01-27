@@ -59,9 +59,6 @@ const achievementRuleSchema = new mongoose.Schema(
       },
     },
 
-    // Optional visual/icon tag for frontend badges
-    icon: { type: String, default: "" },
-
     // Controls whether this rule is currently used for awarding.
     active: { type: Boolean, default: true, index: true },
   },

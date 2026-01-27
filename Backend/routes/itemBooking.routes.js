@@ -8,6 +8,7 @@ import {
     setupWebhook,
     getMyItemBookings,
     getAllItemBookings,
+    deleteItemBooking,
 } from "../controllers/itemBooking.controller.js";
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
@@ -38,5 +39,8 @@ router.get('/all-bookings', getAllItemBookings); // Alias for backward compatibi
 
 // Get order details
 router.get('/order/:orderId', getOrderDetails);
+
+// Delete item booking (admin only)
+router.delete('/:id', deleteItemBooking);
 
 export default router;
