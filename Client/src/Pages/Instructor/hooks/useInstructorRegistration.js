@@ -117,6 +117,14 @@ export const useInstructorRegistration = (adventures) => {
       setErrors(validationErrors);
       const firstError = Object.values(validationErrors)[0];
       toast.error(firstError);
+
+      const firstErrorField = Object.keys(validationErrors)[0];
+      const el = document.getElementById(firstErrorField);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+      }
+
       return null;
     }
 
@@ -166,11 +174,38 @@ export const useInstructorRegistration = (adventures) => {
 
       return response.data;
     } catch (error) {
-      const message =
-        error?.response?.data?.message ||
-        error.message ||
-        'Registration failed. Please try again.';
-      toast.error(message, { id: toastId });
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message;
+
+      switch (status) {
+        case 400:
+          toast.error(
+            message || 'Invalid input data. Please check all required fields.',
+            { id: toastId }
+          );
+          break;
+        case 409:
+          toast.error(
+            'An account with this email already exists. Please use a different email or try logging in.',
+            { id: toastId }
+          );
+          setErrors((prev) => ({ ...prev, email: 'Email already in use' }));
+          break;
+        case 413:
+          toast.error(
+            'File size too large. Please reduce file sizes and try again.',
+            { id: toastId }
+          );
+          break;
+        case 500:
+          toast.error('Server error. Please try again later.', { id: toastId });
+          break;
+        default:
+          toast.error(message || 'Registration failed. Please try again.', {
+            id: toastId,
+          });
+      }
+
       return null;
     } finally {
       setIsSubmitting(false);

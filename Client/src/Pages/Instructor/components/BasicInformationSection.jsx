@@ -36,7 +36,7 @@ export const BasicInformationSection = ({
                         onChange={onChange}
                         placeholder="Enter your full name"
                         required
-                        className="border-gray-300 focus:border-black focus:ring-black"
+                        className={errors.name ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-black focus:ring-black"}
                     />
                     {errors.name && (
                         <p className="text-sm text-red-600">{errors.name}</p>
@@ -55,7 +55,7 @@ export const BasicInformationSection = ({
                         onChange={onChange}
                         placeholder="your.email@example.com"
                         required
-                        className="border-gray-300 focus:border-black focus:ring-black"
+                        className={errors.email ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-black focus:ring-black"}
                     />
                     {errors.email && (
                         <p className="text-sm text-red-600">{errors.email}</p>
@@ -74,7 +74,7 @@ export const BasicInformationSection = ({
                         onChange={onChange}
                         placeholder="Create a secure password"
                         required
-                        className="border-gray-300 focus:border-black focus:ring-black"
+                        className={errors.password ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-black focus:ring-black"}
                     />
                     {errors.password && (
                         <p className="text-sm text-red-600">{errors.password}</p>
@@ -96,7 +96,7 @@ export const BasicInformationSection = ({
                         onChange={onChange}
                         placeholder="Re-enter your password"
                         required
-                        className="border-gray-300 focus:border-black focus:ring-black"
+                        className={errors.confirmPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-black focus:ring-black"}
                     />
                     {errors.confirmPassword && (
                         <p className="text-sm text-red-600">{errors.confirmPassword}</p>

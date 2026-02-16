@@ -38,7 +38,7 @@ export const ProfessionalInformationSection = ({
                         value={formData.bio}
                         onChange={onChange}
                         placeholder="Share your experience, qualifications, and teaching approach"
-                        className="min-h-32 border-gray-300 focus:border-black focus:ring-black resize-none"
+                        className={`min-h-32 resize-none ${errors.bio ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-black focus:ring-black"}`}
                     />
                     {errors.bio && <p className="text-sm text-red-600">{errors.bio}</p>}
                 </div>
@@ -52,7 +52,7 @@ export const ProfessionalInformationSection = ({
                             value={formData.adventure}
                             onValueChange={(value) => onSelectChange("adventure", value)}
                         >
-                            <SelectTrigger className="border-gray-300 focus:border-black focus:ring-black">
+                            <SelectTrigger className={errors.adventure ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-black focus:ring-black"}>
                                 <SelectValue placeholder="Select adventure" />
                             </SelectTrigger>
                             <SelectContent>
@@ -77,7 +77,7 @@ export const ProfessionalInformationSection = ({
                             onValueChange={(value) => onSelectChange("location", value)}
                             disabled={!formData.adventure}
                         >
-                            <SelectTrigger className="border-gray-300 focus:border-black focus:ring-black">
+                            <SelectTrigger className={errors.location ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-black focus:ring-black"}>
                                 <SelectValue placeholder="Select location" />
                             </SelectTrigger>
                             <SelectContent>

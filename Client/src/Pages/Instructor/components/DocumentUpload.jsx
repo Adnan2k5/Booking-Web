@@ -22,7 +22,7 @@ export const DocumentUpload = ({
 
     const DocumentItem = ({ label, description, file, onChange, type, error }) => {
         return (
-            <div className="border border-gray-200 rounded-md p-4 bg-white">
+            <div className={`border rounded-md p-4 bg-white ${error ? "border-red-500" : "border-gray-200"}`}>
                 <div className="flex items-start gap-3">
                     <div className={`p-2 rounded-full shrink-0 ${file ? "bg-gray-100" : "bg-gray-50"}`}>
                         {file ? (

@@ -41,15 +41,29 @@ export const InstructorRegister = () => {
 
     const handleVerifyOTP = async (otp) => {
         const data = { email: formData.email, otp };
-        const statusCode = await VerifyUser(data, dispatch);
+        try {
+            const statusCode = await VerifyUser(data, dispatch);
 
-        if (statusCode === 200) {
-            toast.success("Email verified successfully");
-            setIsOTPModalOpen(false);
-            navigate("/instructor/pending-review");
-        } else {
-            toast.error("Invalid OTP. Please try again.");
-            throw new Error("Invalid OTP");
+            if (statusCode === 200) {
+                toast.success("Email verified successfully");
+                setIsOTPModalOpen(false);
+                navigate("/instructor/pending-review");
+            } else if (statusCode === 400) {
+                toast.error("Invalid or expired OTP. Please check the code and try again.");
+                throw new Error("Invalid OTP");
+            } else {
+                toast.error("OTP verification failed. Please try again.");
+                throw new Error("Verification failed");
+            }
+        } catch (error) {
+            if (error?.response?.status === 410) {
+                toast.error("OTP has expired. Please request a new one.");
+            } else if (error?.response?.status === 404) {
+                toast.error("User not found. Please register first.");
+            } else if (!error?.response) {
+                toast.error("Invalid OTP. Please try again.");
+            }
+            throw error;
         }
     };
 
