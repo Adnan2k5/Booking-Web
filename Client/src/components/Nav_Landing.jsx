@@ -69,6 +69,13 @@ export const Nav_Landing = () => {
         }
     }
 
+    const getDashboardLabel = () => {
+        if (user?.user?.role === "admin") {
+            return t("adminPanel") || "Admin Panel"
+        }
+        return t("dashboard") || "Dashboard"
+    }
+
     const languages = [
         { code: "en", name: "English" },
         { code: "fr", name: "Français" },
@@ -140,7 +147,7 @@ export const Nav_Landing = () => {
                                     <DropdownMenuGroup>
                                         <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer" onClick={() => navigateprofile()}>
                                             <User className="mr-2 h-4 w-4" />
-                                            <span>{t("profile")}</span>
+                                            <span>{getDashboardLabel()}</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer" onClick={() => navigate("/dashboard/tickets")}>
                                             <TicketIcon className="mr-2 h-4 w-4" />
@@ -246,7 +253,7 @@ export const Nav_Landing = () => {
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div>
-                                                    <p className="text-white font-medium">{t("profile")}</p>
+                                                    <p className="text-white font-medium">{getDashboardLabel()}</p>
                                                     <p className="text-gray-400 text-sm">{user?.user?.email}</p>
                                                 </div>
                                             </div>

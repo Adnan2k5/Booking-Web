@@ -260,155 +260,201 @@ export default function LandingPage() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
             </div>
           ) : countrySlider.countriesFromEvents.length > 0 ? (
-            /* Show country-specific events */
             <AnimatePresence mode="wait">
               <motion.div
                 key={countrySlider.currentCountryIndex}
-                className="flex overflow-x-auto gap-6 sm:gap-8 pb-4 snap-x snap-mandatory scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -50 }}
-                transition={{ duration: 0.6, staggerChildren: 0.1 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
               >
-                {countrySlider.currentCountry?.events.map((event, index) => (
-                  <motion.div
-                    key={event._id}
-                    className="min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center md:snap-none h-full"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                <div className="relative">
+                  <div
+                    className="flex overflow-x-auto gap-6 sm:gap-8 pb-4 snap-x snap-mandatory scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible scroll-smooth"
+                    id={`events-container-${countrySlider.currentCountryIndex}`}
+                    onScroll={(e) => {
+                      const container = e.currentTarget
+                      const scrollLeft = container.scrollLeft
+                      const cardWidth = container.scrollWidth / (countrySlider.currentCountry?.events.length || 1)
+                      const currentIndex = Math.round(scrollLeft / cardWidth)
+                      const dots = document.querySelectorAll('.event-dot')
+                      dots.forEach((dot, idx) => {
+                        if (idx === currentIndex) {
+                          dot.classList.add('bg-gray-900', 'w-8')
+                          dot.classList.remove('bg-gray-300', 'w-2')
+                        } else {
+                          dot.classList.remove('bg-gray-900', 'w-8')
+                          dot.classList.add('bg-gray-300', 'w-2')
+                        }
+                      })
+                    }}
                   >
-                    <EventCard
-                      event={event}
-                      onBooking={eventBooking.handleBooking}
-                      onViewMore={eventBooking.handleViewMore}
-                    />
-                  </motion.div>
-                ))}
+                    {countrySlider.currentCountry?.events.map((event, index) => (
+                      <motion.div
+                        key={event._id}
+                        className="min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center md:snap-none h-full"
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <EventCard
+                          event={event}
+                          onBooking={eventBooking.handleBooking}
+                          onViewMore={eventBooking.handleViewMore}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {countrySlider.currentCountry?.events && countrySlider.currentCountry.events.length > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-8 md:hidden">
+                      {countrySlider.currentCountry.events.map((_, index) => (
+                        <button
+                          key={index}
+                          className={`event-dot h-2 rounded-full transition-all duration-300 cursor-pointer ${index === 0 ? 'w-8 bg-gray-900' : 'w-2 bg-gray-300'
+                            }`}
+                          onClick={() => {
+                            const container = document.getElementById(`events-container-${countrySlider.currentCountryIndex}`)
+                            if (container) {
+                              const cardWidth = container.scrollWidth / countrySlider.currentCountry.events.length
+                              container.scrollTo({
+                                left: cardWidth * index,
+                                behavior: 'smooth'
+                              })
+                            }
+                          }}
+                          aria-label={`Go to event ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </motion.div>
             </AnimatePresence>
           ) : (
-            /* Show empty state when no events */
             <div className="col-span-full text-center py-20">
               <p className="text-gray-400 text-lg">{t("noEventsAvailable")}</p>
             </div>
           )}
 
+
           {/* Booking Dialog */}
           <Dialog open={eventBooking.bookingDialog} onOpenChange={eventBooking.setBookingDialog}>
-            <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-              <DialogHeader>
+            <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl max-h-[90vh] flex flex-col p-0">
+              <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0">
                 <DialogTitle className="text-2xl font-bold text-gray-900">{t("bookYourEvent")}</DialogTitle>
                 <DialogDescription className="text-gray-600">
                   {eventBooking.selectedEvent?.title} in {eventBooking.selectedEvent?.city}, {eventBooking.selectedEvent?.country}
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-6 py-4">
-                {/* Event Summary */}
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <img
-                      src={eventBooking.selectedEvent?.image || "/placeholder.svg"}
-                      alt={eventBooking.selectedEvent?.title}
-                      className="w-16 h-16 rounded-lg object-cover"
-                    />
-                    <div>
-                      <h4 className="font-semibold text-gray-900">{eventBooking.selectedEvent?.title}</h4>
-                      <p className="text-sm text-gray-600">{eventBooking.selectedEvent?.description}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <div className="flex items-center space-x-1">
-                      <span>
-                        {eventBooking.selectedEvent?.startTime} - {eventBooking.selectedEvent?.endTime}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <span>
-                        {eventBooking.selectedEvent?.date && formatDateWithWeekday(eventBooking.selectedEvent.date)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Booking Form */}
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">
-                      {t("groupMembers")} ({groupManagement.groupMembers.length + 1})
-                    </Label>
-                    <div className="mt-2 space-y-2">
-                      <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8 border border-gray-200 bg-gray-900">
-                            <AvatarFallback className="text-white text-xs">
-                              {user?.user ? user.user.email.charAt(0).toUpperCase() : "Y"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-sm font-medium text-gray-800">{user?.user ? user.user.email : "You"}</p>
-                            <p className="text-xs text-gray-500">{t("groupLeader")}</p>
-                          </div>
-                        </div>
+              <div className="flex-1 min-h-0 overflow-y-auto dialog-scroll px-4 sm:px-6">
+                <div className="space-y-6 py-4">
+                  {/* Event Summary */}
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <img
+                        src={eventBooking.selectedEvent?.image || "/placeholder.svg"}
+                        alt={eventBooking.selectedEvent?.title}
+                        className="w-16 h-16 rounded-lg object-cover"
+                      />
+                      <div>
+                        <h4 className="font-semibold text-gray-900">{eventBooking.selectedEvent?.title}</h4>
+                        <p className="text-sm text-gray-600">{eventBooking.selectedEvent?.description}</p>
                       </div>
-                      {groupManagement.groupMembers.map((member) => (
-                        <div key={member._id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                    </div>
+                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                      <div className="flex items-center space-x-1">
+                        <span>
+                          {eventBooking.selectedEvent?.startTime} - {eventBooking.selectedEvent?.endTime}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span>
+                          {eventBooking.selectedEvent?.date && formatDateWithWeekday(eventBooking.selectedEvent.date)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Booking Form */}
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">
+                        {t("groupMembers")} ({groupManagement.groupMembers.length + 1})
+                      </Label>
+                      <div className="mt-2 space-y-2">
+                        <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                           <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8 border border-gray-200">
-                              <AvatarImage src={member.profilePicture || "/placeholder.svg"} alt={member.name} />
-                              <AvatarFallback className="text-xs">{member.name?.charAt(0) || member.email?.charAt(0)}</AvatarFallback>
+                            <Avatar className="h-8 w-8 border border-gray-200 bg-gray-900">
+                              <AvatarFallback className="text-white text-xs">
+                                {user?.user ? user.user.email.charAt(0).toUpperCase() : "Y"}
+                              </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-sm font-medium text-gray-800">{member.name || "User"}</p>
-                              <p className="text-xs text-gray-500">{member.email}</p>
+                              <p className="text-sm font-medium text-gray-800">{user?.user ? user.user.email : "You"}</p>
+                              <p className="text-xs text-gray-500">{t("groupLeader")}</p>
                             </div>
                           </div>
                         </div>
-                      ))}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => groupManagement.setShowGroupDialog(true)}
-                        className="w-full mt-2 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
-                      >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        {t("addFriendsToGroup")}
-                      </Button>
+                        {groupManagement.groupMembers.map((member) => (
+                          <div key={member._id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-8 w-8 border border-gray-200">
+                                <AvatarImage src={member.profilePicture || "/placeholder.svg"} alt={member.name} />
+                                <AvatarFallback className="text-xs">{member.name?.charAt(0) || member.email?.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="text-sm font-medium text-gray-800">{member.name || "User"}</p>
+                                <p className="text-xs text-gray-500">{member.email}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => groupManagement.setShowGroupDialog(true)}
+                          className="w-full mt-2 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
+                        >
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          {t("addFriendsToGroup")}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                      {t("emailAddress")}
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={eventBooking.bookingForm.email || user?.user?.email || ""}
-                      onChange={(e) => eventBooking.updateBookingForm({ email: e.target.value })}
-                      className="mt-1"
-                      placeholder="your@email.com"
-                    />
-                  </div>
+                    <div>
+                      <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                        {t("emailAddress")}
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={eventBooking.bookingForm.email || user?.user?.email || ""}
+                        onChange={(e) => eventBooking.updateBookingForm({ email: e.target.value })}
+                        className="mt-1"
+                        placeholder="your@email.com"
+                      />
+                    </div>
 
-                  <div>
-                    <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
-                      {t("phoneNumber")}
-                    </Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={eventBooking.bookingForm.phone || user?.user?.phone || ""}
-                      onChange={(e) => eventBooking.updateBookingForm({ phone: e.target.value })}
-                      className="mt-1"
-                      placeholder="+1 (555) 123-4567"
-                    />
+                    <div>
+                      <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                        {t("phoneNumber")}
+                      </Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={eventBooking.bookingForm.phone || user?.user?.phone || ""}
+                        onChange={(e) => eventBooking.updateBookingForm({ phone: e.target.value })}
+                        className="mt-1"
+                        placeholder="+1 (555) 123-4567"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <DialogFooter className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0">
+              <DialogFooter className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0 px-4 sm:px-6 pb-4 sm:pb-6 pt-2 border-t border-gray-100">
                 <Button variant="outline" onClick={eventBooking.closeDialogs} className="px-6 w-full sm:w-auto">
                   {t("cancel")}
                 </Button>
@@ -425,8 +471,8 @@ export default function LandingPage() {
 
           {/* View More Dialog */}
           <Dialog open={eventBooking.viewMoreDialog} onOpenChange={eventBooking.setViewMoreDialog}>
-            <DialogContent className="sm:max-w-[600px] bg-white rounded-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-              <DialogHeader>
+            <DialogContent className="sm:max-w-[600px] bg-white rounded-2xl max-h-[90vh] flex flex-col p-0">
+              <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0">
                 <DialogTitle className="text-2xl font-bold text-gray-900">
                   {eventBooking.selectedEvent?.title}
                 </DialogTitle>
@@ -435,153 +481,155 @@ export default function LandingPage() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-6 py-4">
-                {/* Event Image */}
-                <div className="relative h-64 overflow-hidden rounded-xl">
-                  <img
-                    src={eventBooking.selectedEvent?.image || "/placeholder.svg"}
-                    alt={eventBooking.selectedEvent?.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                </div>
+              <div className="flex-1 min-h-0 overflow-y-auto dialog-scroll px-4 sm:px-6">
+                <div className="space-y-6 py-4">
+                  {/* Event Image */}
+                  <div className="relative h-64 overflow-hidden rounded-xl">
+                    <img
+                      src={eventBooking.selectedEvent?.image || "/placeholder.svg"}
+                      alt={eventBooking.selectedEvent?.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                  </div>
 
-                {/* Event Details Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Location Details */}
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2 text-gray-700">
-                      <MapPin className="h-5 w-5" />
-                      <span className="font-semibold">{t("locationDetails")}</span>
+                  {/* Event Details Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Location Details */}
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2 text-gray-700">
+                        <MapPin className="h-5 w-5" />
+                        <span className="font-semibold">{t("locationDetails")}</span>
+                      </div>
+                      <div className="pl-7 space-y-1">
+                        <p className="text-gray-900 font-medium">{eventBooking.selectedEvent?.city}, {eventBooking.selectedEvent?.country}</p>
+                        {eventBooking.selectedEvent?.location && (
+                          <p className="text-gray-600 text-sm">{eventBooking.selectedEvent.location}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="pl-7 space-y-1">
-                      <p className="text-gray-900 font-medium">{eventBooking.selectedEvent?.city}, {eventBooking.selectedEvent?.country}</p>
-                      {eventBooking.selectedEvent?.location && (
-                        <p className="text-gray-600 text-sm">{eventBooking.selectedEvent.location}</p>
-                      )}
+
+                    {/* Time & Date */}
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2 text-gray-700">
+                        <span className="font-semibold">{t("schedule")}</span>
+                      </div>
+                      <div className="pl-7 space-y-1">
+                        <p className="text-gray-900 font-medium">
+                          {eventBooking.selectedEvent?.startTime} - {eventBooking.selectedEvent?.endTime}
+                        </p>
+                        <p className="text-gray-600 text-sm">
+                          {eventBooking.selectedEvent?.date && formatDateWithWeekday(eventBooking.selectedEvent.date)}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Time & Date */}
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2 text-gray-700">
-                      <span className="font-semibold">{t("schedule")}</span>
-                    </div>
-                    <div className="pl-7 space-y-1">
-                      <p className="text-gray-900 font-medium">
-                        {eventBooking.selectedEvent?.startTime} - {eventBooking.selectedEvent?.endTime}
-                      </p>
-                      <p className="text-gray-600 text-sm">
-                        {eventBooking.selectedEvent?.date && formatDateWithWeekday(eventBooking.selectedEvent.date)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Adventures Section */}
-                {eventBooking.selectedEvent?.adventures && eventBooking.selectedEvent.adventures.length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2 text-gray-700">
-                      <span className="font-semibold">{t("adventuresIncluded")}</span>
-                    </div>
-                    <div className="pl-7 space-y-2">
-                      {eventBooking.selectedEvent.adventures.map((adventure, index) => (
-                        <div key={adventure._id || index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                          {adventure.thumbnail && (
-                            <img
-                              src={adventure.thumbnail}
-                              alt={adventure.name}
-                              className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <h5 className="font-medium text-gray-900">{adventure.name}</h5>
-                            {adventure.description && (
-                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{adventure.description}</p>
+                  {/* Adventures Section */}
+                  {eventBooking.selectedEvent?.adventures && eventBooking.selectedEvent.adventures.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2 text-gray-700">
+                        <span className="font-semibold">{t("adventuresIncluded")}</span>
+                      </div>
+                      <div className="pl-7 space-y-2">
+                        {eventBooking.selectedEvent.adventures.map((adventure, index) => (
+                          <div key={adventure._id || index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                            {adventure.thumbnail && (
+                              <img
+                                src={adventure.thumbnail}
+                                alt={adventure.name}
+                                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                              />
                             )}
-                            {adventure.exp && (
-                              <div className="flex items-center mt-2">
-                                <Star className="h-3 w-3 text-yellow-500 mr-1" />
-                                <span className="text-xs text-gray-500">{adventure.exp} XP</span>
-                              </div>
-                            )}
+                            <div className="flex-1">
+                              <h5 className="font-medium text-gray-900">{adventure.name}</h5>
+                              {adventure.description && (
+                                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{adventure.description}</p>
+                              )}
+                              {adventure.exp && (
+                                <div className="flex items-center mt-2">
+                                  <Star className="h-3 w-3 text-yellow-500 mr-1" />
+                                  <span className="text-xs text-gray-500">{adventure.exp} XP</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* NFT Reward Section */}
-                {eventBooking.selectedEvent?.isNftEvent && (
+                  {/* NFT Reward Section */}
+                  {eventBooking.selectedEvent?.isNftEvent && (
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2 text-gray-900">
+                        <Star className="h-5 w-5 text-gray-900" />
+                        <span className="font-semibold">{t("nftReward")}</span>
+                      </div>
+                      <div className="pl-7">
+                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Star className="h-4 w-4 text-gray-900" />
+                            <span className="font-medium text-gray-900">{t("exclusiveNftAvailable")}</span>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {t("completeAllAdventures")}
+                          </p>
+                          {eventBooking.selectedEvent.nftReward?.nftName && (
+                            <div className="mt-3 space-y-1">
+                              <p className="text-sm font-medium text-gray-900">{t("nft")} {eventBooking.selectedEvent.nftReward.nftName}</p>
+                              {eventBooking.selectedEvent.nftReward.nftDescription && (
+                                <p className="text-xs text-gray-600">{eventBooking.selectedEvent.nftReward.nftDescription}</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Full Description */}
                   <div className="space-y-3">
-                    <div className="flex items-center space-x-2 text-gray-900">
-                      <Star className="h-5 w-5 text-gray-900" />
-                      <span className="font-semibold">{t("nftReward")}</span>
+                    <div className="flex items-center space-x-2 text-gray-700">
+                      <span className="font-semibold">{t("aboutThisEvent")}</span>
                     </div>
                     <div className="pl-7">
-                      <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <Star className="h-4 w-4 text-gray-900" />
-                          <span className="font-medium text-gray-900">{t("exclusiveNftAvailable")}</span>
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          {t("completeAllAdventures")}
-                        </p>
-                        {eventBooking.selectedEvent.nftReward?.nftName && (
-                          <div className="mt-3 space-y-1">
-                            <p className="text-sm font-medium text-gray-900">{t("nft")} {eventBooking.selectedEvent.nftReward.nftName}</p>
-                            {eventBooking.selectedEvent.nftReward.nftDescription && (
-                              <p className="text-xs text-gray-600">{eventBooking.selectedEvent.nftReward.nftDescription}</p>
-                            )}
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                        {eventBooking.selectedEvent?.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Additional Event Info (if available) */}
+                  {(eventBooking.selectedEvent?.price || eventBooking.selectedEvent?.maxParticipants || eventBooking.selectedEvent?.difficulty) && (
+                    <div className="bg-gray-50 rounded-xl p-4">
+                      <h4 className="font-semibold text-gray-900 mb-3">{t("eventInformation")}</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        {eventBooking.selectedEvent?.price && (
+                          <div>
+                            <span className="text-gray-600">{t("price")}</span>
+                            <p className="font-medium text-gray-900">${eventBooking.selectedEvent.price}</p>
+                          </div>
+                        )}
+                        {eventBooking.selectedEvent?.maxParticipants && (
+                          <div>
+                            <span className="text-gray-600">{t("maxParticipants")}</span>
+                            <p className="font-medium text-gray-900">{eventBooking.selectedEvent.maxParticipants}</p>
+                          </div>
+                        )}
+                        {eventBooking.selectedEvent?.difficulty && (
+                          <div>
+                            <span className="text-gray-600">{t("difficulty")}</span>
+                            <p className="font-medium text-gray-900">{eventBooking.selectedEvent.difficulty}</p>
                           </div>
                         )}
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {/* Full Description */}
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2 text-gray-700">
-                    <span className="font-semibold">{t("aboutThisEvent")}</span>
-                  </div>
-                  <div className="pl-7">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                      {eventBooking.selectedEvent?.description}
-                    </p>
-                  </div>
+                  )}
                 </div>
-
-                {/* Additional Event Info (if available) */}
-                {(eventBooking.selectedEvent?.price || eventBooking.selectedEvent?.maxParticipants || eventBooking.selectedEvent?.difficulty) && (
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <h4 className="font-semibold text-gray-900 mb-3">{t("eventInformation")}</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      {eventBooking.selectedEvent?.price && (
-                        <div>
-                          <span className="text-gray-600">{t("price")}</span>
-                          <p className="font-medium text-gray-900">${eventBooking.selectedEvent.price}</p>
-                        </div>
-                      )}
-                      {eventBooking.selectedEvent?.maxParticipants && (
-                        <div>
-                          <span className="text-gray-600">{t("maxParticipants")}</span>
-                          <p className="font-medium text-gray-900">{eventBooking.selectedEvent.maxParticipants}</p>
-                        </div>
-                      )}
-                      {eventBooking.selectedEvent?.difficulty && (
-                        <div>
-                          <span className="text-gray-600">{t("difficulty")}</span>
-                          <p className="font-medium text-gray-900">{eventBooking.selectedEvent.difficulty}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
 
-              <DialogFooter className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0">
+              <DialogFooter className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0 px-4 sm:px-6 pb-4 sm:pb-6 pt-2 border-t border-gray-100">
                 <Button variant="outline" onClick={eventBooking.closeDialogs} className="px-6 w-full sm:w-auto">
                   {t("close")}
                 </Button>

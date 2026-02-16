@@ -143,6 +143,28 @@
     scrollbar-width: none;
   }
 
+  .dialog-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .dialog-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .dialog-scroll::-webkit-scrollbar-thumb {
+    background: rgb(209 213 219);
+    border-radius: 9999px;
+  }
+
+  .dialog-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgb(156 163 175);
+  }
+
+  .dialog-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(209 213 219) transparent;
+  }
+
   /* Brand strip (scoped fallback if CSS import fails) */
   .brand-marquee {
     width: 100%;
@@ -173,8 +195,20 @@
 
   /* Gradient Mask for Slider */
   .mask-gradient-x {
-    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 10%,
+      black 90%,
+      transparent
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 10%,
+      black 90%,
+      transparent
+    );
   }
 
   /* ReactPlayer styling for full width */
@@ -227,6 +261,16 @@
     border-color: rgba(255, 255, 255, 0.4) !important;
   }
 
+  /* Date input styling to match other search fields */
+  input[type='date'].search-date-input::-webkit-datetime-edit {
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  input[type='date'].search-date-input[data-has-value='true']::-webkit-datetime-edit {
+    color: white;
+  }
+
   /* Fade in animation for hero */
   @keyframes fade-in {
     from {
@@ -240,5 +284,32 @@
 
   .animate-fade-in {
     animation: fade-in 1s ease-out forwards;
+  }
+}
+
+/* Desktop date input styling */
+input[type='date'].search-date-input::-webkit-datetime-edit {
+  font-weight: 500;
+}
+
+input[type='date'].search-date-input:not(
+    [data-has-value='true']
+  )::-webkit-datetime-edit {
+  color: rgb(156 163 175);
+}
+
+input[type='date'].search-date-input[data-has-value='true']::-webkit-datetime-edit {
+  color: rgb(17 24 39);
+}
+
+@media (max-width: 767px) {
+  input[type='date'].search-date-input:not(
+      [data-has-value='true']
+    )::-webkit-datetime-edit {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  input[type='date'].search-date-input[data-has-value='true']::-webkit-datetime-edit {
+    color: white;
   }
 }
