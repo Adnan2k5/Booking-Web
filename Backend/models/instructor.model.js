@@ -7,11 +7,16 @@ const instructorSchema = new mongoose.Schema(
       enum: ["pending", "verified", "rejected"],
       default: "pending",
     },
+    registrationStatus: {
+      type: String,
+      enum: ["active", "waitlist"],
+      default: "active",
+    },
     commissionPercentage: {
       type: Number,
       default: 20, // Default 20% platform fee
       min: 0,
-      max: 100
+      max: 100,
     },
     sessions: [
       {
@@ -49,13 +54,13 @@ const instructorSchema = new mongoose.Schema(
     portfolioMedias: [
       {
         type: String,
-      }
+      },
     ],
     certificate: {
-      type: String
+      type: String,
     },
     governmentId: {
-      type: String
+      type: String,
     },
     languages: [
       {
@@ -72,7 +77,7 @@ const instructorSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export const Instructor = mongoose.model("Instructor", instructorSchema);

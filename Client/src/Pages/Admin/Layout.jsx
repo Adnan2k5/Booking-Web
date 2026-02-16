@@ -29,7 +29,8 @@ import {
   TicketCheck,
   User,
   Award,
-  Shield
+  Shield,
+  UserCheck
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { useDispatch, useSelector } from 'react-redux'
@@ -55,6 +56,7 @@ const ROLE_ACCESS_CONFIG = {
   'Website Settings': [],
   Sponsors: [],
   'System Admins': [],
+  'Registration Limits': ['Instructor'],
 }
 
 const SIDEBAR_ITEMS = [
@@ -66,6 +68,7 @@ const SIDEBAR_ITEMS = [
   { key: 'Hotels', path: '/admin/hotels', icon: Hotel, label: 'Accomodation' },
   { key: 'Instructor', path: '/admin/instructors', icon: User, label: 'Instructor' },
   { key: 'Locations', path: '/admin/locations', icon: Compass, label: 'Locations' },
+  { key: 'Registration Limits', path: '/admin/registration-limits', icon: UserCheck, label: 'Registration Limits' },
   { key: 'Sponsors', path: '/admin/sponsors', icon: Settings, label: 'Sponsors' },
   { key: 'Stores', path: '/admin/store', icon: Store, label: 'Stores' },
   { key: 'Terms & Condition', path: '/admin/terms', icon: FileCheck, label: 'Terms & Condition' },

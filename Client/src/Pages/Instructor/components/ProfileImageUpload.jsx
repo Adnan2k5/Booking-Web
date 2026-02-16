@@ -1,39 +1,52 @@
-"use client"
-
-import { useState } from "react"
-import { Camera } from "lucide-react"
+import { useState, useEffect } from "react";
+import { Camera } from "lucide-react";
 
 export const ProfileImageUpload = ({ initialImage, onChange, getInitial }) => {
-    const [previewUrl, setPreviewUrl] = useState(initialImage ? URL.createObjectURL(initialImage) : null)
+    const [previewUrl, setPreviewUrl] = useState(null);
+
+    useEffect(() => {
+        if (initialImage instanceof File) {
+            const url = URL.createObjectURL(initialImage);
+            setPreviewUrl(url);
+            return () => URL.revokeObjectURL(url);
+        } else {
+            setPreviewUrl(null);
+        }
+    }, [initialImage]);
 
     const handleFileChange = (e) => {
-        const file = e.target.files[0]
-        if (file) {
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                setPreviewUrl(reader.result)
-            }
-            reader.readAsDataURL(file)
-            onChange(file)
+        const file = e.target?.files?.[0];
+        if (!file) return;
+
+        if (file.type.startsWith("image/")) {
+            onChange(file);
         }
-    }
+    };
 
     return (
-        <div className="relative w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 flex items-center justify-center overflow-hidden cursor-pointer group shadow-md border-2 border-white">
+        <div className="relative w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer group border-2 border-gray-200">
             {previewUrl ? (
-                <img src={previewUrl || "/placeholder.svg"} alt="Profile" className="w-full h-full object-cover" />
+                <img
+                    src={previewUrl}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                />
             ) : (
-                <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-500">{getInitial()}</span>
+                <span className="text-3xl font-semibold text-gray-600">
+                    {getInitial()}
+                </span>
             )}
-            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera className="text-white w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="text-white w-6 h-6" />
                 <input
                     type="file"
                     accept="image/*"
                     className="absolute inset-0 opacity-0 cursor-pointer"
                     onChange={handleFileChange}
+                    aria-label="Upload profile image"
                 />
             </div>
         </div>
-    )
-}
+    );
+};
+

@@ -15,6 +15,8 @@ import {
 } from "../utils/facebookHandler.js";
 import { Instructor } from "../models/instructor.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { RegistrationLimit } from "../models/registrationLimit.model.js";
+import { Location } from "../models/location.model.js";
 
 let client = null;
 
@@ -41,7 +43,7 @@ const generateAccessAndRefreshTokens = async (user) => {
   } catch (error) {
     throw new ApiError(
       500,
-      "Something went wrong while generating refresh and access token"
+      "Something went wrong while generating refresh and access token",
     );
   }
 };
@@ -81,7 +83,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
   });
 
   const createdUser = await User.findById(user._id).select(
-    "-password -refreshToken -role"
+    "-password -refreshToken -role",
   );
 
   if (!createdUser) {
@@ -99,8 +101,8 @@ const registerUser = asyncHandler(async (req, res, next) => {
       {
         user: user,
       },
-      "User registered Succesfully"
-    )
+      "User registered Succesfully",
+    ),
   );
 });
 
@@ -118,7 +120,6 @@ const registerInstructor = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Description, Adventure and Location are Required");
   }
 
-  // Handle uploaded files
   const files = req.files || {};
   let profileImage,
     portfolioMedias = [],
@@ -144,61 +145,61 @@ const registerInstructor = asyncHandler(async (req, res) => {
     governmentId = uploaded?.url;
   }
 
-  // Save profile image to user
   if (profileImage) {
     req.user.profilePicture = profileImage;
   }
 
-  // Check for location limit
   const locationDoc = await Location.findById(location);
   if (!locationDoc) {
     throw new ApiError(404, "Location not found");
   }
 
-  let instructor;
-  let isWaitlisted = false;
+  let registrationStatus = "active";
+  let registrationLimit = await RegistrationLimit.findOne({
+    adventure,
+    location,
+  });
 
-  const currentCount = await Instructor.countDocuments({ location: location });
-  if (locationDoc.instructorLimit !== null && locationDoc.instructorLimit !== undefined && currentCount >= locationDoc.instructorLimit) {
-    // Limit reached, add to waitlist
-    isWaitlisted = true;
-
-    // Create instructor with no active location (or we can keep location but use another flag, 
-    // but plan was to add to waitingList. Let's create it normally but we know it's in waitlist list)
-    instructor = await Instructor.create({
-      description: description,
-      adventure: adventure,
-      location: location, // Still associating with location
-      portfolioMedias: portfolioMedias,
-      certificate: certificate,
-      governmentId: governmentId,
-    });
-
-    // Add to waiting list
-    locationDoc.waitingList.push(instructor._id);
-    await locationDoc.save();
-
-  } else {
-    // Normal creation
-    instructor = await Instructor.create({
-      description: description,
-      adventure: adventure,
-      location: location,
-      portfolioMedias: portfolioMedias,
-      certificate: certificate,
-      governmentId: governmentId,
-    });
+  if (registrationLimit) {
+    if (registrationLimit.currentCount >= registrationLimit.limit) {
+      registrationStatus = "waitlist";
+    }
   }
+
+  const instructor = await Instructor.create({
+    description: description,
+    adventure: adventure,
+    location: location,
+    portfolioMedias: portfolioMedias,
+    certificate: certificate,
+    governmentId: governmentId,
+    registrationStatus: registrationStatus,
+  });
 
   if (!instructor) {
     throw new ApiError(
       500,
-      "Something went wrong while registering the instructor"
+      "Something went wrong while registering the instructor",
     );
+  }
+
+  if (registrationLimit) {
+    if (registrationStatus === "waitlist") {
+      registrationLimit.waitlist.push(instructor._id);
+      await registrationLimit.save();
+    } else {
+      registrationLimit.currentCount += 1;
+      await registrationLimit.save();
+    }
   }
 
   req.user.instructor = instructor._id;
   await req.user.save();
+
+  const message =
+    registrationStatus === "waitlist"
+      ? "Instructor registered successfully. You are on the waitlist and will be notified when a spot opens up."
+      : "Instructor registered successfully";
 
   res.status(201).json(
     new ApiResponse(
@@ -206,9 +207,10 @@ const registerInstructor = asyncHandler(async (req, res) => {
       {
         instructor: instructor,
         user: req.user,
+        registrationStatus: registrationStatus,
       },
-      "Instructor registered successfully"
-    )
+      message,
+    ),
   );
 });
 
@@ -220,7 +222,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findOne({ email: email }).select(
-    "email phoneNumber name verified role"
+    "email phoneNumber name verified role",
   );
 
   if (!user) {
@@ -245,9 +247,8 @@ const verifyOtp = asyncHandler(async (req, res) => {
 
   await user.save();
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-    user
-  );
+  const { accessToken, refreshToken } =
+    await generateAccessAndRefreshTokens(user);
 
   user.refreshToken = refreshToken;
 
@@ -270,8 +271,8 @@ const verifyOtp = asyncHandler(async (req, res) => {
           user: user,
           accessToken,
         },
-        "User Verified Successfully"
-      )
+        "User Verified Successfully",
+      ),
     );
 });
 
@@ -303,8 +304,8 @@ const resendOtp = asyncHandler(async (req, res) => {
       {
         email: email,
       },
-      "OTP sent Succesfully"
-    )
+      "OTP sent Succesfully",
+    ),
   );
 });
 
@@ -316,7 +317,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   let user = await User.findOne({ email: email }).select(
-    "email phoneNumber name verified role password instructor admin"
+    "email phoneNumber name verified role password instructor admin",
   );
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -336,9 +337,8 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid Password");
   }
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-    user
-  );
+  const { accessToken, refreshToken } =
+    await generateAccessAndRefreshTokens(user);
 
   user.refreshToken = refreshToken;
 
@@ -368,8 +368,8 @@ const loginUser = asyncHandler(async (req, res) => {
           user: user,
           accessToken,
         },
-        "User logged in Successfully"
-      )
+        "User logged in Successfully",
+      ),
     );
 });
 
@@ -408,8 +408,8 @@ const forgotPassword = asyncHandler(async (req, res) => {
       {
         email: email,
       },
-      "OTP sent Succesfully"
-    )
+      "OTP sent Succesfully",
+    ),
   );
 });
 
@@ -441,8 +441,8 @@ const updatePassword = asyncHandler(async (req, res) => {
       {
         user,
       },
-      "Password Updated Successfully"
-    )
+      "Password Updated Successfully",
+    ),
   );
 });
 
@@ -480,8 +480,8 @@ const verifyNewEmail = asyncHandler(async (req, res) => {
       {
         email: newEmail,
       },
-      "OTP sent Succesfully"
-    )
+      "OTP sent Succesfully",
+    ),
   );
 });
 
@@ -510,13 +510,12 @@ const updateEmail = asyncHandler(async (req, res) => {
   const user = await User.findByIdAndUpdate(
     req.user.id,
     { email: email },
-    { new: true }
+    { new: true },
   ).select("email phoneNumber name verified role");
   await user.save();
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-    user
-  );
+  const { accessToken, refreshToken } =
+    await generateAccessAndRefreshTokens(user);
 
   const options = {
     httpOnly: true,
@@ -535,8 +534,8 @@ const updateEmail = asyncHandler(async (req, res) => {
           user: user,
           accessToken,
         },
-        "User Verified & Updated Successfully"
-      )
+        "User Verified & Updated Successfully",
+      ),
     );
 });
 
@@ -569,13 +568,12 @@ const signInWithGoogle = asyncHandler(async (req, res) => {
     });
     await newUser.save();
     user = await User.findById(newUser._id).select(
-      "email phoneNumber name verified role"
+      "email phoneNumber name verified role",
     );
   }
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-    user
-  );
+  const { accessToken, refreshToken } =
+    await generateAccessAndRefreshTokens(user);
   user.refreshToken = refreshToken;
   await user.save();
 
@@ -596,12 +594,12 @@ const signInWithGoogle = asyncHandler(async (req, res) => {
           user: user,
           accessToken,
         },
-        "User logged in Successfully"
-      )
+        "User logged in Successfully",
+      ),
     );
 });
 
-const signInWithApple = asyncHandler(async (req, res) => { });
+const signInWithApple = asyncHandler(async (req, res) => {});
 
 const signInWithLinkedin = asyncHandler(async (req, res) => {
   const { code } = req.body;
@@ -625,9 +623,8 @@ const signInWithLinkedin = asyncHandler(async (req, res) => {
     await user.save();
   }
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-    user
-  );
+  const { accessToken, refreshToken } =
+    await generateAccessAndRefreshTokens(user);
 
   user.refreshToken = refreshToken;
 
@@ -650,8 +647,8 @@ const signInWithLinkedin = asyncHandler(async (req, res) => {
           user: user,
           accessToken,
         },
-        "User logged in Successfully"
-      )
+        "User logged in Successfully",
+      ),
     );
 });
 
@@ -676,9 +673,8 @@ const signInWithFacebook = asyncHandler(async (req, res) => {
     await user.save();
   }
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-    user
-  );
+  const { accessToken, refreshToken } =
+    await generateAccessAndRefreshTokens(user);
 
   const options = {
     httpOnly: true,
@@ -697,8 +693,8 @@ const signInWithFacebook = asyncHandler(async (req, res) => {
           user: user,
           accessToken,
         },
-        "User logged in Successfully"
-      )
+        "User logged in Successfully",
+      ),
     );
 });
 

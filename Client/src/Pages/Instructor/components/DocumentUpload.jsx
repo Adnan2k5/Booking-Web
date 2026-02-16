@@ -1,46 +1,57 @@
-"use client"
-import { FileText, Upload, CheckCircle, AlertCircle } from "lucide-react"
-import { Label } from "../../../components/ui/label"
+import { FileText, Upload, CheckCircle, AlertCircle } from "lucide-react";
+import { Label } from "../../../components/ui/label";
 
-export const DocumentUpload = ({ certificate, governmentId, onCertificateChange, onGovernmentIdChange }) => {
+export const DocumentUpload = ({
+    certificate,
+    governmentId,
+    onCertificateChange,
+    onGovernmentIdChange,
+    certificateError,
+    governmentIdError,
+}) => {
     const handleFileChange = (e, type) => {
-        const file = e.target.files[0]
-        if (file) {
-            if (type === "certificate") {
-                onCertificateChange(file)
-            } else if (type === "governmentId") {
-                onGovernmentIdChange(file)
-            }
-        }
-    }
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-    const DocumentItem = ({ label, description, file, onChange, type }) => {
+        if (type === "certificate") {
+            onCertificateChange(file);
+        } else if (type === "governmentId") {
+            onGovernmentIdChange(file);
+        }
+    };
+
+    const DocumentItem = ({ label, description, file, onChange, type, error }) => {
         return (
-            <div className="border rounded-lg p-3 sm:p-4 lg:p-5 bg-white">
-                <div className="flex items-start gap-2 sm:gap-3">
-                    <div className={`p-1.5 sm:p-2 rounded-full shrink-0 ${file ? "bg-green-100" : "bg-gray-100"}`}>
-                        {file ? <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" /> : <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />}
+            <div className="border border-gray-200 rounded-md p-4 bg-white">
+                <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-full shrink-0 ${file ? "bg-gray-100" : "bg-gray-50"}`}>
+                        {file ? (
+                            <CheckCircle className="w-5 h-5 text-black" />
+                        ) : (
+                            <FileText className="w-5 h-5 text-gray-400" />
+                        )}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <Label className="font-medium text-sm sm:text-base">{label}</Label>
-                        <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3 leading-relaxed">{description}</p>
+                        <Label className="font-medium text-sm text-black">{label}</Label>
+                        <p className="text-xs text-gray-600 mt-1 mb-3">{description}</p>
 
                         {file ? (
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
-                                <div className="bg-gray-100 rounded px-2 sm:px-3 py-1 sm:py-1.5 flex-1 truncate text-xs sm:text-sm">{file.name}</div>
+                            <div className="space-y-2">
+                                <div className="bg-gray-50 rounded px-3 py-2 text-sm text-gray-900 truncate">
+                                    {file.name}
+                                </div>
                                 <button
                                     type="button"
                                     onClick={() => onChange(null)}
-                                    className="text-red-500 hover:text-red-700 text-xs sm:text-sm font-medium self-start sm:self-auto"
+                                    className="text-xs text-gray-600 hover:text-black underline"
                                 >
-                                    Remove
+                                    Remove file
                                 </button>
                             </div>
                         ) : (
-                            <label className="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs sm:text-sm py-2 px-3 sm:px-4 rounded-md transition-colors inline-flex items-center gap-1 sm:gap-2">
-                                <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
-                                <span className="hidden sm:inline">Upload {label}</span>
-                                <span className="sm:hidden">Upload</span>
+                            <label className="inline-flex items-center gap-2 cursor-pointer bg-black hover:bg-gray-800 text-white text-sm py-2 px-4 rounded transition-colors">
+                                <Upload className="w-4 h-4" />
+                                <span>Upload</span>
                                 <input
                                     type="file"
                                     accept=".pdf,.jpg,.jpeg,.png"
@@ -49,44 +60,52 @@ export const DocumentUpload = ({ certificate, governmentId, onCertificateChange,
                                 />
                             </label>
                         )}
+
+                        {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
                     </div>
                 </div>
             </div>
-        )
-    }
+        );
+    };
 
     return (
-        <div className="space-y-3 sm:space-y-4 lg:space-y-5">
+        <div className="space-y-4">
             <div>
-                <Label className="text-base sm:text-lg font-medium">Verification Documents</Label>
-                <p className="text-sm sm:text-base text-gray-500 mb-3 leading-relaxed">Please upload the required documents for verification</p>
+                <Label className="text-sm font-medium text-black">
+                    Verification Documents
+                </Label>
+                <p className="text-xs text-gray-600 mt-1">
+                    Upload required documents for verification
+                </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:gap-5">
+            <div className="space-y-3">
                 <DocumentItem
                     label="Certification"
-                    description="Upload your diving or relevant adventure certification (PDF, JPG, PNG)"
+                    description="Adventure certification (PDF, JPG, PNG - Max 5MB)"
                     file={certificate}
                     onChange={onCertificateChange}
                     type="certificate"
+                    error={certificateError}
                 />
 
                 <DocumentItem
                     label="Government ID"
-                    description="Upload a valid government-issued ID for verification (PDF, JPG, PNG)"
+                    description="Valid government-issued ID (PDF, JPG, PNG - Max 5MB)"
                     file={governmentId}
                     onChange={onGovernmentIdChange}
                     type="governmentId"
+                    error={governmentIdError}
                 />
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 text-sm sm:text-base text-blue-800 flex items-start gap-2 sm:gap-3">
-                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                    Your documents will be securely stored and only used for verification purposes. They will not be shared with
-                    third parties.
+            <div className="bg-gray-50 border border-gray-200 rounded-md p-3 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-gray-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-gray-600">
+                    Documents are securely stored and used only for verification purposes
                 </p>
             </div>
         </div>
-    )
-}
+    );
+};
+
