@@ -33,6 +33,7 @@ import transactionRouter from "./routes/transaction.routes.js";
 import sponsorRouter from "./routes/sponsor.routes.js";
 import achievementRuleRouter from "./routes/achievementRule.routes.js";
 import reviewRouter from "./routes/review.routes.js";
+import registrationLimitRouter from "./routes/registrationLimit.routes.js";
 import { initCloudinary } from "./utils/cloudinary.js";
 import { ensureDefaultTerms } from "./controllers/terms.controller.js";
 import { ensureDefaultDeclaration } from "./controllers/declaration.controller.js";
@@ -90,6 +91,7 @@ app.use("/api/transactions", transactionRouter);
 app.use("/api/sponsors", sponsorRouter);
 app.use("/api/achievement-rules", achievementRuleRouter);
 app.use("/api/reviews", reviewRouter);
+app.use("/api/registration-limits", registrationLimitRouter);
 app.use(errorHandlingMiddleware); // middlware for handling error
 
 const PORT = process.env.PORT || 8080;

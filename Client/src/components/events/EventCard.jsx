@@ -13,93 +13,93 @@ const EventCard = memo(({ event, onBooking, onViewMore }) => {
       whileHover={{ y: -8, scale: 1.02 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
-      {/* Event Image */}
-      <div className="relative h-48 overflow-hidden">
+      {/* Event Image with Title Overlay */}
+      <div className="relative h-56 overflow-hidden">
         <motion.img
           src={event.image || "/placeholder.svg?height=200&width=300"}
           alt={event.title}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-4 left-4">
-          <h4 className="text-xl font-bold text-white">{event.title}</h4>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-6">
+          <h4 className="text-2xl font-bold text-white mb-2 leading-tight">{event.title}</h4>
+          <div className="flex items-center gap-2 text-white/90">
+            <MapPin className="h-4 w-4" />
+            <span className="text-sm font-medium">{event.city}, {event.country}</span>
+          </div>
         </div>
       </div>
 
       {/* Event Details */}
-      <div className="p-6 space-y-4 flex-1 flex flex-col">
-        {/* Content wrapper that grows to fill available space */}
-        <div className="flex-1 space-y-4">
-          {/* Location Info */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-gray-900">
-              <MapPin className="h-5 w-5" />
-              <span className="font-semibold">{t("location")}</span>
+      <div className="p-5 space-y-4 flex-1 flex flex-col">
+        <div className="flex-1 space-y-3">
+          {/* Date & Time - Two Column Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-start gap-2">
+              <Calendar className="h-4 w-4 mt-0.5 text-gray-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 font-medium">{t("date")}</p>
+                <p className="text-sm text-gray-900 font-semibold truncate">
+                  {new Date(event.date).toLocaleDateString()}
+                </p>
+              </div>
             </div>
-            <p className="text-gray-600 text-sm leading-relaxed pl-7">{event.city}, {event.country}</p>
-            {event.location && (
-              <p className="text-gray-500 text-xs leading-relaxed pl-7">{event.location}</p>
-            )}
+
+            <div className="flex items-start gap-2">
+              <Clock className="h-4 w-4 mt-0.5 text-gray-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 font-medium">{t("time")}</p>
+                <p className="text-sm text-gray-900 font-semibold truncate">
+                  {event.startTime}
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Time Info */}
-          <div className="flex items-center space-x-2 text-gray-700">
-            <Clock className="h-5 w-5" />
-            <span className="font-medium">
-              {t("time")} {event.startTime} - {event.endTime}
-            </span>
-          </div>
-
-          {/* Date Info */}
-          <div className="flex items-center space-x-2 text-gray-700">
-            <Calendar className="h-5 w-5" />
-            <span className="font-medium">
-              {t("date")} {new Date(event.date).toLocaleDateString()}
-            </span>
-          </div>
+          {/* Detailed Location */}
+          {event.location && (
+            <div className="bg-gray-50 rounded-xl p-3">
+              <p className="text-xs text-gray-600 line-clamp-2">{event.location}</p>
+            </div>
+          )}
 
           {/* Adventures */}
           {event.adventures && event.adventures.length > 0 && (
             <div className="space-y-2">
-              <div className="flex items-center space-x-2 text-gray-900">
-                <Compass className="h-5 w-5" />
-                <span className="font-semibold">{t("adventures")}</span>
+              <div className="flex items-center gap-2">
+                <Compass className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-semibold text-gray-900">{t("adventures")}</span>
               </div>
-              <div className="pl-7 space-y-1">
+              <div className="flex flex-wrap gap-2">
                 {event.adventures.slice(0, 2).map((adventure, index) => (
-                  <div key={adventure._id || index} className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-black rounded-full"></div>
-                    <span className="text-gray-600 text-sm">{adventure.name}</span>
-                  </div>
+                  <span
+                    key={adventure._id || index}
+                    className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700"
+                  >
+                    {adventure.name}
+                  </span>
                 ))}
                 {event.adventures.length > 2 && (
-                  <p className="text-gray-500 text-xs pl-4">
-                    +{event.adventures.length - 2} {event.adventures.length - 2 > 1 ? t("moreAdventures") : t("moreAdventure")}
-                  </p>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-gray-900 text-xs font-medium text-white">
+                    +{event.adventures.length - 2}
+                  </span>
                 )}
               </div>
             </div>
           )}
 
           {/* Description */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-gray-900">
-              <Compass className="h-5 w-5" />
-              <span className="font-semibold">{t("description")}</span>
-            </div>
-            <p className="text-gray-600 leading-relaxed pl-7">
-              {event.description && event.description.length > 20
-                ? `${event.description.substring(0, 20)}...`
-                : event.description}
+          {event.description && (
+            <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+              {event.description}
             </p>
-
-          </div>
+          )}
         </div>
 
-        {/* Book Button - Fixed at bottom */}
+        {/* Book Button */}
         <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           className="mt-auto"
         >
           <Button
@@ -110,8 +110,8 @@ const EventCard = memo(({ event, onBooking, onViewMore }) => {
             {t("bookYourSpot").toUpperCase()}
           </Button>
         </motion.div>
-      </div >
-    </motion.div >
+      </div>
+    </motion.div>
   )
 })
 

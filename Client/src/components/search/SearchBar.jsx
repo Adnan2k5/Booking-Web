@@ -71,8 +71,9 @@ const SearchBar = memo(({
             onChange={(e) => onDateChange?.(e.target.value)}
             type="date"
             placeholder={t("selectDate")}
-            className="pl-3 py-3 text-base border-0 focus:ring-0 flex-1 h-full bg-transparent text-white md:text-gray-900 placeholder:text-white/70 md:placeholder:text-gray-400 font-medium [color-scheme:dark] md:[color-scheme:light]"
+            className="search-date-input pl-3 py-3 text-base border-0 focus:ring-0 flex-1 h-full bg-transparent text-white md:text-gray-900 placeholder:text-white/70 md:placeholder:text-gray-400 font-medium [color-scheme:dark] md:[color-scheme:light]"
             value={date}
+            data-has-value={date ? "true" : "false"}
             required
             onFocus={e => e.target.showPicker && e.target.showPicker()}
           />

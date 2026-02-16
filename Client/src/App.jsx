@@ -101,6 +101,7 @@ const WebsiteSettings = lazy(() => import("./Pages/Admin/SubPages/WebsiteSetting
 const SponsorsPage = lazy(() => import("./Pages/Admin/SubPages/Sponsors"))
 const AchievementRulesPage = lazy(() => import("./Pages/Admin/SubPages/AchievementRules"))
 const RBACManagement = lazy(() => import("./Pages/Admin/SubPages/RBACManagement"))
+const RegistrationLimitsPage = lazy(() => import("./Pages/Admin/SubPages/RegistrationLimits"))
 
 // Shop - Lazy loaded
 const ItemPage = lazy(() => import("./Pages/Shop/ItemPage").then(module => ({ default: module.ItemPage })))
@@ -364,6 +365,7 @@ const App = () => {
                           <Route path="/admin/terms" element={<Dash_Terms />} />
                           <Route path="/admin/declaration" element={<Dash_Declation />} />
                           <Route path="/admin/locations" element={<LocationsPage />} />
+                          <Route path="/admin/registration-limits" element={<RegistrationLimitsPage />} />
                           <Route path="/admin/events" element={<EventsPage />} />
                           <Route path="/admin/website-settings" element={<WebsiteSettings />} />
                           <Route path="/admin/sponsors" element={<SponsorsPage />} />
