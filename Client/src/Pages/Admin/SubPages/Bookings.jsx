@@ -377,11 +377,11 @@ export default function Dash_Bookings() {
       </div>
 
       <Tabs defaultValue="items" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 mb-4">
-          <TabsTrigger value="items">Item Bookings</TabsTrigger>
-          <TabsTrigger value="sessions">Session Bookings</TabsTrigger>
-          <TabsTrigger value="hotels">Hotel Bookings</TabsTrigger>
-          <TabsTrigger value="events">Event Bookings</TabsTrigger>
+        <TabsList className="flex w-full overflow-x-auto mb-4">
+          <TabsTrigger value="items" className="flex-1 min-w-0 text-xs sm:text-sm">Items</TabsTrigger>
+          <TabsTrigger value="sessions" className="flex-1 min-w-0 text-xs sm:text-sm">Sessions</TabsTrigger>
+          <TabsTrigger value="hotels" className="flex-1 min-w-0 text-xs sm:text-sm">Hotels</TabsTrigger>
+          <TabsTrigger value="events" className="flex-1 min-w-0 text-xs sm:text-sm">Events</TabsTrigger>
         </TabsList>        <TabsContent value="items">
           <BookingsTable
             bookings={filteredItemBookings}
@@ -655,16 +655,18 @@ export default function Dash_Bookings() {
     return (
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {getTableHeaders()}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {safeBookings.map(renderTableRow)}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[700px]">
+              <TableHeader>
+                <TableRow>
+                  {getTableHeaders()}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {safeBookings.map(renderTableRow)}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     )
@@ -713,40 +715,30 @@ export default function Dash_Bookings() {
     }
 
     return (
-      <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
-        {/* Left side - Results info */}
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-muted-foreground">
-            Showing <span className="font-medium">{startItem}</span> to{' '}
-            <span className="font-medium">{endItem}</span> of{' '}
-            <span className="font-medium">{totalItems}</span> results
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Page <span className="font-medium">{currentPage}</span> of{' '}
-            <span className="font-medium">{totalPages}</span>
-          </div>
+      <div className="flex flex-col gap-3 px-4 py-4 border-t bg-white sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="text-sm text-muted-foreground text-center sm:text-left">
+          Showing <span className="font-medium">{startItem}</span> to{' '}
+          <span className="font-medium">{endItem}</span> of{' '}
+          <span className="font-medium">{totalItems}</span> results
         </div>
 
-        {/* Right side - Navigation controls */}
-        <div className="flex items-center space-x-2">
-          {/* Previous button */}
+        <div className="flex items-center justify-center space-x-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="flex items-center space-x-1"
+            className="h-8 w-8 p-0 sm:h-auto sm:w-auto sm:px-3"
           >
             <ChevronLeft className="h-4 w-4" />
-            <span>Previous</span>
+            <span className="sr-only sm:not-sr-only sm:ml-1">Previous</span>
           </Button>
 
-          {/* Page numbers */}
           <div className="flex items-center space-x-1">
             {getPageNumbers().map((page, index) => (
               page === '...'
                 ? (
-                  <span key={`ellipsis-${index}`} className="px-2 text-muted-foreground">
+                  <span key={`ellipsis-${index}`} className="px-1 text-muted-foreground">
                     ...
                   </span>
                 )
@@ -764,15 +756,14 @@ export default function Dash_Bookings() {
             ))}
           </div>
 
-          {/* Next button */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="flex items-center space-x-1"
+            className="h-8 w-8 p-0 sm:h-auto sm:w-auto sm:px-3"
           >
-            <span>Next</span>
+            <span className="sr-only sm:not-sr-only sm:mr-1">Next</span>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

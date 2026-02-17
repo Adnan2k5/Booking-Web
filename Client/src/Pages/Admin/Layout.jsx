@@ -13,6 +13,8 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
+  SidebarTrigger,
+  useSidebar,
 } from '../../components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import {
@@ -113,16 +115,17 @@ export default function AdminLayout() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-screen w-full overflow-hidden">
         <AdminSidebar pathname={pathname} user={user} onLogout={handleLogout} />
-        <SidebarInset className="bg-muted/40">
-          <header className="flex h-16 items-center gap-4 border-b bg-background px-6">
-            <div className="flex-1 text-lg font-semibold">
+        <SidebarInset className="bg-muted/40 flex flex-col flex-1 min-w-0">
+          <header className="flex h-16 shrink-0 items-center gap-4 border-b bg-background px-4 md:px-6">
+            <SidebarTrigger className="md:hidden" />
+            <div className="flex-1 text-lg font-semibold truncate">
               Adventure Booking Admin
             </div>
             <AdminProfileDropdown user={user} onLogout={handleLogout} />
           </header>
-          <main className="lg:w-[83vw] w-full flex-1 overflow-y-auto p-6">
+          <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <Outlet />
           </main>
         </SidebarInset>
@@ -132,6 +135,7 @@ export default function AdminLayout() {
 }
 
 function AdminSidebar({ pathname, user, onLogout }) {
+  const { isMobile, setOpenMobile } = useSidebar()
   const roles = Array.isArray(user?.admin?.adminRole) ? user.admin.adminRole : []
   const isSuperAdmin = roles.length === 0
 
@@ -144,11 +148,16 @@ function AdminSidebar({ pathname, user, onLogout }) {
     return roles.some((role) => allowedRoles.includes(role))
   }
 
+  const closeMobileSidebar = () => {
+    if (isMobile) setOpenMobile(false)
+  }
+
   return (
     <Sidebar>
       <SidebarHeader className="flex h-16 items-center justify-center border-b px-6">
         <Link
           to="/"
+          onClick={closeMobileSidebar}
           className="flex items-center justify-center gap-2 font-semibold hover:text-gray-700 transition-colors cursor-pointer"
         >
           <Mountain className="h-6 w-6" />
@@ -163,7 +172,7 @@ function AdminSidebar({ pathname, user, onLogout }) {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === "/admin"}>
-                  <Link to="/admin">
+                  <Link to="/admin" onClick={closeMobileSidebar}>
                     <BarChart3 className="h-4 w-4" />
                     <span>Dashboard</span>
                   </Link>
@@ -185,7 +194,7 @@ function AdminSidebar({ pathname, user, onLogout }) {
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton asChild isActive={pathname === item.path}>
-                      <Link to={item.path}>
+                      <Link to={item.path} onClick={closeMobileSidebar}>
                         <Icon className="h-4 w-4" />
                         <span>{item.label}</span>
                       </Link>
