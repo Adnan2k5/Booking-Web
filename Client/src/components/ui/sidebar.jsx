@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva } from "class-variance-authority";
-import { PanelLeftIcon } from "lucide-react"
+import { MenuIcon, XIcon } from "lucide-react"
 
 import { useIsMobile } from "../../hooks/use-mobile"
 import { cn } from "../../lib/utils"
@@ -170,7 +170,21 @@ function Sidebar({
             <SheetTitle>Sidebar</SheetTitle>
             <SheetDescription>Displays the mobile sidebar.</SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div className="flex h-full w-full flex-col">
+            <div className="flex h-16 items-center justify-between border-b px-6">
+              <span className="text-sm font-semibold">Menu</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 text-sidebar-foreground"
+                onClick={() => setOpenMobile(false)}
+              >
+                <XIcon className="size-5" />
+                <span className="sr-only">Close sidebar</span>
+              </Button>
+            </div>
+            {children}
+          </div>
         </SheetContent>
       </Sheet>)
     );
@@ -239,7 +253,7 @@ function SidebarTrigger({
         toggleSidebar()
       }}
       {...props}>
-      <PanelLeftIcon />
+      <MenuIcon className="size-5" />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>)
   );
@@ -537,7 +551,7 @@ function SidebarMenuAction({
         "peer-data-[size=lg]/menu-button:top-2.5",
         "group-data-[collapsible=icon]:hidden",
         showOnHover &&
-          "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
+        "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
         className
       )}
       {...props} />)
