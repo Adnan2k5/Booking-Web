@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { Eye, EyeClosed, Lock, LogInIcon, Phone, User } from "lucide-react";
-import { MdEmail } from "react-icons/md";
+import { Eye, EyeClosed, Lock, Mail, Phone, User, ArrowLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { GoogleLoginSuccess, ResendOtp, UserLogin, UserRegister, VerifyUser } from "../Auth/UserAuth";
 import { Checkbox, Modal } from "antd";
@@ -23,14 +22,11 @@ export default function LoginPage() {
   const location = useLocation();
   const [viewPassword, setViewPassword] = useState(false);
   const [usingPhone, setUsingPhone] = useState(false);
-  // Read action & role from query params first (persist through reloads), fall back to location.state
   const searchParams = new URLSearchParams(location.search);
   const paramAction = searchParams.get('action') || location?.state?.action;
   const paramRole = searchParams.get('role') || location?.state?.role || 'explorer';
 
-  // Initialize signup from action param
   const [signup, setSignup] = useState(() => paramAction === 'signup');
-  // Role state, default to 'explorer' if not provided
   const [role, setRole] = useState(() => paramRole);
   const { register, handleSubmit, reset } = useForm();
   const [openOtp, setopenOtp] = useState(false);
@@ -40,6 +36,16 @@ export default function LoginPage() {
   const [otpLoader, setOtpLoader] = useState(false);
   const { user, loading } = useAuth();
   const Navigate = useNavigate();
+
+  const getErrorMessage = (error, defaultMessage = "An error occurred") => {
+    if (error?.response?.data?.message) {
+      return error.response.data.message;
+    }
+    if (error?.message) {
+      return error.message;
+    }
+    return defaultMessage;
+  };
 
   const onSubmit = async (data) => {
     // Validate form data before submission
@@ -61,87 +67,48 @@ export default function LoginPage() {
     try {
       if (signup) {
         setEmail(data.email);
-        // Attach role to registration data
         const registrationData = { ...data, role };
         const res = await UserRegister(registrationData);
-        if (res === 201) {
+
+        if (res.success) {
           setopenOtp(true);
-          toast.success("Registration successful! Please check your email for OTP verification.");
-        } else if (res === 409) {
-          toast.error("User already exists with this email. Please use a different email or try logging in.");
+          toast.success("Registration successful! Please check your email for verification.");
+          reset();
         }
-        reset();
       } else {
         const res = await UserLogin(data, dispatch);
         setEmail(data.email);
-        const user = res.data?.data?.user;
 
-        if (res.status === 200) {
-          toast.success("Login successful! Welcome back.");
+        if (res.success) {
+          toast.success("Welcome back!");
         }
       }
     } catch (err) {
-      console.error("Authentication error:", err);
-      if (err.response) {
-        const statusCode = err.response.status;
-        const errorMessage = err.response.data?.message || "";
+      const statusCode = err?.response?.status;
+      const errorMessage = getErrorMessage(err);
 
-        switch (statusCode) {
-          case 400:
-            if (signup) {
-              toast.error("Invalid input data. Please check all required fields.");
-            } else {
-              toast.error("Invalid password. Please check your password and try again.");
-            }
-            break;
-          case 401:
-            toast.error("Unauthorized access. Please check your credentials.");
-            break;
-          case 403:
-            toast.warning("Your account is not verified. Please check your email for verification code.");
-            setEmail(data.email);
-            setopenOtp(true);
-            try {
-              await ResendOtp(data.email);
-              toast.info("New verification code sent to your email.");
-            } catch (resendErr) {
-              console.error("Resend OTP error:", resendErr);
-              toast.error("Failed to resend verification code. Please try again.");
-            }
-            break;
-          case 404:
-            if (signup) {
-              toast.error("Registration failed. Please try again.");
-            } else {
-              toast.error("No account found with this email address. Please check your email or sign up for a new account.");
-            }
-            break;
-          case 409:
-            toast.error("An account with this email already exists. Please use a different email or try logging in.");
-            break;
-          case 500:
-            toast.error("Server error. Please try again later or contact support if the problem persists.");
-            break;
-          default:
-            if (signup) {
-              toast.error("Registration failed. Please try again.");
-            } else {
-              toast.error("Login failed. Please check your credentials and try again.");
-            }
+      if (statusCode === 403) {
+        toast.warning("Account not verified. Please check your email.");
+        setEmail(data.email || data.phone);
+        setopenOtp(true);
+        try {
+          await ResendOtp(data.email || data.phone);
+          toast.info("Verification code sent to your email.");
+        } catch (resendErr) {
+          toast.error(getErrorMessage(resendErr, "Failed to resend verification code."));
         }
-      } else if (err.request) {
-        toast.error("Network error. Please check your internet connection and try again.");
+      } else if (!err?.response) {
+        toast.error("Network error. Please check your connection.");
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        toast.error(errorMessage);
       }
-    }
-    finally {
+    } finally {
       setloader(false);
     }
   };
   const verifyOtp = async () => {
     if (!value || value.length !== 6) {
-      toast.error("Please enter a valid 6-digit OTP code.");
+      toast.error("Please enter a valid 6-digit code.");
       return;
     }
 
@@ -149,35 +116,15 @@ export default function LoginPage() {
     try {
       const data = { email, otp: value };
       const res = await VerifyUser(data, dispatch);
-      if (res === 200) {
-        toast.success("Email verified successfully! Welcome to our platform.");
+
+      if (res.success) {
+        toast.success("Email verified successfully! Welcome aboard.");
         setopenOtp(false);
         setValue("");
-      } else if (res === 400) {
-        toast.error("Invalid or expired OTP. Please check the code and try again.");
-      } else {
-        toast.error("OTP verification failed. Please try again.");
       }
     } catch (err) {
-      console.error("OTP verification error:", err);
-      if (err.response) {
-        const statusCode = err.response.status;
-        switch (statusCode) {
-          case 400:
-            toast.error("Invalid OTP code. Please check and try again.");
-            break;
-          case 404:
-            toast.error("User not found. Please register first.");
-            break;
-          case 410:
-            toast.error("OTP has expired. Please request a new one.");
-            break;
-          default:
-            toast.error("OTP verification failed. Please try again.");
-        }
-      } else {
-        toast.error("Network error. Please check your connection and try again.");
-      }
+      const errorMessage = getErrorMessage(err, "Verification failed. Please try again.");
+      toast.error(errorMessage);
     } finally {
       setOtpLoader(false);
     }
@@ -246,101 +193,61 @@ export default function LoginPage() {
   const onGoogleLoginSucces = async (response) => {
     try {
       const res = await GoogleLoginSuccess(response, dispatch);
-      if (res) {
-        toast.success("Google login successful! Welcome back.");
+      if (res?.success) {
+        toast.success("Welcome back!");
       }
     } catch (err) {
-      console.error("Google login error:", err);
-      if (err.response) {
-        const statusCode = err.response.status;
-        switch (statusCode) {
-          case 400:
-            toast.error("Invalid Google authentication token. Please try again.");
-            break;
-          case 401:
-            toast.error("Google authentication failed. Please try again.");
-            break;
-          case 500:
-            toast.error("Server error during Google login. Please try again later.");
-            break;
-          default:
-            toast.error("Google login failed. Please try again or use email/password.");
-        }
-      } else {
-        toast.error("Google login failed. Please try again or use email/password.");
-      }
+      const errorMessage = getErrorMessage(err, "Google sign-in failed. Please try again.");
+      toast.error(errorMessage);
     }
-  }
+  };
 
 
   const handleResendOtp = async () => {
     if (!email) {
-      toast.error("Email not found. Please try logging in again.");
+      toast.error("Email not found. Please try again.");
       return;
     }
 
     try {
-      toast.loading("Resending verification code...");
+      toast.loading("Sending verification code...", { id: "resend-otp" });
       await ResendOtp(email);
-      toast.dismiss();
-      toast.success("New verification code sent to your email!");
+      toast.success("Verification code sent!", { id: "resend-otp" });
     } catch (err) {
-      toast.dismiss();
-      console.error("Resend OTP error:", err);
-      if (err.response) {
-        const statusCode = err.response.status;
-        switch (statusCode) {
-          case 404:
-            toast.error("User not found. Please register first.");
-            break;
-          case 429:
-            toast.error("Too many requests. Please wait before requesting another code.");
-            break;
-          case 500:
-            toast.error("Server error. Please try again later.");
-            break;
-          default:
-            toast.error("Failed to resend verification code. Please try again.");
-        }
-      } else {
-        toast.error("Network error. Please check your connection and try again.");
-      }
+      const errorMessage = getErrorMessage(err, "Failed to send verification code.");
+      toast.error(errorMessage, { id: "resend-otp" });
     }
   };
 
   const linkedInLogin = () => {
     try {
-      const REDIRECT_URI = "http://localhost:5173/auth/signInWithLinkedin";
-      const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${import.meta.env.VITE_LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=openid%20profile%20email`;
-
       if (!import.meta.env.VITE_LINKEDIN_CLIENT_ID) {
-        toast.error("LinkedIn login is not configured. Please contact support.");
+        toast.error("LinkedIn sign-in is not configured.");
         return;
       }
 
+      const REDIRECT_URI = "http://localhost:5173/auth/signInWithLinkedin";
+      const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${import.meta.env.VITE_LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=openid%20profile%20email`;
       window.location.href = authUrl;
     } catch (err) {
-      console.error("LinkedIn login error:", err);
-      toast.error("LinkedIn login failed. Please try again or use email/password.");
+      toast.error("LinkedIn sign-in failed. Please try again.");
     }
-  }
+  };
 
   const facebookLogin = () => {
     try {
-      const REDIRECT_URI = "http://localhost:5173/auth/signInWithFacebook";
-      const authUrl = `https://www.facebook.com/v11.0/dialog/oauth?client_id=${import.meta.env.VITE_FACEBOOK_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state="{st=state123abc,ds=123456789}"&scope=email,public_profile&response_type=code`;
-
       if (!import.meta.env.VITE_FACEBOOK_CLIENT_ID) {
-        toast.error("Facebook login is not configured. Please contact support.");
+        toast.error("Facebook sign-in is not configured.");
         return;
       }
 
+      const REDIRECT_URI = "http://localhost:5173/auth/signInWithFacebook";
+      const authUrl = `https://www.facebook.com/v11.0/dialog/oauth?client_id=${import.meta.env.VITE_FACEBOOK_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state="{st=state123abc,ds=123456789}"&scope=email,public_profile&response_type=code`;
       window.location.href = authUrl;
     } catch (err) {
-      console.error("Facebook login error:", err);
-      toast.error("Facebook login failed. Please try again or use email/password.");
+      toast.error("Facebook sign-in failed. Please try again.");
     }
-  }
+  };
 
   useEffect(() => {
     if (user.user !== null && !loading) {
@@ -384,278 +291,314 @@ export default function LoginPage() {
   // Use the official GoogleLogin component (returns a credential via response.credential)
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 relative">
-      <div className="login relative bg-gradient-to-b from-white/80 to-white rounded-2xl shadow-2xl flex flex-col items-center md:py-8 md:px-6 w-full max-w-md py-6 border border-white/40 backdrop-blur-sm">
-        <Modal open={openOtp} footer={null} onCancel={cancel} transitionName="" maskTransitionName="" animation={false}>
-          <div className="space-y-2 flex flex-col items-center gap-4">
-            <h1 className="text-lg font-semibold text-center">
-              Enter One-Time Password sent to{" "}
-              <span className="text-blue-500 break-all">{email}</span>
-            </h1>
-            <p className="text-sm text-gray-600 text-center">
-              Please check your email and enter the 6-digit verification code
-            </p>
-            <InputOTP
-              maxLength={6}
-              value={value}
-              onChange={(value) => setValue(value)}
-            >
-              <InputOTPGroup>
-                <InputOTPSlot index={0} />
-                <InputOTPSlot index={1} />
-                <InputOTPSlot index={2} />
-                <InputOTPSlot index={3} />
-                <InputOTPSlot index={4} />
-                <InputOTPSlot index={5} />
-              </InputOTPGroup>
-            </InputOTP>
-            <div className="w-full space-y-3">
-              <button
-                onClick={verifyOtp}
-                disabled={value.length !== 6 || otpLoader}
-                className="bg-black text-white rounded-2xl py-2 w-full disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {otpLoader ? <Loader btn={true} /> : "Verify OTP"}
-              </button>
-              <button
-                onClick={handleResendOtp}
-                type="button"
-                disabled={otpLoader}
-                className="text-blue-500 text-sm w-full py-1 hover:text-blue-700 transition-colors disabled:text-gray-400"
-              >
-                Didn't receive code? Resend OTP
-              </button>
-            </div>
-          </div>
-        </Modal>
-        <div className="form w-full flex flex-col">
-          <div className="header flex flex-col items-center gap-4">
-            <div className="icon p-4 rounded-3xl shadow-lg" style={{ background: 'linear-gradient(90deg,#06b6d4,#60a5fa)' }}>
-              <LogInIcon className="text-white" />
-            </div>
-            <h1 className="text-2xl font-semibold w-full text-center ">
-              {signup ? `Sign Up${role ? ` as ${role.charAt(0).toUpperCase() + role.slice(1)}` : ''}` : "Sign In"}
-            </h1>
-          </div>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="Form md:px-12 px-5 py-4 gap-2 flex flex-col mt-5"
+    <div className="min-h-screen w-full relative flex items-center justify-center px-4 py-8">
+      <div className="fixed inset-0 w-full h-screen overflow-hidden -z-50 bg-black">
+        <div className="absolute inset-0 bg-black/60 z-10" />
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="https://dazzling-chaja-b80bdd.netlify.app/video.mp4" type="video/mp4" />
+        </video>
+      </div>
+
+      <button
+        onClick={() => Navigate("/")}
+        className="fixed top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span className="text-sm font-medium">Back</span>
+      </button>
+
+      <div className="w-full max-w-md relative">
+        <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl p-8">
+          <Modal
+            open={openOtp}
+            footer={null}
+            onCancel={cancel}
+            transitionName=""
+            maskTransitionName=""
+            animation={false}
+            centered
           >
-            <div className="email px-4 md:py-5 py-3 bg-white/80 border border-gray-200 flex gap-6 items-center rounded-2xl focus-within:ring-2 focus-within:ring-cyan-200 transition-shadow">
-              {usingPhone ? (
-                <div className="flex gap-6 items-center">
-                  <Phone className="text-cyan-600 text-2xl" />
-                  <input
-                    type="number"
-                    placeholder="Phone Number"
-                    {...register("phone", { required: signup })}
-                    className="w-full bg-transparent h-full outline-none border-none"
-                  />
+            <div className="space-y-6 flex flex-col items-center py-6">
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Verify Your Email
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Enter the 6-digit code sent to
+                </p>
+                <p className="text-sm font-medium text-gray-900 break-all">{email}</p>
+              </div>
+
+              <InputOTP
+                maxLength={6}
+                value={value}
+                onChange={(value) => setValue(value)}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+
+              <div className="w-full space-y-3">
+                <button
+                  onClick={verifyOtp}
+                  disabled={value.length !== 6 || otpLoader}
+                  className="w-full bg-gray-900 text-white py-3 rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {otpLoader ? <Loader btn={true} /> : "Verify Code"}
+                </button>
+                <button
+                  onClick={handleResendOtp}
+                  type="button"
+                  disabled={otpLoader}
+                  className="w-full py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors disabled:text-gray-400"
+                >
+                  Didn't receive code? Resend
+                </button>
+              </div>
+            </div>
+          </Modal>
+
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">
+              {signup ? "Create Account" : "Welcome Back"}
+            </h1>
+            {signup && role && (
+              <p className="text-sm text-white/60">
+                Signing up as {role.charAt(0).toUpperCase() + role.slice(1)}
+              </p>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-4">
+              <div className="group">
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60">
+                    {usingPhone ? <Phone className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
+                  </div>
+                  {usingPhone ? (
+                    <input
+                      type="tel"
+                      placeholder="Phone Number"
+                      {...register("phone", { required: signup })}
+                      className="w-full bg-white/10 border border-white/20 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
+                    />
+                  ) : (
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      {...register("email", {
+                        required: "Email is required",
+                        pattern: {
+                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          message: "Please enter a valid email address"
+                        }
+                      })}
+                      autoComplete="email"
+                      className="w-full bg-white/10 border border-white/20 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
+                    />
+                  )}
                 </div>
-              ) : (
-                <div className="flex gap-6 items-center w-full">
-                  <MdEmail className="text-cyan-600 text-2xl" />
+                <button
+                  type="button"
+                  onClick={() => setUsingPhone(!usingPhone)}
+                  className="mt-2 text-xs text-white/60 hover:text-white/80 transition-colors"
+                >
+                  {usingPhone ? "Use email instead" : "Use phone instead"}
+                </button>
+              </div>
+
+              {signup && (
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60">
+                    <User className="w-5 h-5" />
+                  </div>
                   <input
-                    type="email"
-                    placeholder="Email"
-                    {...register("email", {
-                      required: "Email is required",
-                      pattern: {
-                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                        message: "Please enter a valid email address"
+                    type="text"
+                    placeholder="Full Name"
+                    {...register("name", {
+                      required: signup ? "Name is required" : false,
+                      minLength: {
+                        value: 2,
+                        message: "Name must be at least 2 characters"
                       }
                     })}
-                    autoComplete="off"
-                    className="w-full bg-transparent outline-none border-none placeholder-gray-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
                   />
                 </div>
               )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setUsingPhone(!usingPhone)}
-              className="text-gray-600 cursor-pointer w-fit md:text-sm text-xs text-left"
-            >
-              {usingPhone ? "Use Email instead" : "Use Phone instead"}
-            </button>
-            {signup && (
-              <div className="name px-4 md:py-5 py-3 bg-white/80 border border-gray-200 flex gap-6 items-center rounded-2xl transition-shadow">
-                <User className="text-cyan-600 text-2xl" />
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  {...register("name", {
-                    required: signup ? "Name is required" : false,
-                    minLength: {
-                      value: 2,
-                      message: "Name must be at least 2 characters long"
-                    }
-                  })}
-                  className="w-full bg-transparent outline-none border-none"
-                />
-              </div>
-            )}
-            <div className="password px-4 md:py-5 py-3 bg-white/80 border border-gray-200 flex gap-6 items-center rounded-2xl transition-shadow">
-              <Lock className="text-cyan-600 text-2xl" />
-              <input
-                type={viewPassword ? "text" : "password"}
-                placeholder="Password"
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: signup ? {
-                    value: 6,
-                    message: "Password must be at least 6 characters long"
-                  } : undefined
-                })}
-                className="w-full bg-transparent outline-none border-none"
-              />
-              {!viewPassword ? (
-                <EyeClosed
-                  className="text-cyan-600 text-2xl cursor-pointer"
-                  onClick={() => setViewPassword(true)}
-                />
-              ) : (
-                <Eye
-                  className="text-cyan-600 text-2xl cursor-pointer"
-                  onClick={() => setViewPassword(false)}
-                />
-              )}
-            </div>
-            {signup && (
-              <div className="password px-4 md:py-5 py-3 bg-white/80 border border-gray-200 flex gap-6 items-center rounded-2xl transition-shadow">
-                <Lock className="text-cyan-600 text-2xl" />
+
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60">
+                  <Lock className="w-5 h-5" />
+                </div>
                 <input
                   type={viewPassword ? "text" : "password"}
-                  placeholder="Confirm Password"
-                  {...register("confirmPassword", {
-                    required: signup ? "Please confirm your password" : false,
-                    validate: signup ? (value) => {
-                      const password = document.querySelector('input[name="password"]').value;
-                      return value === password || "Passwords do not match";
+                  placeholder="Password"
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: signup ? {
+                      value: 6,
+                      message: "Password must be at least 6 characters"
                     } : undefined
                   })}
-                  className="w-full bg-transparent outline-none border-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-xl py-3 pl-12 pr-12 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
                 />
+                <button
+                  type="button"
+                  onClick={() => setViewPassword(!viewPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/80 transition-colors"
+                >
+                  {viewPassword ? <Eye className="w-5 h-5" /> : <EyeClosed className="w-5 h-5" />}
+                </button>
               </div>
-            )}
-            {signup && (
-              <div className="terms">
-                <Checkbox>
-                  <span className="text-gray-600 text-sm">
-                    I agree to the <a href="/terms" className="text-blue-500 hover:text-blue-700 transition-colors">
-                      Terms of Service
-                    </a>
-                  </span>
-                </Checkbox>
-                {/* Show role info for clarity */}
-                <div className="mt-2 text-xs text-gray-500">Registering as: <span className="font-semibold">{role.charAt(0).toUpperCase() + role.slice(1)}</span></div>
-              </div>
-            )}
-            <div className="forgot mt-1 flex flex-col items-center justify-between gap-2">
-              <div
-                onClick={handleModeSwitch}
-                className="text-gray-600 md:text-sm text-xs text-center cursor-pointer"
-              >
-                {signup ? (
-                  <p>
-                    Already have an account?{" "}
-                    <span className="text-blue-500 hover:text-blue-700 transition-colors">Sign In</span>
-                  </p>
-                ) : (
-                  <p>
-                    Don't have an account?{" "}
-                    <span className="text-blue-500 hover:text-blue-700 transition-colors">Sign Up</span>
-                  </p>
-                )}
-              </div>
+
+              {signup && (
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <input
+                    type={viewPassword ? "text" : "password"}
+                    placeholder="Confirm Password"
+                    {...register("confirmPassword", {
+                      required: signup ? "Please confirm your password" : false,
+                      validate: signup ? (value) => {
+                        const password = document.querySelector('input[name="password"]').value;
+                        return value === password || "Passwords do not match";
+                      } : undefined
+                    })}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
+                  />
+                </div>
+              )}
+
+              {signup && (
+                <div className="space-y-2">
+                  <Checkbox className="text-white/80 text-sm [&_.ant-checkbox-inner]:border-white/40 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-white [&_.ant-checkbox-checked_.ant-checkbox-inner]:border-white">
+                    <span className="text-white/80 text-sm ml-2">
+                      I agree to the{" "}
+                      <a href="/terms" className="text-white hover:text-white/80 underline transition-colors">
+                        Terms of Service
+                      </a>
+                    </span>
+                  </Checkbox>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col items-center gap-3 pt-2">
               {!signup && (
                 <button
                   type="button"
                   onClick={() => Navigate('/reset')}
-                  className="text-gray-600 md:text-sm w-fit text-xs text-center cursor-pointer hover:text-blue-500 transition-colors"
+                  className="text-sm text-white/60 hover:text-white/80 transition-colors"
                 >
                   Forgot password?
                 </button>
               )}
             </div>
-            {signup ? (
-              <div className="button w-full">
-                <button
-                  type="submit"
-                  disabled={loader}
-                  className="w-full bg-black text-white py-3 rounded-3xl font-semibold shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  style={{ transition: 'none', animation: 'none' }}
-                >
-                  {loader ? <Loader btn={true} /> : "Sign Up"}
-                </button>
-              </div>
-            ) : (
-              <div className="button w-full">
-                <button
-                  type="submit"
-                  disabled={loader}
-                  className="w-full bg-black text-white cursor-pointer py-3 rounded-3xl font-semibold shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  style={{ transition: 'none', animation: 'none' }}
-                >
-                  {loader ? <Loader btn={true} /> : "Sign In"}
-                </button>
-              </div>
-            )}
+
+            <button
+              type="submit"
+              disabled={loader}
+              className="w-full bg-white text-gray-900 py-3 rounded-xl font-semibold hover:bg-white/90 transition-colors disabled:bg-white/50 disabled:cursor-not-allowed"
+            >
+              {loader ? <Loader btn={true} /> : signup ? "Create Account" : "Sign In"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleModeSwitch}
+              className="w-full text-center text-sm text-white/60 hover:text-white/80 transition-colors"
+            >
+              {signup ? (
+                <>Already have an account? <span className="text-white font-medium">Sign In</span></>
+              ) : (
+                <>Don't have an account? <span className="text-white font-medium">Sign Up</span></>
+              )}
+            </button>
           </form>
-        </div>
-        <div className="alternate w-full md:px-12 px-5 mt-6">
-          <p className="text-gray-500 text-sm text-center">
-            {signup ? "Or sign up with" : "Or sign in with"}
-          </p>
-          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-            <div className="google w-full md:mt-6">
-              {/* Google full-width row */}
-              <div className="w-full">
-                {/* Custom themed Google button (visual) with an invisible GoogleLogin overlay to preserve functionality */}
-                <div className="relative w-full">
+
+          <div className="mt-8 space-y-4">
+            <div className="text-center">
+              <span className="text-sm text-white/60">Or continue with</span>
+            </div>
+
+            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+              <div className="space-y-3">
+                <div className="relative">
                   <button
                     type="button"
-                    className="w-full flex items-center gap-3 justify-start bg-white/90 border border-gray-200 rounded-3xl px-4 py-3 shadow-sm hover:shadow-md transition min-w-0"
-                    aria-label="Sign in with Google"
+                    className="w-full flex items-center justify-center gap-3 bg-white/10 border border-white/20 rounded-xl px-4 py-3 hover:bg-white/20 transition-all"
                   >
-                    <span className="bg-white rounded-full p-2 flex items-center justify-center shadow-sm flex-shrink-0">
-                      <FaGoogle className="text-red-500 w-4 h-4" />
-                    </span>
-                    <span className="flex-1 text-sm font-medium text-center truncate">Continue with Google</span>
+                    <FaGoogle className="w-4 h-4 text-white" />
+                    <span className="text-sm font-medium text-white">Continue with Google</span>
                   </button>
-
-                  {/* Invisible overlay from GoogleLogin — captures clicks and runs the official flow */}
                   <div className="absolute inset-0">
                     <GoogleLogin
                       onSuccess={onGoogleLoginSucces}
-                      onError={(err) => {
-                        console.error("Google login failed", err);
-                        toast.error("Google login failed. Please try again.");
+                      onError={() => {
+                        toast.error("Google sign-in failed. Please try again.");
                       }}
-                      containerProps={{ style: { width: '100%', height: '100%', position: 'absolute', inset: 0, opacity: 0 } }}
+                      containerProps={{
+                        style: {
+                          width: '100%',
+                          height: '100%',
+                          position: 'absolute',
+                          inset: 0,
+                          opacity: 0
+                        }
+                      }}
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* LinkedIn and Facebook share the next row; stack on very small screens */}
-              <div className="mt-4 flex flex-col sm:flex-row gap-3">
-                <button onClick={linkedInLogin} className="w-full sm:flex-1 flex items-center gap-3 justify-start bg-white/90 border border-gray-200 rounded-3xl px-4 py-3 shadow-sm hover:shadow-md transition min-w-0">
-                  <span className="bg-white rounded-full p-2 flex items-center justify-center shadow-sm flex-shrink-0">
-                    <FaLinkedinIn className="text-blue-700 w-4 h-4" />
-                  </span>
-                  <span className="flex-1 text-sm font-medium text-center truncate">LinkedIn</span>
-                </button>
+                {(role === 'instructor' || role === 'hotel') ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={linkedInLogin}
+                      className="flex items-center justify-center gap-2 bg-white/10 border border-white/20 rounded-xl px-4 py-3 hover:bg-white/20 transition-all"
+                    >
+                      <FaLinkedinIn className="w-4 h-4 text-white" />
+                      <span className="text-sm font-medium text-white">LinkedIn</span>
+                    </button>
 
-                <button onClick={facebookLogin} className="w-full sm:flex-1 flex items-center gap-3 justify-start bg-white/90 border border-gray-200 rounded-3xl px-4 py-3 shadow-sm hover:shadow-md transition min-w-0">
-                  <span className="bg-white rounded-full p-2 flex items-center justify-center shadow-sm flex-shrink-0">
-                    <FaFacebookF className="text-blue-600 w-4 h-4" />
-                  </span>
-                  <span className="flex-1 text-sm font-medium text-center truncate">Facebook</span>
-                </button>
+                    <button
+                      type="button"
+                      onClick={facebookLogin}
+                      className="flex items-center justify-center gap-2 bg-white/10 border border-white/20 rounded-xl px-4 py-3 hover:bg-white/20 transition-all"
+                    >
+                      <FaFacebookF className="w-4 h-4 text-white" />
+                      <span className="text-sm font-medium text-white">Facebook</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={facebookLogin}
+                    className="w-full flex items-center justify-center gap-2 bg-white/10 border border-white/20 rounded-xl px-4 py-3 hover:bg-white/20 transition-all"
+                  >
+                    <FaFacebookF className="w-4 h-4 text-white" />
+                    <span className="text-sm font-medium text-white">Continue with Facebook</span>
+                  </button>
+                )}
               </div>
-            </div>
-          </GoogleOAuthProvider>
+            </GoogleOAuthProvider>
+          </div>
         </div>
       </div>
     </div>

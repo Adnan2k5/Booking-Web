@@ -2,8 +2,11 @@ import React from 'react'
 
 export const Loader = ({ btn }) => {
   return (
-    <div className={`w-full ${btn ? `` : `h-[100vh]`} flex justify-center items-center bg-white`}>
-      <span className="text-sm font-medium">Loading...</span>
+    <div className={`w-full ${btn ? `` : `h-[100vh] bg-white`} flex justify-center items-center`}>
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+        <span className="text-sm font-medium">Loading...</span>
+      </div>
     </div>
   )
 }

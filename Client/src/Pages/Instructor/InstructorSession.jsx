@@ -256,12 +256,12 @@ export const InstructorSession = () => {
                 sortBy: 'startTime',
                 sortOrder: 'asc'
             });
-            
+
             const sessionsData = res.data?.data?.sessions || [];
-            
+
             // Transform the sessions to match the expected structure
             const transformedSessions = sessionsData.map(session => {
-                
+
                 return {
                     ...session,
                     _id: session._id,
@@ -291,7 +291,7 @@ export const InstructorSession = () => {
             setSessions(transformedSessions);
         } catch (error) {
             console.error("Error fetching instructor sessions:", error);
-            
+
             // Show user-friendly error message
             if (error.response?.status === 404) {
                 console.warn("No sessions found for instructor");
@@ -312,10 +312,10 @@ export const InstructorSession = () => {
         const title = session.title || '';
         const adventure = session.adventure || '';
         const location = session.location || '';
-        
+
         return title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               adventure.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               location.toLowerCase().includes(searchTerm.toLowerCase());
+            adventure.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            location.toLowerCase().includes(searchTerm.toLowerCase());
     });
 
     // Separate sessions into upcoming and completed based on session date
@@ -364,7 +364,7 @@ export const InstructorSession = () => {
             setSessionBookings(res.data?.data?.bookings || res.data || []);
         } catch (error) {
             console.error("Error fetching session bookings:", error);
-            
+
             // Handle different error scenarios
             if (error.response?.status === 404) {
                 console.warn("No bookings found for this session");
@@ -434,188 +434,190 @@ export const InstructorSession = () => {
 
     return (
         <InstructorLayout>
-            <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
-                <div className="flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
-                    <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
-                        <div className="relative w-full sm:w-64 lg:w-80">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                type="search"
-                                placeholder={t("instructor.searchSessions")}
-                                className="w-full pl-8 h-10 text-sm sm:text-base"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+            <div className="min-h-screen">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+                    <div className="flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+                        <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+                            <div className="relative w-full sm:w-64 lg:w-80">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
+                                <Input
+                                    type="search"
+                                    placeholder={t("instructor.searchSessions")}
+                                    className="w-full pl-8 h-10"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
                         </div>
-                    </div>
-                    <Button
-                        className="w-full sm:w-auto h-10 text-sm sm:text-base px-4 sm:px-6"
-                        onClick={() => navigate("/instructor/sessions/new")}
-                    >
-                        <span className="hidden sm:inline">{t("instructor.createNewSession")}</span>
-                        <span className="sm:hidden">New Session</span>
-                    </Button>
-                </div>                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 max-w-md">
-                        <TabsTrigger value="upcoming">
-                            Upcoming ({upcomingSessions.length})
-                        </TabsTrigger>
-                        <TabsTrigger value="completed">
-                            Completed ({completedSessions.length})
-                        </TabsTrigger>
-                    </TabsList>
+                        <Button
+                            className="w-full sm:w-auto h-10 text-sm sm:text-base px-4 sm:px-6"
+                            onClick={() => navigate("/instructor/sessions/new")}
+                        >
+                            <span className="hidden sm:inline">{t("instructor.createNewSession")}</span>
+                            <span className="sm:hidden">New Session</span>
+                        </Button>
+                    </div>                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 max-w-md">
+                            <TabsTrigger value="upcoming">
+                                Upcoming ({upcomingSessions.length})
+                            </TabsTrigger>
+                            <TabsTrigger value="completed">
+                                Completed ({completedSessions.length})
+                            </TabsTrigger>
+                        </TabsList>
 
-                    <TabsContent value="upcoming" className="space-y-4 sm:space-y-6 mt-6">
-                        <SessionsList
-                            sessions={upcomingSessions}
-                            isLoading={isLoading}
-                            searchTerm={searchTerm}
-                            t={t}
-                            formatDate={formatDate}
-                            formatTime={formatTime}
-                            onSessionClick={handleSessionClick}
-                        />
-                    </TabsContent>
+                        <TabsContent value="upcoming" className="space-y-4 sm:space-y-6 mt-6">
+                            <SessionsList
+                                sessions={upcomingSessions}
+                                isLoading={isLoading}
+                                searchTerm={searchTerm}
+                                t={t}
+                                formatDate={formatDate}
+                                formatTime={formatTime}
+                                onSessionClick={handleSessionClick}
+                            />
+                        </TabsContent>
 
-                    <TabsContent value="completed" className="space-y-4 sm:space-y-6 mt-6">
-                        <SessionsList
-                            sessions={completedSessions}
-                            isLoading={isLoading}
-                            searchTerm={searchTerm}
-                            t={t}
-                            formatDate={formatDate}
-                            formatTime={formatTime}
-                            isCompleted={true}
-                            onSessionClick={handleSessionClick}
-                        />
-                    </TabsContent>
-                </Tabs>
+                        <TabsContent value="completed" className="space-y-4 sm:space-y-6 mt-6">
+                            <SessionsList
+                                sessions={completedSessions}
+                                isLoading={isLoading}
+                                searchTerm={searchTerm}
+                                t={t}
+                                formatDate={formatDate}
+                                formatTime={formatTime}
+                                isCompleted={true}
+                                onSessionClick={handleSessionClick}
+                            />
+                        </TabsContent>
+                    </Tabs>
 
-                {/* Booking Details Modal */}
-                <Dialog open={isBookingModalOpen} onOpenChange={setIsBookingModalOpen}>
-                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <Users className="h-5 w-5" />
-                                Session Bookings - {selectedSession?.title}
-                            </DialogTitle>
-                            <DialogDescription>
-                                View all users who have booked this session
-                            </DialogDescription>
-                        </DialogHeader>
+                    {/* Booking Details Modal */}
+                    <Dialog open={isBookingModalOpen} onOpenChange={setIsBookingModalOpen}>
+                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                    <Users className="h-5 w-5" />
+                                    Session Bookings - {selectedSession?.title}
+                                </DialogTitle>
+                                <DialogDescription>
+                                    View all users who have booked this session
+                                </DialogDescription>
+                            </DialogHeader>
 
-                        <div className="space-y-4">
-                            {/* Session Info */}
-                            {selectedSession && (
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                        <div>
-                                            <span className="font-medium">Date:</span>
-                                            <p>{formatDate(selectedSession.startTime)}</p>
-                                        </div>
-                                        <div>
-                                            <span className="font-medium">Time:</span>
-                                            <p>{formatTime(selectedSession.startTime)}</p>
-                                        </div>
-                                        <div>
-                                            <span className="font-medium">Capacity:</span>
-                                            <p>{selectedSession.capacity} seats</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Bookings List */}
-                            <div>
-                                <h3 className="text-lg font-medium mb-4">
-                                    Bookings ({sessionBookings.length})
-                                </h3>
-
-                                {isLoadingBookings ? (
-                                    <div className="space-y-3">
-                                        {Array.from({ length: 3 }).map((_, index) => (
-                                            <div key={index} className="border rounded-lg p-4">
-                                                <Skeleton className="h-4 w-48 mb-2" />
-                                                <Skeleton className="h-4 w-32" />
+                            <div className="space-y-4">
+                                {/* Session Info */}
+                                {selectedSession && (
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                            <div>
+                                                <span className="font-medium">Date:</span>
+                                                <p>{formatDate(selectedSession.startTime)}</p>
                                             </div>
-                                        ))}
+                                            <div>
+                                                <span className="font-medium">Time:</span>
+                                                <p>{formatTime(selectedSession.startTime)}</p>
+                                            </div>
+                                            <div>
+                                                <span className="font-medium">Capacity:</span>
+                                                <p>{selectedSession.capacity} seats</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                ) : sessionBookings.length === 0 ? (
-                                    <div className="text-center py-8">
-                                        <Users className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                                        <p className="text-gray-500">No bookings yet for this session</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {sessionBookings.map((booking, index) => (
-                                            <div key={booking._id || index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                                    <div className="space-y-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="font-medium text-lg">
-                                                                {booking.user?.name || 'Unknown User'}
-                                                            </span>
-                                                            <Badge
-                                                                variant={booking.status === 'confirmed' ? 'default' :
-                                                                    booking.status === 'cancelled' ? 'destructive' : 'secondary'}
-                                                                className="text-xs"
-                                                            >
-                                                                {booking.status}
-                                                            </Badge>
-                                                        </div>
+                                )}
 
-                                                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-gray-600">
-                                                            <div className="flex items-center gap-1">
-                                                                <Mail className="h-4 w-4" />
-                                                                <span>{booking.user?.email || 'No email'}</span>
+                                {/* Bookings List */}
+                                <div>
+                                    <h3 className="text-lg font-medium mb-4">
+                                        Bookings ({sessionBookings.length})
+                                    </h3>
+
+                                    {isLoadingBookings ? (
+                                        <div className="space-y-3">
+                                            {Array.from({ length: 3 }).map((_, index) => (
+                                                <div key={index} className="border rounded-lg p-4">
+                                                    <Skeleton className="h-4 w-48 mb-2" />
+                                                    <Skeleton className="h-4 w-32" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : sessionBookings.length === 0 ? (
+                                        <div className="text-center py-8">
+                                            <Users className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                                            <p className="text-gray-500">No bookings yet for this session</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {sessionBookings.map((booking, index) => (
+                                                <div key={booking._id || index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                                        <div className="space-y-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-medium text-lg">
+                                                                    {booking.user?.name || 'Unknown User'}
+                                                                </span>
+                                                                <Badge
+                                                                    variant={booking.status === 'confirmed' ? 'default' :
+                                                                        booking.status === 'cancelled' ? 'destructive' : 'secondary'}
+                                                                    className="text-xs"
+                                                                >
+                                                                    {booking.status}
+                                                                </Badge>
                                                             </div>
-                                                            {booking.user?.phoneNumber && (
+
+                                                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-gray-600">
                                                                 <div className="flex items-center gap-1">
-                                                                    <Phone className="h-4 w-4" />
-                                                                    <span>{booking.user.phoneNumber}</span>
+                                                                    <Mail className="h-4 w-4" />
+                                                                    <span>{booking.user?.email || 'No email'}</span>
+                                                                </div>
+                                                                {booking.user?.phoneNumber && (
+                                                                    <div className="flex items-center gap-1">
+                                                                        <Phone className="h-4 w-4" />
+                                                                        <span>{booking.user.phoneNumber}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Group Members */}
+                                                            {booking.groupMember && booking.groupMember.length > 0 && (
+                                                                <div className="mt-2">
+                                                                    <span className="text-sm font-medium text-gray-700">Group Members:</span>
+                                                                    <div className="ml-2 space-y-1">
+                                                                        {booking.groupMember.map((member, memberIndex) => (
+                                                                            <div key={member._id || memberIndex} className="text-sm text-gray-600">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <span>{member.name}</span>
+                                                                                    <span className="text-gray-400">•</span>
+                                                                                    <span>{member.email}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
                                                                 </div>
                                                             )}
                                                         </div>
 
-                                                        {/* Group Members */}
-                                                        {booking.groupMember && booking.groupMember.length > 0 && (
-                                                            <div className="mt-2">
-                                                                <span className="text-sm font-medium text-gray-700">Group Members:</span>
-                                                                <div className="ml-2 space-y-1">
-                                                                    {booking.groupMember.map((member, memberIndex) => (
-                                                                        <div key={member._id || memberIndex} className="text-sm text-gray-600">
-                                                                            <div className="flex items-center gap-2">
-                                                                                <span>{member.name}</span>
-                                                                                <span className="text-gray-400">•</span>
-                                                                                <span>{member.email}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
+                                                        <div className="text-right">
+                                                            <div className="text-lg font-semibold text-green-600">
+                                                                ${booking.amount}
                                                             </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="text-right">
-                                                        <div className="text-lg font-semibold text-green-600">
-                                                            ${booking.amount}
-                                                        </div>
-                                                        <div className="text-xs text-gray-500">
-                                                            {booking.modeOfPayment || 'card'}
-                                                        </div>
-                                                        <div className="text-xs text-gray-500">
-                                                            Booked: {formatDate(booking.createdAt)}
+                                                            <div className="text-xs text-gray-500">
+                                                                {booking.modeOfPayment || 'card'}
+                                                            </div>
+                                                            <div className="text-xs text-gray-500">
+                                                                Booked: {formatDate(booking.createdAt)}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    </DialogContent>
-                </Dialog>
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </div>
         </InstructorLayout>
     )

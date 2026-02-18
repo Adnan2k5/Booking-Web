@@ -46,19 +46,19 @@ export const HotelSelection = ({
 
     return (
         <motion.div
-            className="bg-black/5 backdrop-blur-md rounded-2xl p-6 shadow-xl mb-8 border border-white/10"
+            className="bg-white rounded-2xl p-6 md:p-8 shadow-lg mb-8 border border-gray-200"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
-        >            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <Building className="w-6 h-6" /> {t("selectAccommodation")}
+        >            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
+                    <Building className="w-7 h-7" /> {t("selectAccommodation")}
                 </h2>
             </div>
 
             {/* Date Range Picker */}
-            <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <div className="mb-8 pb-6 border-b border-gray-200">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Calendar className="w-5 h-5" /> {t("selectDates")}
                 </h3>
                 <DateRangePicker
@@ -68,7 +68,7 @@ export const HotelSelection = ({
                     className="max-w-md"
                 />
                 {checkInDate && checkOutDate && (
-                    <p className="text-sm text-gray-600 mt-2">
+                    <p className="text-sm text-gray-600 mt-3 font-medium">
                         {calculateNights()} {calculateNights() === 1 ? "night" : "nights"} selected
                     </p>
                 )}
@@ -84,49 +84,54 @@ export const HotelSelection = ({
                     <motion.div key={hotel?._id} variants={itemVariants}>
                         <Card
                             className={cn(
-                                "overflow-hidden h-full transition-all duration-300 cursor-pointer border-2",
+                                "overflow-hidden h-full transition-all duration-300 cursor-pointer border-2 group hover:shadow-xl",
                                 selectedHotel === hotel?._id
-                                    ? "border-blue-500 shadow-md shadow-blue-200"
-                                    : "border-transparent hover:border-blue-200",
+                                    ? "border-gray-900 shadow-lg bg-gray-50"
+                                    : "border-gray-200 hover:border-gray-400 bg-white",
                             )}
                             onClick={() => onSelectHotel(hotel?._id === selectedHotel ? null : hotel?._id)}
                         >
                             <div className="flex flex-col md:flex-row">
-                                <div className="md:w-2/5 h-full">
+                                <div className="md:w-2/5 h-full overflow-hidden bg-gray-100">
                                     <img
                                         src={hotel?.medias || "/placeholder.svg"}
                                         alt={hotel?.name}
-                                        className="w-full h-full object-cover md:h-48"
+                                        className="w-full h-full object-cover md:h-56 transition-transform duration-300 group-hover:scale-110"
                                     />
                                 </div>
-                                <div className="md:w-3/5 p-4">
-                                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                                        <MapPin size={14} />
-                                        <span>{hotel?.location?.name || hotel?.location}</span>
+                                <div className="md:w-3/5 p-5">
+                                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                                        <MapPin size={14} className="flex-shrink-0" />
+                                        <span className="font-medium">{hotel?.location?.name || hotel?.location}</span>
                                     </div>
-                                    <h3 className="text-lg font-bold text-gray-800 mb-2">{hotel?.name}</h3>
-                                    <div className="flex items-center gap-1 mb-3">
+                                    <h3 className="text-xl font-bold text-gray-900 mb-3 leading-tight">{hotel?.name}</h3>
+                                    <div className="flex items-center gap-1 mb-4">
                                         {[1, 2, 3, 4, 5].map((star) => (
-                                            <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                            <Star key={star} className="w-4 h-4 fill-gray-900 text-gray-900" />
                                         ))}
-                                        <span className="text-xs ml-1 text-gray-500">{hotel?.rating}</span>
-                                    </div>                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm ml-1.5 text-gray-600 font-medium">{hotel?.rating}</span>
+                                    </div>                                    <div className="flex justify-between items-end pt-4 border-t border-gray-200">
                                         <div className="flex flex-col">
-                                            <span className="font-bold text-blue-600">
+                                            <span className="font-bold text-gray-900 text-2xl">
                                                 ${(hotel.pricePerNight || hotel?.price) * calculateNights()}
                                                 {calculateNights() > 1 && (
-                                                    <span className="text-sm font-normal text-gray-500">
-                                                        {" "}total
+                                                    <span className="text-sm font-normal text-gray-500 ml-1">
+                                                        total
                                                     </span>
                                                 )}
                                             </span>
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-sm text-gray-600 font-medium mt-1">
                                                 ${hotel?.pricePerNight || hotel?.price}/night × {calculateNights()} {calculateNights() === 1 ? "night" : "nights"}
                                             </span>
                                         </div>
                                         <Badge
                                             variant={selectedHotel === hotel?._id ? "default" : "outline"}
-                                            className={selectedHotel === hotel?._id ? "bg-blue-600" : ""}
+                                            className={cn(
+                                                "font-medium",
+                                                selectedHotel === hotel?._id
+                                                    ? "bg-gray-900 text-white border-gray-900"
+                                                    : "bg-white text-gray-900 border-gray-300"
+                                            )}
                                         >
                                             {selectedHotel === hotel?._id ? t("selected") : t("select")}
                                         </Badge>

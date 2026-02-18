@@ -1,7 +1,7 @@
-import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, Link, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { LayoutDashboard, Calendar, Settings, LogOut, Menu, Bell, User, LifeBuoy, MessageCircle } from "lucide-react"
+import { LayoutDashboard, Calendar, Settings, LogOut, Menu, User, LifeBuoy, MessageCircle } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Button } from "../../components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet"
@@ -17,11 +17,9 @@ import LanguageSelector from "../../components/LanguageSelector"
 import { useAuth } from "../AuthProvider"
 import { MdMoney } from "react-icons/md"
 
-
-
-
 const InstructorLayout = ({ children, onOpenChat }) => {
     const navigate = useNavigate()
+    const location = useLocation()
     const { t } = useTranslation()
     const { user, logout } = useAuth()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -31,6 +29,21 @@ const InstructorLayout = ({ children, onOpenChat }) => {
         navigate("/login")
     }
 
+    const getUserInitials = () => {
+        const email = user?.user?.email
+        const name = user?.user?.name || user?.user?.firstName
+        if (name) {
+            return name.charAt(0).toUpperCase()
+        }
+        if (email) {
+            return email.charAt(0).toUpperCase()
+        }
+        return "I"
+    }
+
+    const getUserDisplayName = () => {
+        return user?.user?.name || user?.user?.firstName || user?.user?.email || "Instructor"
+    }
 
     const navItems = [
         {
@@ -65,54 +78,58 @@ const InstructorLayout = ({ children, onOpenChat }) => {
         },
     ]
 
+    const isActivePath = (path) => {
+        return location.pathname === path
+    }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-            {/* Top Navigation Bar */}
-            <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg shadow-sm border-b border-slate-200">
-                <div className="w-full px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 md:h-20 items-center justify-between gap-4">
-                        <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
-                            {/* Mobile menu button */}
+        <div className="min-h-screen bg-neutral-50">
+            <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-neutral-200">
+                <div className="w-full h-16 px-4 lg:px-6">
+                    <div className="flex h-full items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 min-w-0 flex-1">
                             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                                 <SheetTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="lg:hidden shrink-0 h-10 w-10 hover:bg-slate-100 rounded-xl">
-                                        <Menu className="h-5 w-5 text-slate-700" />
+                                    <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9 hover:bg-neutral-100">
+                                        <Menu className="h-5 w-5 text-neutral-900" />
                                     </Button>
                                 </SheetTrigger>
-                                <SheetContent side="left" className="w-[300px] p-0 bg-white">
+                                <SheetContent side="left" className="w-[280px] p-0 bg-white">
                                     <div className="flex flex-col h-full">
-                                        <div className="p-6 flex items-center border-b border-slate-200 bg-gradient-to-r from-slate-900 to-slate-800">
+                                        <div className="h-16 px-6 flex items-center border-b border-neutral-200 bg-neutral-900">
                                             <Link to="/" className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                                                    <Calendar className="h-5 w-5 text-white" />
+                                                <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center">
+                                                    <Calendar className="h-4 w-4 text-neutral-900" />
                                                 </div>
-                                                <span className="font-bold text-lg text-white">{t("instructor.instructorPortal")}</span>
+                                                <span className="text-base font-semibold text-white tracking-tight">{t("instructor.instructorPortal")}</span>
                                             </Link>
                                         </div>
-                                        <nav className="flex-1 p-4 overflow-y-auto">
-                                            <ul className="space-y-2">
+                                        <nav className="flex-1 p-3 overflow-y-auto">
+                                            <ul className="space-y-1">
                                                 {navItems.map((item) => (
                                                     <li key={item.path}>
                                                         <Link
                                                             to={item.path}
-                                                            className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200 font-medium"
+                                                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActivePath(item.path)
+                                                                ? "bg-neutral-900 text-white"
+                                                                : "text-neutral-700 hover:bg-neutral-100"
+                                                                }`}
                                                             onClick={() => setIsMobileMenuOpen(false)}
                                                         >
-                                                            <span className="shrink-0">{item.icon}</span>
+                                                            {item.icon}
                                                             <span>{item.label}</span>
                                                         </Link>
                                                     </li>
                                                 ))}
                                             </ul>
                                         </nav>
-                                        <div className="p-4 border-t border-slate-200">
+                                        <div className="p-3 border-t border-neutral-200">
                                             <Button
                                                 variant="outline"
-                                                className="w-full flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 rounded-xl font-medium"
+                                                className="w-full h-10 flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-neutral-300 rounded-lg text-sm font-medium"
                                                 onClick={handleLogout}
                                             >
-                                                <LogOut className="h-5 w-5" />
+                                                <LogOut className="h-4 w-4" />
                                                 <span>{t("instructor.logout")}</span>
                                             </Button>
                                         </div>
@@ -120,78 +137,69 @@ const InstructorLayout = ({ children, onOpenChat }) => {
                                 </SheetContent>
                             </Sheet>
 
-                            {/* Logo */}
                             <Link to="/" className="flex items-center gap-3 min-w-0">
-                                <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center shadow-md">
-                                    <Calendar className="h-5 w-5 md:h-6 md:w-6 text-white" />
+                                <div className="h-9 w-9 rounded-lg bg-neutral-900 flex items-center justify-center">
+                                    <Calendar className="h-4 w-4 text-white" />
                                 </div>
-                                <span className="font-bold text-lg md:text-xl hidden sm:inline-block text-slate-900">{t("instructor.instructorPortal")}</span>
+                                <span className="text-base font-semibold hidden sm:inline-block text-neutral-900 tracking-tight">{t("instructor.instructorPortal")}</span>
                             </Link>
                         </div>
 
-                        <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                            {/* Language Selector */}
+                        <div className="flex items-center gap-2 shrink-0">
                             <div className="hidden sm:block">
                                 <LanguageSelector variant="minimal" />
                             </div>
 
-                            {/* Messages Button */}
                             {onOpenChat && (
                                 <Button
                                     onClick={onOpenChat}
                                     variant="ghost"
-                                    className="relative group hover:bg-slate-100 rounded-xl"
-                                    size="sm"
+                                    size="icon"
+                                    className="h-9 w-9 hover:bg-neutral-100"
                                 >
-                                    <div className="relative flex items-center gap-2">
-                                        <div className="relative">
-                                            <MessageCircle className="h-5 w-5 text-slate-700 group-hover:text-slate-900" />
-                                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-white shadow-sm">
-                                                3
-                                            </div>
-                                        </div>
-                                        <span className="hidden lg:inline text-sm font-medium text-slate-700 group-hover:text-slate-900">
-                                            Messages
-                                        </span>
-                                    </div>
+                                    <MessageCircle className="h-5 w-5 text-neutral-700" />
                                 </Button>
                             )}
 
-                            {/* User Menu */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="relative h-10 w-10 md:h-12 md:w-12 rounded-xl hover:bg-slate-100">
-                                        <Avatar className="h-10 w-10 md:h-12 md:w-12 ring-2 ring-slate-200">
-                                            <AvatarImage src="/placeholder.svg?height=48&width=48" alt="User" />
-                                            <AvatarFallback className="bg-gradient-to-br from-blue-600 to-cyan-500 text-white font-semibold">
-                                                {user?.user?.email?.[0]?.toUpperCase() || "U"}
+                                    <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full hover:bg-neutral-100">
+                                        <Avatar className="h-9 w-9 border border-neutral-200">
+                                            <AvatarImage src={user?.user?.profileImage || user?.user?.avatar} alt={getUserDisplayName()} />
+                                            <AvatarFallback className="bg-neutral-900 text-white text-sm font-semibold">
+                                                {getUserInitials()}
                                             </AvatarFallback>
                                         </Avatar>
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-[280px] rounded-xl border-slate-200 shadow-lg">
-                                    <DropdownMenuLabel className="font-normal px-4 py-3">
-                                        <div className="flex flex-col space-y-1">
-                                            <p className="text-sm font-semibold text-slate-900">{user?.user?.email || "Instructor"}</p>
-                                            <p className="text-xs text-slate-500">Instructor Portal</p>
+                                <DropdownMenuContent align="end" className="w-[240px] rounded-lg border-neutral-200">
+                                    <DropdownMenuLabel className="px-3 py-2">
+                                        <div className="flex flex-col space-y-0.5">
+                                            <p className="text-sm font-semibold text-neutral-900 truncate">{getUserDisplayName()}</p>
+                                            <p className="text-xs text-neutral-500">Instructor Portal</p>
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <div className="sm:hidden px-2 py-1">
+                                    <div className="sm:hidden px-1 py-1">
                                         <DropdownMenuItem>
                                             <LanguageSelector variant="minimal" />
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                     </div>
                                     {navItems.map((item) => (
-                                        <DropdownMenuItem key={item.path} onClick={() => navigate(item.path)} className="cursor-pointer px-4 py-2 hover:bg-slate-100 rounded-lg mx-2 my-0.5">
-                                            <span className="mr-3">{item.icon}</span>
+                                        <DropdownMenuItem
+                                            key={item.path}
+                                            onClick={() => navigate(item.path)}
+                                            className={`cursor-pointer px-3 py-2 rounded-md mx-1 text-sm ${isActivePath(item.path) ? "bg-neutral-100" : ""
+                                                }`}
+                                        >
+                                            <span className="mr-2">{item.icon}</span>
                                             <span className="font-medium">{item.label}</span>
                                         </DropdownMenuItem>
                                     ))}
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer px-4 py-2 rounded-lg mx-2 my-0.5 font-medium">
-                                        <LogOut className="h-4 w-4 mr-3" />
+                                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer px-3 py-2 rounded-md mx-1 text-sm font-medium">
+                                        <LogOut className="h-4 w-4 mr-2" />
                                         {t("instructor.logout")}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -201,46 +209,42 @@ const InstructorLayout = ({ children, onOpenChat }) => {
                 </div>
             </header>
 
-            {/* Main Content */}
-            <div className="flex min-h-screen">
-                {/* Desktop Sidebar */}
-                <aside className="hidden lg:block w-64 xl:w-72 fixed inset-y-0 pt-16 md:pt-20 bg-white border-r border-slate-200 z-30 shadow-sm">
+            <div className="flex min-h-screen pt-16">
+                <aside className="hidden lg:block w-64 fixed inset-y-0 top-16 bg-white border-r border-neutral-200">
                     <div className="flex flex-col h-full">
-                        <nav className="flex-1 px-3 xl:px-4 py-6 overflow-y-auto">
+                        <nav className="flex-1 p-3 overflow-y-auto">
                             <ul className="space-y-1">
                                 {navItems.map((item) => (
                                     <li key={item.path}>
                                         <Link
                                             to={item.path}
-                                            className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200 font-medium group"
+                                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActivePath(item.path)
+                                                ? "bg-neutral-900 text-white"
+                                                : "text-neutral-700 hover:bg-neutral-100"
+                                                }`}
                                         >
-                                            <span className="shrink-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</span>
+                                            {item.icon}
                                             <span>{item.label}</span>
                                         </Link>
                                     </li>
                                 ))}
                             </ul>
                         </nav>
-                        <div className="p-4 xl:p-6 border-t border-slate-200">
+                        <div className="p-3 border-t border-neutral-200">
                             <Button
                                 variant="outline"
-                                className="w-full flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 rounded-xl font-medium"
+                                className="w-full h-10 flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-neutral-300 rounded-lg text-sm font-medium"
                                 onClick={handleLogout}
                             >
-                                <LogOut className="h-5 w-5" />
+                                <LogOut className="h-4 w-4" />
                                 <span>{t("instructor.logout")}</span>
                             </Button>
                         </div>
                     </div>
                 </aside>
 
-                {/* Main Content */}
-                <main className="flex-1 lg:ml-64 xl:ml-72 pt-16 md:pt-20 min-h-screen">
-                    <div className="w-full max-w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 md:py-8">
-                        <div className="max-w-7xl mx-auto">
-                            {children}
-                        </div>
-                    </div>
+                <main className="flex-1 lg:ml-64">
+                    {children}
                 </main>
             </div>
         </div>

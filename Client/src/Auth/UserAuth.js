@@ -8,52 +8,52 @@ import { axiosClient } from '../AxiosClient/axios.js';
 import { data } from 'react-router-dom';
 
 export const UserRegister = async (data) => {
-  const res = await axiosClient.post('/api/auth/signUp', data, {
-    withCredentials: true,
-  });
-  if (res.status === 201) {
-    return res.status;
-  } else if (res.status === 409) {
-    return res.status;
+  try {
+    const res = await axiosClient.post('/api/auth/signUp', data, {
+      withCredentials: true,
+    });
+    return { success: true, status: res.status, data: res.data };
+  } catch (err) {
+    throw err;
   }
 };
 
 export const VerifyUser = async (data, dispatch) => {
-  const res = await axiosClient.post('/api/auth/verifyOtp', data, {
-    withCredentials: true,
-  });
-  if (res.status === 200) {
-    if (dispatch) {
+  try {
+    const res = await axiosClient.post('/api/auth/verifyOtp', data, {
+      withCredentials: true,
+    });
+    if (res.status === 200 && dispatch) {
       dispatch(loginSuccess(res.data.data));
     }
-    return res.status;
-  } else if (res.status === 400) {
-    return res.status;
+    return { success: true, status: res.status, data: res.data };
+  } catch (err) {
+    throw err;
   }
 };
 
 export const UserLogin = async (data, dispatch) => {
-  const res = await axiosClient.post('/api/auth/login', data, {
-    withCredentials: true,
-  });
-  if (res.data.statusCode === 200) {
-    dispatch(loginSuccess(res.data.data.user));
-    return res;
+  try {
+    const res = await axiosClient.post('/api/auth/login', data, {
+      withCredentials: true,
+    });
+    if (res.data.statusCode === 200 || res.status === 200) {
+      dispatch(loginSuccess(res.data.data.user));
+      return { success: true, status: res.status, data: res.data };
+    }
+    return { success: false, status: res.status, data: res.data };
+  } catch (err) {
+    throw err;
   }
-  return res.data.statusCode;
 };
 
 export const ResendOtp = async (email) => {
   try {
     const data = { email: email };
     const res = await axiosClient.post('/api/auth/resendOtp', data);
+    return { success: true, status: res.status, data: res.data };
   } catch (err) {
-    console.error(err);
-    if (err.response) {
-      if (err.response.status === 403) {
-        return err.response.status;
-      }
-    }
+    throw err;
   }
 };
 
@@ -132,21 +132,20 @@ export const UpdatePassword = async (data) => {
 };
 
 export const GoogleLoginSuccess = async (response, dispatch) => {
-  await axiosClient
-    .post(
+  try {
+    const res = await axiosClient.post(
       '/api/auth/signInWithGoogle',
       { token: response.credential },
       { withCredentials: true }
-    )
-    .then((res) => {
-      if (res.status === 200) {
-        dispatch(loginSuccess(res.data.data.user));
-        return res.status;
-      }
-    })
-    .catch((err) => {
-      return err;
-    });
+    );
+    if (res.data) {
+      dispatch(loginSuccess(res.data.data));
+      return { success: true, status: res.status, data: res.data };
+    }
+    return { success: false, status: res.status, data: res.data };
+  } catch (err) {
+    throw err;
+  }
 };
 
 export const userLogout = async (dispatch) => {

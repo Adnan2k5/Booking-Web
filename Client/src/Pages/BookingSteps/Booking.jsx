@@ -309,8 +309,8 @@ export default function BookingFlow() {
   // If still loading or adventure not found
   if (isLoading || !adventure) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cyan-100 to-indigo-100 flex items-center justify-center">
-        <div className="bg-white/80 backdrop-blur-md rounded-2xl p-8 shadow-xl">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white rounded-2xl p-8 shadow-xl border border-gray-200">
           <div className="animate-pulse flex flex-col items-center">
             <div className="rounded-full bg-slate-200 h-24 w-24 mb-4"></div>
             <div className="h-4 bg-slate-200 rounded w-32 mb-2"></div>
@@ -346,16 +346,11 @@ export default function BookingFlow() {
   const maxSteps = stepLabels.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-100 to-indigo-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gray-100 relative overflow-hidden">
       {/* Navbar */}
       <Navbar />
 
-      {/* Background elements */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-200 rounded-full opacity-30 blur-[100px]"></div>
-        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-indigo-200 rounded-full opacity-30 blur-[100px]"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white opacity-5 rounded-full"></div>
-      </div>
+      {/* Background elements - removed for minimal theme */}
 
       {/* Main content */}
       <div className="relative z-10 max-w-6xl mt-[10vh] mx-auto pt-20 p-4 sm:p-6">
@@ -383,16 +378,16 @@ export default function BookingFlow() {
                   className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all duration-300",
                     currentStep === item.step
-                      ? "bg-blue-600 text-white"
+                      ? "bg-gray-900 text-white"
                       : currentStep > item.step
-                        ? "bg-green-500 text-white"
-                        : "bg-white/70 backdrop-blur-sm text-gray-400",
+                        ? "bg-gray-700 text-white"
+                        : "bg-white text-gray-400 border-2 border-gray-300",
                   )}
                 >
                   {currentStep > item.step ? <Check size={18} /> : item.icon}
                 </div>
                 <span
-                  className={cn("text-sm font-medium", currentStep === item.step ? "text-blue-600" : "text-gray-500")}
+                  className={cn("text-sm font-medium", currentStep === item.step ? "text-gray-900" : "text-gray-500")}
                 >
                   {item.label}
                 </span>
@@ -424,19 +419,19 @@ export default function BookingFlow() {
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">{adventure.name}</h2>
                 <div className="flex items-center gap-1 mb-4">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <Star key={star} className="w-4 h-4 fill-gray-900 text-gray-900" />
                   ))}
                   <span className="text-sm ml-1 text-gray-500">4.8</span>
                 </div>
                 <p className="text-gray-600 mb-4">Experience the thrill of a lifetime with our carefully curated adventures.</p>
               </div>
               <div className="flex items-center justify-between">
-                <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700">
+                <Badge className="bg-gray-900 text-white hover:bg-gray-800">
                   +{adventure.exp || 100} EXP
                 </Badge>
 
                 {groupMembers.length > 0 && (
-                  <Badge className="bg-blue-100 text-blue-800">
+                  <Badge className="bg-gray-200 text-gray-900">
                     Group Size: {groupMembers.length + 1}
                   </Badge>
                 )}
@@ -631,7 +626,7 @@ export default function BookingFlow() {
             {currentStep < maxSteps && (
               <Button
                 onClick={handleNext}
-                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white gap-2"
+                className="bg-gray-900 hover:bg-gray-800 text-white gap-2"
               >
                 Next
                 <ChevronRight size={16} />

@@ -285,361 +285,361 @@ export const InstructorTickets = () => {
 
     return (
         <InstructorLayout>
-            <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
-                <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+            <div className="min-h-screen">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
                     <div>
-                        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">{t("instructor.supportTickets")}</h2>
-                        <p className="text-muted-foreground text-sm sm:text-base">{t("instructor.manageYourSupportRequests")}</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">{t("instructor.supportTickets")}</h1>
+                        <p className="text-sm text-neutral-500 mt-1">{t("instructor.manageYourSupportRequests")}</p>
                     </div>
-                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2">
-                        <Card className="rounded-2xl border-gray-200">
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle>{t("instructor.supportTickets")}</CardTitle>
-                                <Button
-                                    onClick={() => setIsNewTicketDialogOpen(true)}
-                                    className="bg-black text-white hover:bg-gray-800"
-                                >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    {t("instructor.newTicket")}
-                                </Button>
-                            </CardHeader>
-                            <CardContent>
-                                {loading ? (
-                                    <div className="text-center py-8">
-                                        <Loader2 className="h-8 w-8 mx-auto text-gray-400 mb-2 animate-spin" />
-                                        <p className="text-gray-500">Loading tickets...</p>
-                                    </div>
-                                ) : tickets.length === 0 ? (
-                                    <div className="text-center py-8">
-                                        <FileText className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                                        <p className="text-gray-500">No tickets yet</p>
-                                        <p className="text-sm text-gray-400 mt-1">Create your first support ticket to get help</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {tickets.map((ticket) => (
-                                            <div
-                                                key={ticket._id}
-                                                className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors cursor-pointer"
-                                                onClick={() => handleOpenTicketDetail(ticket)}
-                                            >
-                                                <div className="flex items-start gap-3">
-                                                    <div className="flex flex-col gap-2">
-                                                        <Badge
-                                                            className={`rounded-full ${getStatusColor(ticket.status)}`}
-                                                        >
-                                                            {ticket.status}
-                                                        </Badge>
-                                                        <Badge
-                                                            variant="outline"
-                                                            className={`rounded-full text-xs ${getPriorityColor(ticket.priority)}`}
-                                                        >
-                                                            {ticket.priority}
-                                                        </Badge>
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-medium">{ticket.subject}</p>
-                                                        <p className="text-sm text-gray-600 mb-1">{ticket.category}</p>
-                                                        <p className="text-sm text-gray-500">
-                                                            <Clock className="inline h-3 w-3 mr-1" />
-                                                            {formatDate(ticket.createdAt)}
-                                                        </p>
-                                                        {ticket.responses && ticket.responses.length > 0 && (
-                                                            <p className="text-xs text-gray-400 mt-1">
-                                                                {ticket.responses.length} response{ticket.responses.length !== 1 ? 's' : ''}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2">
+                            <Card className="border-neutral-200">
+                                <CardHeader className="flex flex-row items-center justify-between border-b border-neutral-200">
+                                    <CardTitle className="text-lg font-semibold">{t("instructor.supportTickets")}</CardTitle>
+                                    <Button
+                                        onClick={() => setIsNewTicketDialogOpen(true)}
+                                        className="bg-neutral-900 text-white hover:bg-neutral-800 h-9"
+                                    >
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        {t("instructor.newTicket")}
+                                    </Button>
+                                </CardHeader>
+                                <CardContent className="p-4">
+                                    {loading ? (
+                                        <div className="text-center py-8">
+                                            <Loader2 className="h-8 w-8 mx-auto text-gray-400 mb-2 animate-spin" />
+                                            <p className="text-gray-500">Loading tickets...</p>
+                                        </div>
+                                    ) : tickets.length === 0 ? (
+                                        <div className="text-center py-8">
+                                            <FileText className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                                            <p className="text-gray-500">No tickets yet</p>
+                                            <p className="text-sm text-gray-400 mt-1">Create your first support ticket to get help</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {tickets.map((ticket) => (
+                                                <div
+                                                    key={ticket._id}
+                                                    className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors cursor-pointer"
+                                                    onClick={() => handleOpenTicketDetail(ticket)}
+                                                >
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="flex flex-col gap-2">
+                                                            <Badge
+                                                                className={`rounded-full ${getStatusColor(ticket.status)}`}
+                                                            >
+                                                                {ticket.status}
+                                                            </Badge>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={`rounded-full text-xs ${getPriorityColor(ticket.priority)}`}
+                                                            >
+                                                                {ticket.priority}
+                                                            </Badge>
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-medium">{ticket.subject}</p>
+                                                            <p className="text-sm text-gray-600 mb-1">{ticket.category}</p>
+                                                            <p className="text-sm text-gray-500">
+                                                                <Clock className="inline h-3 w-3 mr-1" />
+                                                                {formatDate(ticket.createdAt)}
                                                             </p>
-                                                        )}
+                                                            {ticket.responses && ticket.responses.length > 0 && (
+                                                                <p className="text-xs text-gray-400 mt-1">
+                                                                    {ticket.responses.length} response{ticket.responses.length !== 1 ? 's' : ''}
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     </div>
+                                                    <ChevronRight className="h-5 w-5 text-gray-400" />
                                                 </div>
-                                                <ChevronRight className="h-5 w-5 text-gray-400" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    <div>
-                        <Card className="rounded-2xl border-gray-200">
-                            <CardHeader>
-                                <CardTitle>{t("instructor.needHelp")}</CardTitle>
-                                <CardDescription>{t("instructor.contactSupportTeam")}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                                        <TicketIcon className="h-5 w-5 text-black" />
-                                    </div>
-                                    <div>
-                                        <p className="font-medium">{t("instructor.supportTicket")}</p>
-                                        <p className="text-sm text-gray-500">{t("instructor.responseWithin24h")}</p>
-                                    </div>
-                                </div>
-
-                                <Button
-                                    className="w-full bg-black text-white hover:bg-gray-800 rounded-xl"
-                                    onClick={() => setIsNewTicketDialogOpen(true)}
-                                >
-                                    {t("instructor.createTicket")}
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-
-                {/* New Ticket Dialog */}
-                <Dialog open={isNewTicketDialogOpen} onOpenChange={handleDialogClose}>
-                    <DialogContent className="max-w-2xl p-6 rounded-2xl">
-                        <DialogHeader>
-                            <DialogTitle>{t("instructor.createNewTicket")}</DialogTitle>
-                            <DialogDescription>
-                                {t("instructor.fillTicketDetails")}
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="subject">{t("instructor.subject")}</Label>
-                                <Input
-                                    id="subject"
-                                    value={formData.subject}
-                                    onChange={(e) => handleFormChange('subject', e.target.value)}
-                                    placeholder={t("instructor.enterBriefSubject")}
-                                    className="mt-2"
-                                />
-                                {formErrors.subject && (
-                                    <p className="text-red-600 text-sm mt-1">{formErrors.subject}</p>
-                                )}
-                            </div>
-
-                            <div>
-                                <Label htmlFor="description">{t("instructor.description")}</Label>
-                                <Textarea
-                                    id="description"
-                                    value={formData.description}
-                                    onChange={(e) => handleFormChange('description', e.target.value)}
-                                    placeholder={t("instructor.describeIssueDetail")}
-                                    className="mt-2"
-                                    rows={4}
-                                />
-                                {formErrors.description && (
-                                    <p className="text-red-600 text-sm mt-1">{formErrors.description}</p>
-                                )}
-                            </div>
-
-                            <div>
-                                <Label htmlFor="category">{t("instructor.category")}</Label>
-                                <Select value={formData.category} onValueChange={(value) => handleFormChange('category', value)}>
-                                    <SelectTrigger className="mt-2">
-                                        <SelectValue placeholder={t("instructor.selectCategory")} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Account Issues">{t("instructor.accountIssues")}</SelectItem>
-                                        <SelectItem value="Billing & Payments">{t("instructor.billingPayments")}</SelectItem>
-                                        <SelectItem value="Technical Support">{t("instructor.technicalSupport")}</SelectItem>
-                                        <SelectItem value="Session Management">{t("instructor.sessionManagement")}</SelectItem>
-                                        <SelectItem value="Booking Support">{t("instructor.bookingSupport")}</SelectItem>
-                                        <SelectItem value="Profile & Verification">{t("instructor.profileVerification")}</SelectItem>
-                                        <SelectItem value="Other">{t("instructor.other")}</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                {formErrors.category && (
-                                    <p className="text-red-600 text-sm mt-1">{formErrors.category}</p>
-                                )}
-                            </div>
-
-                            <div>
-                                <Label htmlFor="priority">{t("instructor.priority")}</Label>
-                                <Select value={formData.priority} onValueChange={(value) => handleFormChange('priority', value)}>
-                                    <SelectTrigger className="mt-2">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="low">{t("instructor.low")}</SelectItem>
-                                        <SelectItem value="medium">{t("instructor.medium")}</SelectItem>
-                                        <SelectItem value="high">{t("instructor.high")}</SelectItem>
-                                        <SelectItem value="critical">{t("instructor.critical")}</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
                         </div>
 
-                        <DialogFooter>
-                            <Button variant="outline" onClick={handleDialogClose}>
-                                {t("instructor.cancel")}
-                            </Button>
-                            <Button
-                                onClick={handleSubmitTicket}
-                                disabled={isSubmitting}
-                                className="bg-black text-white hover:bg-gray-800"
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        {t("instructor.creating")}...
-                                    </>
-                                ) : (
-                                    t("instructor.createTicket")
-                                )}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-
-                {/* Ticket Detail Dialog */}
-                <Dialog open={isTicketDetailDialogOpen} onOpenChange={handleTicketDetailDialogClose}>
-                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>{t("instructor.ticketDetails")}</DialogTitle>
-                            <DialogDescription>
-                                {t("instructor.viewTicketConversation")}
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        {ticketDetailLoading ? (
-                            <div className="text-center py-8">
-                                <Loader2 className="h-8 w-8 mx-auto text-gray-400 mb-2 animate-spin" />
-                                <p className="text-gray-500">Loading ticket details...</p>
-                            </div>
-                        ) : selectedTicket ? (
-                            <div className="space-y-6">
-                                {/* Ticket Information */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl">
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">{t("instructor.ticketId")}</label>
-                                        <p className="text-sm text-gray-900">{selectedTicket._id}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">{t("instructor.status")}</label>
-                                        <div className="mt-1">
-                                            <Badge className={getStatusColor(selectedTicket.status)}>
-                                                {selectedTicket.status}
-                                            </Badge>
+                        <div>
+                            <Card className="rounded-2xl border-gray-200">
+                                <CardHeader>
+                                    <CardTitle>{t("instructor.needHelp")}</CardTitle>
+                                    <CardDescription>{t("instructor.contactSupportTeam")}</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                                            <TicketIcon className="h-5 w-5 text-black" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium">{t("instructor.supportTicket")}</p>
+                                            <p className="text-sm text-gray-500">{t("instructor.responseWithin24h")}</p>
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">{t("instructor.priority")}</label>
-                                        <div className="mt-1">
-                                            <Badge variant="outline" className={getPriorityColor(selectedTicket.priority)}>
-                                                {selectedTicket.priority}
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">{t("instructor.category")}</label>
-                                        <p className="text-sm text-gray-900">{selectedTicket.category}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">{t("instructor.created")}</label>
-                                        <p className="text-sm text-gray-900">{formatDateTime(selectedTicket.createdAt)}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">{t("instructor.lastUpdated")}</label>
-                                        <p className="text-sm text-gray-900">{formatDateTime(selectedTicket.updatedAt)}</p>
-                                    </div>
+
+                                    <Button
+                                        className="w-full bg-black text-white hover:bg-gray-800 rounded-xl"
+                                        onClick={() => setIsNewTicketDialogOpen(true)}
+                                    >
+                                        {t("instructor.createTicket")}
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+
+                    {/* New Ticket Dialog */}
+                    <Dialog open={isNewTicketDialogOpen} onOpenChange={handleDialogClose}>
+                        <DialogContent className="max-w-2xl p-6 rounded-2xl">
+                            <DialogHeader>
+                                <DialogTitle>{t("instructor.createNewTicket")}</DialogTitle>
+                                <DialogDescription>
+                                    {t("instructor.fillTicketDetails")}
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="subject">{t("instructor.subject")}</Label>
+                                    <Input
+                                        id="subject"
+                                        value={formData.subject}
+                                        onChange={(e) => handleFormChange('subject', e.target.value)}
+                                        placeholder={t("instructor.enterBriefSubject")}
+                                        className="mt-2"
+                                    />
+                                    {formErrors.subject && (
+                                        <p className="text-red-600 text-sm mt-1">{formErrors.subject}</p>
+                                    )}
                                 </div>
 
-                                {/* Conversation History */}
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600 mb-3 block">{t("instructor.conversation")}</label>
-                                    <div className="space-y-4 max-h-80 overflow-y-auto border rounded-lg p-4 bg-white">
-                                        {/* Original ticket message */}
-                                        <div className="flex items-start gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                                <User className="h-4 w-4 text-blue-600" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-sm font-medium text-gray-900">{t("instructor.you")}</span>
-                                                    <span className="text-xs text-gray-500">{formatDateTime(selectedTicket.createdAt)}</span>
-                                                </div>
-                                                <div className="bg-blue-50 rounded-lg p-3">
-                                                    <p className="text-sm font-medium text-gray-900 mb-1">{selectedTicket.subject}</p>
-                                                    <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedTicket.description}</p>
-                                                </div>
+                                    <Label htmlFor="description">{t("instructor.description")}</Label>
+                                    <Textarea
+                                        id="description"
+                                        value={formData.description}
+                                        onChange={(e) => handleFormChange('description', e.target.value)}
+                                        placeholder={t("instructor.describeIssueDetail")}
+                                        className="mt-2"
+                                        rows={4}
+                                    />
+                                    {formErrors.description && (
+                                        <p className="text-red-600 text-sm mt-1">{formErrors.description}</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="category">{t("instructor.category")}</Label>
+                                    <Select value={formData.category} onValueChange={(value) => handleFormChange('category', value)}>
+                                        <SelectTrigger className="mt-2">
+                                            <SelectValue placeholder={t("instructor.selectCategory")} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Account Issues">{t("instructor.accountIssues")}</SelectItem>
+                                            <SelectItem value="Billing & Payments">{t("instructor.billingPayments")}</SelectItem>
+                                            <SelectItem value="Technical Support">{t("instructor.technicalSupport")}</SelectItem>
+                                            <SelectItem value="Session Management">{t("instructor.sessionManagement")}</SelectItem>
+                                            <SelectItem value="Booking Support">{t("instructor.bookingSupport")}</SelectItem>
+                                            <SelectItem value="Profile & Verification">{t("instructor.profileVerification")}</SelectItem>
+                                            <SelectItem value="Other">{t("instructor.other")}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {formErrors.category && (
+                                        <p className="text-red-600 text-sm mt-1">{formErrors.category}</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="priority">{t("instructor.priority")}</Label>
+                                    <Select value={formData.priority} onValueChange={(value) => handleFormChange('priority', value)}>
+                                        <SelectTrigger className="mt-2">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="low">{t("instructor.low")}</SelectItem>
+                                            <SelectItem value="medium">{t("instructor.medium")}</SelectItem>
+                                            <SelectItem value="high">{t("instructor.high")}</SelectItem>
+                                            <SelectItem value="critical">{t("instructor.critical")}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <DialogFooter>
+                                <Button variant="outline" onClick={handleDialogClose}>
+                                    {t("instructor.cancel")}
+                                </Button>
+                                <Button
+                                    onClick={handleSubmitTicket}
+                                    disabled={isSubmitting}
+                                    className="bg-black text-white hover:bg-gray-800"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            {t("instructor.creating")}...
+                                        </>
+                                    ) : (
+                                        t("instructor.createTicket")
+                                    )}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Ticket Detail Dialog */}
+                    <Dialog open={isTicketDetailDialogOpen} onOpenChange={handleTicketDetailDialogClose}>
+                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                                <DialogTitle>{t("instructor.ticketDetails")}</DialogTitle>
+                                <DialogDescription>
+                                    {t("instructor.viewTicketConversation")}
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            {ticketDetailLoading ? (
+                                <div className="text-center py-8">
+                                    <Loader2 className="h-8 w-8 mx-auto text-gray-400 mb-2 animate-spin" />
+                                    <p className="text-gray-500">Loading ticket details...</p>
+                                </div>
+                            ) : selectedTicket ? (
+                                <div className="space-y-6">
+                                    {/* Ticket Information */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl">
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">{t("instructor.ticketId")}</label>
+                                            <p className="text-sm text-gray-900">{selectedTicket._id}</p>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">{t("instructor.status")}</label>
+                                            <div className="mt-1">
+                                                <Badge className={getStatusColor(selectedTicket.status)}>
+                                                    {selectedTicket.status}
+                                                </Badge>
                                             </div>
                                         </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">{t("instructor.priority")}</label>
+                                            <div className="mt-1">
+                                                <Badge variant="outline" className={getPriorityColor(selectedTicket.priority)}>
+                                                    {selectedTicket.priority}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">{t("instructor.category")}</label>
+                                            <p className="text-sm text-gray-900">{selectedTicket.category}</p>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">{t("instructor.created")}</label>
+                                            <p className="text-sm text-gray-900">{formatDateTime(selectedTicket.createdAt)}</p>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">{t("instructor.lastUpdated")}</label>
+                                            <p className="text-sm text-gray-900">{formatDateTime(selectedTicket.updatedAt)}</p>
+                                        </div>
+                                    </div>
 
-                                        {/* Responses */}
-                                        {selectedTicket.responses && selectedTicket.responses.map((response, index) => (
-                                            <div key={index} className="flex items-start gap-3">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${response.isAdmin ? 'bg-green-100' : 'bg-blue-100'
-                                                    }`}>
-                                                    {response.isAdmin ? (
-                                                        <UserCog className="h-4 w-4 text-green-600" />
-                                                    ) : (
-                                                        <User className="h-4 w-4 text-blue-600" />
-                                                    )}
+                                    {/* Conversation History */}
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600 mb-3 block">{t("instructor.conversation")}</label>
+                                        <div className="space-y-4 max-h-80 overflow-y-auto border rounded-lg p-4 bg-white">
+                                            {/* Original ticket message */}
+                                            <div className="flex items-start gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                                    <User className="h-4 w-4 text-blue-600" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-sm font-medium text-gray-900">
-                                                            {response.isAdmin ? t("instructor.supportTeam") : t("instructor.you")}
-                                                        </span>
-                                                        <span className="text-xs text-gray-500">{formatDateTime(response.createdAt)}</span>
+                                                        <span className="text-sm font-medium text-gray-900">{t("instructor.you")}</span>
+                                                        <span className="text-xs text-gray-500">{formatDateTime(selectedTicket.createdAt)}</span>
                                                     </div>
-                                                    <div className={`rounded-lg p-3 ${response.isAdmin ? 'bg-green-50' : 'bg-blue-50'
-                                                        }`}>
-                                                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{response.message}</p>
+                                                    <div className="bg-blue-50 rounded-lg p-3">
+                                                        <p className="text-sm font-medium text-gray-900 mb-1">{selectedTicket.subject}</p>
+                                                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedTicket.description}</p>
                                                     </div>
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
 
-                                {/* Add Response (only if ticket is not closed) */}
-                                {selectedTicket.status !== 'closed' && (
-                                    <div>
-                                        <Label htmlFor="newResponse">{t("instructor.addResponse")}</Label>
-                                        <div className="mt-2 space-y-3">
-                                            <Textarea
-                                                id="newResponse"
-                                                value={newResponse}
-                                                onChange={(e) => setNewResponse(e.target.value)}
-                                                placeholder={t("instructor.typeYourResponse")}
-                                                rows={3}
-                                            />
-                                            <div className="flex justify-end">
-                                                <Button
-                                                    onClick={handleAddResponse}
-                                                    disabled={isSubmittingResponse || !newResponse.trim()}
-                                                    className="bg-black text-white hover:bg-gray-800"
-                                                >
-                                                    {isSubmittingResponse ? (
-                                                        <>
-                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                            {t("instructor.sending")}...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Send className="mr-2 h-4 w-4" />
-                                                            {t("instructor.sendResponse")}
-                                                        </>
-                                                    )}
-                                                </Button>
-                                            </div>
+                                            {/* Responses */}
+                                            {selectedTicket.responses && selectedTicket.responses.map((response, index) => (
+                                                <div key={index} className="flex items-start gap-3">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${response.isAdmin ? 'bg-green-100' : 'bg-blue-100'
+                                                        }`}>
+                                                        {response.isAdmin ? (
+                                                            <UserCog className="h-4 w-4 text-green-600" />
+                                                        ) : (
+                                                            <User className="h-4 w-4 text-blue-600" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-sm font-medium text-gray-900">
+                                                                {response.isAdmin ? t("instructor.supportTeam") : t("instructor.you")}
+                                                            </span>
+                                                            <span className="text-xs text-gray-500">{formatDateTime(response.createdAt)}</span>
+                                                        </div>
+                                                        <div className={`rounded-lg p-3 ${response.isAdmin ? 'bg-green-50' : 'bg-blue-50'
+                                                            }`}>
+                                                            <p className="text-sm text-gray-900 whitespace-pre-wrap">{response.message}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                )}
 
-                                {selectedTicket.status === 'closed' && (
-                                    <div className="text-center py-4">
-                                        <p className="text-sm text-gray-500">{t("instructor.ticketClosed")}</p>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="text-center py-8">
-                                <p className="text-gray-500">{t("instructor.failedToLoadTicketDetails")}</p>
-                            </div>
-                        )}
-                    </DialogContent>
-                </Dialog>
+                                    {/* Add Response (only if ticket is not closed) */}
+                                    {selectedTicket.status !== 'closed' && (
+                                        <div>
+                                            <Label htmlFor="newResponse">{t("instructor.addResponse")}</Label>
+                                            <div className="mt-2 space-y-3">
+                                                <Textarea
+                                                    id="newResponse"
+                                                    value={newResponse}
+                                                    onChange={(e) => setNewResponse(e.target.value)}
+                                                    placeholder={t("instructor.typeYourResponse")}
+                                                    rows={3}
+                                                />
+                                                <div className="flex justify-end">
+                                                    <Button
+                                                        onClick={handleAddResponse}
+                                                        disabled={isSubmittingResponse || !newResponse.trim()}
+                                                        className="bg-black text-white hover:bg-gray-800"
+                                                    >
+                                                        {isSubmittingResponse ? (
+                                                            <>
+                                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                {t("instructor.sending")}...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Send className="mr-2 h-4 w-4" />
+                                                                {t("instructor.sendResponse")}
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedTicket.status === 'closed' && (
+                                        <div className="text-center py-4">
+                                            <p className="text-sm text-gray-500">{t("instructor.ticketClosed")}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <p className="text-neutral-500">{t("instructor.failedToLoadTicketDetails")}</p>
+                                </div>
+                            )}
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </div>
         </InstructorLayout>
     )
