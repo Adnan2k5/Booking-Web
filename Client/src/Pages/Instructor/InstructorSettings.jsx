@@ -143,161 +143,163 @@ const InstructorSettings = () => {
 
     return (
         <InstructorLayout>
-            <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
-                <div>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">{t("instructor.settings")}</h2>
-                    <p className="text-muted-foreground text-sm sm:text-base">{t("instructor.manageYourAccountSettings")}</p>
-                </div>
-
-                <div className="space-y-2 sm:space-y-6">
-                    <section id="account">
-                        <Card>
-                            <CardHeader className="p-2 sm:p-6">
-                                <CardTitle className="text-lg sm:text-xl">{t("instructor.accountSettings")}</CardTitle>
-                                <CardDescription className="text-sm">{t("instructor.manageYourAccountInformation")}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-2 sm:space-y-6 p-2 sm:p-6">
-                                <div>
-                                    <h3 className="text-base sm:text-lg font-medium">{t("instructor.emailAddress")}</h3>
-                                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 break-all">
-                                        {t("instructor.currentEmail")}: {settings.email}
-                                    </p>
-
-                                    <form onSubmit={handleEmailUpdate} className="space-y-3 sm:space-y-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="newEmail" className="text-sm">{t("instructor.newEmail")}</Label>
-                                            <Input
-                                                id="newEmail"
-                                                type="email"
-                                                value={newEmail}
-                                                onChange={(e) => setNewEmail(e.target.value)}
-                                                placeholder="new.email@example.com"
-                                                className="text-sm"
-                                            />
-                                        </div>
-                                        <Button type="submit" disabled={loading} className="w-full sm:w-auto text-sm">
-                                            {loading ? t("instructor.updating") : t("instructor.updateEmail")}
-                                        </Button>
-                                    </form>
-                                </div>
-
-                                <Separator />
-
-                                <div>
-                                    <h3 className="text-base sm:text-lg font-medium">{t("instructor.language")}</h3>
-                                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">{t("instructor.selectYourPreferredLanguage")}</p>
-
-                                    <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
-                                        <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
-                                        <Select
-                                            value={currentLanguageCode}
-                                            onValueChange={(value) => handleSettingChange(null, "language", value)}
-                                        >
-                                            <SelectTrigger className="w-full sm:w-[180px]">
-                                                <SelectValue placeholder={t("instructor.selectLanguage")} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="en">English</SelectItem>
-                                                <SelectItem value="es">Español</SelectItem>
-                                                <SelectItem value="fr">Français</SelectItem>
-                                                <SelectItem value="de">Deutsch</SelectItem>
-                                                <SelectItem value="it">Italiano</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </section>
-
-                    <section id="security">
-                        <Card>
-                            <CardHeader className="p-4 sm:p-6">
-                                <CardTitle className="text-lg sm:text-xl">{t("instructor.securitySettings")}</CardTitle>
-                                <CardDescription className="text-sm">{t("instructor.manageYourSecurityPreferences")}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-                                <div>
-                                    <h3 className="text-base sm:text-lg font-medium">{t("instructor.changePassword")}</h3>
-                                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">{t("instructor.updateYourPassword")}</p>
-
-                                    <form onSubmit={handlePasswordUpdate} className="space-y-3 sm:space-y-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="currentPassword" className="text-sm">{t("instructor.currentPassword")}</Label>
-                                            <div className="relative">
-                                                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                                <Input
-                                                    id="currentPassword"
-                                                    type="password"
-                                                    value={settings.currentPassword}
-                                                    onChange={(e) => handleSettingChange(null, "currentPassword", e.target.value)}
-                                                    className="pl-9 text-sm"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="newPassword" className="text-sm">{t("instructor.newPassword")}</Label>
-                                            <div className="relative">
-                                                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                                <Input
-                                                    id="newPassword"
-                                                    type="password"
-                                                    value={settings.newPassword}
-                                                    onChange={(e) => handleSettingChange(null, "newPassword", e.target.value)}
-                                                    className="pl-9 text-sm"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="confirmPassword" className="text-sm">{t("instructor.confirmPassword")}</Label>
-                                            <div className="relative">
-                                                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                                <Input
-                                                    id="confirmPassword"
-                                                    type="password"
-                                                    value={settings.confirmPassword}
-                                                    onChange={(e) => handleSettingChange(null, "confirmPassword", e.target.value)}
-                                                    className="pl-9 text-sm"
-                                                />
-                                            </div>
-                                        </div>
-                                        <Button type="submit" disabled={loading} className="w-full sm:w-auto text-sm">
-                                            {loading ? t("instructor.updating") : t("instructor.updatePassword")}
-                                        </Button>
-                                    </form>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </section>
-                </div>
-                <Modal open={openOtp} footer={null} onCancel={() => setOtpSent(false)}>
-                    <div className="space-y-2 flex flex-col items-center gap-4">
-                        <h1>
-                            Enter One-Time Password sent on{" "}
-                            <span className="text-blue-500">{newEmail}</span>
-                        </h1>
-                        <InputOTP
-                            maxLength={6}
-                            value={otp}
-                            onChange={(value) => setOtp(value)}
-                        >
-                            <InputOTPGroup>
-                                <InputOTPSlot index={0} />
-                                <InputOTPSlot index={1} />
-                                <InputOTPSlot index={2} />
-                                <InputOTPSlot index={3} />
-                                <InputOTPSlot index={4} />
-                                <InputOTPSlot index={5} />
-                            </InputOTPGroup>
-                        </InputOTP>
-                        <button
-                            onClick={verifyOtp}
-                            className="bg-black text-white rounded-2xl py-2 w-full"
-                        >
-                            Verify OTP
-                        </button>
+            <div className="min-h-screen">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">{t("instructor.settings")}</h1>
+                        <p className="text-sm text-neutral-500 mt-1">{t("instructor.manageYourAccountSettings")}</p>
                     </div>
-                </Modal>
+
+                    <div className="space-y-6">
+                        <section id="account">
+                            <Card>
+                                <CardHeader className="p-2 sm:p-6">
+                                    <CardTitle className="text-lg sm:text-xl">{t("instructor.accountSettings")}</CardTitle>
+                                    <CardDescription className="text-sm">{t("instructor.manageYourAccountInformation")}</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-2 sm:space-y-6 p-2 sm:p-6">
+                                    <div>
+                                        <h3 className="text-base sm:text-lg font-medium">{t("instructor.emailAddress")}</h3>
+                                        <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 break-all">
+                                            {t("instructor.currentEmail")}: {settings.email}
+                                        </p>
+
+                                        <form onSubmit={handleEmailUpdate} className="space-y-3 sm:space-y-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="newEmail" className="text-sm">{t("instructor.newEmail")}</Label>
+                                                <Input
+                                                    id="newEmail"
+                                                    type="email"
+                                                    value={newEmail}
+                                                    onChange={(e) => setNewEmail(e.target.value)}
+                                                    placeholder="new.email@example.com"
+                                                    className="text-sm"
+                                                />
+                                            </div>
+                                            <Button type="submit" disabled={loading} className="w-full sm:w-auto text-sm">
+                                                {loading ? t("instructor.updating") : t("instructor.updateEmail")}
+                                            </Button>
+                                        </form>
+                                    </div>
+
+                                    <Separator />
+
+                                    <div>
+                                        <h3 className="text-base sm:text-lg font-medium">{t("instructor.language")}</h3>
+                                        <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">{t("instructor.selectYourPreferredLanguage")}</p>
+
+                                        <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+                                            <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                                            <Select
+                                                value={currentLanguageCode}
+                                                onValueChange={(value) => handleSettingChange(null, "language", value)}
+                                            >
+                                                <SelectTrigger className="w-full sm:w-[180px]">
+                                                    <SelectValue placeholder={t("instructor.selectLanguage")} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="en">English</SelectItem>
+                                                    <SelectItem value="es">Español</SelectItem>
+                                                    <SelectItem value="fr">Français</SelectItem>
+                                                    <SelectItem value="de">Deutsch</SelectItem>
+                                                    <SelectItem value="it">Italiano</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </section>
+
+                        <section id="security">
+                            <Card>
+                                <CardHeader className="p-4 sm:p-6">
+                                    <CardTitle className="text-lg sm:text-xl">{t("instructor.securitySettings")}</CardTitle>
+                                    <CardDescription className="text-sm">{t("instructor.manageYourSecurityPreferences")}</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+                                    <div>
+                                        <h3 className="text-base sm:text-lg font-medium">{t("instructor.changePassword")}</h3>
+                                        <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">{t("instructor.updateYourPassword")}</p>
+
+                                        <form onSubmit={handlePasswordUpdate} className="space-y-3 sm:space-y-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="currentPassword" className="text-sm">{t("instructor.currentPassword")}</Label>
+                                                <div className="relative">
+                                                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        id="currentPassword"
+                                                        type="password"
+                                                        value={settings.currentPassword}
+                                                        onChange={(e) => handleSettingChange(null, "currentPassword", e.target.value)}
+                                                        className="pl-9 text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="newPassword" className="text-sm">{t("instructor.newPassword")}</Label>
+                                                <div className="relative">
+                                                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        id="newPassword"
+                                                        type="password"
+                                                        value={settings.newPassword}
+                                                        onChange={(e) => handleSettingChange(null, "newPassword", e.target.value)}
+                                                        className="pl-9 text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="confirmPassword" className="text-sm">{t("instructor.confirmPassword")}</Label>
+                                                <div className="relative">
+                                                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        id="confirmPassword"
+                                                        type="password"
+                                                        value={settings.confirmPassword}
+                                                        onChange={(e) => handleSettingChange(null, "confirmPassword", e.target.value)}
+                                                        className="pl-9 text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <Button type="submit" disabled={loading} className="w-full sm:w-auto text-sm">
+                                                {loading ? t("instructor.updating") : t("instructor.updatePassword")}
+                                            </Button>
+                                        </form>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </section>
+                    </div>
+                    <Modal open={openOtp} footer={null} onCancel={() => setOtpSent(false)}>
+                        <div className="space-y-2 flex flex-col items-center gap-4">
+                            <h1>
+                                Enter One-Time Password sent on{" "}
+                                <span className="text-blue-500">{newEmail}</span>
+                            </h1>
+                            <InputOTP
+                                maxLength={6}
+                                value={otp}
+                                onChange={(value) => setOtp(value)}
+                            >
+                                <InputOTPGroup>
+                                    <InputOTPSlot index={0} />
+                                    <InputOTPSlot index={1} />
+                                    <InputOTPSlot index={2} />
+                                    <InputOTPSlot index={3} />
+                                    <InputOTPSlot index={4} />
+                                    <InputOTPSlot index={5} />
+                                </InputOTPGroup>
+                            </InputOTP>
+                            <button
+                                onClick={verifyOtp}
+                                className="bg-black text-white rounded-2xl py-2 w-full"
+                            >
+                                Verify OTP
+                            </button>
+                        </div>
+                    </Modal>
+                </div>
             </div>
         </InstructorLayout>
     )

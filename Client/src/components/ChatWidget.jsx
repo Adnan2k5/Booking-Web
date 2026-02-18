@@ -43,6 +43,7 @@ export default function ChatWidget() {
     const { user } = useAuth()
     const [isOpen, setIsOpen] = useState(false)
     const [isMinimized, setIsMinimized] = useState(false)
+    const [isHidden, setIsHidden] = useState(false)
     const [messages, setMessages] = useState(initialMessages)
     const [showSuggestions, setShowSuggestions] = useState(true)
     const [suggestionsExpanded, setSuggestionsExpanded] = useState(false)
@@ -118,44 +119,85 @@ export default function ChatWidget() {
 
     return (
         <>
-            <motion.div
-                className="fixed bottom-4 right-4 z-[9998]"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 1 }}
-            >
-                <button
-                    onClick={toggleChat}
-                    className="group relative flex items-center justify-center w-11 h-11 bg-black text-white rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
-                    aria-label="Customer Support"
-                >
-                    <div className="absolute inset-0 rounded-full border border-white/10" />
-                    {isOpen ? (
-                        <X size={18} className="transition-transform duration-300 group-hover:rotate-90" />
-                    ) : (
-                        <MessageSquare size={18} />
-                    )}
+            <AnimatePresence>
+                {!isHidden && (
+                    <motion.div
+                        className="fixed bottom-20 right-4 md:bottom-4 z-[9998]"
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <div className="relative">
+                            {/* Close button for mobile - appears on top left of chat button */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setIsOpen(false)
+                                    setIsHidden(true)
+                                }}
+                                className="md:hidden absolute -top-1 -left-1 w-5 h-5 bg-gray-900 text-white rounded-full shadow-lg flex items-center justify-center z-10 hover:bg-gray-700 transition-colors"
+                                aria-label="Hide chat"
+                            >
+                                <X size={12} />
+                            </button>
 
-                    {!isOpen && (
-                        <span className="absolute top-0 right-0 flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                            <button
+                                onClick={toggleChat}
+                                className="group relative flex items-center justify-center w-11 h-11 bg-black text-white rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
+                                aria-label="Customer Support"
+                            >
+                                <div className="absolute inset-0 rounded-full border border-white/10" />
+                                {isOpen ? (
+                                    <X size={18} className="transition-transform duration-300 group-hover:rotate-90" />
+                                ) : (
+                                    <MessageSquare size={18} />
+                                )}
+
+                                {!isOpen && (
+                                    <span className="absolute top-0 right-0 flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Show chat edge tab when hidden - positioned on right edge at bottom */}
+            <AnimatePresence>
+                {isHidden && (
+                    <motion.button
+                        initial={{ x: 100, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: 100, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        onClick={() => setIsHidden(false)}
+                        className="fixed right-0 bottom-20 md:bottom-4 bg-black text-white px-2 py-6 rounded-l-lg shadow-lg flex flex-col items-center gap-1.5 hover:px-3 transition-all duration-200 z-[9997] group"
+                        aria-label="Show chat"
+                    >
+                        <MessageSquare size={16} className="group-hover:scale-110 transition-transform" />
+                        <span className="text-[10px] font-medium tracking-wider [writing-mode:vertical-lr] rotate-180">
+                            CHAT
                         </span>
-                    )}
-                </button>
-            </motion.div>
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
+                    </motion.button>
+                )}
+            </AnimatePresence>
 
             <AnimatePresence>
-                {isOpen && (
+                {isOpen && !isHidden && (
                     <motion.div
-                        className="fixed bottom-[4.5rem] right-4 w-[340px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl overflow-hidden z-[9998] flex flex-col border border-gray-100"
-                        style={{ height: isMinimized ? "auto" : "500px" }}
+                        className="fixed bottom-[7rem] right-4 md:bottom-[4.5rem] w-[340px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl overflow-hidden z-[9998] flex flex-col border border-gray-100 max-h-[calc(100vh-9rem)] md:max-h-[calc(100vh-6rem)]"
+                        style={{ height: isMinimized ? "auto" : "min(400px, calc(100vh - 9rem))" }}
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{
                             opacity: 1,
                             y: 0,
                             scale: 1,
-                            height: isMinimized ? "auto" : "500px",
+                            height: isMinimized ? "auto" : "min(400px, calc(100vh - 9rem))",
                             transition: { duration: 0.2, ease: "easeOut" },
                         }}
                         exit={{ opacity: 0, y: 20, scale: 0.95, transition: { duration: 0.15 } }}

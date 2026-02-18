@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { format } from "date-fns"
 import { useLocation, useNavigate } from "react-router-dom"
-import { MapPin } from "lucide-react"
+import { MapPin, Compass } from "lucide-react"
 import { Badge } from "../../components/ui/badge"
 import { useAuth } from "../AuthProvider.jsx"
 import { SearchFilterBar } from "./SearchFilterBar"
@@ -12,8 +12,59 @@ import { AdventureCard } from "./AdventureCard"
 import { AdventureCardSkeleton } from "./AdventureCardSkeleton"
 import { NoResults } from "./NoResults"
 import { useBrowse } from "../../hooks/useBrowse"
+import { useLocations } from "../../hooks/useLocation"
+import { useAdventures } from "../../hooks/useAdventure"
 import { containerVariants, itemVariants } from "../../assets/Animations"
 import { Nav_Landing } from "../../components/Nav_Landing"
+
+// Empty State Component
+const EmptyLocationState = () => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+    className="text-center py-16 px-6"
+  >
+    <div className="inline-block mb-6">
+      <div className="bg-gray-100 p-6 rounded-full">
+        <MapPin size={56} className="text-gray-900" strokeWidth={1.5} />
+      </div>
+    </div>
+    <h3 className="text-2xl font-bold text-gray-900 mb-3">Where would you like to explore?</h3>
+    <p className="text-gray-600 max-w-md mx-auto leading-relaxed">
+      Select a location above to discover amazing adventures waiting for you.
+    </p>
+  </motion.div>
+)
+
+// Results Header Component
+const ResultsHeader = ({ count, hasLocation }) => {
+  if (!hasLocation) return null
+
+  return (
+    <motion.div
+      className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+    >
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-gray-900 rounded-lg">
+          <Compass size={20} className="text-white" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900">
+          Available Adventures
+        </h2>
+      </div>
+      <Badge
+        variant="secondary"
+        className="text-sm font-medium bg-gray-100 text-gray-900 border-gray-200 px-4 py-1.5"
+      >
+        {count} {count === 1 ? 'adventure' : 'adventures'}
+      </Badge>
+    </motion.div>
+  )
+}
 
 export default function BrowsingPage() {
   const location = useLocation()
@@ -29,12 +80,10 @@ export default function BrowsingPage() {
   const [showScrollIndicator, setShowScrollIndicator] = useState(true)
   const categoriesRef = useRef(null)
 
-  const wrapperStyle = {
-    width: 300,
-    border: `1px solid #e2e8f0`,
-    borderRadius: "0.375rem",
-  }
   const { adventures, isLoading, filters, setFilters } = useBrowse()
+  const { locations } = useLocations()
+  const { adventures: allAdventures } = useAdventures()
+
   const updateParams = (params, options = {}) => {
     const queryParams = new URLSearchParams(location.search)
     Object.entries(params).forEach(([key, value]) => {
@@ -129,6 +178,7 @@ export default function BrowsingPage() {
       setDate(undefined)
     }
   }
+
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString)
@@ -142,133 +192,130 @@ export default function BrowsingPage() {
     }
   }
 
+  // Determine what to display
+  const hasLocation = loc && loc.length > 0
+  const hasResults = adventures && adventures.length > 0
+  const showEmptyLocationState = !hasLocation && !isLoading
+  const showNoResults = hasLocation && !hasResults && !isLoading
+  const showResults = hasLocation && hasResults && !isLoading
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white p-4 sm:p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-white relative overflow-hidden">
       <Nav_Landing />
-      <div className="relative z-10 mx-auto max-w-7xl mt-32">
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 pb-16">
+        {/* Hero Section */}
         <motion.div
-          className="mb-8 text-center"
+          className="mb-10 text-center"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ duration: 0.6 }}
         >
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 to-black bg-clip-text text-transparent">
-            Discover Adventures
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-gray-900 leading-tight">
+            Discover Your Next Adventure
           </h1>
-          <p className="text-gray-600 mt-2">Find your next unforgettable experience</p>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            Find unforgettable experiences and create lasting memories
+          </p>
         </motion.div>
 
+        {/* Search Filter Bar */}
         <motion.div
-          className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 mb-8"
+          className="mb-12"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.3, duration: 0.6 }}
         >
-          <SearchFilterBar
-            adventure={adventure}
-            setAdventure={setAdventure}
-            loc={loc}
-            setLoc={setLoc}
-            date={date}
-            setDate={setDate}
-            clearFilter={clearFilter}
-            handleDateChange={handleDateChange}
-            wrapperStyle={wrapperStyle}
-            onSearch={() => {
-              updateParams({
-                adventure,
-                location: loc,
-                date: date ? date.toISOString().split("T")[0] : "",
-              })
-            }}
-            setSearchParams={updateParams}
-          />
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+            <SearchFilterBar
+              adventure={adventure}
+              setAdventure={setAdventure}
+              loc={loc}
+              setLoc={setLoc}
+              date={date}
+              setDate={setDate}
+              clearFilter={clearFilter}
+              handleDateChange={handleDateChange}
+              locations={locations}
+              allAdventures={allAdventures}
+              onSearch={(newFilters) => {
+                // Use the new filter values passed directly from SearchFilterBar
+                updateParams({
+                  adventure: newFilters.adventure,
+                  location: newFilters.location,
+                  date: newFilters.date ? newFilters.date.toISOString().split("T")[0] : "",
+                })
+              }}
+              setSearchParams={updateParams}
+            />
+          </div>
         </motion.div>
 
-        {/* <CategorySelector
-          categories={categories}
-          activeCategory={activeCategory}
-          setActiveCategory={(category) => {
-            // If the same category is clicked again, deselect it
-            if (activeCategory === category) {
-              setActiveCategory("")
-              updateParams({ adventure: "" })
-            } else {
-              setActiveCategory(category)
-              setAdventure(category.toLowerCase())
-              updateParams({ adventure: category })
-            }
-          }}
-          categoriesRef={categoriesRef}
-          showScrollIndicator={showScrollIndicator}
-          ChevronRight={ChevronRight}
-        /> */}
+        {/* Results Section */}
+        <ResultsHeader count={adventures?.length || 0} hasLocation={hasLocation} />
 
-        <motion.div
-          className="flex items-center gap-2 mb-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <h2 className="text-xl font-semibold text-gray-800">Results</h2>
-          <Badge variant="outline" className="text-gray-500 bg-white/80 backdrop-blur-sm">
-            {adventures?.length} adventures
-          </Badge>
-        </motion.div>
-
-        <AnimatePresence>
-          <motion.div
-            className={`${loc ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col items-center justify-center"} `}
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {isLoading ? (
-              Array(6)
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+            >
+              {Array(6)
                 .fill(0)
                 .map((_, index) => (
                   <motion.div key={`skeleton-${index}`} variants={itemVariants}>
                     <AdventureCardSkeleton />
                   </motion.div>
-                ))
-            ) : !loc ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center  py-12 bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-8"
-              >
-                <div className="flex flex-col items-center gap-4">
-                  <MapPin size={48} className="text-gray-800" />
-                  <h3 className="text-xl font-semibold text-gray-800">Select a location to see adventures</h3>
-                  <p className="text-gray-600 max-w-md">
-                    Please use the search bar above to select a location and discover available adventures.
-                  </p>
-                </div>
-              </motion.div>
-            ) : (
-              adventures?.map((adventure) => (
+                ))}
+            </motion.div>
+          ) : showEmptyLocationState ? (
+            <motion.div
+              key="empty-location"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <EmptyLocationState />
+            </motion.div>
+          ) : showNoResults ? (
+            <motion.div
+              key="no-results"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex justify-center"
+            >
+              <NoResults clearFilter={clearFilter} />
+            </motion.div>
+          ) : showResults ? (
+            <motion.div
+              key="results"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+            >
+              {adventures.map((adventure, index) => (
                 <motion.div
                   key={adventure._id}
                   variants={itemVariants}
+                  custom={index}
                   layout
                   className="h-full"
                   whileHover={{ y: -8 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                  onClick={() => onBook(adventure._id)}
-                  style={{ cursor: "pointer" }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 >
                   <AdventureCard adventure={adventure} formatDate={formatDate} onBook={onBook} />
                 </motion.div>
-              ))
-            )}
-          </motion.div>
+              ))}
+            </motion.div>
+          ) : null}
         </AnimatePresence>
-
-        {adventures?.length === 0 && !isLoading && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-12">
-            <NoResults clearFilter={clearFilter} />
-          </motion.div>
-        )}
       </div>
     </div>
   )

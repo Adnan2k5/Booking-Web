@@ -42,7 +42,6 @@ export const createPreset = asyncHandler(async (req, res, next) => {
 
   if (!price) {
     throw new ApiError(400, "Price is required");
-
   }
 
   // Check if adventure and instructor exist
@@ -184,7 +183,7 @@ export const updateSession = asyncHandler(async (req, res, next) => {
   if (["completed", "cancelled", "expired"].includes(session.status)) {
     throw new ApiError(
       400,
-      `Cannot update a session with status: ${session.status}`
+      `Cannot update a session with status: ${session.status}`,
     );
   }
 
@@ -221,7 +220,7 @@ export const updateSession = asyncHandler(async (req, res, next) => {
     if (duplicate) {
       throw new ApiError(
         409,
-        "A session with overlapping time already exists for this adventure and instructor"
+        "A session with overlapping time already exists for this adventure and instructor",
       );
     }
   }
@@ -240,7 +239,7 @@ export const deleteSession = asyncHandler(async (req, res, next) => {
   if (["completed", "cancelled", "expired"].includes(session.status)) {
     throw new ApiError(
       400,
-      `Cannot delete a session with status: ${session.status}`
+      `Cannot delete a session with status: ${session.status}`,
     );
   }
   if (session.booking) {
@@ -266,37 +265,39 @@ export const getAllSessions = asyncHandler(async (req, res, next) => {
 });
 
 // Get all sessions from other instructors (excluding current instructor)
-export const getAllOtherInstructorsSessions = asyncHandler(async (req, res, next) => {
-  const { excludeInstructor, startDate, endDate } = req.query;
+export const getAllOtherInstructorsSessions = asyncHandler(
+  async (req, res, next) => {
+    const { excludeInstructor, startDate, endDate } = req.query;
 
-  let query = {};
+    let query = {};
 
-  // Exclude specific instructor if provided
-  if (excludeInstructor) {
-    query.instructorId = { $ne: excludeInstructor };
-  }
-
-  // Filter by date range if provided
-  if (startDate || endDate) {
-    query.startTime = {};
-    if (startDate) {
-      query.startTime.$gte = new Date(startDate);
+    // Exclude specific instructor if provided
+    if (excludeInstructor) {
+      query.instructorId = { $ne: excludeInstructor };
     }
-    if (endDate) {
-      query.startTime.$lte = new Date(endDate);
+
+    // Filter by date range if provided
+    if (startDate || endDate) {
+      query.startTime = {};
+      if (startDate) {
+        query.startTime.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        query.startTime.$lte = new Date(endDate);
+      }
     }
-  }
 
-  const sessions = await Session.find(query)
-    .select('startTime expiresAt capacity status instructorId')
-    .lean();
+    const sessions = await Session.find(query)
+      .select("startTime expiresAt capacity status instructorId")
+      .lean();
 
-  return res.status(200).json({
-    success: true,
-    count: sessions.length,
-    data: sessions
-  });
-});
+    return res.status(200).json({
+      success: true,
+      count: sessions.length,
+      data: sessions,
+    });
+  },
+);
 
 export const getInstructorSessions = asyncHandler(async (req, res, next) => {
   const { location, session_date, adventure } = req.query;
@@ -307,13 +308,20 @@ export const getInstructorSessions = asyncHandler(async (req, res, next) => {
       .json({ message: "Location, sessionDate, and adventure are required" });
   }
 
+  // Validate the date
+  const sessionDate = new Date(session_date);
+  if (isNaN(sessionDate.getTime())) {
+    return res.status(400).json({ message: "Invalid session_date format" });
+  }
+
+  const nextDay = new Date(sessionDate);
+  nextDay.setDate(nextDay.getDate() + 1);
+
   const sessions = await Session.find({
     adventureId: adventure,
     startTime: {
-      $gte: new Date(session_date),
-      $lt: new Date(
-        new Date(session_date).setDate(new Date(session_date).getDate() + 1)
-      ),
+      $gte: sessionDate,
+      $lt: nextDay,
     },
   })
     .populate({
@@ -327,6 +335,9 @@ export const getInstructorSessions = asyncHandler(async (req, res, next) => {
     .select("");
 
   if (!sessions || sessions.length === 0) {
+  }
+
+  if (!sessions || sessions.length === 0) {
     return res.status(404).json({ message: "No sessions found" });
   }
 
@@ -334,91 +345,96 @@ export const getInstructorSessions = asyncHandler(async (req, res, next) => {
 });
 
 // Get instructor's sessions with booking details
-export const getInstructorSessionsWithBookings = asyncHandler(async (req, res) => {
-  const {
-    page = 1,
-    limit = 10,
-    status,
-    sortBy = "startTime",
-    sortOrder = "asc"
-  } = req.query;
+export const getInstructorSessionsWithBookings = asyncHandler(
+  async (req, res) => {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      sortBy = "startTime",
+      sortOrder = "asc",
+    } = req.query;
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  // Build query object
-  let query = { instructorId: req.user._id };
+    // Build query object
+    let query = { instructorId: req.user._id };
 
-  if (status) {
-    query.status = status;
-  }
+    if (status) {
+      query.status = status;
+    }
 
-  // Sorting
-  const sortOptions = {};
-  sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
+    // Sorting
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
 
-  const sessions = await Session.find(query)
-    .sort(sortOptions)
-    .skip(skip)
-    .limit(parseInt(limit))
-    .populate({
-      path: "adventureId",
-      select: "name description category difficulty thumbnail medias price"
-    })
-    .populate({
-      path: "location",
-      select: "name address city state country"
-    })
-    .populate({
-      path: "booking",
-      populate: {
-        path: "user groupMember",
-        select: "name email phoneNumber"
+    const sessions = await Session.find(query)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate({
+        path: "adventureId",
+        select: "name description category difficulty thumbnail medias price",
+      })
+      .populate({
+        path: "location",
+        select: "name address city state country",
+      })
+      .populate({
+        path: "booking",
+        populate: {
+          path: "user groupMember",
+          select: "name email phoneNumber",
+        },
+      });
+
+    // Add computed status and available seats for each session
+    const processedSessions = sessions.map((session) => {
+      const now = new Date();
+      const startTime = new Date(session.startTime);
+      const expiresAt = new Date(session.expiresAt);
+
+      let computedStatus = "upcoming";
+      if (now > expiresAt) {
+        computedStatus = "expired";
+      } else if (now >= startTime) {
+        computedStatus = "completed";
       }
+
+      // Calculate available seats
+      let bookedSeats = 0;
+      if (session.booking) {
+        bookedSeats = 1; // Main booker
+        if (session.booking.groupMember) {
+          bookedSeats += session.booking.groupMember.length;
+        }
+      }
+
+      const availableSeats = Math.max(0, session.capacity - bookedSeats);
+
+      return {
+        ...session.toObject(),
+        computedStatus,
+        bookedSeats,
+        availableSeats,
+        isBookable:
+          computedStatus === "upcoming" &&
+          availableSeats > 0 &&
+          session.status === "active",
+      };
     });
 
-  // Add computed status and available seats for each session
-  const processedSessions = sessions.map(session => {
-    const now = new Date();
-    const startTime = new Date(session.startTime);
-    const expiresAt = new Date(session.expiresAt);
+    const total = await Session.countDocuments(query);
 
-    let computedStatus = 'upcoming';
-    if (now > expiresAt) {
-      computedStatus = 'expired';
-    } else if (now >= startTime) {
-      computedStatus = 'completed';
-    }
-
-    // Calculate available seats
-    let bookedSeats = 0;
-    if (session.booking) {
-      bookedSeats = 1; // Main booker
-      if (session.booking.groupMember) {
-        bookedSeats += session.booking.groupMember.length;
-      }
-    }
-
-    const availableSeats = Math.max(0, session.capacity - bookedSeats);
-
-    return {
-      ...session.toObject(),
-      computedStatus,
-      bookedSeats,
-      availableSeats,
-      isBookable: computedStatus === 'upcoming' && availableSeats > 0 && session.status === 'active'
-    };
-  });
-
-  const total = await Session.countDocuments(query);
-
-  return res.status(200).json({
-    statusCode: 200,
-    data: {
-      sessions: processedSessions,
-      total,
-      page: parseInt(page),
-      totalPages: Math.ceil(total / limit),
-    },
-    message: "Instructor sessions retrieved successfully"
-  });
-});
+    return res.status(200).json({
+      statusCode: 200,
+      data: {
+        sessions: processedSessions,
+        total,
+        page: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+      },
+      message: "Instructor sessions retrieved successfully",
+    });
+  },
+);

@@ -31,6 +31,7 @@ export const Nav_Landing = () => {
     const { isShopEnabled, isHotelsEnabled } = useWebsiteSettings()
     const navigate = useNavigate()
     const [isScrolled, setIsScrolled] = useState(false)
+    const [isHovered, setIsHovered] = useState(false)
 
     // Handle scroll effect for navbar background
     useEffect(() => {
@@ -72,7 +73,7 @@ export const Nav_Landing = () => {
         if (user?.user?.role === "admin") {
             return t("adminPanel") || "Admin Panel"
         }
-        return t("dashboard") || "Dashboard"
+        return t("dashboardTitle") || "Dashboard"
     }
 
     const languages = [
@@ -98,7 +99,9 @@ export const Nav_Landing = () => {
 
     return (
         <nav
-            className={`fixed top-0 left-0 w-full z-[9999] transition-all duration-300 ease-in-out ${isScrolled ? "bg-black/90 backdrop-blur-md py-3" : "bg-transparent py-5"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className={`fixed top-0 left-0 w-full z-[9999] transition-all duration-300 ease-in-out ${isScrolled || isHovered ? "bg-black/90 backdrop-blur-md py-3" : "bg-transparent py-5"
                 }`}
         >
             <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">

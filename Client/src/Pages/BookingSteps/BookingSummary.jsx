@@ -154,28 +154,28 @@ export const BookingSummary = ({
     };
 
     return (
-        <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-xl mb-8 border border-white/50">
-            <div className="flex items-center gap-2 mb-6">
-                <ClipboardCheck className="text-blue-600" size={24} />
-                <h2 className="text-xl font-bold text-gray-800">{t("bookingSummary")}</h2>
+        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg mb-8 border border-gray-200">
+            <div className="flex items-center gap-3 mb-8">
+                <ClipboardCheck className="text-gray-900" size={24} />
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900">{t("bookingSummary")}</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <div className="bg-blue-50 rounded-xl p-4 mb-6">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("yourProfile")}</h3>
+                    <div className="bg-gray-50 rounded-xl p-5 mb-6 border border-gray-200">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">{t("yourProfile")}</h3>
                         <div className="flex items-center gap-4">
-                            <Avatar className="h-16 w-16 border-2 border-white shadow-md bg-gradient-to-r from-blue-600 to-cyan-500">
-                                <AvatarFallback>{user?.user?.email.charAt(0).toUpperCase()}</AvatarFallback>
+                            <Avatar className="h-16 w-16 border-2 border-gray-200 shadow-md bg-gray-900">
+                                <AvatarFallback className="bg-gray-900 text-white text-xl font-bold">{user?.user?.email.charAt(0).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div>
-                                <p className="font-medium text-gray-800">{user?.user?.email}</p>
-                                <p className="text-sm text-gray-500">{t("adventureEnthusiast")}</p>
+                                <p className="font-bold text-gray-900">{user?.user?.email}</p>
+                                <p className="text-sm text-gray-600">{t("adventureEnthusiast")}</p>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-blue-50 rounded-xl p-4 mb-6">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("adventureDetails")}</h3>
+                    <div className="bg-gray-50 rounded-xl p-5 mb-6 border border-gray-200">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">{t("adventureDetails")}</h3>
                         <div className="flex flex-col gap-3">
                             <div className="flex items-start gap-3">
                                 <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
@@ -186,72 +186,72 @@ export const BookingSummary = ({
                                     />
                                 </div>
                                 <div>
-                                    <p className="font-medium text-gray-800">{adventure.name}</p>
-                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <p className="font-bold text-gray-900">{adventure.name}</p>
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
                                         <MapPin size={14} />
                                         <span>{adventure.location?.[0]?.name || adventure.location || "Location not specified"}</span>
-                                        <span className="ml-2 text-xs text-gray-400">{sessionDate}</span>
+                                        <span className="ml-2 text-xs text-gray-500">{sessionDate}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     {selectedInstructor && (
-                        <div className="bg-blue-50 rounded-xl p-4">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("yourInstructor")}</h3>
+                        <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4">{t("yourInstructor")}</h3>
                             <div className="flex items-start gap-3">
-                                <Avatar className="h-12 w-12 border-2 border-white shadow-md">
+                                <Avatar className="h-12 w-12 border-2 border-gray-200 shadow-md">
                                     <AvatarImage src={selectedInstructor.instructorId?.profilePicture || selectedInstructor.img || selectedInstructor.image || selectedInstructor.avatar || "/placeholder.svg"} alt={selectedInstructor.instructorId?.name || selectedInstructor.name} />
-                                    <AvatarFallback>{selectedInstructor?.instructorId?.name?.charAt(0) || selectedInstructor?.name?.charAt(0) || "I"}</AvatarFallback>
+                                    <AvatarFallback className="bg-gray-900 text-white font-bold">{selectedInstructor?.instructorId?.name?.charAt(0) || selectedInstructor?.name?.charAt(0) || "I"}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <p className="font-medium text-gray-800">{selectedInstructor.instructorId?.name || selectedInstructor.name}</p>
-                                    <p className="text-sm text-gray-500">{selectedInstructor.instructorId?.instructor?.description?.[0] || selectedInstructor.specialty || selectedInstructor.specialization || selectedInstructor.expertise || "Professional Instructor"}</p>
+                                    <p className="font-bold text-gray-900">{selectedInstructor.instructorId?.name || selectedInstructor.name}</p>
+                                    <p className="text-sm text-gray-600">{selectedInstructor.instructorId?.instructor?.description?.[0] || selectedInstructor.specialty || selectedInstructor.specialization || selectedInstructor.expertise || "Professional Instructor"}</p>
                                 </div>
                             </div>
-                            <div className="flex justify-between items-center pt-2 mt-2 border-t border-blue-100">
-                                <span className="text-gray-600">{t("instructorFee")}</span>
-                                <span className="font-medium">${selectedInstructor.price || selectedInstructor.fee || 0}</span>
+                            <div className="flex justify-between items-center pt-3 mt-3 border-t border-gray-200">
+                                <span className="text-gray-600 font-medium">{t("instructorFee")}</span>
+                                <span className="font-bold text-gray-900">${selectedInstructor.price || selectedInstructor.fee || 0}</span>
                             </div>
                             {groupMembers.length > 0 && (
                                 <div className="flex justify-between items-center pt-2">
-                                    <span className="text-gray-600">{t("additionalGroupFee")}</span>
-                                    <span className="font-medium">${groupMembers.length * 30}</span>
+                                    <span className="text-gray-600 font-medium">{t("additionalGroupFee")}</span>
+                                    <span className="font-bold text-gray-900">${groupMembers.length * 30}</span>
                                 </div>
                             )}
                         </div>
                     )}
                     {/* Group Members */}
                     {groupMembers.length > 0 && (
-                        <div className="bg-blue-50 rounded-xl p-4 mb-6 mt-6">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("yourGroup")}</h3>
+                        <div className="bg-gray-50 rounded-xl p-5 mb-6 mt-6 border border-gray-200">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4">{t("yourGroup")}</h3>
                             <div className="space-y-3">
                                 <div className="flex items-start gap-3">
-                                    <Avatar className="h-10 w-10 border-2 border-white shadow-md bg-gradient-to-r from-blue-600 to-cyan-500">
-                                        <AvatarFallback>{user?.user?.email.charAt(0).toUpperCase()}</AvatarFallback>
+                                    <Avatar className="h-10 w-10 border-2 border-gray-200 shadow-md bg-gray-900">
+                                        <AvatarFallback className="bg-gray-900 text-white font-bold">{user?.user?.email.charAt(0).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="font-medium text-gray-800">{user?.user?.email}</p>
-                                        <p className="text-sm text-gray-500">{t("groupLeader")}</p>
+                                        <p className="font-bold text-gray-900">{user?.user?.email}</p>
+                                        <p className="text-sm text-gray-600">{t("groupLeader")}</p>
                                     </div>
                                 </div>
 
                                 {groupMembers.map((member) => (
                                     <div key={member.id} className="flex items-start gap-3">
-                                        <Avatar className="h-10 w-10 border-2 border-white shadow-md">
+                                        <Avatar className="h-10 w-10 border-2 border-gray-200 shadow-md">
                                             <AvatarImage src={member.avatar || "/placeholder.svg"} alt={member.name} />
-                                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                            <AvatarFallback className="bg-gray-100 text-gray-900 font-bold">{member.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-medium text-gray-800">{member.name}</p>
-                                            <p className="text-sm text-gray-500">{member.email}</p>
+                                            <p className="font-bold text-gray-900">{member.name}</p>
+                                            <p className="text-sm text-gray-600">{member.email}</p>
                                         </div>
                                     </div>
                                 ))}
 
-                                <div className="flex justify-between items-center pt-2 mt-2 border-t border-blue-100">
-                                    <span className="text-gray-600">{t("groupSize")}</span>
-                                    <span className="font-medium">
+                                <div className="flex justify-between items-center pt-3 mt-3 border-t border-gray-200">
+                                    <span className="text-gray-600 font-medium">{t("groupSize")}</span>
+                                    <span className="font-bold text-gray-900">
                                         {groupMembers.length + 1} {t("people")}
                                     </span>
                                 </div>
@@ -264,8 +264,8 @@ export const BookingSummary = ({
                 <div>
                     {/* Selected Items */}
                     {cartItems.length > 0 && (
-                        <div className="bg-blue-50 rounded-xl p-4 mb-6">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("selectedItems")}</h3>
+                        <div className="bg-gray-50 rounded-xl p-5 mb-6 border border-gray-200">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4">{t("selectedItems")}</h3>
                             <div className="space-y-3">
                                 {cartItems.map((cartItem) => {
                                     const item = mockItems.find((i) => i._id === cartItem._id)
@@ -283,21 +283,21 @@ export const BookingSummary = ({
                                                 />
                                             </div>
                                             <div className="flex-1">
-                                                <p className="font-medium text-gray-800">
+                                                <p className="font-bold text-gray-900">
                                                     {item?.name}{" "}
-                                                    {cartItem.rent && <span className="text-xs text-green-600">({t("rental")})</span>}
+                                                    {cartItem.rent && <span className="text-xs text-gray-600">({t("rental")})</span>}
                                                 </p>
-                                                <p className="text-sm text-gray-500">
+                                                <p className="text-sm text-gray-600">
                                                     {t("qty")}: {cartItem.quantity}
                                                 </p>
                                             </div>
-                                            <div className="font-medium text-blue-600">${((price || 0) * cartItem.quantity).toFixed(2)}</div>
+                                            <div className="font-bold text-gray-900">${((price || 0) * cartItem.quantity).toFixed(2)}</div>
                                         </div>
                                     )
                                 })}
-                                <div className="flex justify-between items-center pt-2 border-t border-blue-100">
-                                    <span className="text-gray-600">{t("itemsTotal")}</span>
-                                    <span className="font-medium">
+                                <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                                    <span className="text-gray-600 font-medium">{t("itemsTotal")}</span>
+                                    <span className="font-bold text-gray-900">
                                         $
                                         {cartItems
                                             .reduce((sum, cartItem) => {
@@ -315,8 +315,8 @@ export const BookingSummary = ({
 
                     {/* Selected Hotel */}
                     {selectedHotel && (
-                        <div className="bg-blue-50 rounded-xl p-4 mb-6">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("selectedAccommodation")}</h3>
+                        <div className="bg-gray-50 rounded-xl p-5 mb-6 border border-gray-200">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4">{t("selectedAccommodation")}</h3>
                             <div className="flex items-start gap-3">
                                 <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                                     <img
@@ -325,28 +325,28 @@ export const BookingSummary = ({
                                         className="w-full h-full object-cover"
                                     />
                                 </div>                                <div className="flex-1">
-                                    <p className="font-medium text-gray-800">{mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.name}</p>
-                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <p className="font-bold text-gray-900">{mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.name}</p>
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
                                         <MapPin size={14} />
                                         <span>{mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.location?.name || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.location || "Location not specified"}</span>
                                     </div>
                                     {checkInDate && checkOutDate && (
-                                        <div className="text-sm text-gray-600 mt-1">
+                                        <div className="text-sm text-gray-600 mt-2">
                                             <p>Check-in: {checkInDate instanceof Date ? format(checkInDate, "MMM dd, yyyy") : "Invalid date"}</p>
                                             <p>Check-out: {checkOutDate instanceof Date ? format(checkOutDate, "MMM dd, yyyy") : "Invalid date"}</p>
-                                            <p className="font-medium">{calculateNights()} {calculateNights() === 1 ? "night" : "nights"}</p>
+                                            <p className="font-medium text-gray-900 mt-1">{calculateNights()} {calculateNights() === 1 ? "night" : "nights"}</p>
                                         </div>
                                     )}
-                                    <div className="flex items-center gap-1 mt-1">
+                                    <div className="flex items-center gap-1 mt-2">
                                         {[1, 2, 3, 4, 5].map((star) => (
-                                            <Star key={star} className={`w-3 h-3 ${star <= (mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.rating || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
+                                            <Star key={star} className={`w-3 h-3 ${star <= (mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.rating || 0) ? "fill-gray-900 text-gray-900" : "text-gray-300"}`} />
                                         ))}
-                                        <span className="text-xs ml-1 text-gray-500">
+                                        <span className="text-xs ml-1 text-gray-600 font-medium">
                                             {mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.rating}
                                         </span>
                                     </div>
                                 </div>
-                                <div className="font-medium text-blue-600 text-right">
+                                <div className="font-bold text-gray-900 text-right">
                                     <div>
                                         ${(mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.pricePerNight || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.price || 0) * calculateNights()}
                                         <span className="text-xs font-normal text-gray-500 block">total</span>
@@ -360,9 +360,9 @@ export const BookingSummary = ({
                     )}
 
                     {/* Payment Summary */}
-                    <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl p-6 text-white">
-                        <h3 className="text-lg font-semibold mb-4">{t("paymentSummary")}</h3>
-                        <div className="space-y-2 mb-4">
+                    <div className="bg-gray-900 rounded-xl p-6 text-white">
+                        <h3 className="text-xl font-bold mb-5">{t("paymentSummary")}</h3>
+                        <div className="space-y-3 mb-6">
                             <div className="flex justify-between items-center">
                                 <span>{t("adventure")}</span>
                                 <span>{t("included")}</span>
@@ -417,23 +417,23 @@ export const BookingSummary = ({
                             )}
                         </div>
 
-                        <Separator className="bg-white/20 my-4" />
+                        <Separator className="bg-gray-700 my-5" />
 
-                        <div className="flex justify-between items-center text-xl font-bold">
+                        <div className="flex justify-between items-center text-2xl font-bold">
                             <span>{t("total")}</span>
                             <span>${calculateTotal().toFixed(2)}</span>
-                        </div>                        
+                        </div>
                         <Button
                             onClick={() => { setSelectedPaymentMethod("revolut"); handleProceedToPayment("revolut"); }}
                             disabled={isBooking}
-                            className="w-full mt-6 bg-white text-blue-600 hover:bg-blue-50 disabled:opacity-50"
+                            className="w-full mt-6 bg-white text-gray-900 hover:bg-gray-100 disabled:opacity-50 font-bold py-6 text-base"
                         >
                             {isBooking && selectedPaymentMethod === "revolut" ? "Creating Booking..." : t("proceedToPayment")}
                         </Button>
                         <Button
                             onClick={() => { setSelectedPaymentMethod("paypal"); handleProceedToPayment("paypal"); }}
                             disabled={isBooking}
-                            className="w-full mt-2 bg-yellow-400 text-gray-800 hover:bg-yellow-300 disabled:opacity-50"
+                            className="w-full mt-3 bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50 font-bold py-6 text-base"
                         >
                             {isBooking && selectedPaymentMethod === "paypal" ? "Processing PayPal..." : "Pay with PayPal"}
                         </Button>
@@ -442,22 +442,22 @@ export const BookingSummary = ({
             </div>
 
             {showDeclaration && declaration && declaration.length > 0 && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 md:w-2/3 lg:w-1/2">
-                        <h2 className="text-xl font-bold text-gray-800 mb-4">{t("Declaration")}</h2>
-                        <div className="text-gray-600 mb-6 overflow-y-auto max-h-60">
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl p-8 w-11/12 md:w-2/3 lg:w-1/2 border border-gray-200">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-5">{t("Declaration")}</h2>
+                        <div className="text-gray-700 mb-6 overflow-y-auto max-h-60 leading-relaxed">
                             <p>{declaration[0].content}</p>
                         </div>
                         <div className="flex justify-end gap-4">
                             <button
                                 onClick={() => handleUserConsent(declaration[0]._id)}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 font-medium"
                             >
                                 {t("I Agree")}
                             </button>
                             <button
                                 onClick={() => setShowDeclaration(false)}
-                                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                className="px-6 py-3 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 font-medium"
                             >
                                 {t("Cancel")}
                             </button>

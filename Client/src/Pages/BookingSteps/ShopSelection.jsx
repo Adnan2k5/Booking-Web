@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Star, Plus, Minus, Calendar } from "lucide-react"
+import { Star, Plus, Minus, Calendar, ShoppingCart } from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog"
@@ -56,11 +56,11 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
     }
 
     return (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 shadow-xl mb-8 border border-blue-200">
-            <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">{t("shopItems")}</h2>
-                <p className="text-blue-600 font-medium bg-blue-100 px-4 py-2 rounded-full inline-block">
-                    🎒 Recommended items to have before continuing to your adventure
+        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg mb-8 border border-gray-200">
+            <div className="mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{t("shopItems")}</h2>
+                <p className="text-gray-600 leading-relaxed">
+                    {t("Recommended items to have before continuing to your adventure")}
                 </p>
             </div>
 
@@ -75,38 +75,41 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                     const isInCart = rentCartItem && rentCartItem.quantity > 0
                     return (
                         <motion.div key={item._id} variants={itemVariants}>
-                            <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg hover:scale-105 bg-white border-2 border-transparent hover:border-blue-200">
-                                <div className="relative h-48 overflow-hidden">
+                            <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-xl bg-white border-2 border-gray-200 hover:border-gray-400 group">
+                                <div className="relative h-56 overflow-hidden bg-gray-100">
                                     <img
                                         src={item.images[0] || "/placeholder.svg"}
                                         alt={item.name}
-                                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                     />
-                                    <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                                    <div className="absolute top-3 right-3 bg-gray-900 text-white px-3 py-1 rounded-full text-xs font-medium">
                                         For Rent
                                     </div>
                                 </div>
                                 <CardHeader className="pb-3">
-                                    <CardTitle className="text-lg font-bold text-gray-800 leading-tight">{item.name}</CardTitle>
+                                    <CardTitle className="text-xl font-bold text-gray-900 leading-tight">{item.name}</CardTitle>
                                 </CardHeader>
-                                <CardContent className="pb-4">
-                                    <div className="flex items-center gap-1 mb-3">
+                                <CardContent className="pb-5">
+                                    <div className="flex items-center gap-1 mb-4">
                                         {Array.from({ length: 5 }, (_, i) => (
                                             <Star
                                                 key={i}
-                                                className={`w-4 h-4 ${i < Math.floor(item.totalReviews || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                                                className={`w-4 h-4 ${i < Math.floor(item.totalReviews || 0)
+                                                        ? "fill-gray-900 text-gray-900"
+                                                        : "text-gray-300"
+                                                    }`}
                                             />
                                         ))}
-                                        <span className="text-sm ml-2 text-gray-600">({item.totalReviews})</span>
+                                        <span className="text-sm ml-2 text-gray-600 font-medium">({item.totalReviews})</span>
                                     </div>
-                                    <div className="mb-3">
-                                        <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                    <div className="mb-4">
+                                        <span className="inline-block bg-gray-100 text-gray-900 text-xs px-3 py-1.5 rounded-full font-medium border border-gray-200">
                                             {item.category}
                                         </span>
                                     </div>
-                                    <div className="flex flex-col gap-3">
-                                        <div className="text-center">
-                                            <span className="text-2xl font-bold text-blue-600">
+                                    <div className="flex flex-col gap-4">
+                                        <div className="text-center py-2 border-t border-gray-200">
+                                            <span className="text-3xl font-bold text-gray-900">
                                                 ${item.price}
                                             </span>
                                             <span className="text-sm text-gray-500 ml-1">/day</span>
@@ -115,7 +118,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                             {isInCart ? (
                                                 <Button
                                                     variant="outline"
-                                                    className="flex-1 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                                                    className="flex-1 bg-gray-50 border-gray-300 text-gray-900 hover:bg-gray-100 hover:border-gray-400 font-medium"
                                                     onClick={() => handleRentalClick(item)}
                                                 >
                                                     <Calendar size={16} className="mr-2" />
@@ -123,7 +126,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                                 </Button>
                                             ) : (
                                                 <Button
-                                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                                    className="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium"
                                                     onClick={() => handleRentalClick(item)}
                                                 >
                                                     <Calendar size={16} className="mr-2" />
@@ -142,16 +145,16 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
             {/* Cart Summary */}
             {cartItems.length > 0 && (
                 <motion.div
-                    className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200"
+                    className="mt-8 bg-gray-50 rounded-xl p-6 border border-gray-200"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                 >
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                            <span className="text-white text-sm">🛒</span>
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-gray-900 rounded-lg">
+                            <ShoppingCart className="text-white" size={20} />
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-800">{t("yourCart")}</h3>
+                        <h3 className="text-2xl font-bold text-gray-900">{t("yourCart")}</h3>
                     </div>
                     <div className="space-y-4">                        {cartItems.map((cartItem) => {
                         const item = mockItems.find((i) => i._id === cartItem._id)
@@ -167,10 +170,10 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                         return (
                             <div
                                 key={`${cartItem._id}-${cartItem.rent}`}
-                                className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm"
+                                className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-gray-200 shadow-sm"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-gray-200">
+                                    <div className="w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200">
                                         <img
                                             src={item?.images[0] || "/placeholder.svg"}
                                             alt={item?.name}
@@ -178,21 +181,21 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                         />
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-gray-800 text-lg">
+                                        <p className="font-bold text-gray-900 text-lg">
                                             {item?.name}
                                         </p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-sm bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                                        <div className="flex items-center gap-2 mt-1.5">
+                                            <span className="text-sm bg-gray-100 text-gray-900 px-2.5 py-1 rounded-full font-medium border border-gray-200">
                                                 Rental
                                             </span>
-                                            <span className="text-sm text-gray-600">
+                                            <span className="text-sm text-gray-600 font-medium">
                                                 Qty: {cartItem.quantity}
                                             </span>
                                         </div>
                                         {cartItem.rent && cartItem.startDate && cartItem.endDate && (
-                                            <p className="text-sm text-gray-600 mt-1">
-                                                📅 {new Date(cartItem.startDate).toLocaleDateString()} - {new Date(cartItem.endDate).toLocaleDateString()}
-                                                <span className="font-medium text-blue-600 ml-2">
+                                            <p className="text-sm text-gray-600 mt-2">
+                                                {new Date(cartItem.startDate).toLocaleDateString()} - {new Date(cartItem.endDate).toLocaleDateString()}
+                                                <span className="font-medium text-gray-900 ml-2">
                                                     ({Math.ceil((new Date(cartItem.endDate) - new Date(cartItem.startDate)) / (1000 * 60 * 60 * 24))} days)
                                                 </span>
                                             </p>
@@ -200,14 +203,14 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-xl font-bold text-blue-600">${totalPrice.toFixed(2)}</div>
-                                    <div className="text-sm text-gray-500">${price}/day</div>
+                                    <div className="text-2xl font-bold text-gray-900">${totalPrice.toFixed(2)}</div>
+                                    <div className="text-sm text-gray-500 font-medium">${price}/day</div>
                                 </div>
                             </div>
                         )
-                    })}                        <div className="pt-4 border-t-2 border-gray-200 flex justify-between items-center">
-                            <span className="text-xl font-bold text-gray-800">{t("cartTotal")}</span>
-                            <span className="text-2xl font-bold text-blue-600">
+                    })}                        <div className="pt-4 border-t-2 border-gray-300 flex justify-between items-center">
+                            <span className="text-2xl font-bold text-gray-900">{t("cartTotal")}</span>
+                            <span className="text-3xl font-bold text-gray-900">
                                 $
                                 {cartItems
                                     .reduce((sum, cartItem) => {
@@ -231,29 +234,29 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
 
             {/* Rental Date Selection Dialog */}
             <Dialog open={isRentalDialogOpen} onOpenChange={setIsRentalDialogOpen}>
-                <DialogContent className="sm:max-w-[500px]">
+                <DialogContent className="sm:max-w-[550px] bg-white rounded-xl border border-gray-200">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-xl">
-                            <Calendar className="w-6 h-6 text-blue-600" />
+                        <DialogTitle className="flex items-center gap-2.5 text-2xl font-bold text-gray-900">
+                            <Calendar className="w-6 h-6 text-gray-900" />
                             Select Rental Period
                         </DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-6 py-4">
                         {selectedRentalItem && (
-                            <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
                                 <img
                                     src={selectedRentalItem.images[0] || "/placeholder.svg"}
                                     alt={selectedRentalItem.name}
-                                    className="w-16 h-16 object-cover rounded-lg border-2 border-white shadow-sm"
+                                    className="w-20 h-20 object-cover rounded-lg border-2 border-white shadow-sm"
                                 />
                                 <div>
-                                    <h4 className="font-semibold text-lg text-gray-800">{selectedRentalItem.name}</h4>
-                                    <p className="text-blue-600 font-bold text-lg">${selectedRentalItem.price}/day</p>
+                                    <h4 className="font-bold text-lg text-gray-900">{selectedRentalItem.name}</h4>
+                                    <p className="text-gray-900 font-bold text-xl">${selectedRentalItem.price}/day</p>
                                 </div>
                             </div>
                         )}
                         <div className="space-y-3">
-                            <label className="text-sm font-semibold text-gray-700 block">Choose your rental dates:</label>
+                            <label className="text-sm font-bold text-gray-900 block">Choose your rental dates:</label>
                             <DateRangePicker
                                 startDate={rentalStartDate}
                                 endDate={rentalEndDate}
@@ -265,22 +268,22 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                         </div>
 
                         {rentalStartDate && rentalEndDate && (
-                            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                <h5 className="font-semibold text-gray-800 mb-3">Rental Summary</h5>
-                                <div className="space-y-2">
+                            <div className="p-5 bg-gray-50 rounded-lg border-2 border-gray-200">
+                                <h5 className="font-bold text-gray-900 mb-4 text-lg">Rental Summary</h5>
+                                <div className="space-y-3">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-gray-600">Duration:</span>
-                                        <span className="font-semibold">
+                                        <span className="text-gray-600 font-medium">Duration:</span>
+                                        <span className="font-bold text-gray-900">
                                             {Math.ceil((rentalEndDate - rentalStartDate) / (1000 * 60 * 60 * 24))} days
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <span className="text-gray-600">Daily Rate:</span>
-                                        <span className="font-semibold">${selectedRentalItem?.price || 0}</span>
+                                        <span className="text-gray-600 font-medium">Daily Rate:</span>
+                                        <span className="font-bold text-gray-900">${selectedRentalItem?.price || 0}</span>
                                     </div>
-                                    <div className="border-t pt-2 flex justify-between items-center">
-                                        <span className="text-lg font-semibold text-gray-800">Total Cost:</span>
-                                        <span className="text-xl font-bold text-blue-600">
+                                    <div className="border-t-2 border-gray-300 pt-3 flex justify-between items-center">
+                                        <span className="text-xl font-bold text-gray-900">Total Cost:</span>
+                                        <span className="text-2xl font-bold text-gray-900">
                                             ${((selectedRentalItem?.price || 0) * Math.ceil((rentalEndDate - rentalStartDate) / (1000 * 60 * 60 * 24))).toFixed(2)}
                                         </span>
                                     </div>
@@ -291,13 +294,13 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                         <div className="flex gap-3 justify-end pt-4">
                             <Button
                                 variant="outline"
-                                className="px-6"
+                                className="px-6 font-medium border-gray-300 text-gray-900 hover:bg-gray-100 hover:border-gray-400"
                                 onClick={() => setIsRentalDialogOpen(false)}
                             >
                                 Cancel
                             </Button>
                             <Button
-                                className="px-6 bg-blue-600 hover:bg-blue-700"
+                                className="px-6 bg-gray-900 hover:bg-gray-800 text-white font-medium"
                                 onClick={handleRentalDateConfirm}
                                 disabled={!rentalStartDate || !rentalEndDate}
                             >

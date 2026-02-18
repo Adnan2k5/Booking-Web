@@ -7,22 +7,29 @@ import {
 } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { translateObjectsFields, translateObjectFields } from "../utils/translation.js";
+import {
+  translateObjectsFields,
+  translateObjectFields,
+} from "../utils/translation.js";
 import { getLanguage } from "../middlewares/language.middleware.js";
 
 export const getAllAdventure = asyncHandler(async (req, res) => {
   const language = getLanguage(req);
-  
+
   const adventuresData = await Adventure.find().populate("location");
-  
+
   // Convert to plain objects
-  const plainAdventures = adventuresData.map(adventure => adventure.toJSON());
-  
+  const plainAdventures = adventuresData.map((adventure) => adventure.toJSON());
+
   let adventures;
   // Translate adventure names if language is not English
-  if (language !== 'en') {
-    const fieldsToTranslate = ['name'];
-    adventures = await translateObjectsFields(plainAdventures, fieldsToTranslate, language);
+  if (language !== "en") {
+    const fieldsToTranslate = ["name"];
+    adventures = await translateObjectsFields(
+      plainAdventures,
+      fieldsToTranslate,
+      language,
+    );
   } else {
     adventures = plainAdventures;
   }
@@ -52,7 +59,7 @@ export const createAdventure = asyncHandler(async (req, res) => {
     req.files.medias.map(async (image) => {
       const link = await uploadOnCloudinary(image.path);
       return link.url;
-    })
+    }),
   );
 
   let thumbnailUrl = "";
@@ -60,14 +67,14 @@ export const createAdventure = asyncHandler(async (req, res) => {
 
   if (req.files.thumbnail && req.files.thumbnail[0]) {
     const thumbnailUpload = await uploadOnCloudinary(
-      req.files.thumbnail[0].path
+      req.files.thumbnail[0].path,
     );
     thumbnailUrl = thumbnailUpload.url;
   }
 
   if (req.files.previewVideo && req.files.previewVideo[0]) {
     const previewVideoUpload = await uploadOnCloudinary(
-      req.files.previewVideo[0].path
+      req.files.previewVideo[0].path,
     );
     previewVideoUrl = previewVideoUpload.url;
   }
@@ -120,7 +127,7 @@ export const updateAdventure = asyncHandler(async (req, res) => {
       req.files.medias.map(async (image) => {
         const link = await uploadOnCloudinary(image.path);
         return link.url;
-      })
+      }),
     );
 
     const oldMediaUrl = adventure.medias;
@@ -129,7 +136,7 @@ export const updateAdventure = asyncHandler(async (req, res) => {
     await Promise.all(
       oldMediaUrl.map(async (url) => {
         await deleteFromCloudinary(url);
-      })
+      }),
     );
 
     adventure.medias = mediasUrl;
@@ -171,7 +178,7 @@ export const deleteAdventure = asyncHandler(async (req, res) => {
   await Promise.all(
     medias.map(async (url) => {
       await deleteFromCloudinary(url);
-    })
+    }),
   );
 
   await Adventure.deleteOne({ _id: id });
@@ -197,12 +204,16 @@ export const getAdventure = asyncHandler(async (req, res) => {
 
   // Convert to plain object
   const plainAdventure = adventureData.toJSON();
-  
+
   let adventure;
   // Translate adventure name if language is not English
-  if (language !== 'en') {
-    const fieldsToTranslate = ['name'];
-    adventure = await translateObjectFields(plainAdventure, fieldsToTranslate, language);
+  if (language !== "en") {
+    const fieldsToTranslate = ["name"];
+    adventure = await translateObjectFields(
+      plainAdventure,
+      fieldsToTranslate,
+      language,
+    );
   } else {
     adventure = plainAdventure;
   }
@@ -212,21 +223,25 @@ export const getAdventure = asyncHandler(async (req, res) => {
 
 export const getInstructorAdventures = asyncHandler(async (req, res) => {
   const language = getLanguage(req);
-  
+
   const adventuresData = await Adventure.find({ instructor: req.user._id });
-  
+
   // Convert to plain objects
-  const plainAdventures = adventuresData.map(adventure => adventure.toJSON());
-  
+  const plainAdventures = adventuresData.map((adventure) => adventure.toJSON());
+
   let adventures;
   // Translate adventure names if language is not English
-  if (language !== 'en') {
-    const fieldsToTranslate = ['name'];
-    adventures = await translateObjectsFields(plainAdventures, fieldsToTranslate, language);
+  if (language !== "en") {
+    const fieldsToTranslate = ["name"];
+    adventures = await translateObjectsFields(
+      plainAdventures,
+      fieldsToTranslate,
+      language,
+    );
   } else {
     adventures = plainAdventures;
   }
-  
+
   return res.status(200).json(adventures);
 });
 
@@ -234,14 +249,22 @@ export const getFilteredAdventures = asyncHandler(async (req, res) => {
   const { adventure, location, session_date } = req.query;
   const language = getLanguage(req);
 
-  const date = new Date(session_date);
-  const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-  const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+  let dateFilter = {};
 
-  // Step 1: Find sessions within the date range
-  let sessions = await Session.find({
-    startTime: { $gte: startOfDay, $lte: endOfDay },
-  })
+  // Only apply date filter if session_date is provided and valid
+  if (session_date && session_date.trim() !== "") {
+    const date = new Date(session_date);
+
+    // Check if the date is valid
+    if (!isNaN(date.getTime())) {
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+      dateFilter = { startTime: { $gte: startOfDay, $lte: endOfDay } };
+    }
+  }
+
+  // Step 1: Find sessions with or without date filter
+  let sessions = await Session.find(dateFilter)
     .populate({
       path: "adventureId",
       match: adventure ? { name: { $regex: adventure, $options: "i" } } : {}, // filter here
@@ -253,7 +276,7 @@ export const getFilteredAdventures = asyncHandler(async (req, res) => {
 
   // Step 2: Filter out sessions where populate returned null
   sessions = sessions.filter(
-    (session) => session.adventureId && session.location
+    (session) => session.adventureId && session.location,
   );
 
   // Step 3: Extract unique adventure IDs
@@ -268,13 +291,17 @@ export const getFilteredAdventures = asyncHandler(async (req, res) => {
   }).populate("location");
 
   // Convert to plain objects
-  const plainAdventures = adventuresData.map(adventure => adventure.toJSON());
-  
+  const plainAdventures = adventuresData.map((adventure) => adventure.toJSON());
+
   let adventures;
   // Translate adventure names if language is not English
-  if (language !== 'en') {
-    const fieldsToTranslate = ['name'];
-    adventures = await translateObjectsFields(plainAdventures, fieldsToTranslate, language);
+  if (language !== "en") {
+    const fieldsToTranslate = ["name"];
+    adventures = await translateObjectsFields(
+      plainAdventures,
+      fieldsToTranslate,
+      language,
+    );
   } else {
     adventures = plainAdventures;
   }
