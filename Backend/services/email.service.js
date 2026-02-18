@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 class EmailService {
   constructor() {
@@ -9,6 +9,9 @@ class EmailService {
       auth: {
         user: process.env.EMAIL_USER || process.env.SMTP_EMAIL,
         pass: process.env.EMAIL_PASSWORD || process.env.SMTP_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false, // Allow connections from cloud servers
       },
     });
   }
@@ -24,18 +27,19 @@ class EmailService {
   async sendEmail({ to, subject, html, text }) {
     try {
       const mailOptions = {
-        from: process.env.EMAIL_FROM || '"Booking Platform" <noreply@booking.com>',
-        to: Array.isArray(to) ? to.join(', ') : to,
+        from:
+          process.env.EMAIL_FROM || '"Booking Platform" <noreply@booking.com>',
+        to: Array.isArray(to) ? to.join(", ") : to,
         subject,
         html,
-        text: text || html.replace(/<[^>]*>/g, ''), // Strip HTML for text version
+        text: text || html.replace(/<[^>]*>/g, ""), // Strip HTML for text version
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Email sent successfully:', info.messageId);
+      console.log("✅ Email sent successfully:", info.messageId);
       return { success: true, messageId: info.messageId };
     } catch (error) {
-      console.error('❌ Email sending failed:', error);
+      console.error("❌ Email sending failed:", error);
       return { success: false, error: error.message };
     }
   }
@@ -98,11 +102,15 @@ class EmailService {
                 <div class="detail-row">
                   <span class="label">Guests:</span> ${booking.guests}
                 </div>
-                ${booking.specialRequests ? `
+                ${
+                  booking.specialRequests
+                    ? `
                 <div class="detail-row">
                   <span class="label">Special Requests:</span> ${booking.specialRequests}
                 </div>
-                ` : ''}
+                `
+                    : ""
+                }
                 <div class="detail-row">
                   <span class="label">Total Amount:</span> £${booking.amount.toFixed(2)}
                 </div>
@@ -121,7 +129,11 @@ class EmailService {
         </html>
       `;
 
-      await this.sendEmail({ to: userEmail, subject: userSubject, html: userHtml });
+      await this.sendEmail({
+        to: userEmail,
+        subject: userSubject,
+        html: userHtml,
+      });
 
       // Email to hotel owner
       if (hotelOwnerEmail) {
@@ -157,7 +169,7 @@ class EmailService {
                     <span class="label">Email:</span> ${booking.user.email}
                   </div>
                   <div class="detail-row">
-                    <span class="label">Phone:</span> ${booking.user.phoneNumber || 'N/A'}
+                    <span class="label">Phone:</span> ${booking.user.phoneNumber || "N/A"}
                   </div>
                   <div class="detail-row">
                     <span class="label">Check-in:</span> ${new Date(booking.checkInDate).toLocaleDateString()}
@@ -171,11 +183,15 @@ class EmailService {
                   <div class="detail-row">
                     <span class="label">Guests:</span> ${booking.guests}
                   </div>
-                  ${booking.specialRequests ? `
+                  ${
+                    booking.specialRequests
+                      ? `
                   <div class="detail-row">
                     <span class="label">Special Requests:</span> ${booking.specialRequests}
                   </div>
-                  ` : ''}
+                  `
+                      : ""
+                  }
                   <div class="detail-row">
                     <span class="label">Amount:</span> £${booking.amount.toFixed(2)}
                   </div>
@@ -186,12 +202,16 @@ class EmailService {
           </html>
         `;
 
-        await this.sendEmail({ to: hotelOwnerEmail, subject: ownerSubject, html: ownerHtml });
+        await this.sendEmail({
+          to: hotelOwnerEmail,
+          subject: ownerSubject,
+          html: ownerHtml,
+        });
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Error sending hotel booking confirmation:', error);
+      console.error("Error sending hotel booking confirmation:", error);
       return { success: false, error: error.message };
     }
   }
@@ -274,13 +294,20 @@ class EmailService {
         </html>
       `;
 
-      await this.sendEmail({ to: userEmail, subject: userSubject, html: userHtml });
+      await this.sendEmail({
+        to: userEmail,
+        subject: userSubject,
+        html: userHtml,
+      });
 
       // Email to instructors
-      if (booking.adventureInstructors && booking.adventureInstructors.length > 0) {
+      if (
+        booking.adventureInstructors &&
+        booking.adventureInstructors.length > 0
+      ) {
         const instructorEmails = booking.adventureInstructors
-          .map(ai => ai.instructor?.email)
-          .filter(email => email);
+          .map((ai) => ai.instructor?.email)
+          .filter((email) => email);
 
         if (instructorEmails.length > 0) {
           const instructorSubject = `New Event Booking - ${booking.event.title}`;
@@ -333,13 +360,17 @@ class EmailService {
             </html>
           `;
 
-          await this.sendEmail({ to: instructorEmails, subject: instructorSubject, html: instructorHtml });
+          await this.sendEmail({
+            to: instructorEmails,
+            subject: instructorSubject,
+            html: instructorHtml,
+          });
         }
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Error sending event booking confirmation:', error);
+      console.error("Error sending event booking confirmation:", error);
       return { success: false, error: error.message };
     }
   }
@@ -354,7 +385,7 @@ class EmailService {
       const instructorEmail = booking.session?.instructorId?.email;
 
       // Email to user
-      const userSubject = `Session Booking Confirmation - ${booking.session?.adventureId?.name || 'Adventure Session'}`;
+      const userSubject = `Session Booking Confirmation - ${booking.session?.adventureId?.name || "Adventure Session"}`;
       const userHtml = `
         <!DOCTYPE html>
         <html>
@@ -384,29 +415,41 @@ class EmailService {
                 <div class="detail-row">
                   <span class="label">Booking ID:</span> ${booking._id}
                 </div>
-                ${booking.session?.adventureId?.name ? `
+                ${
+                  booking.session?.adventureId?.name
+                    ? `
                 <div class="detail-row">
                   <span class="label">Adventure:</span> ${booking.session.adventureId.name}
                 </div>
-                ` : ''}
+                `
+                    : ""
+                }
                 <div class="detail-row">
                   <span class="label">Session Date:</span> ${new Date(booking.session?.startTime).toLocaleDateString()}
                 </div>
                   <div class="detail-row">
-                    <span class="label">Start Time:</span> ${booking.session?.startTime ? new Date(booking.session.startTime).toLocaleTimeString() : 'N/A'}
+                    <span class="label">Start Time:</span> ${booking.session?.startTime ? new Date(booking.session.startTime).toLocaleTimeString() : "N/A"}
                   </div>
-                ${booking.session?.instructorId?.name ? `
+                ${
+                  booking.session?.instructorId?.name
+                    ? `
                 <div class="detail-row">
                   <span class="label">Instructor:</span> ${booking.session.instructorId.name}
                 </div>
-                ` : ''}
-                ${booking.session?.location ? `
+                `
+                    : ""
+                }
+                ${
+                  booking.session?.location
+                    ? `
                 <div class="detail-row">
-                  <span class="label">Location:</span> ${booking.session.location.name || 'TBD'}
+                  <span class="label">Location:</span> ${booking.session.location.name || "TBD"}
                 </div>
-                ` : ''}
+                `
+                    : ""
+                }
                 <div class="detail-row">
-                  <span class="label">Total Amount:</span> £${(booking.session.price * (booking.groupMember ? (booking.groupMember.length + 1) : 1)).toFixed(2)}
+                  <span class="label">Total Amount:</span> £${(booking.session.price * (booking.groupMember ? booking.groupMember.length + 1 : 1)).toFixed(2)}
                 </div>
                 <div class="detail-row">
                   <span class="label">Payment Status:</span> ✅ Completed
@@ -422,11 +465,15 @@ class EmailService {
         </body>
         </html>
       `;
-      await this.sendEmail({ to: userEmail, subject: userSubject, html: userHtml });
+      await this.sendEmail({
+        to: userEmail,
+        subject: userSubject,
+        html: userHtml,
+      });
 
       // Email to instructor
       if (instructorEmail) {
-        const instructorSubject = `New Session Booking - ${booking.session?.adventureId?.name || 'Adventure'}`;
+        const instructorSubject = `New Session Booking - ${booking.session?.adventureId?.name || "Adventure"}`;
         const instructorHtml = `
           <!DOCTYPE html>
           <html>
@@ -458,7 +505,7 @@ class EmailService {
                     <span class="label">Email:</span> ${booking.user.email}
                   </div>
                   <div class="detail-row">
-                    <span class="label">Phone:</span> ${booking.user.phoneNumber || 'N/A'}
+                    <span class="label">Phone:</span> ${booking.user.phoneNumber || "N/A"}
                   </div>
                   <div class="detail-row">
                     <span class="label">Session Date:</span> ${new Date(booking.session?.startTime).toLocaleDateString()}
@@ -466,11 +513,15 @@ class EmailService {
                   <div class="detail-row">
                     <span class="label">Start Time:</span> ${new Date(booking.session?.startTime).toLocaleTimeString()}
                   </div>
-                  ${booking.groupMember && booking.groupMember.length > 0 ? `
+                  ${
+                    booking.groupMember && booking.groupMember.length > 0
+                      ? `
                   <div class="detail-row">
                     <span class="label">Group Size:</span> ${booking.groupMember.length + 1} people
                   </div>
-                  ` : ''}
+                  `
+                      : ""
+                  }
                 </div>
               </div>
             </div>
@@ -478,12 +529,16 @@ class EmailService {
           </html>
         `;
 
-        await this.sendEmail({ to: instructorEmail, subject: instructorSubject, html: instructorHtml });
+        await this.sendEmail({
+          to: instructorEmail,
+          subject: instructorSubject,
+          html: instructorHtml,
+        });
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Error sending session booking confirmation:', error);
+      console.error("Error sending session booking confirmation:", error);
       return { success: false, error: error.message };
     }
   }
@@ -497,20 +552,22 @@ class EmailService {
       const userEmail = booking.user.email;
 
       // Email to user
-      const itemsList = booking.items.map(item => {
-        const itemName = item.item?.name || 'Item';
-        const quantity = item.quantity;
-        const isPurchase = item.purchase;
-        const rentalPeriod = item.rentalPeriod;
+      const itemsList = booking.items
+        .map((item) => {
+          const itemName = item.item?.name || "Item";
+          const quantity = item.quantity;
+          const isPurchase = item.purchase;
+          const rentalPeriod = item.rentalPeriod;
 
-        let details = `${itemName} (Qty: ${quantity})`;
-        if (isPurchase) {
-          details += ' - Purchase';
-        } else if (rentalPeriod) {
-          details += ` - Rental: ${new Date(rentalPeriod.startDate).toLocaleDateString()} to ${new Date(rentalPeriod.endDate).toLocaleDateString()}`;
-        }
-        return details;
-      }).join('<br>');
+          let details = `${itemName} (Qty: ${quantity})`;
+          if (isPurchase) {
+            details += " - Purchase";
+          } else if (rentalPeriod) {
+            details += ` - Rental: ${new Date(rentalPeriod.startDate).toLocaleDateString()} to ${new Date(rentalPeriod.endDate).toLocaleDateString()}`;
+          }
+          return details;
+        })
+        .join("<br>");
 
       const userSubject = `Item Booking Confirmation`;
       const userHtml = `
@@ -566,18 +623,22 @@ class EmailService {
         </html>
       `;
 
-      await this.sendEmail({ to: userEmail, subject: userSubject, html: userHtml });
+      await this.sendEmail({
+        to: userEmail,
+        subject: userSubject,
+        html: userHtml,
+      });
 
       // Email to item owners (if owner field exists)
       const uniqueOwners = new Map();
-      booking.items.forEach(item => {
+      booking.items.forEach((item) => {
         if (item.item?.owner?.email) {
           const ownerEmail = item.item.owner.email;
           if (!uniqueOwners.has(ownerEmail)) {
             uniqueOwners.set(ownerEmail, {
               email: ownerEmail,
               name: item.item.owner.name,
-              items: []
+              items: [],
             });
           }
           uniqueOwners.get(ownerEmail).items.push(item);
@@ -585,20 +646,22 @@ class EmailService {
       });
 
       for (const [email, ownerData] of uniqueOwners) {
-        const ownerItemsList = ownerData.items.map(item => {
-          const itemName = item.item?.name || 'Item';
-          const quantity = item.quantity;
-          const isPurchase = item.purchase;
-          const rentalPeriod = item.rentalPeriod;
+        const ownerItemsList = ownerData.items
+          .map((item) => {
+            const itemName = item.item?.name || "Item";
+            const quantity = item.quantity;
+            const isPurchase = item.purchase;
+            const rentalPeriod = item.rentalPeriod;
 
-          let details = `${itemName} (Qty: ${quantity})`;
-          if (isPurchase) {
-            details += ' - Purchase';
-          } else if (rentalPeriod) {
-            details += ` - Rental: ${new Date(rentalPeriod.startDate).toLocaleDateString()} to ${new Date(rentalPeriod.endDate).toLocaleDateString()}`;
-          }
-          return details;
-        }).join('<br>');
+            let details = `${itemName} (Qty: ${quantity})`;
+            if (isPurchase) {
+              details += " - Purchase";
+            } else if (rentalPeriod) {
+              details += ` - Rental: ${new Date(rentalPeriod.startDate).toLocaleDateString()} to ${new Date(rentalPeriod.endDate).toLocaleDateString()}`;
+            }
+            return details;
+          })
+          .join("<br>");
 
         const ownerSubject = `New Item Booking Received`;
         const ownerHtml = `
@@ -632,7 +695,7 @@ class EmailService {
                     <span class="label">Email:</span> ${booking.user.email}
                   </div>
                   <div class="detail-row">
-                    <span class="label">Phone:</span> ${booking.user.phoneNumber || 'N/A'}
+                    <span class="label">Phone:</span> ${booking.user.phoneNumber || "N/A"}
                   </div>
                   <div class="detail-row">
                     <span class="label">Items Booked:</span><br>${ownerItemsList}
@@ -649,12 +712,16 @@ class EmailService {
           </html>
         `;
 
-        await this.sendEmail({ to: email, subject: ownerSubject, html: ownerHtml });
+        await this.sendEmail({
+          to: email,
+          subject: ownerSubject,
+          html: ownerHtml,
+        });
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Error sending item booking confirmation:', error);
+      console.error("Error sending item booking confirmation:", error);
       return { success: false, error: error.message };
     }
   }
