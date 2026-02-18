@@ -277,19 +277,18 @@ const InstructorDashboard = () => {
             return
         }
 
+        const adventureId = user?.user?.instructor?.adventure?._id || user?.user?.instructor?.adventure
 
-        // Check if the user has instructor data and adventure ID
-        if (user?.user?.instructor?.adventure) {
-            getAdventure(user.user.instructor.adventure).then((res) => {
-                setAdventureTypes(res.data)
+        if (adventureId) {
+            getAdventure(adventureId).then((res) => {
+                if (res?.data) {
+                    setAdventureTypes(res.data)
+                }
             }).catch((err) => {
-                toast.error("Failed to load adventure data")
-            });
-        } else {
-            toast.error("No adventure ID found for instructor")
+                console.error("Failed to load adventure data:", err)
+            })
         }
 
-        // Fetch real dashboard data instead of just upcoming sessions
         fetchDashboardData()
         fetchUpcomingSessions()
         fetchInstructorAchievements()
