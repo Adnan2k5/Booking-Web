@@ -250,9 +250,13 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
     const [selectedSession, setSelectedSession] = useState(null)
 
     const instructorId = user?.user?._id
-    const instructorAdventureId = user?.user?.instructor?.adventure?._id || user?.user?.instructor?.adventure
-    const instructorLocationId = user?.user?.instructor?.location?._id
-    const instructorLocationName = user?.user?.instructor?.location?.name
+    const instructorAdventure = user?.user?.instructor?.adventure
+    const instructorAdventureId = typeof instructorAdventure === 'object' ? instructorAdventure?._id : instructorAdventure
+    const instructorAdventureName = typeof instructorAdventure === 'object' ? instructorAdventure?.name : null
+
+    const instructorLocation = user?.user?.instructor?.location
+    const instructorLocationId = typeof instructorLocation === 'object' ? instructorLocation?._id : instructorLocation
+    const instructorLocationName = typeof instructorLocation === 'object' ? instructorLocation?.name : null
 
     const { sessions, refetch: refetchSessions } = useSessions(instructorId)
     const { currentMonth, currentYear, daysInMonth, firstDayOfMonth } = useCalendar(currentDate)
@@ -629,9 +633,9 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                         <SelectValue placeholder="Select adventure" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {adventureTypes?._id && (
-                                            <SelectItem value={adventureTypes._id}>
-                                                {adventureTypes.name || "Adventure"}
+                                        {(adventureTypes?._id || instructorAdventureId) && (
+                                            <SelectItem value={adventureTypes?._id || instructorAdventureId}>
+                                                {adventureTypes?.name || instructorAdventureName || "Adventure"}
                                             </SelectItem>
                                         )}
                                     </SelectContent>
@@ -654,9 +658,9 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                                 </SelectItem>
                                             ))
                                         ) : (
-                                            instructorLocationName && instructorLocationId && (
+                                            instructorLocationId && (
                                                 <SelectItem value={instructorLocationId}>
-                                                    {instructorLocationName}
+                                                    {instructorLocationName || "Location"}
                                                 </SelectItem>
                                             )
                                         )}
@@ -839,9 +843,9 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                         <SelectValue placeholder="Select adventure" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {adventureTypes?._id && (
-                                            <SelectItem value={adventureTypes._id}>
-                                                {adventureTypes.name || "Adventure"}
+                                        {(adventureTypes?._id || instructorAdventureId) && (
+                                            <SelectItem value={adventureTypes?._id || instructorAdventureId}>
+                                                {adventureTypes?.name || instructorAdventureName || "Adventure"}
                                             </SelectItem>
                                         )}
                                     </SelectContent>
@@ -864,9 +868,9 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                                 </SelectItem>
                                             ))
                                         ) : (
-                                            instructorLocationName && instructorLocationId && (
+                                            instructorLocationId && (
                                                 <SelectItem value={instructorLocationId}>
-                                                    {instructorLocationName}
+                                                    {instructorLocationName || "Location"}
                                                 </SelectItem>
                                             )
                                         )}
