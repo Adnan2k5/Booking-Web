@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Smile, Send, ImageIcon, X, Paperclip } from "lucide-react"
+import { Smile, Send, Paperclip, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 export default function MessageInput({ onSendMessage }) {
@@ -10,7 +10,6 @@ export default function MessageInput({ onSendMessage }) {
     const [attachments, setAttachments] = useState([])
     const fileInputRef = useRef(null)
 
-    // Convert file to base64
     const fileToBase64 = (file) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader()
@@ -20,29 +19,24 @@ export default function MessageInput({ onSendMessage }) {
         })
     }
 
-    // Handle message submission
     const handleSubmit = async (e) => {
         e.preventDefault()
         if (message.trim() || attachments.length > 0) {
-            // Process any attachments to include base64 data
             const processedAttachments = await Promise.all(
                 attachments.map(async (attachment) => {
                     const base64Data = await fileToBase64(attachment.file)
                     return base64Data
                 }),
             )
-            // Send message with processed attachments
             onSendMessage(message, processedAttachments)
             setMessage("")
             setAttachments([])
         }
     }
 
-    // Handle file selection
     const handleFileSelect = (e) => {
         const files = Array.from(e.target.files)
         if (files.length > 0) {
-            // Convert files to attachments with preview URLs
             const newAttachments = files.map((file) => ({
                 id: Math.random().toString(36).substr(2, 9),
                 name: file.name,
@@ -54,19 +48,16 @@ export default function MessageInput({ onSendMessage }) {
         }
     }
 
-    // Remove an attachment
     const removeAttachment = (id) => {
         setAttachments(attachments.filter((attachment) => attachment.id !== id))
     }
 
-    // Basic emoji picker options
     const emojiOptions = ["😊", "👍", "❤️", "🙏", "😂", "🎉", "👋", "🤔", "👌", "🔥"]
 
     return (
         <div className="message-input-container">
-            {/* Attachments Preview */}
             {attachments.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-3 p-2 bg-white/50 backdrop-blur-sm rounded-lg border border-gray-100">
+                <div className="flex flex-wrap gap-2 mb-2 p-2 bg-neutral-50 rounded-lg border border-black/10">
                     <AnimatePresence>
                         {attachments.map((attachment) => (
                             <motion.div
@@ -78,7 +69,7 @@ export default function MessageInput({ onSendMessage }) {
                                 transition={{ duration: 0.2 }}
                             >
                                 {attachment.type.startsWith("image/") ? (
-                                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+                                    <div className="w-14 h-14 rounded-lg overflow-hidden border border-black/10">
                                         <img
                                             src={attachment.url}
                                             alt={attachment.name}
@@ -86,18 +77,18 @@ export default function MessageInput({ onSendMessage }) {
                                         />
                                     </div>
                                 ) : (
-                                    <div className="w-16 h-16 rounded-lg flex flex-col items-center justify-center text-center p-1 border border-gray-200 bg-gray-50 shadow-sm">
-                                        <div className="text-2xl">📄</div>
-                                        <div className="text-[8px] text-gray-500 truncate w-full">
+                                    <div className="w-14 h-14 rounded-lg flex flex-col items-center justify-center text-center p-1 border border-black/10 bg-white">
+                                        <div className="text-xl">📄</div>
+                                        <div className="text-[8px] text-neutral-500 truncate w-full">
                                             {attachment.name}
                                         </div>
                                     </div>
                                 )}
                                 <button
                                     onClick={() => removeAttachment(attachment.id)}
-                                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 w-5 h-5 flex items-center justify-center border border-white shadow-sm hover:bg-red-600 transition-colors"
+                                    className="absolute -top-1 -right-1 bg-black text-white rounded-full p-0.5 w-4 h-4 flex items-center justify-center hover:bg-neutral-800 transition-colors"
                                 >
-                                    <X size={12} />
+                                    <X size={10} />
                                 </button>
                             </motion.div>
                         ))}
@@ -105,29 +96,28 @@ export default function MessageInput({ onSendMessage }) {
                 </div>
             )}
 
-            {/* Message Input Form */}
             <form onSubmit={handleSubmit} className="flex items-center gap-2">
                 <div className="relative flex-1">
                     <input
                         type="text"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        placeholder="Type a message..."
-                        className="w-full py-2.5 pl-10 pr-12 rounded-full border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all bg-gray-50"
+                        placeholder="Message..."
+                        className="w-full py-2 pl-10 pr-10 rounded-full border border-black/10 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all bg-white text-sm"
                     />
 
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
                         <button
                             type="button"
                             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+                            className="text-black hover:text-neutral-600 transition-colors p-1 rounded-full hover:bg-neutral-50"
                         >
                             <Smile size={18} />
                         </button>
                     </div>
 
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <label className="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100">
+                        <label className="cursor-pointer text-black hover:text-neutral-600 transition-colors p-1 rounded-full hover:bg-neutral-50">
                             <Paperclip size={18} />
                             <input
                                 type="file"
@@ -144,11 +134,11 @@ export default function MessageInput({ onSendMessage }) {
                     type="submit"
                     disabled={!message.trim() && attachments.length === 0}
                     className={`
-                        p-2.5 rounded-full shadow-sm flex items-center justify-center 
+                        p-2 rounded-full flex items-center justify-center 
                         transition-all duration-200
                         ${message.trim() || attachments.length > 0
-                            ? "bg-black text-white"
-                            : "bg-gray-100 text-gray-400"
+                            ? "bg-black text-white hover:bg-neutral-800"
+                            : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
                         }
                     `}
                 >
@@ -156,10 +146,9 @@ export default function MessageInput({ onSendMessage }) {
                 </button>
             </form>
 
-            {/* Emoji Picker */}
             {showEmojiPicker && (
                 <motion.div
-                    className="absolute bottom-16 left-4 bg-white p-2 rounded-lg shadow-lg border border-gray-200 flex flex-wrap gap-1 max-w-xs"
+                    className="absolute bottom-14 left-4 bg-white p-2 rounded-lg border border-black/10 flex flex-wrap gap-1 max-w-xs z-10"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
@@ -172,7 +161,7 @@ export default function MessageInput({ onSendMessage }) {
                                 setMessage(message + emoji)
                                 setShowEmojiPicker(false)
                             }}
-                            className="w-8 h-8 text-xl hover:bg-gray-100 rounded transition-colors flex items-center justify-center"
+                            className="w-8 h-8 text-xl hover:bg-neutral-50 rounded transition-colors flex items-center justify-center"
                         >
                             {emoji}
                         </button>

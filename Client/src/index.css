@@ -3,7 +3,7 @@
 @custom-variant dark (&:is(.dark *));
 
 .glow {
-  box-shadow: 0 0 80px 20px rgb(76 29 149 / 0.1);
+  box-shadow: 0 0 80px 20px rgb(255 140 0 / 0.1);
 }
 
 .bg-grid {

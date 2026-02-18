@@ -17,13 +17,42 @@ axiosClient.interceptors.request.use(
 
     // Add authorization token if available
     const token = localStorage.getItem('accessToken');
-    if (token) {
+    // Only add token if it exists and is not 'null' or 'undefined' string
+    if (
+      token &&
+      token !== 'null' &&
+      token !== 'undefined' &&
+      token.trim() !== ''
+    ) {
       configWithLang.headers.Authorization = `Bearer ${token}`;
     }
 
     return configWithLang;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle token errors
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // If token is invalid or expired, clear it from localStorage
+    if (error.response?.status === 401) {
+      const errorMessage = error.response?.data?.message?.toLowerCase() || '';
+      if (
+        errorMessage.includes('token') ||
+        errorMessage.includes('unauthorized')
+      ) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        // Only redirect if not already on login page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+      }
+    }
     return Promise.reject(error);
   }
 );

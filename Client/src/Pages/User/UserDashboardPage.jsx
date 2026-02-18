@@ -238,63 +238,60 @@ export default function UserDashboardPage() {
 
     return (
         <UserLayout onOpenChat={() => setChatOpen(true)}>
-            <div className="min-h-screen p-4 sm:p-6">
+            <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
                 <div className="max-w-7xl mx-auto">
-                    {/* Header */}
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
                         <div>
-                            <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-                            <p className="text-gray-600 text-lg">Welcome back, <span className="font-semibold text-gray-900">{userProfile.name}</span></p>
+                            <h1 className="text-3xl lg:text-4xl font-bold text-black tracking-tight mb-1">Dashboard</h1>
+                            <p className="text-sm text-neutral-600">Welcome back, <span className="font-medium text-black">{userProfile.name}</span></p>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            <Link to="/browse" className="flex px-5 py-2.5 text-white bg-gray-900 items-center gap-2 rounded-xl hover:bg-gray-800 transition-all duration-300 shadow-lg hover:shadow-xl font-medium">
+                        <div className="flex items-center gap-2">
+                            <Link to="/browse" className="flex px-4 py-2 text-white bg-black items-center gap-2 rounded-lg hover:bg-neutral-800 transition-colors duration-200 font-medium text-sm">
                                 <Calendar className="h-4 w-4" />
                                 Browse Adventures
                             </Link>
 
-                            <Link to="/shop" className="bg-white border-2 border-gray-900 px-5 py-2.5 text-gray-900 hover:bg-gray-50 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg font-medium">Shop</Link>
+                            <Link to="/shop" className="bg-white border border-black px-4 py-2 text-black hover:bg-black hover:text-white rounded-lg transition-colors duration-200 font-medium text-sm">Shop</Link>
                         </div>
                     </div>
 
-                    {/* User Stats Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                        {/* Level Card */}
-                        <Card className="rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                        <Card className="border border-black/10 hover:border-black/30 transition-colors duration-200 bg-white">
                             <CardHeader className="pb-3">
-                                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                    Overall Adventure Level
+                                <CardTitle className="text-sm font-semibold text-black flex items-center gap-2">
+                                    Overall Level
                                     <HintTooltip content="Your overall level based on total experience points earned across all adventures." />
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
-                                        <Avatar className="h-20 w-20 border-4 border-gray-200 shadow-lg">
-                                            <AvatarFallback className="bg-gray-900 text-white text-2xl font-bold">
+                                        <Avatar className="h-16 w-16 border-2 border-black">
+                                            <AvatarFallback className="bg-black text-white text-xl font-bold">
                                                 {userProfile.level}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <div className="absolute -bottom-1 -right-1 bg-yellow-400 rounded-full p-1.5 shadow-md">
-                                            <Award className="h-3 w-3 text-yellow-900" />
+                                        <div className="absolute -bottom-0.5 -right-0.5 bg-white border border-black rounded-full p-1">
+                                            <Award className="h-2.5 w-2.5 text-black" />
                                         </div>
                                     </div>
                                     <div className="flex-1">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="font-bold text-xl text-gray-900">Level {userProfile.level}</span>
-                                            <span className="text-sm text-gray-600 font-medium">
+                                        <div className="flex justify-between items-center mb-1.5">
+                                            <span className="font-bold text-lg text-black">Level {userProfile.level}</span>
+                                            <span className="text-xs text-neutral-600 font-medium">
                                                 {userProfile.experience}/{userProfile.nextLevel} XP
                                             </span>
                                         </div>
-                                        <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                                            <div className="h-full bg-gray-900 rounded-full transition-all duration-500"
+                                        <div className="w-full h-2 bg-neutral-200 rounded-full overflow-hidden">
+                                            <div className="h-full bg-black rounded-full transition-all duration-500"
                                                 style={{ width: `${progressPercentage}%` }}></div>
                                         </div>
-                                        <div className="flex justify-between mt-2">
-                                            <p className="text-xs text-gray-500">
+                                        <div className="flex justify-between mt-1.5">
+                                            <p className="text-xs text-neutral-500">
                                                 {userProfile.nextLevel - userProfile.experience} XP to next
                                             </p>
-                                            <p className="text-xs text-gray-500">
+                                            <p className="text-xs text-neutral-500">
                                                 {userProfile.adventureCount} adventures
                                             </p>
                                         </div>
@@ -303,24 +300,23 @@ export default function UserDashboardPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Completed Adventures */}
-                        <Card className="rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group hover:scale-105">
+                        <Card className="border border-black/10 hover:border-black/30 transition-colors duration-200 bg-white">
                             <CardHeader className="pb-3">
-                                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <CardTitle className="text-sm font-semibold text-black flex items-center gap-2">
                                     Completed Adventures
                                     <HintTooltip content="Total number of adventure sessions you have completed." />
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex items-center gap-4">
-                                    <div className="h-20 w-20 rounded-2xl bg-gray-100 flex items-center justify-center shadow-md">
-                                        <Award className="h-10 w-10 text-gray-900" />
+                                    <div className="h-16 w-16 rounded border border-black/10 bg-neutral-50 flex items-center justify-center">
+                                        <Award className="h-8 w-8 text-black" />
                                     </div>
                                     <div>
-                                        <p className="text-4xl font-bold text-gray-900">
+                                        <p className="text-3xl font-bold text-black">
                                             {loading ? "..." : error ? "0" : userProfile.completedAdventures}
                                         </p>
-                                        <p className="text-sm text-gray-600 font-medium">Adventures completed</p>
+                                        <p className="text-xs text-neutral-600 font-medium">Completed</p>
                                         {error && (
                                             <p className="text-xs text-red-500 mt-1">{error}</p>
                                         )}
@@ -329,24 +325,23 @@ export default function UserDashboardPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Upcoming Adventures */}
-                        <Card className="rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group hover:scale-105">
+                        <Card className="border border-black/10 hover:border-black/30 transition-colors duration-200 bg-white">
                             <CardHeader className="pb-3">
-                                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <CardTitle className="text-sm font-semibold text-black flex items-center gap-2">
                                     Upcoming Adventures
                                     <HintTooltip content="Number of adventure sessions you have scheduled for the future." />
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex items-center gap-4">
-                                    <div className="h-20 w-20 rounded-2xl bg-gray-100 flex items-center justify-center shadow-md">
-                                        <Calendar className="h-10 w-10 text-gray-900" />
+                                    <div className="h-16 w-16 rounded border border-black/10 bg-neutral-50 flex items-center justify-center">
+                                        <Calendar className="h-8 w-8 text-black" />
                                     </div>
                                     <div>
-                                        <p className="text-4xl font-bold text-gray-900">
+                                        <p className="text-3xl font-bold text-black">
                                             {loading ? "..." : error ? "0" : userProfile.upcomingAdventures}
                                         </p>
-                                        <p className="text-sm text-gray-600 font-medium">Adventures scheduled</p>
+                                        <p className="text-xs text-neutral-600 font-medium">Scheduled</p>
                                         {error && (
                                             <p className="text-xs text-red-500 mt-1">{error}</p>
                                         )}
@@ -358,9 +353,9 @@ export default function UserDashboardPage() {
 
                     <div className="stats">
                         <div className="lg:col-span-2">
-                            <Card className="rounded-2xl border-0 shadow-xl bg-white">
+                            <Card className="border border-black/10 bg-white">
                                 <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
+                                    <CardTitle className="flex items-center gap-2 text-base font-bold text-black">
                                         Level Overview
                                         <HintTooltip content="Your progression summary showing experience points, level, and achievements earned." />
                                     </CardTitle>
@@ -368,95 +363,93 @@ export default function UserDashboardPage() {
                                 <CardContent>
                                     <div className="space-y-6">
                                         <div>
-                                            <h4 className="font-medium mb-3">Overall Experience Progress</h4>
-                                            <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+                                            <h4 className="font-semibold mb-3 text-sm text-black">Overall Experience Progress</h4>
+                                            <div className="w-full h-2.5 bg-neutral-200 rounded-full overflow-hidden">
                                                 <div
-                                                    className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-500"
+                                                    className="h-full bg-black rounded-full transition-all duration-500"
                                                     style={{ width: `${progressPercentage}%` }}
                                                 ></div>
                                             </div>
-                                            <div className="flex justify-between mt-2 text-sm">
+                                            <div className="flex justify-between mt-2 text-xs text-neutral-600">
                                                 <span>{userProfile.experience} XP</span>
                                                 <span>{userProfile.nextLevel} XP (Next Level)</span>
                                             </div>
                                         </div>
 
-                                        <Separator />
+                                        <Separator className="bg-black/10" />
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="text-center p-4 bg-gray-50 rounded-xl">
+                                            <div className="text-center p-4 border border-black/10 bg-neutral-50 rounded">
                                                 <div className="flex items-center justify-center mb-2">
-                                                    <Award className="h-8 w-8 text-blue-500" />
+                                                    <Award className="h-6 w-6 text-black" />
                                                 </div>
-                                                <p className="text-2xl font-bold text-gray-900">{userProfile.level}</p>
-                                                <p className="text-sm text-gray-600">Overall Level</p>
+                                                <p className="text-2xl font-bold text-black">{userProfile.level}</p>
+                                                <p className="text-xs text-neutral-600">Overall Level</p>
                                             </div>
-                                            <div className="text-center p-4 bg-gray-50 rounded-xl">
+                                            <div className="text-center p-4 border border-black/10 bg-neutral-50 rounded">
                                                 <div className="flex items-center justify-center mb-2">
-                                                    <Target className="h-8 w-8 text-purple-500" />
+                                                    <Target className="h-6 w-6 text-black" />
                                                 </div>
-                                                <p className="text-2xl font-bold text-gray-900">{userProfile.adventureCount}</p>
-                                                <p className="text-sm text-gray-600">Adventures Tried</p>
+                                                <p className="text-2xl font-bold text-black">{userProfile.adventureCount}</p>
+                                                <p className="text-xs text-neutral-600">Adventures Tried</p>
                                             </div>
                                         </div>
 
-                                        <Separator />
+                                        <Separator className="bg-black/10" />
                                         <div className="flex items-center justify-between">
-                                            <h4 className="text-lg font-medium">Achievements</h4>
+                                            <h4 className="text-sm font-semibold text-black">Achievements</h4>
                                             <button
                                                 onClick={handleRefreshAchievements}
                                                 disabled={refreshing}
-                                                className="text-sm px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+                                                className="text-xs px-3 py-1.5 rounded border border-black text-black hover:bg-black hover:text-white disabled:opacity-50 transition-colors duration-200"
                                             >
                                                 {refreshing ? 'Refreshing...' : 'Refresh'}
                                             </button>
                                         </div>
 
-                                        {/* Backend achievements summary (badges and stats) */}
                                         {achievementsLoading ? (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                 {[1, 2, 3, 4].map(i => (
-                                                    <div key={i} className="h-14 bg-gray-200 rounded-xl animate-pulse" />
+                                                    <div key={i} className="h-14 bg-neutral-200 rounded animate-pulse" />
                                                 ))}
                                             </div>
                                         ) : userAchievements ? (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                                <div className="p-4 rounded-xl bg-gray-50">
-                                                    <div className="text-sm text-gray-600 flex items-center gap-2">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                                                <div className="p-4 rounded border border-black/10 bg-neutral-50">
+                                                    <div className="text-xs text-neutral-600 flex items-center gap-2">
                                                         Total Completed Adventures
                                                         <HintTooltip content="Total number of adventure sessions you have successfully completed." />
                                                     </div>
-                                                    <div className="text-2xl font-semibold text-gray-900">{userAchievements.totalCompletedAdventures || 0}</div>
+                                                    <div className="text-xl font-bold text-black">{userAchievements.totalCompletedAdventures || 0}</div>
                                                 </div>
-                                                <div className="p-4 rounded-xl bg-gray-50">
-                                                    <div className="text-sm text-gray-600 flex items-center gap-2">
+                                                <div className="p-4 rounded border border-black/10 bg-neutral-50">
+                                                    <div className="text-xs text-neutral-600 flex items-center gap-2">
                                                         Overall Level
                                                         <HintTooltip content="Your current level calculated from total experience points (100 XP per level)." />
                                                     </div>
-                                                    <div className="text-2xl font-semibold text-gray-900">{normalizedLevel}</div>
+                                                    <div className="text-xl font-bold text-black">{normalizedLevel}</div>
                                                 </div>
-                                                <div className="p-4 rounded-xl bg-gray-50">
-                                                    <div className="text-sm text-gray-600 flex items-center gap-2">
+                                                <div className="p-4 rounded border border-black/10 bg-neutral-50">
+                                                    <div className="text-xs text-neutral-600 flex items-center gap-2">
                                                         Total XP
                                                         <HintTooltip content="Total experience points earned across all your adventures." />
                                                     </div>
-                                                    <div className="text-2xl font-semibold text-gray-900">{totalXP}</div>
+                                                    <div className="text-xl font-bold text-black">{totalXP}</div>
                                                 </div>
-                                                <div className="p-4 rounded-xl bg-gray-50">
-                                                    <div className="text-sm text-gray-600 flex items-center gap-2">
+                                                <div className="p-4 rounded border border-black/10 bg-neutral-50">
+                                                    <div className="text-xs text-neutral-600 flex items-center gap-2">
                                                         Unique Categories
                                                         <HintTooltip content="Number of different adventure categories you have tried." />
                                                     </div>
-                                                    <div className="text-2xl font-semibold text-gray-900">{userAchievements?.adventureStats?.uniqueCategories || 0}</div>
+                                                    <div className="text-xl font-bold text-black">{userAchievements?.adventureStats?.uniqueCategories || 0}</div>
                                                 </div>
                                             </div>
                                         ) : null}
 
-                                        {/* Dynamic earned achievements from backend */}
                                         {userAchievements?.achievements?.length > 0 && (
                                             <div className="mb-8">
-                                                <h5 className="font-semibold mb-3">Your earned badges</h5>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <h5 className="font-semibold mb-3 text-sm text-black">Your earned badges</h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                     {Object.entries(
                                                         userAchievements.achievements.reduce((acc, a) => {
                                                             const cat = a.category || 'General';
@@ -465,16 +458,16 @@ export default function UserDashboardPage() {
                                                             return acc;
                                                         }, {})
                                                     ).map(([cat, list]) => (
-                                                        <div key={cat} className="p-4 rounded-xl bg-gray-50">
-                                                            <div className="font-medium text-gray-900 mb-2">{cat}</div>
+                                                        <div key={cat} className="p-4 rounded border border-black/10 bg-neutral-50">
+                                                            <div className="font-semibold text-black mb-2 text-sm">{cat}</div>
                                                             <div className="flex flex-col gap-2">
                                                                 {list.map((a, idx) => (
                                                                     <div key={idx} className="flex items-center gap-3">
-                                                                        <Award className="h-5 w-5 text-gray-800" />
+                                                                        <Award className="h-4 w-4 text-black flex-shrink-0" />
                                                                         <div>
-                                                                            <div className="text-sm font-medium text-gray-800">{a.name}</div>
+                                                                            <div className="text-xs font-medium text-black">{a.name}</div>
                                                                             {a.description && (
-                                                                                <div className="text-xs text-gray-500">{a.description}</div>
+                                                                                <div className="text-xs text-neutral-600">{a.description}</div>
                                                                             )}
                                                                         </div>
                                                                     </div>
@@ -496,8 +489,8 @@ export default function UserDashboardPage() {
 
                                             return (
                                                 <div key={index} className="mb-6">
-                                                    <h4 className="text-lg font-medium mb-3">{section.category}</h4>
-                                                    <div className="flex flex-col gap-4">
+                                                    <h4 className="text-sm font-semibold mb-3 text-black">{section.category}</h4>
+                                                    <div className="flex flex-col gap-3">
                                                         {section.achievements.map((item, i) => {
                                                             let isEarned = false;
 
@@ -509,15 +502,15 @@ export default function UserDashboardPage() {
                                                             return (
                                                                 <div
                                                                     key={i}
-                                                                    className={`flex items-center gap-4 p-4 rounded-2xl bg-gray-100 ${isEarned ? "opacity-100" : "opacity-50"
+                                                                    className={`flex items-center gap-4 p-3 rounded border ${isEarned ? "border-black/20 bg-neutral-50 opacity-100" : "border-black/10 bg-white opacity-40"
                                                                         }`}
                                                                 >
                                                                     <Award
-                                                                        className={`h-8 w-8 ${isEarned ? "text-gray-800 opacity-100" : "text-gray-800 opacity-50"}`}
+                                                                        className={`h-6 w-6 ${isEarned ? "text-black" : "text-neutral-400"}`}
                                                                     />
                                                                     <div>
-                                                                        <span className="text-sm font-medium text-gray-600">{item.title}</span>
-                                                                        <p className="text-xs text-gray-400">{item.description}</p>
+                                                                        <span className="text-xs font-semibold text-black">{item.title}</span>
+                                                                        <p className="text-xs text-neutral-600">{item.description}</p>
                                                                     </div>
                                                                 </div>
                                                             );
@@ -532,30 +525,29 @@ export default function UserDashboardPage() {
                         </div>
                     </div>
 
-                    {/* Adventure Experiences Section */}
                     <div className="mb-10">
                         <div className="flex items-center justify-between mb-8 pt-8">
                             <div>
-                                <h2 className="text-3xl font-bold text-gray-900">Adventure Experience</h2>
-                                <p className="text-gray-600 mt-1 text-lg">
+                                <h2 className="text-2xl font-bold text-black">Adventure Experience</h2>
+                                <p className="text-sm text-neutral-600 mt-1">
                                     {adventureExperiences.length > 0
                                         ? `Your progress in ${adventureExperiences.length} adventure${adventureExperiences.length !== 1 ? 's' : ''}`
                                         : "Your progress in each adventure"
                                     }
                                 </p>
                             </div>
-                            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-md">
-                                <Target className="h-5 w-5 text-gray-900" />
-                                <span className="text-sm text-gray-700 font-semibold">
+                            <div className="flex items-center gap-2 bg-white border border-black/10 px-3 py-2 rounded">
+                                <Target className="h-4 w-4 text-black" />
+                                <span className="text-xs text-black font-semibold">
                                     {userProfile.adventureCount} Adventure{userProfile.adventureCount !== 1 ? 's' : ''}
                                 </span>
                             </div>
                         </div>
 
                         {experienceLoading ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {[1, 2, 3].map((i) => (
-                                    <div key={i} className="h-64 bg-gray-200 rounded-2xl animate-pulse"></div>
+                                    <div key={i} className="h-64 bg-neutral-200 rounded animate-pulse"></div>
                                 ))}
                             </div>
                         ) : adventureExperiences.length > 0 ? (
@@ -570,18 +562,18 @@ export default function UserDashboardPage() {
                                 ))}
                             </div>
                         ) : (
-                            <Card className="rounded-2xl border-gray-200 border-dashed">
+                            <Card className="border border-dashed border-black/20">
                                 <CardContent className="flex flex-col items-center justify-center py-16">
-                                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                                        <Award className="h-10 w-10 text-gray-400" />
+                                    <div className="w-16 h-16 bg-neutral-50 border border-black/10 rounded-full flex items-center justify-center mb-6">
+                                        <Award className="h-8 w-8 text-black" />
                                     </div>
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No Adventure Experience Yet</h3>
-                                    <p className="text-gray-600 text-center mb-8 max-w-md">
+                                    <h3 className="text-lg font-bold text-black mb-2">No Adventure Experience Yet</h3>
+                                    <p className="text-sm text-neutral-600 text-center mb-8 max-w-md">
                                         Start your adventure journey by booking your first session and gain experience points to level up!
                                     </p>
                                     <Link
                                         to="/browse"
-                                        className="bg-black text-white px-8 py-3 rounded-xl hover:bg-gray-800 transition-colors font-medium"
+                                        className="bg-black text-white px-6 py-2.5 rounded hover:bg-neutral-800 transition-colors font-medium text-sm"
                                     >
                                         Browse Adventures
                                     </Link>
@@ -592,16 +584,15 @@ export default function UserDashboardPage() {
                 </div>
             </div>
 
-            {/* Chat Modal */}
             {chatOpen && (
-                <div className="fixed inset-0 z-[9997] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="relative w-full max-w-6xl h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
+                <div className="fixed inset-0 z-[9997] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="relative w-full max-w-6xl h-[90vh] bg-white rounded-lg border border-black/10 overflow-hidden">
                         <button
                             onClick={() => setChatOpen(false)}
-                            className="absolute top-4 right-4 z-50 w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+                            className="absolute top-4 right-4 z-50 w-10 h-10 bg-white border border-black/10 hover:bg-neutral-50 rounded-full flex items-center justify-center transition-colors"
                             aria-label="Close chat"
                         >
-                            <X className="h-5 w-5 text-gray-600" />
+                            <X className="h-5 w-5 text-black" />
                         </button>
                         <ChatLayout />
                     </div>

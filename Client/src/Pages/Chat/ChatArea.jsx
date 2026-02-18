@@ -10,6 +10,7 @@ import MessageInput from './components/MessageInput';
 import BackgroundEffects from './components/BackgroundEffects';
 import ChatHeader from './components/ChatHeader';
 import MessageContainer from './components/MessageContainer';
+import { MessageCircle } from 'lucide-react';
 
 // Create socket outside component to prevent multiple connections
 const socket = io(SOCKET_URL, SOCKET_CONFIG);
@@ -127,7 +128,7 @@ export const ChatArea = ({ selectedFriend, toggleSidebar, onClose }) => {
     return (
         <BackgroundEffects>
             <motion.div
-                className="chat-room flex flex-col w-full h-full justify-between relative"
+                className="chat-room flex flex-col w-full h-full justify-between relative bg-white"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
@@ -139,7 +140,7 @@ export const ChatArea = ({ selectedFriend, toggleSidebar, onClose }) => {
                 />
 
                 {friend?._id ? (
-                    <div className="chat-messages w-full flex-1 overflow-y-auto flex flex-col-reverse scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                    <div className="chat-messages w-full flex-1 overflow-y-auto flex flex-col-reverse scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-transparent">
                         <MessageContainer
                             messages={messages}
                             loading={loading}
@@ -151,16 +152,21 @@ export const ChatArea = ({ selectedFriend, toggleSidebar, onClose }) => {
                         />
                     </div>
                 ) : (
-                    <div className="chat-messages flex-1 flex items-center justify-center">
-                        <EmptyState
-                            title={EMPTY_STATES.NO_FRIEND_SELECTED.title}
-                        />
+                    <div className="chat-messages flex-1 flex items-center justify-center bg-white">
+                        <div className="text-center p-8 max-w-md">
+                            <div className="w-20 h-20 mx-auto mb-6 border-2 border-black rounded-full flex items-center justify-center">
+                                <MessageCircle className="h-10 w-10 text-black" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-black mb-3">Your Messages</h3>
+                            <p className="text-sm text-neutral-600">
+                                Select a conversation from the list to start chatting with your adventure connections.
+                            </p>
+                        </div>
                     </div>
                 )}
 
-                {/* Message input component */}
                 {friend?._id && (
-                    <div className="p-3 backdrop-blur-sm bg-white/70 border-t border-gray-200 rounded-b-xl">
+                    <div className="p-3 bg-white border-t border-black/10">
                         <MessageInput onSendMessage={handleSendMessage} />
                     </div>
                 )}

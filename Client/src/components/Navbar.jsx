@@ -34,16 +34,14 @@ export const Navbar = () => {
   ]
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-black/10">
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <MapPin className="w-6 h-6 text-blue-600" />
-            <span className="text-xl font-bold text-gray-800">Adventure Bookings</span>
+            <MapPin className="w-6 h-6 text-black" />
+            <span className="text-xl font-bold text-black">Adventure Bookings</span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
             <nav>
               <ul className="flex space-x-6 items-center">
@@ -53,12 +51,12 @@ export const Navbar = () => {
                       <button
                         type="button"
                         onClick={() => navigate(`/browse?date=${todayISO}&q=adventure`)}
-                        className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                        className="text-black hover:text-neutral-600 transition-colors font-medium"
                       >
                         {item.label}
                       </button>
                     ) : (
-                      <Link to={item.path} className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+                      <Link to={item.path} className="text-black hover:text-neutral-600 transition-colors font-medium">
                         {item.label}
                       </Link>
                     )}
@@ -74,20 +72,19 @@ export const Navbar = () => {
             ) : (
               <Button
                 onClick={() => navigate("/login")}
-                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                className="bg-black text-white hover:bg-neutral-800 transition-colors"
               >
                 {t("login")}
               </Button>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-4">
             <LanguageSelector variant="icon-only" />
 
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 text-gray-700 hover:text-blue-600 transition-colors"
+              className="p-2 text-black hover:text-neutral-600 transition-colors"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -95,7 +92,6 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
@@ -103,7 +99,7 @@ export const Navbar = () => {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="md:hidden bg-white border-t"
+            className="md:hidden bg-white border-t border-black/10"
           >
             <div className="container mx-auto px-4 py-4">
               <ul className="space-y-4">
@@ -116,14 +112,14 @@ export const Navbar = () => {
                           navigate(`/browse?date=${todayISO}&q=adventure`)
                           setIsMenuOpen(false)
                         }}
-                        className="block w-full text-left py-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                        className="block w-full text-left py-2 text-black hover:text-neutral-600 transition-colors font-medium"
                       >
                         {item.label}
                       </button>
                     ) : (
                       <Link
                         to={item.path}
-                        className="block py-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                        className="block py-2 text-black hover:text-neutral-600 transition-colors font-medium"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         {item.label}
@@ -133,23 +129,23 @@ export const Navbar = () => {
                 ))}
               </ul>
 
-              <div className="mt-6 pt-4 border-t">
+              <div className="mt-6 pt-4 border-t border-black/10">
                 {user?.user ? (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-bold">
                         {user.user.email?.[0]?.toUpperCase() || "U"}
                       </div>
                       <div className="overflow-hidden">
-                        <p className="font-medium truncate">{user.user.email}</p>
-                        <p className="text-sm text-gray-500">{t("level")}: Explorer</p>
+                        <p className="font-medium truncate text-black">{user.user.email}</p>
+                        <p className="text-sm text-neutral-500">{t("level")}: Explorer</p>
                       </div>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleLogout}
-                      className="text-red-500 border-red-200 hover:bg-red-50"
+                      className="text-black border-black/20 hover:bg-black hover:text-white"
                     >
                       {t("logout")}
                     </Button>
@@ -160,7 +156,7 @@ export const Navbar = () => {
                       navigate("/login")
                       setIsMenuOpen(false)
                     }}
-                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                    className="w-full bg-black text-white hover:bg-neutral-800 transition-colors"
                   >
                     {t("login")}
                   </Button>

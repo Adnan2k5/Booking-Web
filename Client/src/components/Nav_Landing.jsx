@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { Loader } from "../components/Loader"
-import { Settings, LogOut, User, TicketIcon, Menu, X } from 'lucide-react'
+import { Settings, LogOut, User, TicketIcon, Menu, X, Compass, ShoppingBag, Hotel, Target } from 'lucide-react'
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion"
 import { MdLanguage } from "react-icons/md"
 import { useTranslation } from "react-i18next"
@@ -117,10 +117,10 @@ export const Nav_Landing = () => {
                 {/* Desktop Menu */}
                 <div className="hidden lg:flex items-center space-x-8">
                     <ul className="flex items-center space-x-6">
-                        <NavLink to={`/browse?date=${new Date().toISOString().split('T')[0]}&q=adventure`} text={t("explore")} />
-                        {isShopEnabled && <NavLink to="/shop" text={t("shop")} />}
-                        {isHotelsEnabled && <NavLink to="/book-hotel" text={t("Accommodations")} />}
-                        <NavLink to="/mission" text={t("mission")} />
+                        <NavLink to={`/browse?date=${new Date().toISOString().split('T')[0]}&q=adventure`} text={t("explore")} icon={Compass} />
+                        {isShopEnabled && <NavLink to="/shop" text={t("shop")} icon={ShoppingBag} />}
+                        {isHotelsEnabled && <NavLink to="/book-hotel" text={t("Accommodations")} icon={Hotel} />}
+                        <NavLink to="/mission" text={t("mission")} icon={Target} />
                     </ul>
 
                     <div className="flex items-center space-x-4 border-l border-white/20 pl-6">
@@ -208,20 +208,20 @@ export const Nav_Landing = () => {
                             </div>
 
                             <div className="flex flex-col space-y-6 mt-4">
-                                <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate(`/browse?date=${new Date().toISOString().split('T')[0]}&q=adventure`) }}>
+                                <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate(`/browse?date=${new Date().toISOString().split('T')[0]}&q=adventure`) }} icon={Compass}>
                                     {t("explore")}
                                 </MobileNavLink>
                                 {isShopEnabled && (
-                                    <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate("/shop") }}>
+                                    <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate("/shop") }} icon={ShoppingBag}>
                                         {t("shop")}
                                     </MobileNavLink>
                                 )}
                                 {isHotelsEnabled && (
-                                    <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate("/book-hotel") }}>
+                                    <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate("/book-hotel") }} icon={Hotel}>
                                         {t("Accommodations")}
                                     </MobileNavLink>
                                 )}
-                                <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate("/mission") }}>
+                                <MobileNavLink onClick={() => { setMobileMenuOpen(false); navigate("/mission") }} icon={Target}>
                                     {t("mission")}
                                 </MobileNavLink>
 
@@ -286,23 +286,25 @@ export const Nav_Landing = () => {
 }
 
 // Helper Components
-const NavLink = ({ to, text }) => (
+const NavLink = ({ to, text, icon: Icon }) => (
     <li>
         <Link
             to={to}
-            className="text-white/80 hover:text-white text-sm font-medium tracking-wide transition-colors relative group"
+            className="text-white/80 hover:text-white text-sm font-medium tracking-wide transition-colors relative group flex items-center gap-2"
         >
+            {Icon && <Icon className="h-4 w-4" />}
             {text}
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
         </Link>
     </li>
 )
 
-const MobileNavLink = ({ children, onClick }) => (
+const MobileNavLink = ({ children, onClick, icon: Icon }) => (
     <button
         onClick={onClick}
-        className="text-left text-2xl font-light text-white hover:text-gray-300 transition-colors"
+        className="text-left text-2xl font-light text-white hover:text-gray-300 transition-colors flex items-center gap-3"
     >
+        {Icon && <Icon className="h-6 w-6" />}
         {children}
     </button>
 )
