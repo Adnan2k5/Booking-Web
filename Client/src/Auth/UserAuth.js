@@ -1,4 +1,9 @@
-import { loginStart, loginSuccess, setUser, logout } from '../Store/UserSlice.js';
+import {
+  loginStart,
+  loginSuccess,
+  setUser,
+  logout,
+} from '../Store/UserSlice.js';
 import { axiosClient } from '../AxiosClient/axios.js';
 import { data } from 'react-router-dom';
 
@@ -154,8 +159,17 @@ export const userLogout = async (dispatch) => {
       }
     );
     dispatch(logout());
+    // Clear localStorage to fully logout
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('redirectAfterLogin');
     return 200;
   } catch (error) {
+    // Even on error, clear localStorage
+    dispatch(logout());
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('redirectAfterLogin');
     return error;
   }
 };

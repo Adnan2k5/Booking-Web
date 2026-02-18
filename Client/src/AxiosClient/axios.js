@@ -34,11 +34,9 @@ axiosClient.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle token errors
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // If token is invalid or expired, clear it from localStorage
     if (error.response?.status === 401) {
       const errorMessage = error.response?.data?.message?.toLowerCase() || '';
       if (
@@ -47,8 +45,27 @@ axiosClient.interceptors.response.use(
       ) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        // Only redirect if not already on login page
-        if (!window.location.pathname.includes('/login')) {
+
+        const publicRoutes = [
+          '/',
+          '/login',
+          '/login-options',
+          '/terms',
+          '/privacy',
+          '/faq',
+          '/mission',
+          '/browse',
+          '/event',
+          '/auth',
+          '/reset',
+        ];
+        const currentPath = window.location.pathname;
+        const isPublicRoute = publicRoutes.some(
+          (route) =>
+            currentPath === route || currentPath.startsWith(route + '/')
+        );
+
+        if (!isPublicRoute && !currentPath.includes('/login')) {
           window.location.href = '/login';
         }
       }

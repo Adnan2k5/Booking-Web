@@ -35,10 +35,10 @@ import {
   UserCheck
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
-import { useDispatch, useSelector } from 'react-redux'
-import { userLogout } from '../../Auth/UserAuth.js'
+import { useSelector } from 'react-redux'
 import { toast } from 'sonner'
 import AdminProfileDropdown from '../../components/AdminProfileDropdown'
+import { useAuth } from '../AuthProvider'
 
 const ROLE_ACCESS_CONFIG = {
   Dashboard: [],
@@ -85,8 +85,8 @@ export default function AdminLayout() {
   const location = useLocation()
   const pathname = location.pathname
   const navigate = useNavigate()
-  const dispatch = useDispatch()
   const [isMounted, setIsMounted] = useState(false)
+  const { logout } = useAuth()
 
   const user = useSelector((state) => state?.user?.user)
 
@@ -96,7 +96,7 @@ export default function AdminLayout() {
 
   const handleLogout = async () => {
     try {
-      await userLogout(dispatch)
+      await logout()
       navigate('/login')
     } catch (error) {
       console.error('Logout error:', error)
