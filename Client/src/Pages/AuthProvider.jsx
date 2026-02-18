@@ -34,22 +34,22 @@ export const AuthProvider = ({ children }) => {
                     withCredentials: true,
                 }
             );
-            dispatch(logout());
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("redirectAfterLogin");
         } catch (error) {
             console.error("Logout error:", error);
+        } finally {
+            // Always clear state and localStorage, even if API call fails
             dispatch(logout());
             localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
             localStorage.removeItem("redirectAfterLogin");
         }
     };
 
     useEffect(() => {
         // Quick check for token existence before making API call
-        const hasToken = document.cookie.includes('accessToken') || 
-                        localStorage.getItem('accessToken');
-        
+        const hasToken = document.cookie.includes('accessToken') ||
+            localStorage.getItem('accessToken');
+
         if (!hasToken) {
             // No token, skip verification and render immediately
             setLoading(false);

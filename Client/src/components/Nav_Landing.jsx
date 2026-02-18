@@ -21,18 +21,15 @@ import {
 import { Button } from "./ui/button"
 import { Avatar, AvatarFallback } from "./ui/avatar"
 import LanguageSelector from "./LanguageSelector"
-import { useDispatch } from "react-redux";
 import { updateLanguageHeaders } from "../Api/language.api.js"
-import { userLogout } from "../Auth/UserAuth.js"
 import { toast } from "sonner"
 
 export const Nav_Landing = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const { t, i18n } = useTranslation()
-    const { user } = useAuth()
+    const { user, logout } = useAuth()
     const { isShopEnabled, isHotelsEnabled } = useWebsiteSettings()
     const navigate = useNavigate()
-    const dispatch = useDispatch();
     const [isScrolled, setIsScrolled] = useState(false)
 
     // Handle scroll effect for navbar background
@@ -50,11 +47,13 @@ export const Nav_Landing = () => {
     }, [])
 
     const handleLogout = async () => {
-        await userLogout(dispatch).then(() => {
-            window.location.reload()
-        }).catch((error) => {
+        try {
+            await logout()
+            navigate("/login")
+        } catch (error) {
+            console.error("Logout error:", error)
             toast.error(t("logoutError"))
-        })
+        }
     }
 
     const navigateprofile = () => {
@@ -159,7 +158,7 @@ export const Nav_Landing = () => {
                                         </DropdownMenuItem>
                                     </DropdownMenuGroup>
                                     <DropdownMenuSeparator className="bg-white/10" />
-                                    <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer text-red-400 focus:text-red-400" onClick={handleLogout}>
+                                    <DropdownMenuItem className="focus:bg-red-50 cursor-pointer text-red-400 focus:text-red-600" onClick={handleLogout}>
                                         <LogOut className="mr-2 h-4 w-4" />
                                         <span>{t("logout")}</span>
                                     </DropdownMenuItem>

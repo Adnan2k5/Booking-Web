@@ -17,8 +17,6 @@ import {
 } from "../../components/ui/dropdown-menu"
 import LanguageSelector from "../../components/LanguageSelector"
 import { useAuth } from "../AuthProvider"
-import { userLogout } from "../../Auth/UserAuth.js"
-import { useDispatch } from "react-redux"
 import { toast } from "sonner"
 
 const UserLayout = ({ children, onOpenChat }) => {
@@ -26,15 +24,16 @@ const UserLayout = ({ children, onOpenChat }) => {
     const location = useLocation()
     const { t } = useTranslation()
     const { user, logout } = useAuth()
-    const dispatch = useDispatch();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
     const handleLogout = async () => {
-        await userLogout(dispatch).then(() => {
-            window.location.reload();
-        }).catch((error) => {
-            toast.error("Logout error:", error);
-        });
+        try {
+            await logout()
+            navigate("/login")
+        } catch (error) {
+            console.error("Logout error:", error)
+            toast.error(t("logoutError"))
+        }
     }
 
     const navItems = [
