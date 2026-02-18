@@ -54,8 +54,11 @@ export const InstructorRoute = ({ children }) => {
 
   const getStatus = async () => {
     try {
-      const res = await getInstructorById(user.user.instructor)
-      if (res.data.message.instructor[0].instructor.documentVerified === "pending") {
+      const instructorId = typeof user.user.instructor === 'object'
+        ? user.user.instructor._id
+        : user.user.instructor;
+      const res = await getInstructorById(instructorId)
+      if (res.data.message.instructor?.instructor?.documentVerified === "pending") {
         return false;
       }
       return true;

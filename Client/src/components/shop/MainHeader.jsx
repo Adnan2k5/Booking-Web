@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { Search, ShoppingCart, Heart, User, Menu, X, GitCompare, Activity, ShoppingBag, Package, Star } from "lucide-react";
+import { Search, ShoppingCart, Heart, User, Menu, X, GitCompare, Tent, Shirt, Footprints, Watch, Wrench } from "lucide-react";
 
 export default function MainHeader({ categories = [], onSearch, onCategorySelect, selectedCategory }) {
   const navigate = useNavigate();
@@ -14,11 +14,11 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
 
   // map category names to icons (uses lucide-react icons available in the project)
   const categoryIcons = {
-    Camping: Activity,
-    Clothing: ShoppingBag,
-    Footwear: Star,
-    Accessories: Package,
-    Equipment: Package,
+    Camping: Tent,
+    Clothing: Shirt,
+    Footwear: Footprints,
+    Accessories: Watch,
+    Equipment: Wrench,
   };
 
   const submit = (e) => {
@@ -100,7 +100,7 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
         {/* Actions */}
         <div className="hidden md:flex items-center gap-5">
           <form onSubmit={submit} className="relative" ref={inputRef} autoComplete="off">
-            <input value={query} onChange={e=>{ setQuery(e.target.value); }} placeholder="Search products" className="bg-neutral-800 text-sm rounded-full px-4 py-2 pr-9 focus:outline-none focus:ring-2 focus:ring-orange-500" onFocus={() => { if (suggestions.length) setShowSuggestions(true); }} />
+            <input value={query} onChange={e => { setQuery(e.target.value); }} placeholder="Search products" className="bg-neutral-800 text-sm rounded-full px-4 py-2 pr-9 focus:outline-none focus:ring-2 focus:ring-orange-500" onFocus={() => { if (suggestions.length) setShowSuggestions(true); }} />
             <button type="submit" className="absolute top-1/2 -translate-y-1/2 right-3 text-neutral-400 hover:text-orange-400">
               <Search className="h-4 w-4" />
             </button>
@@ -132,20 +132,20 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
           </Link>
         </div>
         {/* Mobile toggle */}
-        <button onClick={()=>setMobileOpen(o=>!o)} className="md:hidden p-2 rounded-md bg-neutral-800 hover:bg-neutral-700">
+        <button onClick={() => setMobileOpen(o => !o)} className="md:hidden p-2 rounded-md bg-neutral-800 hover:bg-neutral-700">
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
       {mobileOpen && (
         <div className="md:hidden border-t border-neutral-800 px-6 pb-6 space-y-4 bg-black/95 backdrop-blur">
           <form onSubmit={submit} className="relative pt-4">
-            <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search products" className="bg-neutral-800 w-full text-sm rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products" className="bg-neutral-800 w-full text-sm rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-orange-500" />
             <button type="submit" className="absolute top-1/2 -translate-y-1/2 right-4 text-neutral-400 hover:text-orange-400">
               <Search className="h-4 w-4" />
             </button>
           </form>
           <div className="grid gap-2">
-              {categories.map(c => (
+            {categories.map(c => (
               <Link
                 key={c}
                 to={`/shop/category/${c.toLowerCase()}`}
@@ -168,10 +168,10 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
             ))}
           </div>
           <div className="flex gap-6 pt-2 text-sm">
-            <Link to="/favorites" onClick={()=>setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><Heart className="h-4 w-4" /> Favorites</Link>
-            <Link to="/shop/comparison" onClick={()=>setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><GitCompare className="h-4 w-4" /> Compare</Link>
-            <Link to="/account" onClick={()=>setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><User className="h-4 w-4" /> Account</Link>
-            <Link to="/cart" onClick={()=>setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><ShoppingCart className="h-4 w-4" /> Cart</Link>
+            <Link to="/favorites" onClick={() => setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><Heart className="h-4 w-4" /> Favorites</Link>
+            <Link to="/shop/comparison" onClick={() => setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><GitCompare className="h-4 w-4" /> Compare</Link>
+            <Link to="/account" onClick={() => setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><User className="h-4 w-4" /> Account</Link>
+            <Link to="/cart" onClick={() => setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><ShoppingCart className="h-4 w-4" /> Cart</Link>
           </div>
         </div>
       )}

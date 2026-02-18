@@ -3,7 +3,7 @@ import { ChatArea } from './ChatArea'
 import { useSenders } from '../../hooks/useSenders';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { motion } from 'framer-motion';
-import { Search, Users, MessageCircle } from 'lucide-react';
+import { Search, MessageCircle } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 export const ChatLayout = () => {
@@ -80,48 +80,35 @@ export const ChatLayout = () => {
     );
 
     return (
-        <div className='h-full w-full flex relative'>
-            {/* Sidebar */}
+        <div className='h-full w-full flex relative bg-white'>
             <motion.div
-                className={`sidebar md:min-w-[320px] w-full md:w-[320px] md:relative absolute z-10 h-full flex flex-col bg-white border-r border-gray-100 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]`}
-                initial={{ x: typeof window !== 'undefined' && window.innerWidth < 768 ? -320 : 0 }}
-                animate={{ x: showSidebar ? 0 : -320 }}
+                className={`sidebar md:min-w-[360px] w-full md:w-[360px] md:relative absolute z-10 h-full flex flex-col bg-white border-r border-black/10`}
+                initial={{ x: typeof window !== 'undefined' && window.innerWidth < 768 ? -360 : 0 }}
+                animate={{ x: showSidebar ? 0 : -360 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 style={{ maxWidth: '100%' }}
             >
-                <div className="sidebar-header p-2 border-b border-gray-100 bg-white/70 backdrop-blur-sm">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center">
-                            <MessageCircle size={20} className="text-white" />
-                        </div>
-                        <h2 className='text-xl font-bold text-black'>
-                            Adventure Social
-                        </h2>
+                <div className="sidebar-header p-4 border-b border-black/10 bg-white">
+                    <div className="flex items-center justify-between">
+                        <h2 className='text-xl font-bold text-black'>Messages</h2>
+                        <MessageCircle size={20} className="text-black" />
                     </div>
                 </div>
 
-                <div className='p-2 flex items-center justify-between border-b border-gray-100 bg-white/50 backdrop-blur-sm'>
-                    <div className="flex items-center gap-2">
-                        <Users size={18} className="text-black" />
-                        <h2 className='text-lg font-medium text-gray-800'>Friends</h2>
-                    </div>
-                </div>
-
-                {/* Search input */}
-                <div className="p-2 border-b border-gray-100 bg-white/30">
+                <div className="p-3 border-b border-black/10 bg-white">
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder="Search friends..."
+                            placeholder="Search conversations..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full p-2.5 pl-10 bg-gray-50 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 transition-all"
+                            className="w-full p-2 pl-9 bg-neutral-50 border border-black/10 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-black transition-all placeholder:text-neutral-400"
                         />
-                        <Search size={16} className="absolute left-3.5 top-3 text-gray-400" />
+                        <Search size={16} className="absolute left-3 top-2.5 text-neutral-400" />
                     </div>
                 </div>
 
-                <div className='flex-1 overflow-y-auto'>
+                <div className='flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-transparent'>
                     {filteredFriends.length > 0 ? (
                         filteredFriends.map(friend => (
                             <motion.div
@@ -130,31 +117,42 @@ export const ChatLayout = () => {
                                     setSelectedFriend(friend);
                                     if (window.innerWidth < 768) setShowSidebar(false);
                                 }}
-                                className={`p-2 flex gap-2 items-center cursor-pointer transition-all hover:bg-gray-50/80 ${selectedFriend?._id === friend._id ? 'bg-gray-50 border-l-4 border-gray-900 pl-1.5' : 'border-l-4 border-transparent'}`}
-                                whileHover={{ x: 5 }}
-                                transition={{ duration: 0.2 }}
+                                className={`p-3 flex gap-3 items-center cursor-pointer transition-colors ${selectedFriend?._id === friend._id
+                                        ? 'bg-neutral-50 border-l-2 border-black'
+                                        : 'border-l-2 border-transparent hover:bg-neutral-50/50'
+                                    }`}
+                                whileHover={{ x: 2 }}
+                                transition={{ duration: 0.15 }}
                             >
-                                <Avatar className='w-8 h-8 border border-gray-100 shadow-sm'>
+                                <Avatar className='w-12 h-12 border border-black/10'>
                                     <AvatarImage src={friend.profilePicture} alt={friend.name} />
-                                    <AvatarFallback className='w-8 h-8 bg-gray-900 text-white font-medium text-xs'>
+                                    <AvatarFallback className='w-12 h-12 bg-black text-white font-semibold text-sm'>
                                         {friend.name.charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className='text-base font-semibold text-gray-800'>{friend.name}</h3>
-                                    <p className='text-sm text-gray-500 truncate'>{friend.hotelName ? friend.hotelName : friend.email}</p>
+                                    <div className="flex items-center justify-between mb-0.5">
+                                        <h3 className='text-sm font-semibold text-black truncate'>{friend.name}</h3>
+                                        {friend.unreadCount > 0 && (
+                                            <span className="ml-2 px-1.5 py-0.5 bg-black text-white text-xs font-bold rounded-full min-w-[18px] text-center">
+                                                {friend.unreadCount}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className='text-xs text-neutral-500 truncate'>
+                                        {friend.latestMessage || (friend.hotelName ? friend.hotelName : friend.email)}
+                                    </p>
                                 </div>
                             </motion.div>
                         ))
                     ) : (
-                        <div className="p-6 text-center text-gray-500 bg-white/30 m-4 rounded-lg">
-                            {searchQuery ? "No friends match your search" : "No friends found"}
+                        <div className="p-8 text-center text-neutral-500 bg-white m-4">
+                            {searchQuery ? "No conversations match your search" : "No conversations yet"}
                         </div>
                     )}
                 </div>
             </motion.div>
 
-            {/* Chat Area */}
             <div className="flex-1 w-full h-full">
                 <ChatArea
                     selectedFriend={selectedFriend}

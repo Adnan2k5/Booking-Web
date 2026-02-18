@@ -8,7 +8,7 @@ const MessageContainer = ({ messages, loading, error, userId, user, friend, mess
     if (loading && messages.length === 0) {
         return (
             <div className="flex justify-center items-center h-full w-full">
-                <div className="loader animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <div className="loader animate-spin rounded-full h-10 w-10 border-2 border-t-black border-b-black border-l-transparent border-r-transparent"></div>
             </div>
         );
     }
@@ -34,7 +34,7 @@ const MessageContainer = ({ messages, loading, error, userId, user, friend, mess
 
     return (
         <motion.div
-            className="space-y-4 w-full max-w-full mx-auto px-4"
+            className="space-y-1 w-full max-w-full mx-auto py-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}

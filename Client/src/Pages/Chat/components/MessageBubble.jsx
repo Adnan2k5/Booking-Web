@@ -91,16 +91,16 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className={`flex ${isSender ? 'justify-end' : 'justify-start'} mb-4 group`}
+            className={`flex ${isSender ? 'justify-end' : 'justify-start'} mb-2 px-4 group`}
         >
             {!isSender && (
                 <div className="flex-shrink-0 mr-2">
-                    <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
+                    <Avatar className="h-7 w-7 border border-black/10">
                         <AvatarImage
                             src={messageUser?.profilePicture || "/placeholder.svg"}
                             alt={messageUser?.name}
                         />
-                        <AvatarFallback className="bg-black text-white">
+                        <AvatarFallback className="bg-black text-white text-xs font-semibold">
                             {getInitial(messageUser)}
                         </AvatarFallback>
                     </Avatar>
@@ -110,32 +110,30 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
             <div className={`flex flex-col ${isSender ? 'items-end' : 'items-start'} max-w-[70%] md:max-w-[60%] lg:max-w-[50%]`}>
                 <div
                     className={`
-                        relative px-4 py-2 rounded-2xl shadow-sm backdrop-blur-sm
+                        relative px-4 py-2 rounded-3xl
                         ${isSender ?
-                            'bg-black text-white rounded-tr-none' :
-                            'bg-gray-100 text-black rounded-tl-none border border-gray-200'
+                            'bg-black text-white' :
+                            'bg-neutral-100 text-black border border-black/5'
                         }
                     `}
                 >
-                    {/* Message text content */}
                     {(message.content || message.text) && (
-                        <p className="m-0 whitespace-pre-wrap text-sm">
+                        <p className="m-0 whitespace-pre-wrap text-sm leading-5">
                             {renderMessageContent(message.content || message.text)}
                         </p>
                     )}
 
-                    {/* Message attachments - legacy format */}
                     {message.attachments && message.attachments.length > 0 && (
                         <div className={`flex flex-wrap gap-2 ${(message.content || message.text) ? 'mt-2' : ''}`}>
                             {message.attachments.map((base64Image, attachmentIndex) => (
                                 <div
                                     key={attachmentIndex}
-                                    className="relative overflow-hidden rounded-lg border border-gray-200"
+                                    className="relative overflow-hidden rounded-lg border border-black/10"
                                 >
                                     <img
                                         src={base64Image || "/placeholder.svg"}
                                         alt={`Image ${attachmentIndex + 1}`}
-                                        className="max-w-full max-h-60 object-contain bg-black/5"
+                                        className="max-w-full max-h-60 object-contain bg-neutral-50"
                                         loading="lazy"
                                         onClick={() => window.open(base64Image, '_blank')}
                                         onError={(e) => {
@@ -148,15 +146,14 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
                         </div>
                     )}
 
-                    {/* New single attachment format */}
                     {message.attachment && (
                         <div className={`${(message.content || message.text) ? 'mt-2' : ''}`}>
                             {message.attachment.type && message.attachment.type.startsWith('image/') ? (
-                                <div className="relative overflow-hidden rounded-lg border border-gray-200">
+                                <div className="relative overflow-hidden rounded-lg border border-black/10">
                                     <img
                                         src={message.attachment.url || "/placeholder.svg"}
                                         alt={message.attachment.name || "Image attachment"}
-                                        className="max-w-full max-h-60 object-contain bg-black/5"
+                                        className="max-w-full max-h-60 object-contain bg-neutral-50"
                                         loading="lazy"
                                         onClick={() => window.open(message.attachment.url, '_blank')}
                                         onError={(e) => {
@@ -167,7 +164,7 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
                                 </div>
                             ) : (
                                 <div className={`
-                                    file-attachment p-3 rounded-lg flex items-center
+                                    file-attachment p-3 rounded-lg flex items-center border border-black/10
                                     ${isSender ? 'bg-white/10' : 'bg-white'}
                                 `}>
                                     <div className="file-icon mr-3 text-2xl">📄</div>
@@ -175,7 +172,7 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
                                         <div className="file-name font-medium text-sm truncate">
                                             {message.attachment.name}
                                         </div>
-                                        <div className="file-size text-xs text-gray-500">
+                                        <div className="file-size text-xs text-neutral-500">
                                             {(message.attachment.size / 1024).toFixed(1)} KB
                                         </div>
                                     </div>
@@ -185,7 +182,7 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
                                             download={message.attachment.name}
                                             className={`
                                                 download-button ml-2 p-1.5 rounded-full 
-                                                ${isSender ? 'bg-white text-black' : 'bg-gray-200 text-black'}
+                                                ${isSender ? 'bg-white text-black' : 'bg-neutral-100 text-black'}
                                                 hover:opacity-80 transition-opacity
                                             `}
                                             target="_blank"
@@ -204,24 +201,23 @@ const MessageBubble = ({ message, userId, currentUser, friendData }) => {
                     )}
                 </div>
 
-                {/* Timestamp and read receipt */}
-                <div className={`flex items-center text-xs text-gray-500 mt-1 opacity-70 group-hover:opacity-100 transition-opacity ${isSender ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={`flex items-center text-xs text-neutral-500 mt-1 opacity-0 group-hover:opacity-100 transition-opacity ${isSender ? 'flex-row-reverse' : 'flex-row'}`}>
                     <span className="mx-1">{formattedTime}</span>
 
                     {isSender && (
-                        <CheckCheck size={14} className="text-black" />
+                        <CheckCheck size={12} className="text-neutral-500" />
                     )}
                 </div>
             </div>
 
             {isSender && (
                 <div className="flex-shrink-0 ml-2">
-                    <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
+                    <Avatar className="h-7 w-7 border border-black/10">
                         <AvatarImage
                             src={messageUser?.profilePicture || "/placeholder.svg"}
                             alt={messageUser?.name}
                         />
-                        <AvatarFallback className="bg-black text-white">
+                        <AvatarFallback className="bg-black text-white text-xs font-semibold">
                             {getInitial(messageUser)}
                         </AvatarFallback>
                     </Avatar>
