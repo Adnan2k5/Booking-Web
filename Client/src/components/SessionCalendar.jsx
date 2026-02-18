@@ -239,36 +239,41 @@ const CalendarDay = ({ day, isToday, hasSession, sessionCount, onClick, trafficL
 
 const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherSessionsCount = 0 }) => {
     const { t } = useTranslation()
-    const user = useAuth()
-    // Core state
+    const { user } = useAuth()
+
     const [currentDate, setCurrentDate] = useState(new Date())
     const [selectedDate, setSelectedDate] = useState(null)
 
-    // Dialog states
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [presetDialog, setPresetDialog] = useState(false)
     const [sessionDetailDialog, setSessionDetailDialog] = useState(false)
     const [selectedSession, setSelectedSession] = useState(null)
 
-    const instructorId = user?.user?.user?._id
+    const instructorId = user?.user?._id
+    const instructorAdventureId = user?.user?.instructor?.adventure?._id || user?.user?.instructor?.adventure
+    const instructorLocationId = user?.user?.instructor?.location?._id
+    const instructorLocationName = user?.user?.instructor?.location?.name
+
     const { sessions, refetch: refetchSessions } = useSessions(instructorId)
     const { currentMonth, currentYear, daysInMonth, firstDayOfMonth } = useCalendar(currentDate)
 
-    // Form states using custom hook
-    const [sessionForm, updateSessionForm, resetSessionForm] = useFormState({
+    const [sessionForm, updateSessionForm, resetSessionForm, setSessionForm] = useFormState({
         ...DEFAULT_FORM_STATE,
-        adventureId: user?.user?.user?.instructor?.adventure,
+        adventureId: instructorAdventureId || "",
+        location: instructorLocationId || "",
     })
 
-    const [presetForm, updatePresetForm, resetPresetForm] = useFormState({
+    const [presetForm, updatePresetForm, resetPresetForm, setPresetForm] = useFormState({
         ...DEFAULT_FORM_STATE,
-        adventureId: "",
+        adventureId: instructorAdventureId || "",
+        location: instructorLocationId || "",
         days: []
     })
 
-    // Get filtered locations based on adventure selection
     const filteredLocations = useMemo(() => {
-        return adventureTypes?.location || []
+        const locations = adventureTypes?.location
+        if (!locations) return []
+        return Array.isArray(locations) ? locations : [locations]
     }, [adventureTypes])
 
     // Session date helpers
@@ -323,17 +328,53 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
             setSelectedSession(sessionsForDate[0])
             setSessionDetailDialog(true)
         } else {
+            setSessionForm({
+                ...DEFAULT_FORM_STATE,
+                adventureId: instructorAdventureId || "",
+                location: instructorLocationId || "",
+            })
             setIsDialogOpen(true)
         }
-    }, [currentYear, currentMonth, getSessionsForDate])
+    }, [currentYear, currentMonth, getSessionsForDate, instructorAdventureId, instructorLocationId, setSessionForm])
 
     const handleCreateSession = useCallback(async () => {
         const { adventureId, location, time, capacity, notes, price, unit } = sessionForm
 
-        if (!adventureId || !location || !price || !unit || !capacity || !time) {
-            toast.error("Please fill all required fields")
+        if (!instructorId) {
+            toast.error("Instructor ID not found")
             return
         }
+
+        if (!adventureId) {
+            toast.error("Adventure type is required")
+            return
+        }
+
+        if (!location) {
+            toast.error("Location is required")
+            return
+        }
+
+        if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
+            toast.error("Valid price is required")
+            return
+        }
+
+        if (!unit) {
+            toast.error("Pricing unit is required")
+            return
+        }
+
+        if (!capacity || isNaN(parseInt(capacity)) || parseInt(capacity) <= 0) {
+            toast.error("Valid capacity is required")
+            return
+        }
+
+        if (!time) {
+            toast.error("Start time is required")
+            return
+        }
+
         if (!selectedDate) {
             toast.error("No date selected")
             return
@@ -348,33 +389,68 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
             days: [DAY_NAMES[startTime.getDay()]],
             startTime: startTime.toISOString(),
             expiresAt: expiresAt.toISOString(),
-            capacity,
-            price,
+            capacity: parseInt(capacity),
+            price: parseFloat(price),
             unit,
-            notes,
+            notes: notes || "",
             status: "active",
         }
 
         try {
             const res = await createSession(payload)
-            if (res) {
+            if (res?.data?.success || res?.status === 200 || res?.status === 201) {
                 toast.success("Session created successfully")
                 setIsDialogOpen(false)
-                resetSessionForm()
                 refetchSessions()
             } else {
-                toast.error("Error creating session")
+                toast.error(res?.data?.message || "Error creating session")
             }
         } catch (error) {
-            toast.error("Failed to create session")
+            const errorMessage = error?.response?.data?.message || error?.message || "Failed to create session"
+            toast.error(errorMessage)
         }
-    }, [sessionForm, selectedDate, instructorId, resetSessionForm, refetchSessions])
+    }, [sessionForm, selectedDate, instructorId, refetchSessions])
 
     const handleCreatePreset = useCallback(async () => {
         const { adventureId, location, days, capacity, time, notes, price, unit } = presetForm
 
-        if (!adventureId || !location || days.length === 0 || !capacity || !time) {
-            toast.error("Please fill all required fields")
+        if (!instructorId) {
+            toast.error("Instructor ID not found")
+            return
+        }
+
+        if (!adventureId) {
+            toast.error("Adventure type is required")
+            return
+        }
+
+        if (!location) {
+            toast.error("Location is required")
+            return
+        }
+
+        if (!Array.isArray(days) || days.length === 0) {
+            toast.error("Please select at least one day")
+            return
+        }
+
+        if (!capacity || isNaN(parseInt(capacity)) || parseInt(capacity) <= 0) {
+            toast.error("Valid capacity is required")
+            return
+        }
+
+        if (!time) {
+            toast.error("Start time is required")
+            return
+        }
+
+        if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
+            toast.error("Valid price is required")
+            return
+        }
+
+        if (!unit) {
+            toast.error("Pricing unit is required")
             return
         }
 
@@ -383,45 +459,69 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
         const payload = {
             location,
             days,
-            capacity,
+            capacity: parseInt(capacity),
             startTime: formatTime(time),
-            notes,
+            notes: notes || "",
             instructorId,
             adventureId,
-            price,
+            price: parseFloat(price),
             unit,
         }
 
         try {
             const res = await createPreset(payload)
-            if (res) {
+            if (res?.data?.success || res?.status === 200 || res?.status === 201) {
                 toast.success("Preset created successfully", { id: toastId })
                 refetchSessions()
                 setPresetDialog(false)
-                resetPresetForm()
+                setPresetForm({
+                    ...DEFAULT_FORM_STATE,
+                    adventureId: instructorAdventureId || "",
+                    location: instructorLocationId || "",
+                    days: []
+                })
             } else {
-                toast.error("Error creating preset", { id: toastId })
+                toast.error(res?.data?.message || "Error creating preset", { id: toastId })
             }
         } catch (error) {
-            console.error("Error creating preset:", error)
-            toast.error("Failed to create preset", { id: toastId })
+            const errorMessage = error?.response?.data?.message || error?.message || "Failed to create preset"
+            toast.error(errorMessage, { id: toastId })
         }
-    }, [presetForm, instructorId, refetchSessions, resetPresetForm])
+    }, [presetForm, instructorId, instructorAdventureId, instructorLocationId, refetchSessions, setPresetForm])
 
     const handleDeleteSession = useCallback(async () => {
-        if (!selectedSession) return
+        if (!selectedSession?._id) {
+            toast.error("No session selected")
+            return
+        }
+
+        const toastId = toast.loading("Deleting session...")
 
         try {
-            toast.loading("Deleting session...")
-            await deleteSession(selectedSession._id)
-            toast.success("Session deleted successfully")
-            refetchSessions()
-            setSessionDetailDialog(false)
+            const res = await deleteSession(selectedSession._id)
+            if (res?.data?.success || res?.status === 200) {
+                toast.success("Session deleted successfully", { id: toastId })
+                refetchSessions()
+                setSessionDetailDialog(false)
+                setSelectedSession(null)
+            } else {
+                toast.error(res?.data?.message || "Error deleting session", { id: toastId })
+            }
         } catch (error) {
-            console.error("Error deleting session:", error)
-            toast.error("Failed to delete session")
+            const errorMessage = error?.response?.data?.message || error?.message || "Failed to delete session"
+            toast.error(errorMessage, { id: toastId })
         }
     }, [selectedSession, refetchSessions])
+
+    const handleOpenPresetDialog = useCallback(() => {
+        setPresetForm({
+            ...DEFAULT_FORM_STATE,
+            adventureId: instructorAdventureId || "",
+            location: instructorLocationId || "",
+            days: []
+        })
+        setPresetDialog(true)
+    }, [instructorAdventureId, instructorLocationId, setPresetForm])
 
     // Generate calendar days
     const calendarDays = useMemo(() => {
@@ -482,7 +582,7 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                 </div>
 
                 <div className="flex items-center space-x-1 sm:space-x-2 w-full sm:w-auto justify-between sm:justify-end">
-                    <Button variant="outline" size="sm" onClick={() => setPresetDialog(true)} className="flex-shrink-0">
+                    <Button variant="outline" size="sm" onClick={handleOpenPresetDialog} className="flex-shrink-0">
                         <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                         <span className="hidden sm:inline ml-1">Preset</span>
                     </Button>
@@ -529,9 +629,9 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                         <SelectValue placeholder="Select adventure" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {adventureTypes && (
-                                            <SelectItem value={sessionForm.adventureId}>
-                                                {adventureTypes.name}
+                                        {adventureTypes?._id && (
+                                            <SelectItem value={adventureTypes._id}>
+                                                {adventureTypes.name || "Adventure"}
                                             </SelectItem>
                                         )}
                                     </SelectContent>
@@ -542,17 +642,24 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                 <Select
                                     value={sessionForm.location}
                                     onValueChange={(value) => updateSessionForm("location", value)}
-                                    disabled={!sessionForm.adventureId}
                                 >
                                     <SelectTrigger className="text-sm">
                                         <SelectValue placeholder="Select location" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {filteredLocations?.map((location) => (
-                                            <SelectItem key={location._id} value={location._id}>
-                                                {location.name}
-                                            </SelectItem>
-                                        ))}
+                                        {filteredLocations.length > 0 ? (
+                                            filteredLocations.map((location) => (
+                                                <SelectItem key={location._id} value={location._id}>
+                                                    {location.name}
+                                                </SelectItem>
+                                            ))
+                                        ) : (
+                                            instructorLocationName && instructorLocationId && (
+                                                <SelectItem value={instructorLocationId}>
+                                                    {instructorLocationName}
+                                                </SelectItem>
+                                            )
+                                        )}
                                     </SelectContent>
                                 </Select>
                             </FormField>
@@ -652,7 +759,7 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                         <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Capacity</h3>
                                         <p className="flex items-center text-sm">
                                             <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                            <span className="text-xs sm:text-sm">{selectedSession.capacity} participants</span>
+                                            <span className="text-xs sm:text-sm">{selectedSession.capacity || 0} participants</span>
                                         </p>
                                     </div>
                                 </div>
@@ -669,10 +776,27 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                         <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Location</h3>
                                         <p className="flex items-center text-sm">
                                             <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                            <span className="text-xs sm:text-sm truncate">{selectedSession.location}</span>
+                                            <span className="text-xs sm:text-sm truncate">
+                                                {selectedSession.location?.name || selectedSession.location || "N/A"}
+                                            </span>
                                         </p>
                                     </div>
                                 </div>
+
+                                {(selectedSession.price || selectedSession.unit) && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                        <div>
+                                            <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Price</h3>
+                                            <p className="text-xs sm:text-sm">${selectedSession.price || 0}</p>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Unit</h3>
+                                            <p className="text-xs sm:text-sm">
+                                                {PRICING_UNITS.find(u => u.value === selectedSession.unit)?.label || selectedSession.unit || "N/A"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {selectedSession.notes && (
                                     <div>
@@ -715,9 +839,9 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                         <SelectValue placeholder="Select adventure" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {adventureTypes && (
+                                        {adventureTypes?._id && (
                                             <SelectItem value={adventureTypes._id}>
-                                                {adventureTypes.name}
+                                                {adventureTypes.name || "Adventure"}
                                             </SelectItem>
                                         )}
                                     </SelectContent>
@@ -728,17 +852,24 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                 <Select
                                     value={presetForm.location}
                                     onValueChange={(value) => updatePresetForm("location", value)}
-                                    disabled={!presetForm.adventureId}
                                 >
                                     <SelectTrigger className="text-sm">
                                         <SelectValue placeholder="Select location" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {filteredLocations?.map((location) => (
-                                            <SelectItem key={location._id} value={location._id}>
-                                                {location.name}
-                                            </SelectItem>
-                                        ))}
+                                        {filteredLocations.length > 0 ? (
+                                            filteredLocations.map((location) => (
+                                                <SelectItem key={location._id} value={location._id}>
+                                                    {location.name}
+                                                </SelectItem>
+                                            ))
+                                        ) : (
+                                            instructorLocationName && instructorLocationId && (
+                                                <SelectItem value={instructorLocationId}>
+                                                    {instructorLocationName}
+                                                </SelectItem>
+                                            )
+                                        )}
                                     </SelectContent>
                                 </Select>
                             </FormField>
