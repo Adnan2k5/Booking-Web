@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
@@ -142,6 +142,7 @@ const AdventureFormPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [locations, setLocations] = useState([])
     const [showLocationDropdown, setShowLocationDropdown] = useState(false)
+    const locationDropdownRef = useRef(null)
     const [selectedLocations, setSelectedLocations] = useState([])
     const [adventure, setAdventure] = useState(null)
     const [isLoading, setIsLoading] = useState(isEditMode)
@@ -161,7 +162,10 @@ const AdventureFormPage = () => {
                     if (res && res.data) {
                         setAdventure(res.data)
                         reset(res.data)
-                        setSelectedLocations(res.data.location || [])
+                        const ids = (res.data.location || []).map((l) =>
+                            typeof l === "object" && l !== null ? l._id : l
+                        )
+                        setSelectedLocations(ids)
                     }
                 })
                 .catch((error) => {
@@ -323,6 +327,16 @@ const AdventureFormPage = () => {
             }
         })
     }, [])
+
+    useEffect(() => {
+        const handler = (e) => {
+            if (locationDropdownRef.current && !locationDropdownRef.current.contains(e.target)) {
+                setShowLocationDropdown(false)
+            }
+        }
+        if (showLocationDropdown) document.addEventListener("mousedown", handler)
+        return () => document.removeEventListener("mousedown", handler)
+    }, [showLocationDropdown])
 
     useEffect(() => {
         setValue("location", selectedLocations, {
@@ -600,7 +614,7 @@ const AdventureFormPage = () => {
                                             <MapPin className="h-4 w-4" />
                                             Location <span className="text-red-500">*</span>
                                         </Label>
-                                        <div className="relative">
+                                        <div className="relative" ref={locationDropdownRef}>
                                             <div
                                                 className={`block w-full border rounded-lg p-3 bg-white cursor-pointer select-none transition-all duration-200 hover:border-gray-400 ${errors.location ? "border-red-500" : "border-gray-300"}`}
                                                 onClick={() => setShowLocationDropdown((v) => !v)}
@@ -613,40 +627,52 @@ const AdventureFormPage = () => {
                                                         .join(", ")}</span>}
                                             </div>
                                             {showLocationDropdown && (
-                                                <div className="absolute left-0 right-0 z-50 bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
-                                                    {locations.length === 0 ? (
-                                                        <div className="px-4 py-3 text-gray-500">No locations available</div>
-                                                    ) : (
-                                                        locations.map((loc) => (
-                                                            <div
-                                                                key={loc._id}
-                                                                className="flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    toggleLocation(loc._id)
-                                                                }}
-                                                            >
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={selectedLocations.includes(loc._id)}
-                                                                    readOnly
-                                                                    className="mr-3 h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                                                                />
-                                                                <span className="text-gray-900">{loc.name}</span>
-                                                            </div>
-                                                        ))
-                                                    )}
-                                                    <div className="border-t border-gray-200">
+                                                <div className="absolute left-0 right-0 z-50 bg-white border border-gray-300 rounded-lg mt-1 shadow-xl overflow-hidden">
+                                                    <div className="max-h-52 overflow-y-auto">
+                                                        {locations.length === 0 ? (
+                                                            <div className="px-4 py-3 text-gray-500">No locations available</div>
+                                                        ) : (
+                                                            locations.map((loc) => (
+                                                                <div
+                                                                    key={loc._id}
+                                                                    className="flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                        toggleLocation(loc._id)
+                                                                    }}
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={selectedLocations.includes(loc._id)}
+                                                                        readOnly
+                                                                        className="mr-3 h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                                                                    />
+                                                                    <span className="text-gray-900">{loc.name}</span>
+                                                                </div>
+                                                            ))
+                                                        )}
+                                                    </div>
+                                                    <div className="border-t border-gray-200 flex">
                                                         <button
                                                             type="button"
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 handleAddLocationClick()
                                                             }}
-                                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-black font-medium hover:bg-gray-50 transition-colors duration-150"
+                                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-black font-medium hover:bg-gray-50 transition-colors duration-150 border-r border-gray-200"
                                                         >
                                                             <Plus className="h-4 w-4" />
-                                                            Add New Location
+                                                            Add New
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                setShowLocationDropdown(false)
+                                                            }}
+                                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-black font-semibold hover:bg-gray-50 transition-colors duration-150"
+                                                        >
+                                                            Done
                                                         </button>
                                                     </div>
                                                 </div>
@@ -995,7 +1021,7 @@ const AdventureFormPage = () => {
                     </DialogContent>
                 </Dialog>
             </div>
-        </div>
+        </div >
     )
 }
 

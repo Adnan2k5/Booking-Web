@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, lazy, Suspense, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider"
 import { Users, UserPlus, UserX, ChevronLeft, ChevronRight, Star, MapPin } from "lucide-react"
@@ -45,6 +45,7 @@ const ReactPlayer = lazy(() => import("react-player"))
 export default function LandingPage() {
   const navigate = useNavigate()
   const { user, loading } = useAuth()
+  const heroRef = useRef(null)
   const { t } = useTranslation()
   const [location, setLocation] = useState("")
   const [date, setDate] = useState("")
@@ -90,63 +91,111 @@ export default function LandingPage() {
     }
   }, [eventBooking])
 
-  return (
-    <div className="min-h-screen flex flex-col relative">
-      {/* Background Video */}
-      <div className="fixed inset-0 w-full h-screen overflow-hidden -z-50 bg-black">
-        <motion.div
-          className="absolute inset-0 bg-black/40 z-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.5 }}
-        />
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-0 animate-fade-in transition-opacity duration-1000"
-          onLoadedData={(e) => e.currentTarget.classList.remove("opacity-0")}
-        >
-          <source src="https://dazzling-chaja-b80bdd.netlify.app/video.mp4" type="video/mp4" />
-        </video>
-      </div>
+  const [vh, setVh] = useState(900)
 
+  useEffect(() => {
+    const update = () => setVh(window.innerHeight)
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [])
+
+  const { scrollY } = useScroll()
+
+  const searchY = useTransform(scrollY, [0, vh], [vh, 0])
+  const arrowOpacity = useTransform(scrollY, [0, 220], [1, 0])
+  const titleOpacity = useTransform(scrollY, [0, 350], [1, 0])
+
+  return (
+    <div className="flex flex-col">
       <Nav_Landing />
-      {/* Main Content - First Section */}
-      <section className="flex items-center min-h-screen justify-center pt-20 pb-16 px-4">
-        <motion.div
-          className="w-full max-w-5xl"
-          variants={fadeIn}
-          initial="hidden"
-          animate="visible"
-        >
-          <div className="text-center mb-10 md:mb-16">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight drop-shadow-md">
-              {t("discoverAdventures") || "Discover Your Next Adventure"}
-            </h1>
-            <p className="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto drop-shadow-sm">
-              {t("adventureDescription") || "Explore the world's most exciting events and experiences."}
-            </p>
+
+      <div ref={heroRef} style={{ height: "200vh" }} className="relative">
+
+        <div className="sticky top-0 h-screen overflow-hidden" style={{ transform: "translateZ(0)" }}>
+          <div className="absolute inset-0 bg-black">
+            <div className="absolute inset-0 bg-black/45 z-10" />
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover opacity-0 animate-fade-in"
+              onLoadedData={(e) => e.currentTarget.classList.remove("opacity-0")}
+            >
+              <source src="https://dazzling-chaja-b80bdd.netlify.app/video.mp4" type="video/mp4" />
+            </video>
           </div>
 
-          <SearchBar
-            adventures={adventures}
-            adventure={adventure}
-            onAdventureChange={setAdventure}
-            location={location}
-            onLocationChange={setLocation}
-            date={date}
-            onDateChange={setDate}
-            groupMembers={groupManagement.groupMembers}
-            onShowGroupDialog={groupManagement.setShowGroupDialog}
-            onNavigate={handleNavigate}
-            t={t}
-            locationsList={allLocations?.map(l => l.name) || []}
-            locationsLoading={locationsLoading}
-          />
-        </motion.div>
-      </section>
+          <motion.div
+            className="relative z-20 flex flex-col items-center justify-center h-full px-4 text-center"
+            style={{ opacity: titleOpacity }}
+          >
+            <motion.h1
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight drop-shadow-lg max-w-4xl"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            >
+              {t("discoverAdventures") || "Discover Your Next Adventure"}
+            </motion.h1>
+            <motion.p
+              className="mt-5 text-base sm:text-lg md:text-xl text-white/75 max-w-xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+            >
+              {t("adventureDescription") || "Explore the world's most exciting events and experiences."}
+            </motion.p>
+          </motion.div>
+
+          <motion.div
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2"
+            style={{ opacity: arrowOpacity }}
+          >
+            <span className="text-white/60 text-xs tracking-widest uppercase">Scroll</span>
+            <motion.svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              animate={{ y: [0, 6, 0] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <path d="M12 5v14M5 12l7 7 7-7" />
+            </motion.svg>
+          </motion.div>
+
+          <motion.div
+            className="absolute inset-0 z-30 flex items-center px-4 sm:px-6 md:px-8"
+            style={{ y: searchY, willChange: "transform" }}
+          >
+            <div className="max-w-5xl mx-auto">
+              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8">
+                <SearchBar
+                  adventures={adventures}
+                  adventure={adventure}
+                  onAdventureChange={setAdventure}
+                  location={location}
+                  onLocationChange={setLocation}
+                  date={date}
+                  onDateChange={setDate}
+                  groupMembers={groupManagement.groupMembers}
+                  onShowGroupDialog={groupManagement.setShowGroupDialog}
+                  onNavigate={handleNavigate}
+                  t={t}
+                  locationsList={allLocations?.map(l => l.name) || []}
+                  locationsLoading={locationsLoading}
+                />
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
 
 
       {/* Featured Events Content */}
