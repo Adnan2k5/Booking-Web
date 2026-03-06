@@ -5,6 +5,7 @@ import { EventBooking } from "../models/eventBooking.model.js";
 import { ItemBooking } from "../models/itemBooking.model.js";
 import { HotelBooking } from "../models/hotelBooking.model.js";
 import { Adventure } from "../models/adventure.model.js";
+import { Location } from "../models/location.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -111,8 +112,162 @@ const summaryPipeline = (match) => [
   },
 ];
 
+export const getAdventureInsights = asyncHandler(async (req, res) => {
+  const { adventureId } = req.params
+  const { range = 'month' } = req.query
+
+  if (!adventureId) throw new ApiError(400, 'Adventure ID is required')
+
+  const adventure = await Adventure.findById(adventureId).select('name thumbnail')
+  if (!adventure) throw new ApiError(404, 'Adventure not found')
+
+  const { now, currentStart } = resolvePeriods(range)
+
+  let bucketCount, bucketMs, dateFormat, labelFormatter, bucketStart
+  if (range === 'day') {
+    bucketCount = 24; bucketMs = 60 * 60 * 1000
+    bucketStart = new Date(now.getTime() - (bucketCount - 1) * bucketMs)
+    dateFormat = '%Y-%m-%dT%H:00:00'
+    labelFormatter = (d) => `${d.getHours()}:00`
+  } else if (range === 'week') {
+    bucketCount = 7; bucketMs = 24 * 60 * 60 * 1000
+    bucketStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (bucketCount - 1))
+    dateFormat = '%Y-%m-%d'
+    labelFormatter = (d) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  } else if (range === 'month') {
+    bucketCount = 30; bucketMs = 24 * 60 * 60 * 1000
+    bucketStart = new Date(now.getTime() - (bucketCount - 1) * bucketMs)
+    dateFormat = '%Y-%m-%d'
+    labelFormatter = (d) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  } else {
+    bucketCount = 12; bucketMs = null
+    bucketStart = new Date(now.getFullYear(), now.getMonth() - (bucketCount - 1), 1)
+    dateFormat = '%Y-%m'
+    labelFormatter = (d) => monthNames[d.getMonth()]
+  }
+
+  const baseBookingMatch = {
+    status: { $ne: 'cancelled' },
+    createdAt: { $gte: currentStart, $lte: now },
+  }
+
+  const adventureObjectId = adventure._id
+
+  const [totals, trend, sessionBreakdown, recentRaw] = await Promise.all([
+    Booking.aggregate([
+      { $match: baseBookingMatch },
+      { $lookup: { from: 'sessions', localField: 'session', foreignField: '_id', as: 'session' } },
+      { $unwind: '$session' },
+      { $match: { 'session.adventureId': adventureObjectId } },
+      {
+        $group: {
+          _id: null,
+          totalBookings: { $sum: 1 },
+          totalRevenue: { $sum: { $ifNull: ['$amount', 0] } },
+          uniqueParticipants: { $addToSet: '$user' },
+        },
+      },
+    ]),
+    Booking.aggregate([
+      { $match: { ...baseBookingMatch, createdAt: { $gte: bucketStart, $lte: now } } },
+      { $lookup: { from: 'sessions', localField: 'session', foreignField: '_id', as: 'session' } },
+      { $unwind: '$session' },
+      { $match: { 'session.adventureId': adventureObjectId } },
+      {
+        $group: {
+          _id: { $dateToString: { format: dateFormat, date: '$createdAt' } },
+          bookings: { $sum: 1 },
+          revenue: { $sum: { $ifNull: ['$amount', 0] } },
+        },
+      },
+    ]),
+    Booking.aggregate([
+      { $match: baseBookingMatch },
+      { $lookup: { from: 'sessions', localField: 'session', foreignField: '_id', as: 'sessionDoc' } },
+      { $unwind: '$sessionDoc' },
+      { $match: { 'sessionDoc.adventureId': adventureObjectId } },
+      {
+        $group: {
+          _id: '$sessionDoc._id',
+          sessionDate: { $first: '$sessionDoc.startTime' },
+          bookings: { $sum: 1 },
+          revenue: { $sum: { $ifNull: ['$amount', 0] } },
+          participants: { $addToSet: '$user' },
+        },
+      },
+      { $sort: { sessionDate: -1 } },
+      { $limit: 20 },
+    ]),
+    Booking.find(baseBookingMatch)
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate({ path: 'user', select: 'name email' })
+      .populate({
+        path: 'session',
+        match: { adventureId: adventureObjectId },
+        select: 'startTime',
+      })
+      .select('amount createdAt user session'),
+  ])
+
+  const kpi = totals[0] ?? { totalBookings: 0, totalRevenue: 0, uniqueParticipants: [] }
+
+  const trendMap = new Map(trend.map(({ _id, bookings, revenue }) => [_id, { bookings, revenue }]))
+  const pad = (n) => String(n).padStart(2, '0')
+  const formatKey = (date) => {
+    const Y = date.getFullYear(), M = pad(date.getMonth() + 1), D = pad(date.getDate()), H = pad(date.getHours())
+    if (dateFormat === '%Y-%m-%dT%H:00:00') return `${Y}-${M}-${D}T${H}:00:00`
+    if (dateFormat === '%Y-%m-%d') return `${Y}-${M}-${D}`
+    return `${Y}-${M}`
+  }
+  const trendData = []
+  for (let i = 0; i < bucketCount; i++) {
+    const date = range === 'year'
+      ? new Date(now.getFullYear(), now.getMonth() - (bucketCount - 1) + i, 1)
+      : new Date(bucketStart.getTime() + i * bucketMs)
+    const key = formatKey(date)
+    const bucket = trendMap.get(key) ?? { bookings: 0, revenue: 0 }
+    trendData.push({ label: labelFormatter(date), bookings: bucket.bookings, revenue: bucket.revenue })
+  }
+
+  const recentBookings = recentRaw
+    .filter((b) => b.session)
+    .map((b) => ({
+      id: b._id.toString(),
+      user: b.user?.name ?? b.user?.email ?? 'Unknown',
+      date: b.createdAt,
+      amount: b.amount ?? 0,
+    }))
+
+  res.status(200).json(new ApiResponse(200, {
+    adventure: { id: adventure._id, name: adventure.name, thumbnail: adventure.thumbnail },
+    kpi: {
+      totalBookings: kpi.totalBookings,
+      totalRevenue: kpi.totalRevenue,
+      uniqueParticipants: kpi.uniqueParticipants.length,
+      avgBookingValue: kpi.totalBookings > 0 ? +(kpi.totalRevenue / kpi.totalBookings).toFixed(2) : 0,
+    },
+    trend: trendData,
+    sessions: sessionBreakdown.map((s) => ({
+      id: s._id.toString(),
+      date: s.sessionDate,
+      bookings: s.bookings,
+      revenue: s.revenue,
+      participants: s.participants.length,
+    })),
+    recentBookings,
+  }, 'Adventure insights retrieved'))
+})
+
 export const getDashboardStats = asyncHandler(async (req, res) => {
-  const { range = "month" } = req.query;
+  const { range = "month", locationId } = req.query;
+
+  // If locationId given, resolve adventure IDs that belong to that location
+  let filteredAdventureIds = null;
+  if (locationId) {
+    const adventures = await Adventure.find({ location: locationId }).select("_id");
+    filteredAdventureIds = adventures.map((a) => a._id);
+  }
   const { now, currentStart, previousStart, previousEnd } = resolvePeriods(range);
 
   const bookingMatch = { status: { $ne: "cancelled" } };
@@ -120,9 +275,26 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
     status: { $ne: "cancelled" },
     paymentStatus: "completed",
   };
-
   const itemMatch = { status: { $ne: "cancelled" }, paymentStatus: "completed" };
   const hotelMatch = { status: { $ne: "cancelled" }, paymentStatus: "completed" };
+
+  // Adventure booking pre-filter pipeline stages when locationId is active
+  const locationAdventureStages = filteredAdventureIds
+    ? [
+        { $lookup: { from: "sessions", localField: "session", foreignField: "_id", as: "_sess" } },
+        { $unwind: "$_sess" },
+        { $match: { "_sess.adventureId": { $in: filteredAdventureIds } } },
+      ]
+    : [];
+
+  const locationBookingSummaryPipeline = (match) =>
+    filteredAdventureIds
+      ? [
+          { $match: match },
+          ...locationAdventureStages,
+          { $group: { _id: null, totalAmount: { $sum: { $ifNull: ["$amount", 0] } }, count: { $sum: 1 } } },
+        ]
+      : summaryPipeline(match);
 
   const monthsLookbackStart = new Date(now.getFullYear(), now.getMonth() - 11, 1);
   // Determine bucketization for the revenue chart based on requested range
@@ -191,13 +363,13 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
     recentItemBookings,
     recentHotelBookings,
   ] = await Promise.all([
-    Booking.aggregate(summaryPipeline(bookingMatch)),
+    Booking.aggregate(locationBookingSummaryPipeline(bookingMatch)),
     EventBooking.aggregate(summaryPipeline(eventMatch)),
     ItemBooking.aggregate(summaryPipeline(itemMatch)),
     HotelBooking.aggregate(summaryPipeline(hotelMatch)),
     // Totals for the selected current period (currentStart -> now)
-    Booking.aggregate(summaryPipeline(buildMatch(bookingMatch, currentStart, now))),
-    Booking.aggregate(summaryPipeline(buildMatch(bookingMatch, previousStart, previousEnd))),
+    Booking.aggregate(locationBookingSummaryPipeline(buildMatch(bookingMatch, currentStart, now))),
+    Booking.aggregate(locationBookingSummaryPipeline(buildMatch(bookingMatch, previousStart, previousEnd))),
     EventBooking.aggregate(summaryPipeline(buildMatch(eventMatch, currentStart, now))),
     EventBooking.aggregate(summaryPipeline(buildMatch(eventMatch, previousStart, previousEnd))),
     ItemBooking.aggregate(summaryPipeline(buildMatch(itemMatch, currentStart, now))),
@@ -213,29 +385,22 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
       role: { $in: ["user", "instructor", "hotel"] },
       createdAt: { $gte: previousStart, $lte: previousEnd },
     }),
-    Adventure.countDocuments(),
-    Adventure.countDocuments({ createdAt: { $gte: currentStart } }),
-    Adventure.countDocuments({ createdAt: { $gte: previousStart, $lte: previousEnd } }),
+    filteredAdventureIds
+      ? Promise.resolve(filteredAdventureIds.length)
+      : Adventure.countDocuments(),
+    filteredAdventureIds
+      ? Promise.resolve(filteredAdventureIds.length)
+      : Adventure.countDocuments({ createdAt: { $gte: currentStart } }),
+    filteredAdventureIds
+      ? Promise.resolve(0)
+      : Adventure.countDocuments({ createdAt: { $gte: previousStart, $lte: previousEnd } }),
     Booking.aggregate([
       { $match: buildMatch(bookingMatch, currentStart, now) },
-      {
-        $lookup: {
-          from: "sessions",
-          localField: "session",
-          foreignField: "_id",
-          as: "session",
-        },
-      },
+      { $lookup: { from: "sessions", localField: "session", foreignField: "_id", as: "session" } },
       { $unwind: "$session" },
-      {
-        $lookup: {
-          from: "adventures",
-          localField: "session.adventureId",
-          foreignField: "_id",
-          as: "adventure",
-        },
-      },
+      { $lookup: { from: "adventures", localField: "session.adventureId", foreignField: "_id", as: "adventure" } },
       { $unwind: "$adventure" },
+      ...(filteredAdventureIds ? [{ $match: { "adventure._id": { $in: filteredAdventureIds } } }] : []),
       {
         $group: {
           _id: "$adventure._id",
@@ -247,9 +412,10 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
       { $sort: { bookings: -1 } },
       { $limit: 5 },
     ]),
-    // Revenue buckets for chart according to selected range
+    // Revenue buckets for chart
     Booking.aggregate([
       { $match: buildMatch(bookingMatch, bucketStart, now) },
+      ...locationAdventureStages,
       {
         $group: {
           _id: { $dateToString: { format: dateFormat, date: "$createdAt" } },
@@ -457,7 +623,37 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
   );
 });
 
+export const getDashboardLocations = asyncHandler(async (req, res) => {
+  const locations = await Location.find({}).select("name address").lean()
+
+  const parseAddress = (address = "") => {
+    const allParts = address.split(",").map((s) => s.trim()).filter(Boolean)
+    // Strip purely numeric segments (postcodes like "75007", "56001")
+    const parts = allParts.filter((p) => !/^\d[\d\s-]*$/.test(p))
+    return {
+      country: parts.length > 0 ? parts[parts.length - 1] : "Unknown",
+      // Second-to-last non-numeric segment is typically the state/city; third is the actual city
+      // We prefer the third from end when available (skips state), otherwise fall back to second
+      city: parts.length > 2
+        ? parts[parts.length - 2]
+        : parts.length > 1
+          ? parts[parts.length - 2]
+          : "Unknown",
+    }
+  }
+
+  const data = locations.map((loc) => ({
+    id: loc._id,
+    name: loc.name,
+    address: loc.address,
+    ...parseAddress(loc.address),
+  }))
+
+  res.status(200).json(new ApiResponse(200, data, "Locations fetched"))
+})
+
 export const getAllAdmins = asyncHandler(async (req, res) => {
+
   const { page = 1, limit = 10, search = '', role, adminRole } = req.query;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 

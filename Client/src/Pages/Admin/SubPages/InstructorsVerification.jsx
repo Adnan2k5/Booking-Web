@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
-import { Search, Download, Eye, Edit, Trash2, FileText, X } from "lucide-react"
+import { Search, Download, Eye, Trash2, FileText, X, Percent, CheckCircle, XCircle, ChevronRight } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
@@ -11,130 +11,120 @@ import { Badge } from "../../../components/ui/badge"
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogClose,
 } from "../../../components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
 import { useInstructors } from "../../../hooks/useInstructor"
 import { toast } from "sonner"
+
+const statusVariant = (s) =>
+    s === "verified" ? "default" : s === "pending" ? "outline" : "secondary"
+
+const capitalize = (s = "") => s.charAt(0).toUpperCase() + s.slice(1)
 
 export default function InstructorsPage() {
     const [searchTerm, setSearchTerm] = useState("")
     const [debouncedSearch, setDebouncedSearch] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
     const [selectedInstructor, setSelectedInstructor] = useState(null)
-    const [showDocuments, setShowDocuments] = useState(false)
-    const { instructors, page, setPage, deleteInstructorById, totalPages, changeDocumentStatus, updateInstructorData } = useInstructors(debouncedSearch, statusFilter)
+    const [modalOpen, setModalOpen] = useState(false)
+    const [commissionEditing, setCommissionEditing] = useState(null) // { id, value }
+    const commissionInputRef = useRef(null)
+
+    const { instructors, page, setPage, deleteInstructorById, totalPages, changeDocumentStatus, updateInstructorData } =
+        useInstructors(debouncedSearch, statusFilter)
 
     useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedSearch(searchTerm.trim())
-        }, 400)
-        return () => clearTimeout(handler)
+        const t = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 400)
+        return () => clearTimeout(t)
     }, [searchTerm])
 
     useEffect(() => {
-        setPage((prev) => (prev !== 1 ? 1 : prev))
+        setPage((p) => (p !== 1 ? 1 : p))
     }, [debouncedSearch, statusFilter, setPage])
 
-    const handleViewDocuments = (instructor) => {
+    const openModal = (instructor) => {
         setSelectedInstructor(instructor)
-        setShowDocuments(true)
+        setModalOpen(true)
     }
 
     const handleDocumentStatus = async (status) => {
-        const loading = toast.loading("Changing document status...");
+        const id = toast.loading("Updating status…")
         try {
-            if (selectedInstructor) {
-                await changeDocumentStatus(selectedInstructor.instructor._id, status)
-                toast.success("Document status changed successfully", {
-                    id: loading,
-                });
-            }
-        }
-        catch (error) {
-            toast.error("Failed to change document status", {
-                id: loading,
-            })
-        } finally {
-            setShowDocuments(false)
-            setSelectedInstructor(null)
+            await changeDocumentStatus(selectedInstructor.instructor._id, status)
+            setSelectedInstructor((prev) => ({
+                ...prev,
+                instructor: { ...prev.instructor, documentVerified: status },
+            }))
+            toast.success("Status updated", { id })
+        } catch {
+            toast.error("Failed to update status", { id })
         }
     }
 
-    const handleUpdateCommission = async (val) => {
-        const percentage = Number(val);
-        if (isNaN(percentage) || percentage < 0 || percentage > 100) {
-            toast.error("Please enter a valid percentage between 0 and 100");
-            return;
-        }
+    const openCommissionInline = (instructor) => {
+        setCommissionEditing({
+            id: instructor.instructor._id,
+            value: instructor.instructor.commissionPercentage ?? 20,
+            instructorRowId: instructor._id,
+        })
+        setTimeout(() => commissionInputRef.current?.focus(), 50)
+    }
 
-        const loading = toast.loading("Updating commission...");
+    const saveCommission = async () => {
+        if (!commissionEditing) return
+        const pct = Number(commissionEditing.value)
+        if (isNaN(pct) || pct < 0 || pct > 100) {
+            toast.error("Enter a valid percentage (0–100)")
+            return
+        }
+        const id = toast.loading("Saving commission…")
         try {
-            if (selectedInstructor?.instructor?._id) {
-                await updateInstructorData(selectedInstructor.instructor._id, {
-                    commissionPercentage: percentage
-                });
-                toast.success("Commission updated successfully", {
-                    id: loading,
-                });
-
-                // Update local selected instructor state to reflect change immediately if needed
-                setSelectedInstructor(prev => ({
-                    ...prev,
-                    instructor: {
-                        ...prev.instructor,
-                        commissionPercentage: percentage
-                    }
-                }));
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to update commission", {
-                id: loading,
-            });
+            await updateInstructorData(commissionEditing.id, { commissionPercentage: pct })
+            toast.success(`Commission set to ${pct}%`, { id })
+            setCommissionEditing(null)
+        } catch {
+            toast.error("Failed to save", { id })
         }
-    };
+    }
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="space-y-5">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <h2 className="text-2xl font-bold tracking-tight">Instructors</h2>
-                <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm">
-                        <Download className="mr-2 h-4 w-4" />
-                        Export List
-                    </Button>
-                </div>
+                <Button variant="outline" size="sm">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export
+                </Button>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 mb-4">
-                <div className="relative flex items-center gap-2">
-                    <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="search"
-                            placeholder="Search instructors..."
-                            className="w-full sm:w-[300px] pl-8"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <select
-                        className="h-10 w-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                    >
-                        <option value="all">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="verified">Verified</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="search"
+                        placeholder="Search instructors…"
+                        className="w-full sm:w-[280px] pl-8"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
+                <select
+                    className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="verified">Verified</option>
+                    <option value="rejected">Rejected</option>
+                </select>
             </div>
 
+            {/* Table */}
             <Card>
                 <CardContent className="p-0">
                     <Table>
@@ -142,238 +132,199 @@ export default function InstructorsPage() {
                             <TableRow>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Email</TableHead>
-                                <TableHead>Adventures</TableHead>
+                                <TableHead>Adventure</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead>Commission</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {instructors.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                        {debouncedSearch || statusFilter !== 'all' ? `No instructors found` : "No instructors yet."}
+                                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                        {debouncedSearch || statusFilter !== "all"
+                                            ? "No instructors found"
+                                            : "No instructors yet."}
                                     </TableCell>
                                 </TableRow>
-                            ) : instructors.map((instructor) => (
-                                <TableRow key={instructor._id}>
-                                    <TableCell className="font-medium">{instructor.name}</TableCell>
-                                    <TableCell>{instructor.email}</TableCell>
-                                    <TableCell>{instructor?.instructor?.adventure?.name}</TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant={
-                                                instructor?.instructor?.documentVerified === "verified"
-                                                    ? "default"
-                                                    : instructor?.instructor?.documentVerified === "pending"
-                                                        ? "outline"
-                                                        : "secondary"
-                                            }
-                                        >
-                                            {instructor?.instructor?.documentVerified.charAt(0).toUpperCase() + instructor?.instructor?.documentVerified.slice(1)}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end space-x-2">
-                                            <Button variant="ghost" size="icon" onClick={() => handleViewDocuments(instructor)}>
-                                                <FileText className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => deleteInstructorById(instructor._id)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                            ) : (
+                                instructors.map((instructor) => {
+                                    const isEditingThis = commissionEditing?.instructorRowId === instructor._id
+                                    return (
+                                        <TableRow key={instructor._id}>
+                                            <TableCell className="font-medium">{instructor.name}</TableCell>
+                                            <TableCell className="text-muted-foreground text-sm">{instructor.email}</TableCell>
+                                            <TableCell>{instructor?.instructor?.adventure?.name ?? "—"}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={statusVariant(instructor?.instructor?.documentVerified)}>
+                                                    {capitalize(instructor?.instructor?.documentVerified)}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                {isEditingThis ? (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <div className="relative w-20">
+                                                            <Input
+                                                                ref={commissionInputRef}
+                                                                type="number"
+                                                                min={0}
+                                                                max={100}
+                                                                className="h-8 pr-6 text-sm"
+                                                                value={commissionEditing.value}
+                                                                onChange={(e) =>
+                                                                    setCommissionEditing((p) => ({ ...p, value: e.target.value }))
+                                                                }
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Enter") saveCommission()
+                                                                    if (e.key === "Escape") setCommissionEditing(null)
+                                                                }}
+                                                            />
+                                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                                                        </div>
+                                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:text-green-700" onClick={saveCommission}>
+                                                            <CheckCircle className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground" onClick={() => setCommissionEditing(null)}>
+                                                            <XCircle className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="relative group inline-flex">
+                                                        <button
+                                                            onClick={() => openCommissionInline(instructor)}
+                                                            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline cursor-pointer"
+                                                        >
+                                                            <Percent className="h-3.5 w-3.5" />
+                                                            {instructor?.instructor?.commissionPercentage ?? 20}%
+                                                        </button>
+                                                        <span className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-900 px-2 py-0.5 text-xs text-white opacity-0 transition-none group-hover:opacity-100">
+                                                            Click to edit
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex justify-end gap-1">
+                                                    <Button variant="ghost" size="icon" onClick={() => openModal(instructor)} title="View documents">
+                                                        <FileText className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="text-destructive hover:text-destructive"
+                                                        onClick={() => deleteInstructorById(instructor._id)}
+                                                        title="Delete instructor"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                })
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>
             </Card>
 
-            {/* Pagination Controls */}
+            {/* Pagination */}
             {totalPages > 1 && (
-                <div className="flex justify-center items-center mt-4 space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 1}
-                        onClick={() => setPage(page - 1)}
-                    >
+                <div className="flex justify-center items-center gap-2">
+                    <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>
                         Previous
                     </Button>
-                    <span className="px-2">Page {page} of {totalPages}</span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === totalPages}
-                        onClick={() => setPage(page + 1)}
-                    >
+                    <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
+                    <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
                         Next
                     </Button>
                 </div>
             )}
 
-            {/* Full-width Document Viewer Dialog */}
-            <Dialog open={showDocuments} onOpenChange={setShowDocuments} className="w-full">
-                <DialogContent className="max-w-full w-full h-[90vh] p-0 border-none rounded-none sm:rounded-none">
-                    <DialogHeader className="sticky top-0 z-10 bg-background px-6 py-4 border-b">
-                        <div className="flex items-center justify-between">
-                            <DialogTitle className="text-xl">Documents for {selectedInstructor?.name}</DialogTitle>
-                            <DialogClose className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center">
-                                <X className="h-4 w-4" />
-                                <span className="sr-only">Close</span>
-                            </DialogClose>
-                        </div>
-                        <DialogDescription className="mt-1">Review all submitted documents and certifications</DialogDescription>
-                    </DialogHeader>
-
+            {/* Instructor Document Modal */}
+            <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+                <DialogContent className="max-w-2xl w-full p-0 overflow-hidden">
                     {selectedInstructor && (
-                        <div className="p-6 overflow-y-auto">
-                            <Tabs defaultValue="documents" className="w-full">
-                                <TabsList className="mb-4">
-                                    <TabsTrigger value="documents">Documents</TabsTrigger>
-                                    <TabsTrigger value="details">Instructor Details</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="documents" className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                                        <motion.div
-                                            className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ duration: 0.3 }}
-                                        >
-                                            <div className="aspect-[4/3] bg-muted relative group">
-                                                <img
-                                                    src={selectedInstructor.instructor.certificate || "/placeholder.svg"}
-                                                    alt={"Certificate"}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
-                                            <div className="p-4">
-                                                <h3 className="font-medium">{"Certifcate"}</h3>
-                                                <p className="text-sm text-muted-foreground capitalize">Certificate Document</p>
-                                                <div className="mt-4 flex space-x-2">
-                                                    <Button variant="outline" size="sm" className="flex-1" onClick={() => {
-                                                        window.open(selectedInstructor.instructor.certificate || "/placeholder.svg", "_blank");
-                                                    }}>
-                                                        <Eye className="mr-2 h-4 w-4" />
-                                                        View
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-
-                                        <motion.div
-                                            className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ duration: 0.3 }}
-                                        >
-                                            <div className="aspect-[4/3] bg-muted relative group">
-                                                <img
-                                                    src={selectedInstructor.instructor.governmentId || "/placeholder.svg"}
-                                                    alt={"Government ID"}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
-                                            <div className="p-4">
-                                                <h3 className="font-medium">{"Government Id"}</h3>
-                                                <p className="text-sm text-muted-foreground capitalize">Government Id Document</p>
-                                                <div className="mt-4 flex space-x-2">
-                                                    <Button variant="outline" size="sm" className="flex-1" onClick={() => {
-                                                        window.open(selectedInstructor.instructor.governmentId || "/placeholder.svg", "_blank");
-                                                    }}>
-                                                        <Eye className="mr-2 h-4 w-4" />
-                                                        View
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-
+                        <>
+                            {/* Modal Header */}
+                            <DialogHeader className="px-6 pt-6 pb-4 border-b">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <DialogTitle className="text-lg font-semibold">{selectedInstructor.name}</DialogTitle>
+                                        <p className="text-sm text-muted-foreground mt-0.5">{selectedInstructor.email}</p>
                                     </div>
-                                </TabsContent>
-                                <TabsContent value="details">
-                                    <div className="bg-muted/40 rounded-lg p-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <h3 className="text-sm font-medium text-muted-foreground">Personal Information</h3>
-                                                <div className="mt-3 space-y-3">
-                                                    <div>
-                                                        <p className="text-sm font-medium">Full Name</p>
-                                                        <p>{selectedInstructor.name}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-medium">Email Address</p>
-                                                        <p>{selectedInstructor.email}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <h3 className="text-sm font-medium text-muted-foreground">Professional Information</h3>
-                                                <div className="mt-3 space-y-3">
-                                                    <div>
-                                                        <p className="text-sm font-medium">Specialties</p>
-                                                        <div className="flex flex-wrap gap-2 mt-1">
-                                                            {selectedInstructor?.instructor?.adventure?.name}
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-medium">Verification Status</p>
-                                                        <Badge
-                                                            variant={
-                                                                selectedInstructor.instructor.documentVerified === "verified"
-                                                                    ? "default"
-                                                                    : selectedInstructor.instructor.documentVerified === "pending"
-                                                                        ? "outline"
-                                                                        : "secondary"
-                                                            }
-                                                            className="mt-1"
-                                                        >
-                                                            {selectedInstructor.instructor.documentVerified.charAt(0).toUpperCase() + selectedInstructor.instructor.documentVerified.slice(1)}
-                                                        </Badge>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <Badge variant={statusVariant(selectedInstructor.instructor.documentVerified)}>
+                                        {capitalize(selectedInstructor.instructor.documentVerified)}
+                                    </Badge>
+                                </div>
+                            </DialogHeader>
 
-                                        <div className="mt-6 pt-6 border-t">
-                                            <h3 className="text-sm font-medium text-muted-foreground mb-4">Commission Settings</h3>
-                                            <div className="flex items-end gap-4 max-w-md">
-                                                <div className="flex-1">
-                                                    <label className="text-sm font-medium mb-1 block">Platform Commission (%)</label>
-                                                    <Input
-                                                        type="number"
-                                                        min="0"
-                                                        max="100"
-                                                        placeholder="20"
-                                                        defaultValue={selectedInstructor.instructor.commissionPercentage ?? 20}
-                                                        id="commission-input"
-                                                    />
-                                                    <p className="text-xs text-muted-foreground mt-1">
-                                                        Percentage of booking amount retained by platform.
-                                                    </p>
-                                                </div>
-                                                <Button onClick={() => {
-                                                    const val = document.getElementById("commission-input").value;
-                                                    handleUpdateCommission(val);
-                                                }}>
-                                                    Update
+                            {/* Documents */}
+                            <div className="px-6 py-5">
+                                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Submitted Documents</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {[
+                                        { label: "Certificate", url: selectedInstructor.instructor.certificate },
+                                        { label: "Government ID", url: selectedInstructor.instructor.governmentId },
+                                    ].map(({ label, url }) => (
+                                        <div key={label} className="rounded-lg border overflow-hidden bg-muted/30">
+                                            <div className="h-36 bg-muted relative">
+                                                <img
+                                                    src={url || "/placeholder.svg"}
+                                                    alt={label}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <div className="px-3 py-2.5 flex items-center justify-between">
+                                                <p className="text-sm font-medium">{label}</p>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-7 px-2 text-xs"
+                                                    onClick={() => window.open(url || "/placeholder.svg", "_blank")}
+                                                >
+                                                    <Eye className="h-3.5 w-3.5 mr-1" />
+                                                    View
                                                 </Button>
                                             </div>
                                         </div>
+                                    ))}
+                                </div>
+
+                                {/* Quick info */}
+                                <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                                    <div className="rounded-lg bg-muted/40 px-4 py-3">
+                                        <p className="text-xs text-muted-foreground mb-0.5">Adventure</p>
+                                        <p className="font-medium">{selectedInstructor.instructor.adventure?.name ?? "—"}</p>
                                     </div>
-                                </TabsContent>
-                            </Tabs>
-                            <div className="mt-8 flex justify-end space-x-4 sticky bottom-0 bg-background p-4 border-t">
-                                <Button variant="outline" onClick={() => handleDocumentStatus("rejected")}>Reject Documents</Button>
+                                    <div className="rounded-lg bg-muted/40 px-4 py-3">
+                                        <p className="text-xs text-muted-foreground mb-0.5">Platform Fee</p>
+                                        <p className="font-medium">{selectedInstructor.instructor.commissionPercentage ?? 20}%</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer actions */}
+                            <div className="px-6 py-4 border-t flex items-center justify-between bg-muted/20">
                                 <Button
-                                    onClick={() => handleDocumentStatus("verified")}
-                                    disabled={selectedInstructor.instructor.documentVerified === "verified"}
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-destructive border-destructive/40 hover:bg-destructive/5"
+                                    onClick={() => handleDocumentStatus("rejected")}
                                 >
-                                    {selectedInstructor.instructor.documentVerified === "verified" ? "Approved" : "Approve Documents"}
+                                    <XCircle className="h-4 w-4 mr-1.5" />
+                                    Reject
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    disabled={selectedInstructor.instructor.documentVerified === "verified"}
+                                    onClick={() => handleDocumentStatus("verified")}
+                                >
+                                    <CheckCircle className="h-4 w-4 mr-1.5" />
+                                    {selectedInstructor.instructor.documentVerified === "verified" ? "Already Approved" : "Approve Documents"}
                                 </Button>
                             </div>
-                        </div>
+                        </>
                     )}
                 </DialogContent>
             </Dialog>

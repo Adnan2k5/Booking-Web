@@ -407,14 +407,17 @@ export const BookingSummary = ({
                                 </div>
                             )}
 
-                            {selectedInstructor && (
-                                <div className="flex justify-between items-center">
-                                    <span>
-                                        {t("Platform Fee")}
-                                    </span>
-                                    <span>${(calculateTotal() * 0.12).toFixed(2)}</span>
-                                </div>
-                            )}
+                            {selectedInstructor && (() => {
+                                const commission = selectedInstructor?.instructorId?.instructor?.commissionPercentage ?? 20
+                                const instructorBaseAmount = (selectedInstructor.price || selectedInstructor.fee || 0) + groupMembers.length * 30
+                                const platformFeeAmount = (instructorBaseAmount * commission / 100).toFixed(2)
+                                return (
+                                    <div className="flex justify-between items-center">
+                                        <span>Platform Fee ({commission}%)</span>
+                                        <span>${platformFeeAmount}</span>
+                                    </div>
+                                )
+                            })()}
                         </div>
 
                         <Separator className="bg-gray-700 my-5" />
