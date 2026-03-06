@@ -144,7 +144,26 @@ export const updateAdventure = asyncHandler(async (req, res) => {
 
   adventure.name = name || adventure.name;
   adventure.description = description || adventure.description;
-  adventure.location = location || adventure.location;
+  if (location !== undefined && location !== null) {
+    let locationsArray = location
+
+    if (Array.isArray(location)) {
+      locationsArray = location.map((l) => (typeof l === "object" && l !== null ? l._id : l))
+    } else if (typeof location === "string" && location.includes(",")) {
+      locationsArray = location.split(",").map((s) => s.trim())
+    } else if (typeof location === "string") {
+      locationsArray = [location]
+    }
+
+    locationsArray = locationsArray.filter(
+      (id) => typeof id === "string" && id.length === 24 && !id.includes("[object")
+    )
+
+    if (locationsArray.length > 0) {
+      adventure.location = locationsArray
+    }
+  }
+
   adventure.date = date || adventure.date;
   adventure.exp = exp || adventure.exp;
   adventure.instructor = instructor || adventure.instructor;
