@@ -102,6 +102,7 @@ const SponsorsPage = lazy(() => import("./Pages/Admin/SubPages/Sponsors"))
 const AchievementRulesPage = lazy(() => import("./Pages/Admin/SubPages/AchievementRules"))
 const RBACManagement = lazy(() => import("./Pages/Admin/SubPages/RBACManagement"))
 const RegistrationLimitsPage = lazy(() => import("./Pages/Admin/SubPages/RegistrationLimits"))
+const AdventureInsightsPage = lazy(() => import("./Pages/Admin/SubPages/AdventureInsights"))
 
 // Shop - Lazy loaded
 const ItemPage = lazy(() => import("./Pages/Shop/ItemPage").then(module => ({ default: module.ItemPage })))
@@ -371,6 +372,7 @@ const App = () => {
                           <Route path="/admin/sponsors" element={<SponsorsPage />} />
                           <Route path="/admin/achievement-rules" element={<AchievementRulesPage />} />
                           <Route path="/admin/rbac" element={<RBACManagement />} />
+                          <Route path="/admin/adventure-insights" element={<AdventureInsightsPage />} />
                         </Route>
                       </Routes>
                     </Suspense>

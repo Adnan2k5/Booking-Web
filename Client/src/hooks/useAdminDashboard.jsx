@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getAdminDashboardStats } from "../Api/admin.api";
 
-export function useAdminDashboard(range = "month") {
+export function useAdminDashboard(range = "month", locationId = null) {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -9,7 +9,7 @@ export function useAdminDashboard(range = "month") {
   const fetchStats = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await getAdminDashboardStats(range);
+      const response = await getAdminDashboardStats(range, locationId);
       const payload = response?.data ?? null;
       setData(payload);
       setError(null);
@@ -20,7 +20,7 @@ export function useAdminDashboard(range = "month") {
     } finally {
       setIsLoading(false);
     }
-  }, [range]);
+  }, [range, locationId]);
 
   useEffect(() => {
     fetchStats();

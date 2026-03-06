@@ -12,8 +12,10 @@ import {
   deleteAdmin,
   getAllAdmins,
   getDashboardStats,
+  getDashboardLocations,
   updateAdmin,
   getAdminPermissions,
+  getAdventureInsights,
 } from "../controllers/admin.controller.js";
 
 const adminRouter = express.Router();
@@ -23,7 +25,9 @@ adminRouter.use(verifyJWT);
 adminRouter.use(verifyAdmin);
 
 // Dashboard - all admins can view
-adminRouter.get("/dashboard/stats", getDashboardStats);
+adminRouter.get("/dashboard/stats", getDashboardStats)
+adminRouter.get("/dashboard/locations", getDashboardLocations)
+adminRouter.get("/adventure-insights/:adventureId", getAdventureInsights);
 
 // Get current user's permissions (for frontend RBAC)
 adminRouter.get("/permissions", getAdminPermissions);

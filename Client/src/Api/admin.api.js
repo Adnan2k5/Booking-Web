@@ -23,15 +23,15 @@ export const deleteAdmin = async (adminId) => {
   return res.data;
 };
 
-export const getAdminDashboardStats = async (range = "month") => {
-  const params = {};
-  if (range) {
-    params.range = range;
-  }
+export const getAdminDashboardStats = async (range = "month", locationId = null) => {
+  const params = {}
+  if (range) params.range = range
+  if (locationId) params.locationId = locationId
+  const res = await axiosClient.get("/api/admin/dashboard/stats", { params })
+  return res.data
+}
 
-  const res = await axiosClient.get("/api/admin/dashboard/stats", {
-    params,
-  });
-
-  return res.data;
-};
+export const getAdminDashboardLocations = async () => {
+  const res = await axiosClient.get("/api/admin/dashboard/locations", { withCredentials: true })
+  return res.data
+}

@@ -19,6 +19,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import {
   BarChart3,
+  BarChart2,
   BookOpen,
   ClipboardCheck,
   Compass,
@@ -44,6 +45,7 @@ const ROLE_ACCESS_CONFIG = {
   Dashboard: [],
   Locations: [],
   Adventures: ['Instructor'],
+  'Adventure Insights': ['Instructor'],
   Bookings: ['Hotel', 'Instructor'],
   Admins: ['Admin'],
   Users: ['User'],
@@ -63,6 +65,7 @@ const ROLE_ACCESS_CONFIG = {
 
 const SIDEBAR_ITEMS = [
   { key: 'Adventures', path: '/admin/adventures', icon: Compass, label: 'Adventures' },
+  { key: 'Adventure Insights', path: '/admin/adventure-insights', icon: BarChart2, label: 'Adventure Insights' },
   { key: 'Bookings', path: '/admin/bookings', icon: BookOpen, label: 'Bookings' },
   { key: 'Events', path: '/admin/events', icon: Hotel, label: 'Events' },
   { key: 'Achievement Rules', path: '/admin/achievement-rules', icon: Award, label: 'Achievement Rules' },
