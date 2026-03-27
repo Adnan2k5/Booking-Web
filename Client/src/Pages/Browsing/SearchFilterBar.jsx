@@ -19,7 +19,12 @@ export function SearchFilterBar({
   const adventureOptions = [...new Set(allAdventures.map(adv => adv.name))].filter(Boolean)
 
   // Extract location names
-  const locationOptions = locations.map(location => location.name).filter(Boolean)
+  const locationOptions = adventure
+    ? allAdventures
+        .find(adv => adv.name?.toLowerCase() === adventure.toLowerCase())
+        ?.location?.map(l => l.name)
+        .filter(Boolean) || []
+    : locations.map(location => location.name).filter(Boolean)
 
   return (
     <div className="space-y-4">

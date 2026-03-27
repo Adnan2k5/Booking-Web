@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Search, ChevronRight, Filter, X } from 'lucide-react';
 import ProductsGrid from '../../components/shop/ProductsGrid';
 import { axiosClient } from '../../AxiosClient/axios';
 import MainHeader from '../../components/shop/MainHeader';
 import Footer from '../../components/shop/Footer';
-import { useContext } from 'react';
 import { CartContext } from '../Cart/CartContext';
 import { useComparison } from '../../contexts/ComparisonContext';
 import { useFavorites } from '../../contexts/FavoritesContext';
+import { getCategories } from '../../Api/category.api';
 
 export default function NavResultsPage() {
   const [searchParams] = useSearchParams();
@@ -23,11 +23,21 @@ export default function NavResultsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const categories = ['Camping', 'Clothing', 'Footwear', 'Accessories', 'Equipment'];
+  const [categories, setCategories] = useState([]);
   const searchQuery = searchParams.get('search') || '';
   const categoryParam = searchParams.get('category') || '';
 
   const limit = 12;
+
+  useEffect(() => {
+    getCategories()
+      .then(res => {
+        const data = res?.data?.message || [];
+        const names = Array.isArray(data) ? data.map(c => c.name).filter(Boolean) : [];
+        setCategories(names);
+      })
+      .catch(() => setCategories([]));
+  }, []);
 
   // Shared fetch that ProductsGrid will call via onFilterChange (uses axios client)
   const fetchItems = async (filters = {}) => {

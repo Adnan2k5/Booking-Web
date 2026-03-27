@@ -27,18 +27,19 @@ export const createBooking = asyncHandler(async (req, res) => {
   if (!cart) {
     throw new ApiError(404, "Cart not found");
   }
-  const totalPrice = cart.items.reduce((sum, item) => {
+  const rawSubtotal = cart.items.reduce((sum, item) => {
     if (item.purchase) {
       sum += item.item.price * item.quantity;
     } else {
       // For rental items, calculate based on rental period
       const startDate = new Date(item.rentalPeriod.startDate);
       const endDate = new Date(item.rentalPeriod.endDate);
-      const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+      const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
       sum += item.item.rentalPrice * item.quantity * days;
     }
     return sum;
   }, 0);
+  const totalPrice = rawSubtotal + rawSubtotal * 0.12;
 
   if (modeOfPayment && modeOfPayment.toLowerCase() === "revolut") {
     // Create Revolut payment order

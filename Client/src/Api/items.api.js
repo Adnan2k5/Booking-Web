@@ -1,7 +1,7 @@
 import {axiosClient} from '../AxiosClient/axios';
 
 
-export const fetchAllItems = async ({ search, category, page, limit } = {}) => {
+export const fetchAllItems = async ({ search, category, page, limit, adventureId } = {}) => {
   let url = '/api/items/discover';
   const params = {};
   
@@ -9,6 +9,7 @@ export const fetchAllItems = async ({ search, category, page, limit } = {}) => {
   if (category) params.category = category;
   if (page) params.page = page;
   if (limit) params.limit = limit;
+  if (adventureId) params.adventureId = adventureId;
   
   const res = await axiosClient.get(url, {
     params,

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { toast } from "sonner"
@@ -24,8 +24,7 @@ import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Separator } from "../../components/ui/separator"
 import { Badge } from "../../components/ui/badge"
-import { Slider } from "../../components/ui/slider"
-import { Navbar } from "../../components/Navbar"
+import { Nav_Landing } from "../../components/Nav_Landing"
 import { useTranslation } from "react-i18next"
 import { createHotelBooking } from "../../Api/hotelBooking.api"
 
@@ -35,24 +34,42 @@ export default function HotelCheckout() {
   const location = useLocation()
   const [isLoading, setIsLoading] = useState(false)
 
-  // Get hotel data from location state or redirect back
-  const hotelData = location.state?.hotel
-
-  if (!hotelData) {
-    useEffect(() => {
-      toast.error("No hostel selected for booking")
-      navigate("/hotels")
-    }, [])
+  // Get hotel data from location state, or fall back to localStorage for post-login redirects
+  const pendingRef = useRef(() => {
+    const stored = localStorage.getItem('pendingHotelBooking')
+    if (stored) {
+      try { return JSON.parse(stored) } catch { return null }
+    }
     return null
-  } const [bookingDetails, setBookingDetails] = useState({
-    checkInDate: location.state?.checkInDate || new Date().toISOString().split("T")[0],
-    checkOutDate: location.state?.checkOutDate || new Date(Date.now() + 86400000).toISOString().split("T")[0],
-    rooms: location.state?.rooms || 1,
-    guests: typeof location.state?.guests === 'object'
-      ? (location.state.guests.adults || 1) + (location.state.guests.children || 0)
-      : location.state?.guests || 2,
+  })
+  const pending = pendingRef.current()
+  const hotelData = location.state?.hotel || pending?.hotel
+
+  const stateOrPending = location.state || pending || {}
+
+  const [bookingDetails, setBookingDetails] = useState({
+    checkInDate: stateOrPending.checkInDate || new Date().toISOString().split("T")[0],
+    checkOutDate: stateOrPending.checkOutDate || new Date(Date.now() + 86400000).toISOString().split("T")[0],
+    rooms: stateOrPending.rooms || 1,
+    guests: typeof stateOrPending.guests === 'object'
+      ? (stateOrPending.guests.adults || 1) + (stateOrPending.guests.children || 0)
+      : stateOrPending.guests || 2,
     specialRequests: ""
   })
+
+  useEffect(() => {
+    // Clean up localStorage once we've read the pending booking
+    if (!location.state?.hotel && pending?.hotel) {
+      localStorage.removeItem('pendingHotelBooking')
+    }
+    // Redirect if there's no hotel at all
+    if (!hotelData) {
+      toast.error("No hotel selected for booking")
+      navigate("/book-hotel")
+    }
+  }, [])
+
+  if (!hotelData) return null
 
   // Calculate stay duration in nights
   const nights = Math.ceil((new Date(bookingDetails.checkOutDate) - new Date(bookingDetails.checkInDate)) / (1000 * 60 * 60 * 24))
@@ -100,8 +117,8 @@ export default function HotelCheckout() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <Nav_Landing theme="dark" />
 
       <motion.div
         initial={{ opacity: 0 }}
@@ -224,42 +241,30 @@ export default function HotelCheckout() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    {/* Number of Rooms Slider */}
+                    {/* Number of Rooms */}
                     <div>
-                      <Label className="text-base font-medium">Number of Rooms: {bookingDetails.rooms}</Label>
-                      <div className="mt-3">
-                        <Slider
-                          value={[bookingDetails.rooms]}
-                          onValueChange={(value) => setBookingDetails(prev => ({ ...prev, rooms: value[0] }))}
-                          max={10}
-                          min={1}
-                          step={1}
-                          className="w-full"
-                        />
-                        <div className="flex justify-between text-sm text-gray-500 mt-1">
-                          <span>1 room</span>
-                          <span>10 rooms</span>
-                        </div>
-                      </div>
+                      <Label className="block text-sm font-semibold text-gray-700 mb-2">Number of Rooms</Label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={bookingDetails.rooms}
+                        onChange={(e) => setBookingDetails(prev => ({ ...prev, rooms: parseInt(e.target.value || '1') }))}
+                        className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                      />
                     </div>
 
-                    {/* Number of Guests Slider */}
+                    {/* Number of Guests */}
                     <div>
-                      <Label className="text-base font-medium">Number of Guests: {bookingDetails.guests}</Label>
-                      <div className="mt-3">
-                        <Slider
-                          value={[bookingDetails.guests]}
-                          onValueChange={(value) => setBookingDetails(prev => ({ ...prev, guests: value[0] }))}
-                          max={20}
-                          min={1}
-                          step={1}
-                          className="w-full"
-                        />
-                        <div className="flex justify-between text-sm text-gray-500 mt-1">
-                          <span>1 guest</span>
-                          <span>20 guests</span>
-                        </div>
-                      </div>
+                      <Label className="block text-sm font-semibold text-gray-700 mb-2">Number of Guests</Label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={bookingDetails.guests}
+                        onChange={(e) => setBookingDetails(prev => ({ ...prev, guests: parseInt(e.target.value || '1') }))}
+                        className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                      />
                     </div>
 
                     {/* Special Requests */}

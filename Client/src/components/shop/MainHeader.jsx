@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { Search, ShoppingCart, Heart, User, Menu, X, GitCompare, Tent, Shirt, Footprints, Watch, Wrench } from "lucide-react";
+import { Search, ShoppingCart, Heart, User, Menu, X, GitCompare, Mountain, Tent, Waves, Wind, ShieldCheck } from "lucide-react";
 
 export default function MainHeader({ categories = [], onSearch, onCategorySelect, selectedCategory }) {
   const navigate = useNavigate();
@@ -12,13 +12,12 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
   const inputRef = useRef(null);
   const baseUrl = import.meta.env.VITE_SERVER_URL;
 
-  // map category names to icons (uses lucide-react icons available in the project)
   const categoryIcons = {
-    Camping: Tent,
-    Clothing: Shirt,
-    Footwear: Footprints,
-    Accessories: Watch,
-    Equipment: Wrench,
+    "Climbing Gear": Mountain,
+    "Camping Equipment": Tent,
+    "Water Sports": Waves,
+    "High Altitude Wear": Wind,
+    "Safety & Protection": ShieldCheck,
   };
 
   const submit = (e) => {
@@ -70,33 +69,7 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
         <Link to="/" className="text-2xl font-bold tracking-tight">
           <span className="text-orange-400">Adventure</span>Shop
         </Link>
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6 text-sm">
-          {categories.map(c => (
-            <Link
-              key={c}
-              to={`/shop/category/${c.toLowerCase()}`}
-              onClick={(e) => {
-                // Always prevent default and either call the handler or navigate to the nav results page
-                e.preventDefault();
-                if (onCategorySelect) {
-                  onCategorySelect(c);
-                } else {
-                  navigate(`/shop/nav?category=${encodeURIComponent(c)}`);
-                }
-              }}
-              aria-current={selectedCategory === c ? 'page' : undefined}
-              className={`transition-colors font-medium ${selectedCategory === c ? 'text-orange-400 font-semibold underline underline-offset-4' : 'hover:text-orange-400'}`}
-            >
-              {/* render a small icon if we have one for this category */}
-              {(() => {
-                const Icon = categoryIcons[c];
-                return Icon ? <Icon className="inline-block mr-2 -mt-0.5 h-4 w-4 text-current" aria-hidden="true" /> : null;
-              })()}
-              {c}
-            </Link>
-          ))}
-        </nav>
+        {/* Desktop Nav (Categories Removed) */}
         {/* Actions */}
         <div className="hidden md:flex items-center gap-5">
           <form onSubmit={submit} className="relative" ref={inputRef} autoComplete="off">
@@ -144,29 +117,7 @@ export default function MainHeader({ categories = [], onSearch, onCategorySelect
               <Search className="h-4 w-4" />
             </button>
           </form>
-          <div className="grid gap-2">
-            {categories.map(c => (
-              <Link
-                key={c}
-                to={`/shop/category/${c.toLowerCase()}`}
-                onClick={(e) => {
-                  if (onCategorySelect) {
-                    e.preventDefault();
-                    onCategorySelect(c);
-                  }
-                  setMobileOpen(false);
-                }}
-                aria-current={selectedCategory === c ? 'page' : undefined}
-                className={`py-2 border-b border-neutral-800 text-sm font-medium tracking-wide ${selectedCategory === c ? 'text-orange-400 font-semibold underline underline-offset-4' : ''}`}
-              >
-                {(() => {
-                  const Icon = categoryIcons[c];
-                  return Icon ? <Icon className="inline-block mr-2 -mt-0.5 h-4 w-4 text-current" aria-hidden="true" /> : null;
-                })()}
-                {c}
-              </Link>
-            ))}
-          </div>
+          {/* Mobile Nav Categories Removed */}
           <div className="flex gap-6 pt-2 text-sm">
             <Link to="/favorites" onClick={() => setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><Heart className="h-4 w-4" /> Favorites</Link>
             <Link to="/shop/comparison" onClick={() => setMobileOpen(false)} className="hover:text-orange-400 flex items-center gap-1"><GitCompare className="h-4 w-4" /> Compare</Link>

@@ -1,71 +1,169 @@
 import { Hotel } from "../models/hotel.model.js";
 import { User } from "../models/user.model.js";
+import { Location } from "../models/location.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import sendEmail from "../utils/sendOTP.js";
 import { Otp } from "../models/otp.model.js";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import {
   translateObjectFields,
   translateObjectsFields,
 } from "../utils/translation.js";
 import { getLanguage } from "../middlewares/language.middleware.js";
 
-export const verifyHotel = asyncHandler(async (req, res) => {
-  const { email } = req.body;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const OTP_VALIDITY_MS = 10 * 60 * 1000;
+const MIN_PASSWORD_LENGTH = 6;
+const HOTEL_CATEGORY_CAMPING = "camping";
+const USER_ROLE_ADMIN = "admin";
+const USER_ROLE_SUPERADMIN = "superadmin";
 
-  // Validate email
+const validateEmail = (email) => {
   if (!email || !email.trim()) {
     throw new ApiError(400, "Email is required");
   }
-
-  // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!EMAIL_REGEX.test(email)) {
     throw new ApiError(400, "Invalid email format");
   }
+  return email.trim();
+};
 
-  // Check if user already exists
-  const existingUser = await User.findOne({ email: email.trim() });
-  if (existingUser) {
-    throw new ApiError(409, "User already exists with this email");
+const uploadSingleFile = async (fileArr) => {
+  if (!fileArr || !fileArr[0]) return null;
+  const uploaded = await uploadOnCloudinary(fileArr[0].path);
+  return uploaded?.url || null;
+};
+
+const uploadMultipleFiles = async (fileArr) => {
+  if (!fileArr || fileArr.length === 0) return [];
+  const uploadPromises = fileArr.map((file) => uploadOnCloudinary(file.path));
+  const results = await Promise.all(uploadPromises);
+  return results.filter((r) => r?.url).map((r) => r.url);
+};
+
+const validateRequiredFiles = (files) => {
+  if (!files.businessLicense || !files.businessLicense[0]) {
+    throw new ApiError(400, "Business license document is required");
+  }
+  if (!files.hotelImages || files.hotelImages.length === 0) {
+    throw new ApiError(400, "At least one hotel image is required");
+  }
+};
+
+const uploadHotelFiles = async (files) => {
+  const [
+    profileImageUrl,
+    businessLicenseUrl,
+    taxCertificateUrl,
+    insuranceDocumentUrl,
+    hotelImagesUrls,
+  ] = await Promise.all([
+    uploadSingleFile(files.profileImage),
+    uploadSingleFile(files.businessLicense),
+    uploadSingleFile(files.taxCertificate),
+    uploadSingleFile(files.insuranceDocument),
+    uploadMultipleFiles(files.hotelImages),
+  ]);
+
+  if (!businessLicenseUrl) {
+    throw new ApiError(500, "Failed to upload business license");
+  }
+  if (hotelImagesUrls.length === 0) {
+    throw new ApiError(500, "Failed to upload hotel images");
   }
 
-  // Generate OTP
-  const otp = Math.floor(100000 + Math.random() * 900000);
-  
-  // Delete any existing OTP for this email
-  await Otp.deleteMany({ userId: email.trim() });
-  
-  // Create new OTP
-  await Otp.create({ userId: email.trim(), otp });
+  return {
+    profileImageUrl,
+    businessLicenseUrl,
+    taxCertificateUrl,
+    insuranceDocumentUrl,
+    hotelImagesUrls,
+  };
+};
 
-  // Send OTP email
+const validateLocation = async (locationId) => {
+  const locationExists = await Location.findById(locationId);
+  if (!locationExists) {
+    throw new ApiError(400, "Invalid location selected");
+  }
+};
+
+const parseArrayField = (field) => {
+  return Array.isArray(field)
+    ? field.filter((item) => item)
+    : field
+      ? [field]
+      : [];
+};
+
+const isCampingCategory = (categoryValue) => {
+  return categoryValue?.toLowerCase() === HOTEL_CATEGORY_CAMPING;
+};
+
+const extractAdminFromToken = async (req) => {
   try {
-    await sendEmail({
-      to: email.trim(),
-      subject: "Hotel Registration OTP Verification",
-      text: `Your OTP for hotel registration is: ${otp}. This OTP is valid for 10 minutes.`,
-    });
-  } catch (emailError) {
-    console.error("Email sending error:", emailError);
-    throw new ApiError(500, "Failed to send OTP email. Please try again.");
+    const authHeader = req.header("Authorization");
+    const token =
+      req.cookies?.accessToken ||
+      (authHeader?.startsWith("Bearer ")
+        ? authHeader.replace("Bearer ", "").trim()
+        : null);
+
+    if (!token || token === "" || token === "null" || token === "undefined") {
+      return null;
+    }
+
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const user = await User.findById(decodedToken?._id).select(
+      "-password -refreshToken -reviews",
+    );
+
+    if (!user) {
+      return null;
+    }
+
+    return user.role === USER_ROLE_ADMIN || user.role === USER_ROLE_SUPERADMIN
+      ? user
+      : null;
+  } catch (error) {
+    return null;
   }
+};
+
+export const verifyHotel = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const validatedEmail = validateEmail(email);
+  await checkUserExists(validatedEmail);
+
+  const otp = Math.floor(100000 + Math.random() * 900000);
+  await Otp.deleteMany({ userId: validatedEmail });
+  await Otp.create({ userId: validatedEmail, otp });
+
+  await sendEmail({
+    to: validatedEmail,
+    subject: "Hotel Registration OTP Verification",
+    text: `Your OTP for hotel registration is: ${otp}. This OTP is valid for 10 minutes.`,
+  });
 
   res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        { email: email.trim() },
-        "OTP sent to email. Please verify to complete registration."
-      )
+        { email: validatedEmail },
+        "OTP sent to email. Please verify to complete registration.",
+      ),
     );
 });
 
-// New endpoint for OTP verification and final registration
 export const HotelRegistration = asyncHandler(async (req, res) => {
+  const adminUser = await extractAdminFromToken(req);
+  const isAdminCreation = !!adminUser;
+
   const {
     email,
     otp,
@@ -86,118 +184,86 @@ export const HotelRegistration = asyncHandler(async (req, res) => {
     amenities,
   } = req.body;
 
-  // Validate required fields
-  if (!email || !otp) {
-    throw new ApiError(400, "Email and OTP are required");
+  const validatedEmail = validateEmail(email);
+
+  let otpRecord = null;
+  if (!isAdminCreation) {
+    if (!otp) {
+      throw new ApiError(400, "OTP is required");
+    }
+    if (!password) {
+      throw new ApiError(400, "Password is required");
+    }
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      throw new ApiError(
+        400,
+        `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`,
+      );
+    }
+
+    otpRecord = await Otp.findOne({
+      userId: validatedEmail,
+      otp,
+      verified: false,
+    });
+    if (!otpRecord) {
+      throw new ApiError(400, "Invalid or expired OTP");
+    }
+
+    const otpAge = Date.now() - otpRecord.createdAt.getTime();
+    if (otpAge > OTP_VALIDITY_MS) {
+      await otpRecord.deleteOne();
+      throw new ApiError(400, "OTP has expired. Please request a new one.");
+    }
   }
-  
-  if (!name || !password || !location || !address || !phone || !managerName || !rooms) {
+
+  if (!name || !location || !address || !phone || !managerName) {
     throw new ApiError(400, "All required fields must be provided");
   }
 
-  // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    throw new ApiError(400, "Invalid email format");
+  const isCamping = isCampingCategory(category);
+
+  if (!isCamping && !rooms) {
+    throw new ApiError(
+      400,
+      "Number of rooms is required for non-camping properties",
+    );
   }
 
-  // Validate password strength
-  if (password.length < 6) {
-    throw new ApiError(400, "Password must be at least 6 characters long");
-  }
+  await validateLocation(location);
 
-  // Check OTP
-  const otpRecord = await Otp.findOne({ userId: email, otp, verified: false });
-  if (!otpRecord) {
-    throw new ApiError(400, "Invalid or expired OTP");
-  }
-
-  // Check if OTP is expired (10 minutes validity)
-  const otpAge = Date.now() - otpRecord.createdAt.getTime();
-  if (otpAge > 10 * 60 * 1000) {
-    await otpRecord.deleteOne();
-    throw new ApiError(400, "OTP has expired. Please request a new one.");
-  }
-
-  // Check if user was created in the meantime
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    throw new ApiError(409, "User already exists with this email");
-  }
-
-  // Mark OTP as used
-  otpRecord.verified = true;
-  await otpRecord.save();
-
-  // Upload images to Cloudinary with error handling
   const files = req.files || {};
-  
-  const uploadFile = async (fileArr) => {
-    if (!fileArr || !fileArr[0]) return null;
-    try {
-      const uploaded = await uploadOnCloudinary(fileArr[0].path);
-      return uploaded?.url || null;
-    } catch (error) {
-      console.error("File upload error:", error);
-      return null;
+  validateRequiredFiles(files);
+
+  const {
+    profileImageUrl,
+    businessLicenseUrl,
+    taxCertificateUrl,
+    insuranceDocumentUrl,
+    hotelImagesUrls,
+  } = await uploadHotelFiles(files);
+
+  let user;
+  try {
+    user = await User.create({
+      email: validatedEmail,
+      password: isAdminCreation ? undefined : password,
+      role: "hotel",
+      verified: isAdminCreation,
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      throw new ApiError(409, "User already exists with this email");
     }
-  };
-  
-  const uploadMultiple = async (fileArr) => {
-    if (!fileArr || fileArr.length === 0) return [];
-    const urls = [];
-    for (const file of fileArr) {
-      try {
-        const uploaded = await uploadOnCloudinary(file.path);
-        if (uploaded?.url) urls.push(uploaded.url);
-      } catch (error) {
-        console.error("File upload error:", error);
-      }
-    }
-    return urls;
-  };
-
-  // Validate required files
-  if (!files.businessLicense || !files.businessLicense[0]) {
-    throw new ApiError(400, "Business license document is required");
-  }
-  
-  if (!files.hotelImages || files.hotelImages.length === 0) {
-    throw new ApiError(400, "At least one hotel image is required");
+    throw error;
   }
 
-  const profileImageUrl = await uploadFile(files.profileImage);
-  const businessLicenseUrl = await uploadFile(files.businessLicense);
-  const taxCertificateUrl = await uploadFile(files.taxCertificate);
-  const insuranceDocumentUrl = await uploadFile(files.insuranceDocument);
-  const hotelImagesUrls = await uploadMultiple(files.hotelImages);
+  const finalPrice = pricePerNight
+    ? Number(pricePerNight)
+    : price
+      ? Number(price)
+      : 0;
 
-  // Verify uploads
-  if (!businessLicenseUrl) {
-    throw new ApiError(500, "Failed to upload business license");
-  }
-  
-  if (hotelImagesUrls.length === 0) {
-    throw new ApiError(500, "Failed to upload hotel images");
-  }
-
-  // Create user
-  const user = await User.create({
-    email: email.trim(),
-    password,
-    role: "hotel",
-    verified: true,
-  });
-  
-  // Validate location exists
-  const { Location } = await import("../models/location.model.js");
-  const locationExists = await Location.findById(location);
-  if (!locationExists) {
-    await User.findByIdAndDelete(user._id); // Cleanup
-    throw new ApiError(400, "Invalid location selected");
-  }
-  
-  // Create hotel
   const hotel = await Hotel.create({
     name: name.trim(),
     location,
@@ -205,27 +271,78 @@ export const HotelRegistration = asyncHandler(async (req, res) => {
     contactNo: phone.trim(),
     managerName: managerName.trim(),
     category: category || "hotel",
-    noRoom: Number(rooms),
-    description: description.trim(),
-    price: pricePerNight ? Number(pricePerNight) : (price ? Number(price) : 0),
-    pricePerNight: pricePerNight ? Number(pricePerNight) : (price ? Number(price) : 0),
+    noRoom: isCamping ? 0 : Number(rooms),
+    description: description?.trim() || "",
+    price: finalPrice,
+    pricePerNight: finalPrice,
     rating: rating ? Number(rating) : 0,
-    amenities: Array.isArray(amenities) ? amenities.filter(a => a) : (amenities ? [amenities] : []),
-    socials: Array.isArray(socials) ? socials.filter(s => s) : (socials ? [socials] : []),
+    amenities: parseArrayField(amenities),
+    socials: parseArrayField(socials),
     logo: profileImageUrl,
     medias: hotelImagesUrls,
-    website: website ? website.trim() : "",
+    website: website?.trim() || "",
     license: businessLicenseUrl,
     certificate: taxCertificateUrl,
     insurance: insuranceDocumentUrl,
     owner: user._id,
-    verified: "pending", // Set initial verification status
+    verified: isAdminCreation ? "approved" : "pending",
   });
+
+  if (otpRecord) {
+    await otpRecord.deleteOne();
+  }
 
   res
     .status(201)
     .json(
-      new ApiResponse(201, { user, hotel }, "Hotel registered successfully. Please wait for admin approval.")
+      new ApiResponse(
+        201,
+        { user, hotel },
+        isAdminCreation
+          ? "Hotel created successfully by admin."
+          : "Hotel registered successfully. Please wait for admin approval.",
+      ),
+    );
+});
+
+export const getHotelDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const language = getLanguage(req);
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid hotel id");
+  }
+
+  const hotel = await Hotel.findById(id)
+    .populate("owner", "name email")
+    .populate("location", "name");
+
+  if (!hotel) {
+    throw new ApiError(404, "Hotel not found");
+  }
+
+  const plainHotel = hotel.toJSON();
+
+  let translatedHotel;
+  if (language !== "en") {
+    const fieldsToTranslate = ["description", "category", "amenities"];
+    translatedHotel = await translateObjectFields(
+      plainHotel,
+      fieldsToTranslate,
+      language,
+    );
+  } else {
+    translatedHotel = plainHotel;
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { hotel: translatedHotel },
+        "Hotel details retrieved successfully",
+      ),
     );
 });
 
@@ -233,7 +350,6 @@ export const getHotelById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const language = getLanguage(req);
 
-  // Fetch from database
   const hotelData = await Hotel.find({ owner: id })
     .populate("owner", "name email")
     .populate("location", "name");
@@ -242,17 +358,15 @@ export const getHotelById = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Hotel not found");
   }
 
-  // Convert Mongoose documents to plain objects
   const plainHotelData = hotelData.map((hotel) => hotel.toJSON());
 
   let hotel;
-  // Translate hotel fields if language is not English
   if (language !== "en") {
     const fieldsToTranslate = ["description", "category", "amenities"];
     hotel = await translateObjectsFields(
       plainHotelData,
       fieldsToTranslate,
-      language
+      language,
     );
   } else {
     hotel = plainHotelData;
@@ -270,6 +384,7 @@ export const getHotel = asyncHandler(async (req, res) => {
     limit = 10,
     verified,
     location,
+    category,
     minPrice,
     maxPrice,
     minRating,
@@ -288,10 +403,7 @@ export const getHotel = asyncHandler(async (req, res) => {
     ];
   }
 
-  // Location filtering - handle both location ID and location name
   if (location) {
-    // First, try to find location by name to get the ID
-    const { Location } = await import("../models/location.model.js");
     const locationDoc = await Location.findOne({
       name: { $regex: location, $options: "i" },
     });
@@ -299,30 +411,30 @@ export const getHotel = asyncHandler(async (req, res) => {
     if (locationDoc) {
       query.location = locationDoc._id;
     } else {
-      // If no location found by name, try by ID (for backward compatibility)
       query.location = location;
     }
+  }
+
+  if (category) {
+    query.category = { $regex: category, $options: "i" };
   }
 
   if (verified) {
     query.verified = verified;
   }
 
-  // Price filtering
   if (minPrice || maxPrice) {
     query.pricePerNight = {};
     if (minPrice) query.pricePerNight.$gte = Number(minPrice);
     if (maxPrice) query.pricePerNight.$lte = Number(maxPrice);
   }
 
-  // Rating filtering
   if (minRating) {
     query.rating = { $gte: Number(minRating) };
   }
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  // Sorting
   const sortOptions = {};
   sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
   let hotels = await Hotel.find(query)
@@ -332,17 +444,15 @@ export const getHotel = asyncHandler(async (req, res) => {
     .populate("owner", "name email")
     .populate("location", "name");
 
-  // Convert Mongoose documents to plain objects
   const plainHotels = hotels.map((hotel) => hotel.toJSON());
   const total = await Hotel.countDocuments(query);
 
-  // Translate hotel fields if language is not English
   if (language !== "en" && plainHotels.length > 0) {
     const fieldsToTranslate = ["description", "category", "amenities"];
     hotels = await translateObjectsFields(
       plainHotels,
       fieldsToTranslate,
-      language
+      language,
     );
   } else {
     hotels = plainHotels;
@@ -363,7 +473,7 @@ export const approveHotel = asyncHandler(async (req, res) => {
   const hotel = await Hotel.findByIdAndUpdate(
     id,
     { verified: "approved" },
-    { new: true }
+    { new: true },
   );
   if (!hotel) {
     throw new ApiError(404, "Hotel not found");
@@ -379,7 +489,7 @@ export const rejectHotel = asyncHandler(async (req, res) => {
   const hotel = await Hotel.findByIdAndUpdate(
     id,
     { verified: "rejected" },
-    { new: true }
+    { new: true },
   );
   if (!hotel) {
     throw new ApiError(404, "Hotel not found");
@@ -401,7 +511,7 @@ export const updateHotelRating = asyncHandler(async (req, res) => {
   const hotel = await Hotel.findByIdAndUpdate(
     id,
     { rating: Number(rating) },
-    { new: true }
+    { new: true },
   );
 
   if (!hotel) {
@@ -452,20 +562,21 @@ export const updateHotel = asyncHandler(async (req, res) => {
     category,
   } = req.body;
 
-  // Validate hotel exists and get current data
   const existingHotel = await Hotel.findById(id);
   if (!existingHotel) {
     throw new ApiError(404, "Hotel not found");
   }
 
-  // Verify ownership (if user is authenticated)
   if (req.user && existingHotel.owner.toString() !== req.user._id.toString()) {
     throw new ApiError(403, "You don't have permission to update this hotel");
   }
 
-  // Build update object with only provided fields
   const updateData = {};
-  
+
+  const finalCategory =
+    category !== undefined ? category : existingHotel.category;
+  const isCamping = isCampingCategory(finalCategory);
+
   if (name !== undefined) updateData.name = name.trim();
   if (description !== undefined) updateData.description = description.trim();
   if (contactNo !== undefined) updateData.contactNo = contactNo.trim();
@@ -473,57 +584,52 @@ export const updateHotel = asyncHandler(async (req, res) => {
   if (fullAddress !== undefined) updateData.fullAddress = fullAddress.trim();
   if (website !== undefined) updateData.website = website.trim();
   if (category !== undefined) updateData.category = category;
-  
-  // Handle numeric fields
+
   if (price !== undefined) updateData.price = Number(price);
   if (pricePerNight !== undefined) {
     updateData.pricePerNight = Number(pricePerNight);
-    // Keep price in sync if pricePerNight is updated
     if (price === undefined) updateData.price = Number(pricePerNight);
   }
-  if (noRoom !== undefined) updateData.noRoom = Number(noRoom);
-  
-  // Handle array fields
-  if (amenities !== undefined) {
-    updateData.amenities = Array.isArray(amenities) 
-      ? amenities.filter(a => a) 
-      : (amenities ? [amenities] : []);
+
+  if (isCamping && noRoom !== undefined) {
+    throw new ApiError(
+      400,
+      "Number of rooms cannot be set for camping properties",
+    );
   }
 
-  // Handle file uploads if present
+  if (category !== undefined && isCampingCategory(category)) {
+    updateData.noRoom = 0;
+  } else if (noRoom !== undefined) {
+    updateData.noRoom = Number(noRoom);
+  }
+
+  if (amenities !== undefined) {
+    updateData.amenities = parseArrayField(amenities);
+  }
+
   const files = req.files || {};
-  
+
   if (files.profileImage && files.profileImage[0]) {
-    try {
-      const uploaded = await uploadOnCloudinary(files.profileImage[0].path);
-      if (uploaded?.url) updateData.logo = uploaded.url;
-    } catch (error) {
-      console.error("Profile image upload error:", error);
-    }
+    const uploaded = await uploadOnCloudinary(files.profileImage[0].path);
+    if (uploaded?.url) updateData.logo = uploaded.url;
   }
 
   if (files.hotelImages && files.hotelImages.length > 0) {
-    try {
-      const urls = [];
-      for (const file of files.hotelImages) {
-        const uploaded = await uploadOnCloudinary(file.path);
-        if (uploaded?.url) urls.push(uploaded.url);
-      }
-      if (urls.length > 0) {
-        // Append new images to existing ones
-        updateData.medias = [...(existingHotel.medias || []), ...urls];
-      }
-    } catch (error) {
-      console.error("Hotel images upload error:", error);
+    const uploadPromises = files.hotelImages.map((file) =>
+      uploadOnCloudinary(file.path),
+    );
+    const results = await Promise.all(uploadPromises);
+    const urls = results.filter((r) => r?.url).map((r) => r.url);
+    if (urls.length > 0) {
+      updateData.medias = [...(existingHotel.medias || []), ...urls];
     }
   }
 
-  // Update hotel
-  const hotel = await Hotel.findByIdAndUpdate(
-    id, 
-    updateData, 
-    { new: true, runValidators: true }
-  )
+  const hotel = await Hotel.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  })
     .populate("owner", "name email")
     .populate("location", "name");
 

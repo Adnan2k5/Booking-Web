@@ -242,7 +242,7 @@ export const deleteSession = asyncHandler(async (req, res, next) => {
       `Cannot delete a session with status: ${session.status}`,
     );
   }
-  if (session.booking) {
+  if (session.booking && session.booking.length > 0) {
     throw new ApiError(400, "Cannot delete a session that has a booking");
   }
   await session.deleteOne();
@@ -403,11 +403,13 @@ export const getInstructorSessionsWithBookings = asyncHandler(
 
       // Calculate available seats
       let bookedSeats = 0;
-      if (session.booking) {
-        bookedSeats = 1; // Main booker
-        if (session.booking.groupMember) {
-          bookedSeats += session.booking.groupMember.length;
-        }
+      if (session.booking && session.booking.length > 0) {
+        session.booking.forEach(b => {
+          bookedSeats += 1; // Main booker
+          if (b.groupMember && b.groupMember.length > 0) {
+            bookedSeats += b.groupMember.length;
+          }
+        });
       }
 
       const availableSeats = Math.max(0, session.capacity - bookedSeats);

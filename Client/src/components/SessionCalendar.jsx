@@ -1,4 +1,3 @@
-// filepath: /Users/adnanashraf/Documents/Projects/Booking-Web/Client/src/components/SessionCalendar.jsx
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
@@ -12,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Input } from "./ui/input"
 import { Textarea } from "./ui/textarea"
 import { Label } from "./ui/label"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../Pages/AuthProvider"
 import { createPreset, getInstructorSessions, deleteSession, createSession } from "../Api/session.api"
@@ -164,19 +164,19 @@ const PricingFields = ({ price, unit, onPriceChange, onUnitChange }) => (
     </div>
 )
 
-const CalendarDay = ({ day, isToday, hasSession, sessionCount, onClick, trafficLevel, trafficCount }) => {
+const CalendarDay = ({ day, isToday, isPastDay, hasSession, sessionCount, onClick, trafficLevel, trafficCount }) => {
     let trafficGradient = ""
-    let trafficText = "Low Traffic"
+    let trafficText = ""
 
-    if (trafficCount >= 1) {
+    if (!isPastDay) {
         if (trafficCount <= 2) {
-            trafficGradient = "bg-gradient-to-br from-white to-green-200 dark:from-slate-950 dark:to-green-800/60"
-            trafficText = "Low Traffic"
+            trafficGradient = "bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50 text-slate-800 dark:text-slate-200"
+            trafficText = trafficCount === 0 ? "No Traffic" : "Low Traffic"
         } else if (trafficCount <= 5) {
-            trafficGradient = "bg-gradient-to-br from-white to-yellow-200 dark:from-slate-950 dark:to-yellow-800/60"
+            trafficGradient = "bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/50 text-slate-800 dark:text-slate-200"
             trafficText = "Medium Traffic"
         } else {
-            trafficGradient = "bg-gradient-to-br from-white to-red-200 dark:from-slate-950 dark:to-red-800/60"
+            trafficGradient = "bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/50 text-slate-800 dark:text-slate-200"
             trafficText = "High Traffic"
         }
     }
@@ -187,33 +187,37 @@ const CalendarDay = ({ day, isToday, hasSession, sessionCount, onClick, trafficL
             whileTap={{ scale: 0.98 }}
             className={`h-12 sm:h-16 lg:h-20 border rounded-lg relative cursor-pointer transition-all duration-200 overflow-hidden group
             ${isToday ? "border-gray-900 shadow-md ring-1 ring-gray-900" : "border-gray-100 hover:border-gray-300 hover:shadow-md"}
-            ${hasSession ? "bg-gray-50 dark:bg-gray-900" : trafficGradient}
+            ${trafficGradient ? trafficGradient : (hasSession ? "bg-gray-50 dark:bg-gray-900" : "")}
         `}
             onClick={onClick}
         >
             <div className="absolute top-1 right-1 flex flex-col items-end gap-1">
-                {trafficCount > 0 ? (
-                    <HintTooltip
-                        content={`${trafficText}: ${trafficCount} other session${trafficCount !== 1 ? 's' : ''}`}
-                        className="z-10"
-                    >
-                        {isToday ? (
-                            <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-gray-900 flex items-center justify-center text-white text-xs cursor-help shadow-sm">
-                                {day}
-                            </div>
-                        ) : (
-                            <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center text-xs sm:text-sm cursor-help hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-                                {day}
-                            </div>
-                        )}
-                    </HintTooltip>
+                {!isPastDay ? (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                {isToday ? (
+                                    <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-slate-900 dark:bg-slate-100 flex items-center justify-center text-white dark:text-slate-900 font-semibold text-xs shadow-sm cursor-help">
+                                        {day}
+                                    </div>
+                                ) : (
+                                    <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center font-medium text-slate-800 dark:text-slate-200 text-xs sm:text-sm cursor-help hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                                        {day}
+                                    </div>
+                                )}
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p className="text-sm">{trafficText}: {trafficCount} session{trafficCount !== 1 ? 's' : ''}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 ) : (
                     isToday ? (
-                        <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-gray-900 flex items-center justify-center text-white text-xs shadow-sm">
+                        <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-slate-900 dark:bg-slate-100 flex items-center justify-center text-white dark:text-slate-900 font-semibold text-xs shadow-sm">
                             {day}
                         </div>
                     ) : (
-                        <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center text-xs sm:text-sm">{day}</div>
+                        <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center font-medium text-slate-400 dark:text-slate-500 text-xs sm:text-sm">{day}</div>
                     )
                 )}
             </div>
@@ -274,11 +278,41 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
         days: []
     })
 
+    const parsedAdventure = adventureTypes?.data || adventureTypes?.adventure || adventureTypes || {}
+    const parsedAdventureId = parsedAdventure?._id || instructorAdventureId || ""
+    const parsedAdventureName = parsedAdventure?.title || parsedAdventure?.name || instructorAdventureName || "Selected Adventure"
+
     const filteredLocations = useMemo(() => {
-        const locations = adventureTypes?.location
+        const locations = parsedAdventure?.location || parsedAdventure?.locations
         if (!locations) return []
         return Array.isArray(locations) ? locations : [locations]
-    }, [adventureTypes])
+    }, [parsedAdventure])
+
+    // Form validation
+    const isSessionFormValid = useMemo(() => {
+        const { adventureId, location, time, capacity, price, unit } = sessionForm
+        return (
+            adventureId && adventureId !== "default" &&
+            location && location !== "default" &&
+            time &&
+            capacity && parseInt(capacity) > 0 &&
+            price && parseFloat(price) > 0 &&
+            unit
+        )
+    }, [sessionForm])
+
+    const isPresetFormValid = useMemo(() => {
+        const { adventureId, location, days, time, capacity, price, unit } = presetForm
+        return (
+            adventureId && adventureId !== "default" &&
+            location && location !== "default" &&
+            Array.isArray(days) && days.length > 0 &&
+            time &&
+            capacity && parseInt(capacity) > 0 &&
+            price && parseFloat(price) > 0 &&
+            unit
+        )
+    }, [presetForm])
 
     // Session date helpers
     const getSessionsForDate = useCallback((day) => {
@@ -303,6 +337,15 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
     // Traffic helpers
     const getTrafficForDate = useCallback((day) => {
         if (!otherInstructorsSessions) return 0
+
+        const dateToCheck = new Date(currentYear, currentMonth, day)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        if (dateToCheck < today) {
+            return 0
+        }
+
         return otherInstructorsSessions.filter(session => {
             const sessionDate = new Date(session.startTime)
             return (
@@ -332,14 +375,20 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
             setSelectedSession(sessionsForDate[0])
             setSessionDetailDialog(true)
         } else {
+            // Ensure form values match available options
+            const formAdventureId = parsedAdventureId || "default"
+            const formLocationId = filteredLocations.length > 0
+                ? (filteredLocations[0]?._id || filteredLocations[0])
+                : (instructorLocationId || "default")
+
             setSessionForm({
                 ...DEFAULT_FORM_STATE,
-                adventureId: instructorAdventureId || "",
-                location: instructorLocationId || "",
+                adventureId: formAdventureId,
+                location: formLocationId,
             })
             setIsDialogOpen(true)
         }
-    }, [currentYear, currentMonth, getSessionsForDate, instructorAdventureId, instructorLocationId, setSessionForm])
+    }, [currentYear, currentMonth, getSessionsForDate, parsedAdventureId, instructorLocationId, filteredLocations, setSessionForm])
 
     const handleCreateSession = useCallback(async () => {
         const { adventureId, location, time, capacity, notes, price, unit } = sessionForm
@@ -349,12 +398,12 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
             return
         }
 
-        if (!adventureId) {
+        if (!adventureId || adventureId === "default") {
             toast.error("Adventure type is required")
             return
         }
 
-        if (!location) {
+        if (!location || location === "default") {
             toast.error("Location is required")
             return
         }
@@ -423,12 +472,12 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
             return
         }
 
-        if (!adventureId) {
+        if (!adventureId || adventureId === "default") {
             toast.error("Adventure type is required")
             return
         }
 
-        if (!location) {
+        if (!location || location === "default") {
             toast.error("Location is required")
             return
         }
@@ -518,14 +567,19 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
     }, [selectedSession, refetchSessions])
 
     const handleOpenPresetDialog = useCallback(() => {
+        const formAdventureId = parsedAdventureId || "default"
+        const formLocationId = filteredLocations.length > 0
+            ? (filteredLocations[0]?._id || filteredLocations[0])
+            : (instructorLocationId || "default")
+
         setPresetForm({
             ...DEFAULT_FORM_STATE,
-            adventureId: instructorAdventureId || "",
-            location: instructorLocationId || "",
+            adventureId: formAdventureId,
+            location: formLocationId,
             days: []
         })
         setPresetDialog(true)
-    }, [instructorAdventureId, instructorLocationId, setPresetForm])
+    }, [parsedAdventureId, instructorLocationId, filteredLocations, setPresetForm])
 
     // Generate calendar days
     const calendarDays = useMemo(() => {
@@ -538,6 +592,11 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
 
         // Days of the month
         for (let day = 1; day <= daysInMonth; day++) {
+            const dateToCheck = new Date(currentYear, currentMonth, day)
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            const isPastDay = dateToCheck < today
+
             const isToday =
                 day === new Date().getDate() &&
                 currentMonth === new Date().getMonth() &&
@@ -552,6 +611,7 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                     key={day}
                     day={day}
                     isToday={isToday}
+                    isPastDay={isPastDay}
                     hasSession={hasSession}
                     sessionCount={sessionCount}
                     trafficCount={trafficCount}
@@ -578,9 +638,9 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                             {otherSessionsCount} {otherSessionsCount === 1 ? 'session' : 'sessions'} by other instructors this month
                         </Badge>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground ml-2">
-                            <span className="flex items-center"><div className="w-3 h-3 rounded bg-gradient-to-br from-white to-green-200 border border-green-200 mr-1"></div>Low</span>
-                            <span className="flex items-center"><div className="w-3 h-3 rounded bg-gradient-to-br from-white to-yellow-200 border border-yellow-200 mr-1"></div>Med</span>
-                            <span className="flex items-center"><div className="w-3 h-3 rounded bg-gradient-to-br from-white to-red-200 border border-red-200 mr-1"></div>High</span>
+                            <span className="flex items-center"><div className="w-3 h-3 rounded bg-gradient-to-br from-green-100 to-green-200 border border-green-300 mr-1"></div>Low</span>
+                            <span className="flex items-center"><div className="w-3 h-3 rounded bg-gradient-to-br from-yellow-100 to-yellow-200 border border-yellow-300 mr-1"></div>Med</span>
+                            <span className="flex items-center"><div className="w-3 h-3 rounded bg-gradient-to-br from-red-100 to-red-200 border border-red-300 mr-1"></div>High</span>
                         </div>
                     </div>
                 </div>
@@ -633,10 +693,12 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                         <SelectValue placeholder="Select adventure" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {(adventureTypes?._id || instructorAdventureId) && (
-                                            <SelectItem value={adventureTypes?._id || instructorAdventureId}>
-                                                {adventureTypes?.name || instructorAdventureName || "Adventure"}
+                                        {parsedAdventureId ? (
+                                            <SelectItem value={parsedAdventureId}>
+                                                {parsedAdventureName}
                                             </SelectItem>
+                                        ) : (
+                                            <SelectItem value="default" disabled>No Adventure Assigned</SelectItem>
                                         )}
                                     </SelectContent>
                                 </Select>
@@ -652,17 +714,17 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                     </SelectTrigger>
                                     <SelectContent>
                                         {filteredLocations.length > 0 ? (
-                                            filteredLocations.map((location) => (
-                                                <SelectItem key={location._id} value={location._id}>
-                                                    {location.name}
+                                            filteredLocations.map((loc) => (
+                                                <SelectItem key={loc?._id || loc} value={loc?._id || loc}>
+                                                    {loc?.name || loc?.title || instructorLocationName || "Location"}
                                                 </SelectItem>
                                             ))
+                                        ) : instructorLocationId ? (
+                                            <SelectItem value={instructorLocationId}>
+                                                {instructorLocationName || "Location"}
+                                            </SelectItem>
                                         ) : (
-                                            instructorLocationId && (
-                                                <SelectItem value={instructorLocationId}>
-                                                    {instructorLocationName || "Location"}
-                                                </SelectItem>
-                                            )
+                                            <SelectItem value="default" disabled>No Location Assigned</SelectItem>
                                         )}
                                     </SelectContent>
                                 </Select>
@@ -686,6 +748,8 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                         <Users className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                         <Input
                                             type="number"
+                                            min="1"
+                                            step="1"
                                             value={sessionForm.capacity}
                                             onChange={(e) => updateSessionForm("capacity", e.target.value)}
                                             className="pl-9 text-sm"
@@ -698,6 +762,8 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                 <FormField label="Price" required>
                                     <Input
                                         type="number"
+                                        min="0"
+                                        step="0.01"
                                         value={sessionForm.price}
                                         onChange={e => updateSessionForm("price", e.target.value)}
                                         placeholder="Enter price"
@@ -728,12 +794,15 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                 />
                             </FormField>
                         </div>
-
-                        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+                        <DialogFooter className="flex-col sm:flex-row gap-3 sm:gap-4 sm:justify-end">
                             <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto">
                                 Cancel
                             </Button>
-                            <Button onClick={handleCreateSession} className="w-full sm:w-auto">
+                            <Button
+                                onClick={handleCreateSession}
+                                disabled={!isSessionFormValid}
+                                className="w-full sm:w-auto"
+                            >
                                 Create Session
                             </Button>
                         </DialogFooter>
@@ -781,7 +850,10 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                         <p className="flex items-center text-sm">
                                             <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                                             <span className="text-xs sm:text-sm truncate">
-                                                {selectedSession.location?.name || selectedSession.location || "N/A"}
+                                                {selectedSession.location?.name ||
+                                                    filteredLocations?.find(loc => loc._id === selectedSession.location)?.name ||
+                                                    selectedSession.location ||
+                                                    "N/A"}
                                             </span>
                                         </p>
                                     </div>
@@ -811,7 +883,7 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                             </div>
                         )}
 
-                        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+                        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3">
                             <Button variant="outline" onClick={() => setSessionDetailDialog(false)} className="w-full sm:w-auto">
                                 Close
                             </Button>
@@ -843,10 +915,12 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                         <SelectValue placeholder="Select adventure" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {(adventureTypes?._id || instructorAdventureId) && (
-                                            <SelectItem value={adventureTypes?._id || instructorAdventureId}>
-                                                {adventureTypes?.name || instructorAdventureName || "Adventure"}
+                                        {parsedAdventureId ? (
+                                            <SelectItem value={parsedAdventureId}>
+                                                {parsedAdventureName}
                                             </SelectItem>
+                                        ) : (
+                                            <SelectItem value="default" disabled>No Adventure Assigned</SelectItem>
                                         )}
                                     </SelectContent>
                                 </Select>
@@ -862,17 +936,17 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                     </SelectTrigger>
                                     <SelectContent>
                                         {filteredLocations.length > 0 ? (
-                                            filteredLocations.map((location) => (
-                                                <SelectItem key={location._id} value={location._id}>
-                                                    {location.name}
+                                            filteredLocations.map((loc) => (
+                                                <SelectItem key={loc?._id || loc} value={loc?._id || loc}>
+                                                    {loc?.name || loc?.title || instructorLocationName || "Location"}
                                                 </SelectItem>
                                             ))
+                                        ) : instructorLocationId ? (
+                                            <SelectItem value={instructorLocationId}>
+                                                {instructorLocationName || "Location"}
+                                            </SelectItem>
                                         ) : (
-                                            instructorLocationId && (
-                                                <SelectItem value={instructorLocationId}>
-                                                    {instructorLocationName || "Location"}
-                                                </SelectItem>
-                                            )
+                                            <SelectItem value="default" disabled>No Location Assigned</SelectItem>
                                         )}
                                     </SelectContent>
                                 </Select>
@@ -921,6 +995,8 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                         <Users className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                         <Input
                                             type="number"
+                                            min="1"
+                                            step="1"
                                             value={presetForm.capacity}
                                             onChange={(e) => updatePresetForm("capacity", e.target.value)}
                                             className="pl-9 text-sm"
@@ -933,6 +1009,8 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                 <FormField label="Price" required>
                                     <Input
                                         type="number"
+                                        min="0"
+                                        step="0.01"
                                         value={presetForm.price}
                                         onChange={e => updatePresetForm("price", e.target.value)}
                                         placeholder="Enter price"
@@ -964,11 +1042,17 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                             </FormField>
                         </div>
 
-                        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+                        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3">
                             <Button variant="outline" onClick={() => setPresetDialog(false)} className="w-full sm:w-auto">
                                 Cancel
                             </Button>
-                            <Button onClick={handleCreatePreset} className="w-full sm:w-auto">Create Preset</Button>
+                            <Button
+                                onClick={handleCreatePreset}
+                                disabled={!isPresetFormValid}
+                                className="w-full sm:w-auto"
+                            >
+                                Create Preset
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

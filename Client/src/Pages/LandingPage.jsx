@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, lazy, Suspense, useEffect } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
+import { useNetworkQuality } from "../hooks/useNetworkQuality"
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "./AuthProvider"
@@ -37,9 +38,6 @@ import PaginationComponent from "../components/ui/PaginationComponent"
 // Utils
 import { validateSearchForm } from "../utils/validationUtils"
 import { formatDateWithWeekday } from "../utils/dateUtils"
-
-// Lazy load heavy components
-const ReactPlayer = lazy(() => import("react-player"))
 
 
 export default function LandingPage() {
@@ -92,12 +90,47 @@ export default function LandingPage() {
   }, [eventBooking])
 
   const [vh, setVh] = useState(900)
+  const [videoLoaded, setVideoLoaded] = useState(false)
+  const videoRef = useRef(null)
+
+  // ─── Network-adaptive video quality ───────────────────────────────────────
+  // Add your transcoded variants here. Until low/medium copies exist on your
+  // CDN, all tiers fall back to the original MP4 — replace the URLs when ready.
+  const VIDEO_SOURCES = {
+    low: "https://dazzling-chaja-b80bdd.netlify.app/video-low.mp4",    // e.g. 480p / high-compression
+    medium: "https://dazzling-chaja-b80bdd.netlify.app/video-medium.mp4", // e.g. 720p
+    high: "https://dazzling-chaja-b80bdd.netlify.app/video.mp4",         // original quality
+  }
+  const networkQuality = useNetworkQuality()
+  const videoSrc = VIDEO_SOURCES[networkQuality] ?? VIDEO_SOURCES.high
+  // preload: skip buffer on slow links, load metadata on medium, full auto on fast
+  const videoPreload = networkQuality === "low" ? "none" : networkQuality === "medium" ? "metadata" : "auto"
 
   useEffect(() => {
     const update = () => setVh(window.innerHeight)
     update()
     window.addEventListener("resize", update)
     return () => window.removeEventListener("resize", update)
+  }, [])
+
+  // Play when hero is visible; pause when scrolled away (saves CPU/battery)
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => { }) // handle autoplay policy silently
+        } else {
+          video.pause()
+        }
+      },
+      { threshold: 0.3 } // trigger once at least 30% of the video is visible
+    )
+
+    observer.observe(video)
+    return () => observer.disconnect()
   }, [])
 
   const { scrollY } = useScroll()
@@ -116,14 +149,27 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-black">
             <div className="absolute inset-0 bg-black/45 z-10" />
             <video
+              ref={videoRef}
               autoPlay
               loop
               muted
               playsInline
-              className="absolute inset-0 w-full h-full object-cover opacity-0 animate-fade-in"
-              onLoadedData={(e) => e.currentTarget.classList.remove("opacity-0")}
+              preload={videoPreload}
+              onCanPlay={() => setVideoLoaded(true)}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center center",
+                willChange: "opacity",
+                transform: "translateZ(0)",
+                opacity: videoLoaded ? 1 : 0,
+                transition: "opacity 1s ease-out",
+              }}
             >
-              <source src="https://dazzling-chaja-b80bdd.netlify.app/video.mp4" type="video/mp4" />
+              <source src={videoSrc} type="video/mp4" />
             </video>
           </div>
 
@@ -174,25 +220,25 @@ export default function LandingPage() {
             className="absolute inset-0 z-30 flex items-center px-4 sm:px-6 md:px-8"
             style={{ y: searchY, willChange: "transform" }}
           >
-            <div className="max-w-5xl mx-auto">
-              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8">
-                <SearchBar
-                  adventures={adventures}
-                  adventure={adventure}
-                  onAdventureChange={setAdventure}
-                  location={location}
-                  onLocationChange={setLocation}
-                  date={date}
-                  onDateChange={setDate}
-                  groupMembers={groupManagement.groupMembers}
-                  onShowGroupDialog={groupManagement.setShowGroupDialog}
-                  onNavigate={handleNavigate}
-                  t={t}
-                  locationsList={allLocations?.map(l => l.name) || []}
-                  locationsLoading={locationsLoading}
-                />
-              </div>
-            </div>
+            <SearchBar
+              adventures={adventures}
+              adventure={adventure} ou
+              onAdventureChange={setAdventure}
+              location={location}
+              onLocationChange={setLocation}
+              date={date}
+              onDateChange={setDate}
+              groupMembers={groupManagement.groupMembers}
+              onShowGroupDialog={groupManagement.setShowGroupDialog}
+              onNavigate={handleNavigate}
+              t={t}
+              locationsList={
+                adventure
+                  ? adventures?.find(a => a.name === adventure)?.location?.map(l => l.name) || []
+                  : allLocations?.map(l => l.name) || []
+              }
+              locationsLoading={locationsLoading}
+            />
           </motion.div>
         </div>
       </div>

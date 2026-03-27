@@ -57,7 +57,7 @@ export default function HotelsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const limit = 10
 
-  const { hotels, isLoading, totalPages } = useHotels({
+  const { hotels, isLoading, totalPages, refetch } = useHotels({
     search: searchTerm,
     page,
     limit,
@@ -93,7 +93,7 @@ export default function HotelsPage() {
       if (res.status === 200) {
         toast.success(`${hotel.name} has been approved`)
         setShowHotelDetails(false)
-        window.location.reload()
+        refetch()
       }
     } catch (error) {
       toast.error("Failed to approve accommodation")
@@ -106,7 +106,7 @@ export default function HotelsPage() {
       if (res.status === 200) {
         toast.success(`${hotel.name} has been declined`)
         setShowHotelDetails(false)
-        window.location.reload()
+        refetch()
       }
     } catch (error) {
       toast.error("Failed to decline accommodation")
@@ -457,6 +457,7 @@ export default function HotelsPage() {
           open={showAddModal}
           onClose={() => setShowAddModal(false)}
           locations={locations}
+          onSuccess={refetch}
         />
       </div>
     </div>
@@ -617,7 +618,7 @@ function HotelDetailsModal({ hotel, open, onClose, onApprove, onDecline, formatD
   )
 }
 
-function AddAccommodationModal({ open, onClose, locations }) {
+function AddAccommodationModal({ open, onClose, locations, onSuccess }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -762,6 +763,11 @@ function AddAccommodationModal({ open, onClose, locations }) {
       return
     }
 
+    if (!formData.phone || !formData.managerName) {
+      toast.error("Phone number and manager name are required")
+      return
+    }
+
     if (!formData.businessLicense) {
       toast.error("Business license is required")
       return
@@ -816,7 +822,7 @@ function AddAccommodationModal({ open, onClose, locations }) {
         toast.success("Accommodation created successfully!", { id: toastId })
         resetForm()
         onClose()
-        window.location.reload()
+        onSuccess?.()
       } else {
         throw new Error(res.data?.message || "Creation failed")
       }
@@ -835,23 +841,23 @@ function AddAccommodationModal({ open, onClose, locations }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="!max-w-[75vw] sm:!max-w-[75vw] w-[75vw] max-h-[95vh] overflow-y-auto">
-        <DialogHeader className="pb-4 border-b">
-          <DialogTitle className="text-3xl font-bold">Add New Accommodation</DialogTitle>
-          <DialogDescription className="text-base mt-2">
-            Create a new accommodation entry. This will be automatically approved.
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="pb-4 border-b shrink-0">
+          <DialogTitle className="text-2xl font-semibold tracking-tight">Add New Accommodation</DialogTitle>
+          <DialogDescription className="text-sm text-gray-600 mt-1">
+            Complete the form below to register a new accommodation
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-8 mt-6">
-          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-            <Label htmlFor="category" className="block text-base font-semibold text-gray-900 mb-3">Accommodation Category</Label>
+        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 py-6 space-y-6">
+          <div className="bg-gray-50 px-4 py-3 rounded-lg border">
+            <Label htmlFor="category" className="text-sm font-medium text-gray-900 mb-2 block">Category</Label>
             <select
               id="category"
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full md:w-64 border rounded-md px-4 py-3 text-base focus:ring-2 focus:ring-black"
+              className="w-full max-w-xs h-10 border rounded-md px-3 text-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -859,67 +865,124 @@ function AddAccommodationModal({ open, onClose, locations }) {
             </select>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-6 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-900 pb-3 border-b">Basic Information</h3>
-              <div className="space-y-3">
-                <Label htmlFor="name" className="flex items-center text-base font-medium">
-                  <Building className="h-4 w-4 mr-2" />
-                  {getCategoryLabel()} Name <span className="text-red-500 ml-1">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder={`Enter ${getCategoryLabel().toLowerCase()} name`}
-                  required
-                  className="h-11 text-base"
-                />
-              </div>
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900 mb-4">Basic Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium flex items-center gap-1.5">
+                    <Building className="h-3.5 w-3.5" />
+                    {getCategoryLabel()} Name
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder={`Enter ${getCategoryLabel().toLowerCase()} name`}
+                    required
+                    className="h-10 text-sm"
+                  />
+                </div>
 
-              <div className="space-y-3">
-                <Label htmlFor="email" className="flex items-center text-base font-medium">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Email Address <span className="text-red-500 ml-1">*</span>
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Enter email address"
-                  required
-                  className="h-11 text-base"
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium flex items-center gap-1.5">
+                    <Mail className="h-3.5 w-3.5" />
+                    Email Address
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="contact@example.com"
+                    required
+                    className="h-10 text-sm"
+                  />
+                </div>
 
-              <div className="space-y-3">
-                <Label htmlFor="location" className="flex items-center text-base font-medium">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Location <span className="text-red-500 ml-1">*</span>
-                </Label>
-                <select
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  className="w-full h-11 border rounded-md px-4 text-base focus:ring-2 focus:ring-black"
-                  required
-                >
-                  <option value="">Select location</option>
-                  {locations.map((loc) => (
-                    <option key={loc._id} value={loc._id}>
-                      {loc.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-1.5">
+                    <Phone className="h-3.5 w-3.5" />
+                    Contact Phone
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="+1 234 567 8900"
+                    required
+                    className="h-10 text-sm"
+                  />
+                </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <Label htmlFor="pricePerNight" className="text-base font-medium">Price Per Night</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="managerName" className="text-sm font-medium flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5" />
+                    Manager Name
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="managerName"
+                    name="managerName"
+                    value={formData.managerName}
+                    onChange={handleChange}
+                    placeholder="Manager full name"
+                    required
+                    className="h-10 text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location" className="text-sm font-medium flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5" />
+                    Location
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <select
+                    id="location"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    className="w-full h-10 border rounded-md px-3 text-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select location</option>
+                    {locations.map((loc) => (
+                      <option key={loc._id} value={loc._id}>
+                        {loc.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {formData.category !== "camping" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="rooms" className="text-sm font-medium">
+                      Number of Rooms
+                    </Label>
+                    <Input
+                      id="rooms"
+                      name="rooms"
+                      type="number"
+                      value={formData.rooms}
+                      onChange={handleChange}
+                      placeholder="0"
+                      min="0"
+                      className="h-10 text-sm"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="pricePerNight" className="text-sm font-medium">
+                    Price Per Night
+                  </Label>
                   <Input
                     id="pricePerNight"
                     name="pricePerNight"
@@ -927,11 +990,15 @@ function AddAccommodationModal({ open, onClose, locations }) {
                     value={formData.pricePerNight}
                     onChange={handleChange}
                     placeholder="0"
-                    className="h-11 text-base"
+                    min="0"
+                    className="h-10 text-sm"
                   />
                 </div>
-                <div className="space-y-3">
-                  <Label htmlFor="rating" className="text-base font-medium">Initial Rating</Label>
+
+                <div className="space-y-2">
+                  <Label htmlFor="rating" className="text-sm font-medium">
+                    Initial Rating
+                  </Label>
                   <Input
                     id="rating"
                     name="rating"
@@ -941,231 +1008,222 @@ function AddAccommodationModal({ open, onClose, locations }) {
                     step="0.1"
                     value={formData.rating}
                     onChange={handleChange}
-                    placeholder="0"
-                    className="h-11 text-base"
+                    placeholder="0.0"
+                    className="h-10 text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="website" className="text-sm font-medium">
+                    Website
+                  </Label>
+                  <Input
+                    id="website"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleChange}
+                    placeholder="https://example.com"
+                    className="h-10 text-sm"
                   />
                 </div>
               </div>
-
-              <div className="space-y-3">
-                <Label htmlFor="address" className="text-base font-medium">Full Address</Label>
-                <Textarea
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  placeholder={`Enter complete ${getCategoryLabel().toLowerCase()} address`}
-                  rows={4}
-                  className="text-base resize-none"
-                />
-              </div>
-
-              {formData.category !== "camping" && (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <Label htmlFor="phone" className="flex items-center text-base font-medium">
-                        <Phone className="h-4 w-4 mr-2" />
-                        Contact Phone
-                      </Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        placeholder="Contact number"
-                        className="h-11 text-base"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="managerName" className="flex items-center text-base font-medium">
-                        <User className="h-4 w-4 mr-2" />
-                        Manager Name
-                      </Label>
-                      <Input
-                        id="managerName"
-                        name="managerName"
-                        value={formData.managerName}
-                        onChange={handleChange}
-                        placeholder={`${getCategoryLabel()} manager`}
-                        className="h-11 text-base"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label htmlFor="website" className="text-base font-medium">Website (Optional)</Label>
-                    <Input
-                      id="website"
-                      name="website"
-                      value={formData.website}
-                      onChange={handleChange}
-                      placeholder="Website URL"
-                      className="h-11 text-base"
-                    />
-                  </div>
-
-                  {formData.category !== "glamping" && (
-                    <div className="space-y-3">
-                      <Label htmlFor="rooms" className="text-base font-medium">Number of Rooms</Label>
-                      <Input
-                        id="rooms"
-                        name="rooms"
-                        type="number"
-                        value={formData.rooms}
-                        onChange={handleChange}
-                        placeholder="Total rooms available"
-                        min="1"
-                        className="h-11 text-base"
-                      />
-                    </div>
-                  )}
-                </>
-              )}
             </div>
 
-            <div className="space-y-6 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-900 pb-3 border-b">Additional Details</h3>
+            <div className="space-y-2">
+              <Label htmlFor="address" className="text-sm font-medium">Full Address</Label>
+              <Textarea
+                id="address"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                placeholder="Enter complete street address"
+                rows={3}
+                className="text-sm resize-none"
+              />
+            </div>
 
-              <div className="space-y-3">
-                <Label htmlFor="description" className="text-base font-medium">
-                  {getCategoryLabel()} Description <span className="text-red-500 ml-1">*</span>
-                </Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder={`Describe your ${getCategoryLabel().toLowerCase()}`}
-                  rows={5}
-                  required
-                  className="text-base resize-none"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium">
+                Description
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder={`Provide a detailed description of your ${getCategoryLabel().toLowerCase()}`}
+                rows={4}
+                required
+                className="text-sm resize-none"
+              />
+            </div>
 
-              {formData.category !== "camping" && (
-                <div className="space-y-3">
-                  <Label className="text-base font-medium">Amenities</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={customAmenity}
-                      onChange={(e) => setCustomAmenity(e.target.value)}
-                      placeholder="Add amenity"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAmenity())}
-                      className="h-11 text-base"
-                    />
-                    <Button type="button" onClick={addAmenity} className="bg-black hover:bg-gray-800 px-6">
-                      Add
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2 min-h-[40px]">
-                    {formData.amenities.map((amenity) => (
-                      <div key={amenity} className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-md">
-                        <span className="text-sm">{amenity}</span>
-                        <button type="button" onClick={() => removeAmenity(amenity)} className="text-red-500 hover:text-red-700">
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900 mb-4">Media & Assets</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="hotelImages" className="text-sm font-medium">
+                    Property Images (Max {MAX_IMAGES})
+                    <span className="text-red-500 ml-1">*</span>
+                  </Label>
+                  <Input
+                    id="hotelImages"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleHotelImagesChange}
+                    disabled={formData.hotelImages.length >= MAX_IMAGES}
+                    ref={hotelImagesRef}
+                    className="text-sm cursor-pointer"
+                  />
+                  {formData.hotelImages.length > 0 && (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mt-3">
+                      {formData.hotelImages.map((img, index) => (
+                        <div key={index} className="relative group aspect-square">
+                          <img
+                            src={img.url}
+                            alt={`Image ${index + 1}`}
+                            className="w-full h-full object-cover rounded border"
+                          />
+                          <button
+                            type="button"
+                            className="absolute -top-1 -right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                            onClick={() => removeHotelImage(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {formData.category !== "camping" && (
-                <div className="space-y-3">
-                  <Label className="text-base font-medium">Social Media Links (Optional)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="url"
-                      value={customSocial}
-                      onChange={(e) => setCustomSocial(e.target.value)}
-                      placeholder="Add social media URL"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSocial())}
-                      className="h-11 text-base"
-                    />
-                    <Button type="button" onClick={addSocial} className="bg-black hover:bg-gray-800 px-6">
-                      Add
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2 min-h-[40px]">
-                    {formData.socialMedias.map((social) => (
-                      <div key={social} className="flex items-center gap-2 bg-blue-100 px-3 py-2 rounded-md">
-                        <a href={social} target="_blank" rel="noopener noreferrer" className="underline text-blue-700 text-sm max-w-[180px] truncate">
-                          {social}
-                        </a>
-                        <button type="button" onClick={() => removeSocial(social)} className="text-red-500 hover:text-red-700">
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {formData.category !== "camping" && (
-                <div className="space-y-3">
-                  <Label htmlFor="profileImage" className="text-base font-medium">{getCategoryLabel()} Logo/Profile Image</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="profileImage" className="text-sm font-medium">
+                    Logo/Profile Image
+                  </Label>
                   <Input
                     id="profileImage"
                     type="file"
                     accept="image/*"
                     onChange={handleProfileImageChange}
                     ref={profileImageRef}
-                    className="text-base"
+                    className="text-sm cursor-pointer"
                   />
                   {formData.profileImage && (
-                    <div className="mt-2 w-32 h-32">
+                    <div className="mt-2 w-24 h-24">
                       <img
                         src={URL.createObjectURL(formData.profileImage)}
-                        alt="Logo preview"
-                        className="w-full h-full object-cover rounded-md border-2 border-gray-200"
+                        alt="Logo"
+                        className="w-full h-full object-cover rounded border"
                       />
                     </div>
                   )}
                 </div>
-              )}
-
-              <div className="space-y-3">
-                <Label htmlFor="hotelImages" className="text-base font-medium">
-                  {getCategoryLabel()} Images (Max {MAX_IMAGES}) <span className="text-red-500 ml-1">*</span>
-                </Label>
-                <Input
-                  id="hotelImages"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleHotelImagesChange}
-                  disabled={formData.hotelImages.length >= MAX_IMAGES}
-                  ref={hotelImagesRef}
-                  className="text-base"
-                />
-                <div className="grid grid-cols-3 gap-3 min-h-[100px]">
-                  {formData.hotelImages.map((img, index) => (
-                    <div key={index} className="relative group aspect-video">
-                      <img
-                        src={img.url}
-                        alt={`Image ${index + 1}`}
-                        className="w-full h-full object-cover rounded-md border-2 border-gray-200"
-                      />
-                      <button
-                        type="button"
-                        className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition"
-                        onClick={() => removeHotelImage(index)}
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
               </div>
+            </div>
 
-              <div className="space-y-4 pt-4 border-t">
-                <h4 className="text-lg font-semibold text-gray-900">Required Documents</h4>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900 mb-4">Amenities</h3>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    value={customAmenity}
+                    onChange={(e) => setCustomAmenity(e.target.value)}
+                    placeholder="Enter amenity name"
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAmenity())}
+                    className="h-9 text-sm"
+                  />
+                  <Button
+                    type="button"
+                    onClick={addAmenity}
+                    size="sm"
+                    className="bg-gray-900 hover:bg-gray-800 h-9 px-4"
+                  >
+                    Add
+                  </Button>
+                </div>
+                {formData.amenities.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.amenities.map((amenity) => (
+                      <div
+                        key={amenity}
+                        className="inline-flex items-center gap-1.5 bg-gray-100 border rounded-md px-2.5 py-1 text-sm"
+                      >
+                        <span>{amenity}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeAmenity(amenity)}
+                          className="text-gray-500 hover:text-red-600"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
 
-                <div className="space-y-3">
-                  <Label htmlFor="businessLicense" className="flex items-center text-base font-medium">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Business License <span className="text-red-500 ml-1">*</span>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900 mb-4">Social Media Links</h3>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    type="url"
+                    value={customSocial}
+                    onChange={(e) => setCustomSocial(e.target.value)}
+                    placeholder="https://facebook.com/yourpage"
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSocial())}
+                    className="h-9 text-sm"
+                  />
+                  <Button
+                    type="button"
+                    onClick={addSocial}
+                    size="sm"
+                    className="bg-gray-900 hover:bg-gray-800 h-9 px-4"
+                  >
+                    Add
+                  </Button>
+                </div>
+                {formData.socialMedias.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.socialMedias.map((social) => (
+                      <div
+                        key={social}
+                        className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-md px-2.5 py-1 text-sm"
+                      >
+                        <a
+                          href={social}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-700 hover:underline max-w-[200px] truncate"
+                        >
+                          {social}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => removeSocial(social)}
+                          className="text-gray-500 hover:text-red-600"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-base font-semibold text-gray-900 mb-4">Required Documents</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="businessLicense" className="text-sm font-medium flex items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5" />
+                    Business License
+                    <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="businessLicense"
@@ -1173,16 +1231,19 @@ function AddAccommodationModal({ open, onClose, locations }) {
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     onChange={(e) => handleDocumentChange("businessLicense", e)}
                     required
-                    className="text-base"
+                    className="text-sm cursor-pointer"
                   />
                   {formData.businessLicense && (
-                    <p className="text-sm text-green-600 font-medium">✓ {formData.businessLicense.name} uploaded</p>
+                    <p className="text-xs text-green-700 font-medium flex items-center gap-1">
+                      <Check className="h-3 w-3" />
+                      {formData.businessLicense.name}
+                    </p>
                   )}
                 </div>
 
-                <div className="space-y-3">
-                  <Label htmlFor="taxCertificate" className="flex items-center text-base font-medium">
-                    <FileText className="h-4 w-4 mr-2" />
+                <div className="space-y-2">
+                  <Label htmlFor="taxCertificate" className="text-sm font-medium flex items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5" />
                     Tax Certificate
                   </Label>
                   <Input
@@ -1190,16 +1251,19 @@ function AddAccommodationModal({ open, onClose, locations }) {
                     type="file"
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     onChange={(e) => handleDocumentChange("taxCertificate", e)}
-                    className="text-base"
+                    className="text-sm cursor-pointer"
                   />
                   {formData.taxCertificate && (
-                    <p className="text-sm text-green-600 font-medium">✓ {formData.taxCertificate.name} uploaded</p>
+                    <p className="text-xs text-green-700 font-medium flex items-center gap-1">
+                      <Check className="h-3 w-3" />
+                      {formData.taxCertificate.name}
+                    </p>
                   )}
                 </div>
 
-                <div className="space-y-3">
-                  <Label htmlFor="insuranceDocument" className="flex items-center text-base font-medium">
-                    <FileText className="h-4 w-4 mr-2" />
+                <div className="space-y-2">
+                  <Label htmlFor="insuranceDocument" className="text-sm font-medium flex items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5" />
                     Insurance Document
                   </Label>
                   <Input
@@ -1207,21 +1271,37 @@ function AddAccommodationModal({ open, onClose, locations }) {
                     type="file"
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     onChange={(e) => handleDocumentChange("insuranceDocument", e)}
-                    className="text-base"
+                    className="text-sm cursor-pointer"
                   />
                   {formData.insuranceDocument && (
-                    <p className="text-sm text-green-600 font-medium">✓ {formData.insuranceDocument.name} uploaded</p>
+                    <p className="text-xs text-green-700 font-medium flex items-center gap-1">
+                      <Check className="h-3 w-3" />
+                      {formData.insuranceDocument.name}
+                    </p>
                   )}
                 </div>
               </div>
             </div>
           </div>
 
-          <DialogFooter className="flex gap-3 pt-6 border-t mt-8">
-            <Button type="button" variant="outline" onClick={() => { resetForm(); onClose(); }} disabled={isSubmitting} className="px-6 h-11">
+          <DialogFooter className="flex gap-2 pt-4 border-t mt-6 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                resetForm()
+                onClose()
+              }}
+              disabled={isSubmitting}
+              className="h-10 px-5"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="bg-black hover:bg-gray-800 text-white px-8 h-11">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-gray-900 hover:bg-gray-800 h-10 px-6"
+            >
               {isSubmitting ? "Creating..." : "Create Accommodation"}
             </Button>
           </DialogFooter>

@@ -253,13 +253,13 @@ const InstructorDashboard = () => {
 
         try {
             const now = new Date()
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+            const endOfNextTwoMonths = new Date(now.getFullYear(), now.getMonth() + 3, 0)
 
             const res = await getAllOtherInstructorsSessions(
                 user.user._id,
-                startOfMonth.toISOString(),
-                endOfMonth.toISOString()
+                startOfToday.toISOString(),
+                endOfNextTwoMonths.toISOString()
             )
 
             if (res.status === 200 && res.data?.success) {

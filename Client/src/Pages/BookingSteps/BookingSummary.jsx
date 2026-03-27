@@ -18,7 +18,7 @@ export const BookingSummary = ({
     cartItems,
     mockItems,
     selectedHotel,
-    mockHotels,
+    hotels,
     calculateTotal,
     checkInDate,
     checkOutDate,
@@ -120,7 +120,7 @@ export const BookingSummary = ({
 
             // 3. Create Hotel Booking (for accommodation)
             if (selectedHotel && checkInDate && checkOutDate) {
-                const hotel = mockHotels.find(h => h._id === selectedHotel || h.id === selectedHotel);
+                const hotel = hotels.find(h => h._id == selectedHotel || h.id == selectedHotel);
                 const nights = calculateNights();
 
                 hotelBookingData = {
@@ -138,7 +138,7 @@ export const BookingSummary = ({
                 sessionBooking: sessionBookingData,
                 itemBooking: itemBookingData,
                 hotelBooking: selectedHotel ? hotelBookingData : null,
-                totalAmount: calculateTotal(),
+                totalAmount: Number(calculateTotal()),
                 modeOfPayment: selectedPaymentMethod
             }
 
@@ -302,9 +302,9 @@ export const BookingSummary = ({
                                         {cartItems
                                             .reduce((sum, cartItem) => {
                                                 const itemData = mockItems.find((i) => i._id === cartItem._id)
-                                                const price = cartItem.rent ? itemData?.price : itemData?.price
+                                                const price = Number(cartItem.rent ? itemData?.price : itemData?.price || 0)
                                                 const quantity = cartItem.quantity || 1
-                                                return sum + (price || 0) * quantity
+                                                return sum + price * quantity
                                             }, 0)
                                             .toFixed(2)}
                                     </span>
@@ -320,15 +320,15 @@ export const BookingSummary = ({
                             <div className="flex items-start gap-3">
                                 <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                                     <img
-                                        src={mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.medias?.[0] || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.logo || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.images?.[0] || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.img || "/placeholder.svg"}
-                                        alt={mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.name}
+                                        src={hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.medias?.[0] || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.logo || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.images?.[0] || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.img || "/placeholder.svg"}
+                                        alt={hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.name}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>                                <div className="flex-1">
-                                    <p className="font-bold text-gray-900">{mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.name}</p>
+                                    <p className="font-bold text-gray-900">{hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.name}</p>
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                         <MapPin size={14} />
-                                        <span>{mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.location?.name || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.location || "Location not specified"}</span>
+                                        <span>{hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.location?.name || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.location || "Location not specified"}</span>
                                     </div>
                                     {checkInDate && checkOutDate && (
                                         <div className="text-sm text-gray-600 mt-2">
@@ -339,20 +339,20 @@ export const BookingSummary = ({
                                     )}
                                     <div className="flex items-center gap-1 mt-2">
                                         {[1, 2, 3, 4, 5].map((star) => (
-                                            <Star key={star} className={`w-3 h-3 ${star <= (mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.rating || 0) ? "fill-gray-900 text-gray-900" : "text-gray-300"}`} />
+                                            <Star key={star} className={`w-3 h-3 ${star <= (hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.rating || 0) ? "fill-gray-900 text-gray-900" : "text-gray-300"}`} />
                                         ))}
                                         <span className="text-xs ml-1 text-gray-600 font-medium">
-                                            {mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.rating}
+                                            {hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.rating}
                                         </span>
                                     </div>
                                 </div>
                                 <div className="font-bold text-gray-900 text-right">
                                     <div>
-                                        ${(mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.pricePerNight || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.price || 0) * calculateNights()}
+                                        ${Number(hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.pricePerNight || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.price || 0) * calculateNights()}
                                         <span className="text-xs font-normal text-gray-500 block">total</span>
                                     </div>
                                     <div className="text-xs text-gray-500">
-                                        ${mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.pricePerNight || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.price || 0}/night
+                                        ${Number(hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.pricePerNight || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.price || 0)}/night
                                     </div>
                                 </div>
                             </div>
@@ -394,7 +394,7 @@ export const BookingSummary = ({
                                     <span>
                                         {t("hotel")} {checkInDate && checkOutDate && `(${calculateNights()} ${calculateNights() === 1 ? "night" : "nights"})`}
                                     </span>
-                                    <span>${(mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.pricePerNight || mockHotels.find((h) => h._id === selectedHotel || h.id === selectedHotel)?.price || 0) * calculateNights()}</span>
+                                    <span>${(hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.pricePerNight || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.price || 0) * calculateNights()}</span>
                                 </div>
                             )}
 
@@ -408,8 +408,8 @@ export const BookingSummary = ({
                             )}
 
                             {selectedInstructor && (() => {
-                                const commission = selectedInstructor?.instructorId?.instructor?.commissionPercentage ?? 20
-                                const instructorBaseAmount = (selectedInstructor.price || selectedInstructor.fee || 0) + groupMembers.length * 30
+                                const commission = Number(selectedInstructor?.instructorId?.instructor?.commissionPercentage ?? 20)
+                                const instructorBaseAmount = Number(selectedInstructor.price || selectedInstructor.fee || 0) + groupMembers.length * 30
                                 const platformFeeAmount = (instructorBaseAmount * commission / 100).toFixed(2)
                                 return (
                                     <div className="flex justify-between items-center">
