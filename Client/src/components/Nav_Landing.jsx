@@ -24,7 +24,7 @@ import LanguageSelector from "./LanguageSelector"
 import { updateLanguageHeaders } from "../Api/language.api.js"
 import { toast } from "sonner"
 
-export const Nav_Landing = () => {
+export const Nav_Landing = ({ theme = "light" }) => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const { t, i18n } = useTranslation()
     const { user, logout } = useAuth()
@@ -97,12 +97,17 @@ export const Nav_Landing = () => {
         }, 100)
     }
 
+    const isDark = theme === "dark"
+    const bgClass = isScrolled || isHovered ? "bg-black/90 backdrop-blur-md py-3" : "bg-transparent py-5"
+    const textClass = isDark && !isScrolled && !isHovered ? "text-black" : "text-white"
+    const borderClass = isDark && !isScrolled && !isHovered ? "border-black/20" : "border-white/20"
+    const logoClass = isDark && !isScrolled && !isHovered ? "text-black hover:text-gray-700" : "text-white hover:text-gray-300"
+
     return (
         <nav
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className={`fixed top-0 left-0 w-full z-[9999] transition-all duration-300 ease-in-out ${isScrolled || isHovered ? "bg-black/90 backdrop-blur-md py-3" : "bg-transparent py-5"
-                }`}
+            className={`fixed top-0 left-0 w-full z-[9999] transition-all duration-300 ease-in-out ${bgClass} ${textClass}`}
         >
             <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
                 {/* Logo */}
@@ -111,29 +116,28 @@ export const Nav_Landing = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <Link to="/" className="text-2xl font-bold text-white tracking-tighter hover:text-gray-300 transition-colors">
+                    <Link to="/" className={`text-2xl font-bold tracking-tighter transition-colors ${logoClass}`}>
                         Adventure
                     </Link>
                 </motion.div>
 
-                {/* Desktop Menu */}
                 <div className="hidden lg:flex items-center space-x-8">
                     <ul className="flex items-center space-x-6">
-                        <NavLink to={`/browse?date=${new Date().toISOString().split('T')[0]}&q=adventure`} text={t("explore")} icon={Compass} />
-                        {isShopEnabled && <NavLink to="/shop" text={t("shop")} icon={ShoppingBag} />}
-                        {isHotelsEnabled && <NavLink to="/book-hotel" text={t("Accommodations")} icon={Hotel} />}
-                        <NavLink to="/mission" text={t("mission")} icon={Target} />
+                        <NavLink to={`/browse?date=${new Date().toISOString().split('T')[0]}&q=adventure`} text={t("explore")} icon={Compass} textClass={textClass} />
+                        {isShopEnabled && <NavLink to="/shop" text={t("shop")} icon={ShoppingBag} textClass={textClass} />}
+                        {isHotelsEnabled && <NavLink to="/book-hotel" text={t("Accommodations")} icon={Hotel} textClass={textClass} />}
+                        <NavLink to="/mission" text={t("mission")} icon={Target} textClass={textClass} />
                     </ul>
 
-                    <div className="flex items-center space-x-4 border-l border-white/20 pl-6">
-                        <div className="text-white/80 hover:text-white transition-colors">
+                    <div className={`flex items-center space-x-4 border-l pl-6 transition-colors ${borderClass}`}>
+                        <div className={`transition-colors ${textClass} hover:opacity-80`}>
                             <LanguageSelector />
                         </div>
 
                         {user.user ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-white/10 p-0 border border-white/20">
+                                    <Button variant="ghost" className={`relative h-10 w-10 rounded-full hover:bg-black/5 p-0 border transition-colors ${borderClass}`}>
                                         <Avatar className="h-full w-full">
                                             <AvatarFallback className="bg-black text-white border border-white/20">
                                                 {user?.user?.email?.charAt(0)?.toUpperCase()}
@@ -170,7 +174,11 @@ export const Nav_Landing = () => {
                         ) : (
                             <Button
                                 onClick={() => navigate("/login-options")}
-                                className="bg-white text-black hover:bg-gray-200 font-medium rounded-full px-6 transition-transform hover:scale-105"
+                                className={`font-medium rounded-full px-6 transition-transform hover:scale-105 ${
+                                    isDark && !isScrolled && !isHovered 
+                                        ? "bg-black text-white hover:bg-gray-800" 
+                                        : "bg-white text-black hover:bg-gray-200"
+                                }`}
                             >
                                 {t("login")}
                             </Button>
@@ -178,11 +186,14 @@ export const Nav_Landing = () => {
                     </div>
                 </div>
 
-                {/* Mobile Menu Toggle */}
                 <div className="lg:hidden">
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="text-white p-2 focus:outline-none bg-black/30 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-black/50 transition-all"
+                        className={`p-2 focus:outline-none backdrop-blur-sm rounded-lg border transition-all ${
+                            isDark && !isScrolled && !isHovered
+                                ? "text-black bg-white/30 border-black/20 hover:bg-white/50"
+                                : "text-white bg-black/30 border-white/20 hover:bg-black/50"
+                        }`}
                     >
                         {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                     </button>
@@ -288,15 +299,15 @@ export const Nav_Landing = () => {
 }
 
 // Helper Components
-const NavLink = ({ to, text, icon: Icon }) => (
+const NavLink = ({ to, text, icon: Icon, textClass = "text-white" }) => (
     <li>
         <Link
             to={to}
-            className="text-white/80 hover:text-white text-sm font-medium tracking-wide transition-colors relative group flex items-center gap-2"
+            className={`${textClass} opacity-80 hover:opacity-100 text-sm font-medium tracking-wide transition-colors relative group flex items-center gap-2`}
         >
             {Icon && <Icon className="h-4 w-4" />}
             {text}
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
+            <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${textClass === "text-black" ? "bg-black" : "bg-white"}`}></span>
         </Link>
     </li>
 )

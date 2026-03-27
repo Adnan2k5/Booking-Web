@@ -279,7 +279,7 @@ export const createSessionBooking = asyncHandler(async (req, res) => {
         throw new ApiError(404, `Hotel with ID ${validatedHotel.hotel} not found`);
       }
       const nights = calculateDaysBetween(validatedHotel.checkInDate, validatedHotel.checkOutDate);
-      hotelPrice = hotel.price * nights;
+      hotelPrice = (hotel.pricePerNight || hotel.price || 0) * nights;
     }
 
     // Calculate total price including all components

@@ -10,7 +10,7 @@ export default function ComparisonPage() {
   const { comparedProducts, removeFromComparison, clearComparison } = useComparison();
   const { addToCart } = useContext(CartContext);
   
-  const categories = ['Camping', 'Clothing', 'Footwear', 'Accessories', 'Equipment'];
+  const categories = ['Climbing Gear', 'Camping Equipment', 'Water Sports', 'High Altitude Wear', 'Safety & Protection'];
 
   if (comparedProducts.length === 0) {
     return (

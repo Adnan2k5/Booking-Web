@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Search, ChevronRight, Filter, X } from 'lucide-react';
 import ProductsGrid from '../../components/shop/ProductsGrid';
 import MainHeader from '../../components/shop/MainHeader';
 import Footer from '../../components/shop/Footer';
-import { useContext } from 'react';
 import { CartContext } from '../Cart/CartContext';
-import { useComparison } from '../../contexts/ComparisonContext';
-import { useFavorites } from '../../contexts/FavoritesContext';
+import { getCategories } from '../../Api/category.api';
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -23,7 +21,7 @@ export default function SearchPage() {
   const [adventures, setAdventures] = useState([]);
   const [selectedAdventure, setSelectedAdventure] = useState('');
 
-  const categories = ['Camping', 'Clothing', 'Footwear', 'Accessories', 'Equipment'];
+  const [categories, setCategories] = useState([]);
   const searchQuery = searchParams.get('search') || '';
   const categoryParam = searchParams.get('category') || '';
   const baseUrl = import.meta.env.VITE_SERVER_URL;
@@ -46,8 +44,16 @@ export default function SearchPage() {
     setSelectedCategory(categoryParam);
   }, [searchQuery, categoryParam]);
 
-  // Fetch adventures on mount
-  useEffect(() => { fetchAdventures(); }, []);
+  useEffect(() => {
+    getCategories()
+      .then(res => {
+        const data = res?.data?.message || [];
+        const names = Array.isArray(data) ? data.map(c => c.name).filter(Boolean) : [];
+        setCategories(names);
+      })
+      .catch(() => setCategories([]));
+    fetchAdventures();
+  }, []);
 
   // Shared fetch that ProductsGrid will call via onFilterChange
   const fetchItems = async (filters = {}) => {

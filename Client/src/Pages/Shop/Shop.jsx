@@ -2,17 +2,17 @@ import { useContext, useState, useEffect, useRef } from "react";
 import { CartContext } from "../Cart/CartContext";
 import { useLocation, useNavigate } from 'react-router-dom';
 import MainHeader from "../../components/shop/MainHeader";
-import FilterBar from "../../components/shop/FilterBar";
 import HeroCarousel from "../../components/shop/HeroCarousel";
 import CategoryFeatureGrid from "../../components/shop/CategoryFeatureGrid";
 import ProductsGrid from "../../components/shop/ProductsGrid";
 import PromoBanners from "../../components/shop/PromoBanners";
 import BrandStrip from "../../components/shop/BrandStrip";
 import Footer from "../../components/shop/Footer";
+import { getCategories } from "../../Api/category.api";
 
 export default function AdventureShop() {
   const [items, setItems] = useState([]);
-  const [categories] = useState(['Camping', 'Clothing', 'Footwear', 'Accessories', 'Equipment']);
+  const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [adventures, setAdventures] = useState([]);
@@ -23,6 +23,17 @@ export default function AdventureShop() {
   const baseUrl = import.meta.env.VITE_SERVER_URL;
   const productsRef = useRef(null);
   const navigate = useNavigate();
+
+  // Fetch categories from API
+  useEffect(() => {
+    getCategories()
+      .then(res => {
+        const data = res?.data?.message || [];
+        const names = Array.isArray(data) ? data.map(c => c.name).filter(Boolean) : [];
+        setCategories(names);
+      })
+      .catch(() => setCategories([]));
+  }, []);
 
   // Fetch adventures from API
   const fetchAdventures = async () => {
@@ -55,7 +66,7 @@ export default function AdventureShop() {
         if (sortBy) params.append('sortBy', sortBy);
       }
 
-      const url = `${baseUrl}api/items${params.toString() ? `?${params.toString()}` : ''}`;
+      const url = `${baseUrl}api/items/discover${params.toString() ? `?${params.toString()}` : ''}`;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -71,34 +82,18 @@ export default function AdventureShop() {
   // Fetch adventures on mount
   useEffect(() => { fetchAdventures(); }, []);
 
-  // On mount, read URL to set initial category/search state (supports direct navigation)
+  // On mount, read URL to set initial category/search state
   useEffect(() => {
-    const path = location.pathname;
     const params = new URLSearchParams(location.search);
     const q = params.get('search') || "";
+    const cat = params.get('category') || "";
     setSearchQuery(q);
-
-    // If path matches /shop/category/:slug
-    const parts = path.split('/').filter(Boolean);
-    if (parts[0] === 'shop' && parts[1] === 'category' && parts[2]) {
-      // Convert slug back to title-case category (assume categories list contains proper names)
-      const slug = parts[2];
-      const found = categories.find(c => c.toLowerCase() === slug.toLowerCase());
-      if (found) {
-        setSelectedCategory(found);
-        fetchItems({ search: q, category: found });
-        return;
-      }
+    if (cat) {
+      setSelectedCategory(cat);
+      fetchItems({ search: q, category: cat });
+    } else {
+      fetchItems({ search: q });
     }
-
-    // If path is /shop/search, fetch with search query
-    if (path.startsWith('/shop/search')) {
-      fetchItems({ search: q, category: selectedCategory });
-      return;
-    }
-
-    // Default: fetch items (maybe with search)
-    fetchItems({ search: q, category: selectedCategory });
   }, []);
 
   const handleSearch = (q, opts = {}) => {
@@ -158,9 +153,8 @@ export default function AdventureShop() {
     <div className="w-full font-sans bg-neutral-50 text-neutral-900">
       {/* <AnnouncementBar /> */}
       <MainHeader categories={categories} selectedCategory={selectedCategory} onSearch={handleSearch} onCategorySelect={handleCategorySelect} />
-      <FilterBar search={searchQuery} category={selectedCategory} onClear={clearFilters} onRemoveFilter={removeFilter} />
       <HeroCarousel />
-      <CategoryFeatureGrid />
+      <CategoryFeatureGrid categories={categories} />
       {/* Products grid: replaces separate product page navigation; shows all products with left filters */}
       <ProductsGrid items={items} categories={categories} selectedCategory={selectedCategory} search={searchQuery} addToCart={addToCart} onCategorySelect={handleCategorySelect} onSearch={handleSearch} onFilterChange={fetchItems} adventures={adventures} selectedAdventure={selectedAdventure} />
       <PromoBanners />

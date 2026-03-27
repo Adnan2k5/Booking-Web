@@ -1,16 +1,27 @@
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart, X } from 'lucide-react';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import MainHeader from '../../components/shop/MainHeader';
 import Footer from '../../components/shop/Footer';
 import { CartContext } from '../../Pages/Cart/CartContext';
+import { getCategories } from '../../Api/category.api';
 
 export default function FavoritesPage() {
   const { favorites, removeFromFavorites, clearFavorites } = useFavorites();
   const { addToCart } = useContext(CartContext);
 
-  const categories = ['Camping', 'Clothing', 'Footwear', 'Accessories', 'Equipment'];
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    getCategories()
+      .then(res => {
+        const data = res?.data?.message || [];
+        const names = Array.isArray(data) ? data.map(c => c.name).filter(Boolean) : [];
+        setCategories(names);
+      })
+      .catch(() => setCategories([]));
+  }, []);
 
   if (favorites.length === 0) {
     return (

@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
@@ -11,10 +9,10 @@ import {
     Waves,
     Wind,
     Zap,
-    Users,
-    Award,
     Tent,
     TreePine,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
@@ -25,15 +23,13 @@ import { useHotels } from "../../hooks/useHotel"
 import { Nav_Landing } from "../../components/Nav_Landing"
 import { fetchLocations } from "../../Api/location.api"
 
-// Stay type categories
 const stayCategories = [
-    { id: '', name: 'All Stays', icon: HotelIcon, description: 'All accommodation types' },
-    { id: 'hotel', name: 'Hotel', icon: HotelIcon, description: 'Traditional hotels & resorts' },
-    { id: 'camping', name: 'Camping', icon: Tent, description: 'Outdoor adventure' },
-    { id: 'glamping', name: 'Glamping', icon: TreePine, description: 'Luxury camping' },
+    { id: '', name: 'All Stays', icon: HotelIcon },
+    { id: 'hotel', name: 'Hotel', icon: HotelIcon },
+    { id: 'camping', name: 'Camping', icon: Tent },
+    { id: 'glamping', name: 'Glamping', icon: TreePine },
 ]
 
-// Lightweight amenity icon detection (keeps previous behavior)
 const amenityIcons = {
     "wifi": Wifi,
     "wifi-free": Wifi,
@@ -59,7 +55,6 @@ export default function HotelBrowsingPage() {
     const [searchParams, setSearchParams] = useSearchParams()
     const navigate = useNavigate()
 
-    // keep basic filter state for search integration
     const [filters, setFilters] = useState({
         location: searchParams.get('location') || "",
         checkIn: searchParams.get('checkin') || "",
@@ -72,7 +67,7 @@ export default function HotelBrowsingPage() {
     const [locations, setLocations] = useState([])
     const [limit] = useState(12)
 
-    const { hotels, isLoading, error, total, totalPages } = useHotels({
+    const { hotels, isLoading, total, totalPages } = useHotels({
         page: filters.page,
         limit,
         location: filters.location || null,
@@ -104,23 +99,25 @@ export default function HotelBrowsingPage() {
 
     const updateFilter = (key, value) => setFilters(prev => ({ ...prev, [key]: value, page: 1 }))
 
-    // Simple helpers for date defaults
     const todayISO = new Date().toISOString().split('T')[0]
     const tomorrowISO = new Date(Date.now() + 86400000).toISOString().split('T')[0]
 
-
-    // Handler for booking/search form submit
     const handleBookingSearch = (e) => {
-        e.preventDefault();
-        // Always reset to first page on new search
-        setFilters(prev => ({ ...prev, page: 1 }));
-    };
+        e.preventDefault()
+        setFilters(prev => ({ ...prev, page: 1 }))
+    }
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setFilters(prev => ({ ...prev, page: newPage }))
+            window.scrollTo({ top: 500, behavior: 'smooth' })
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
             <Nav_Landing />
 
-            {/* HERO */}
             <header
                 className="relative bg-cover bg-center min-h-[720px] sm:min-h-[680px] md:min-h-[620px] rounded-b-3xl overflow-visible shadow-inner z-10 pt-28 sm:pt-32"
                 style={{ backgroundImage: `url('https://images.unsplash.com/photo-1719466419345-fdb12719ec29?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470')` }}
@@ -129,12 +126,10 @@ export default function HotelBrowsingPage() {
                 <div className="absolute inset-0 max-w-7xl mx-auto px-6 sm:px-8 flex flex-col justify-center z-20 pt-24 md:pt-28 pb-10">
                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-lg">Find your perfect stay</h1>
-                        <p className="mt-3 text-lg sm:text-xl text-white/90 max-w-2xl">Handpicked hostels, boutique stays and cozy hostels for every kind of traveler. Explore exclusive offers and flexible bookings.</p>
+                        <p className="mt-3 text-lg sm:text-xl text-white/90 max-w-2xl">Handpicked hostels, boutique stays and cozy hotels for every kind of traveler. Explore exclusive offers and flexible bookings.</p>
                     </motion.div>
 
-                    {/* Booking Form (overlay) */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 max-w-4xl z-30">
-                        {/* Stay Type Tabs */}
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 max-w-5xl z-30">
                         <div className="flex flex-wrap gap-2 mb-4">
                             {stayCategories.map((cat) => {
                                 const IconComponent = cat.icon
@@ -145,8 +140,8 @@ export default function HotelBrowsingPage() {
                                         type="button"
                                         onClick={() => updateFilter('category', cat.id)}
                                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${isActive
-                                                ? 'bg-white text-rose-600 shadow-lg scale-105'
-                                                : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
+                                            ? 'bg-white text-rose-600 shadow-lg scale-105'
+                                            : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
                                             }`}
                                     >
                                         <IconComponent className={`w-4 h-4 ${isActive ? 'text-rose-600' : 'text-white'}`} />
@@ -156,43 +151,67 @@ export default function HotelBrowsingPage() {
                             })}
                         </div>
 
-                        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-2xl border border-white/40">
-                            <form className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end" onSubmit={handleBookingSearch}>
-                                <div className="sm:col-span-2">
-                                    <label className="block text-xs font-semibold text-gray-600 mb-1">Destination</label>
-                                    <div className="relative">
-                                        <select
-                                            value={filters.location}
-                                            onChange={e => updateFilter('location', e.target.value)}
-                                            className="h-12 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-400 px-3 pr-8 text-gray-700 bg-white appearance-none"
-                                        >
-                                            <option value="">All Locations</option>
-                                            {locations.map(loc => (
-                                                <option key={loc._id} value={loc.name}>{loc.name}</option>
-                                            ))}
-                                        </select>
-                                        <MapPin className="w-4 h-4 text-gray-400 absolute right-3 top-3 pointer-events-none" />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-600 mb-1">Check-in</label>
-                                    <Input type="date" value={filters.checkIn || todayISO} onChange={(e) => updateFilter('checkIn', e.target.value)} className="h-12" />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-600 mb-1">Check-out</label>
-                                    <Input type="date" value={filters.checkOut || tomorrowISO} onChange={(e) => updateFilter('checkOut', e.target.value)} className="h-12" />
-                                </div>
-
-                                <div className="sm:col-span-1 flex items-center gap-3">
-                                    <div className="w-full">
-                                        <label className="block text-xs font-semibold text-gray-600 mb-1">Guests</label>
-                                        <Input type="number" min={1} value={filters.guests} onChange={(e) => updateFilter('guests', parseInt(e.target.value || '1'))} className="h-12" />
+                        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-6 shadow-2xl border border-white/40">
+                            <form onSubmit={handleBookingSearch}>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                    <div className="sm:col-span-2">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Destination</label>
+                                        <div className="relative">
+                                            <select
+                                                value={filters.location}
+                                                onChange={e => updateFilter('location', e.target.value)}
+                                                className="h-12 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 px-4 pr-10 text-gray-700 bg-white appearance-none transition-all"
+                                            >
+                                                <option value="">All Locations</option>
+                                                {locations.map(loc => (
+                                                    <option key={loc._id} value={loc.name}>{loc.name}</option>
+                                                ))}
+                                            </select>
+                                            <MapPin className="w-5 h-5 text-gray-400 absolute right-3 top-3.5 pointer-events-none" />
+                                        </div>
                                     </div>
 
                                     <div>
-                                        <Button type="submit" className="h-12 px-6 bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-xl shadow-lg">Search</Button>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Check-in</label>
+                                        <Input
+                                            type="date"
+                                            value={filters.checkIn || todayISO}
+                                            onChange={(e) => updateFilter('checkIn', e.target.value)}
+                                            className="h-12 border-gray-300 focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Check-out</label>
+                                        <Input
+                                            type="date"
+                                            value={filters.checkOut || tomorrowISO}
+                                            onChange={(e) => updateFilter('checkOut', e.target.value)}
+                                            className="h-12 border-gray-300 focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Guests</label>
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            max={20}
+                                            value={filters.guests}
+                                            onChange={(e) => updateFilter('guests', parseInt(e.target.value || '1'))}
+                                            className="h-12 border-gray-300 focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                                        />
+                                    </div>
+
+                                    <div className="sm:col-span-1 lg:col-span-3 flex items-end">
+                                        <Button
+                                            type="submit"
+                                            className="h-12 w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white rounded-xl shadow-lg font-semibold text-base transition-all"
+                                        >
+                                            Search
+                                        </Button>
                                     </div>
                                 </div>
                             </form>
@@ -201,106 +220,179 @@ export default function HotelBrowsingPage() {
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-6 sm:px-8 mt-8">
-                <section className="mb-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2">
-                            <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-2xl font-bold text-gray-900">Featured Stays</h2>
-                                    <p className="text-sm text-gray-500">Curated picks for comfort & value</p>
-                                </div>
+            <main className="max-w-7xl mx-auto px-6 sm:px-8 py-12">
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 className="text-3xl font-bold text-gray-900">
+                            {filters.location ? `Stays in ${filters.location}` : 'All Accommodations'}
+                        </h2>
+                        <p className="text-gray-600 mt-1">
+                            {total > 0 ? `${total} properties found` : 'No properties found'}
+                        </p>
+                    </div>
+                </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {isLoading ? (
-                                        [...Array(3)].map((_, i) => (
-                                            <div key={i} className="h-44 bg-gray-100 rounded-lg animate-pulse" />
-                                        ))
-                                    ) : (
-                                        (hotels.slice(0, 6)).map((hotel) => (
-                                            <Card key={hotel._id} className="overflow-hidden rounded-xl hover:shadow-2xl transition-all">
-                                                <div className="aspect-video bg-gray-50 relative">
-                                                    <img src={hotel.logo || hotel.medias?.[0] || '/placeholder.svg'} alt={hotel.name} className="w-full h-full object-cover" />
-                                                    <div className="absolute top-3 left-3">
-                                                        <Badge className="bg-gradient-to-r from-rose-500 to-pink-500 text-white capitalize">{hotel.category}</Badge>
+                {isLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[...Array(6)].map((_, i) => (
+                            <div key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                                <div className="aspect-[4/3] bg-gray-200 animate-pulse" />
+                                <div className="p-4 space-y-3">
+                                    <div className="h-6 bg-gray-200 rounded animate-pulse" />
+                                    <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+                                    <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : hotels.length === 0 ? (
+                    <div className="text-center py-16">
+                        <HotelIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No accommodations found</h3>
+                        <p className="text-gray-600">Try adjusting your search filters</p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                            {hotels.map((hotel) => (
+                                <motion.div
+                                    key={hotel._id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <Card
+                                        className="group overflow-hidden rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300 cursor-pointer h-full flex flex-col"
+                                        onClick={() => navigate(`/hotel/${hotel._id}`)}
+                                    >
+                                        <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
+                                            <img
+                                                src={hotel.logo || hotel.medias?.[0] || '/placeholder.svg'}
+                                                alt={hotel.name}
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                            />
+                                            <div className="absolute top-3 left-3">
+                                                <Badge className="bg-white/95 text-gray-900 font-medium capitalize border-0 shadow-sm">
+                                                    {hotel.category}
+                                                </Badge>
+                                            </div>
+                                            <div className="absolute top-3 right-3 bg-white/95 rounded-full px-3 py-1 flex items-center gap-1 shadow-sm">
+                                                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                                <span className="text-sm font-semibold text-gray-900">
+                                                    {(hotel.rating || 0).toFixed(1)}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <CardContent className="p-4 flex-1 flex flex-col">
+                                            <h3 className="font-bold text-lg text-gray-900 line-clamp-1 mb-2">
+                                                {hotel.name}
+                                            </h3>
+
+                                            <div className="flex items-center gap-1.5 text-gray-600 mb-3">
+                                                <MapPin className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                                                <span className="text-sm line-clamp-1">
+                                                    {typeof hotel.location === 'object' ? hotel.location?.name : hotel.location}
+                                                </span>
+                                            </div>
+
+                                            {hotel.amenities && hotel.amenities.length > 0 && (
+                                                <div className="flex flex-wrap gap-2 mb-4">
+                                                    {hotel.amenities.slice(0, 4).map((amenity, idx) => {
+                                                        const IconComponent = getAmenityIcon(amenity)
+                                                        return (
+                                                            <div
+                                                                key={idx}
+                                                                className="flex items-center gap-1.5 text-xs text-gray-600 bg-gray-50 px-2.5 py-1.5 rounded-lg"
+                                                            >
+                                                                <IconComponent className="w-3.5 h-3.5" />
+                                                                <span className="line-clamp-1">{amenity}</span>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )}
+
+                                            <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+                                                <div>
+                                                    <div className="text-sm text-gray-600">Starting from</div>
+                                                    <div className="flex items-baseline gap-1">
+                                                        <span className="text-2xl font-bold text-gray-900">
+                                                            ${hotel.pricePerNight || hotel.price || 0}
+                                                        </span>
+                                                        <span className="text-sm text-gray-600">/night</span>
                                                     </div>
                                                 </div>
-                                                <CardContent>
-                                                    <h3 className="font-semibold text-lg line-clamp-2">{hotel.name}</h3>
-                                                    <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                                                        <MapPin className="w-3.5 h-3.5 text-rose-600" />
-                                                        <span>{typeof hotel.location === 'object' ? hotel.location?.name : hotel.location}</span>
-                                                    </div>
-                                                    {hotel.website && (
-                                                        <div className="mt-1 text-xs text-blue-600 underline"><a href={hotel.website} target="_blank" rel="noopener noreferrer">{hotel.website}</a></div>
-                                                    )}
-                                                    {hotel.socials && hotel.socials.length > 0 && (
-                                                        <div className="mt-1 flex gap-2 flex-wrap">
-                                                            {hotel.socials.map((s, i) => (
-                                                                <a key={i} href={s} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 underline">{s}</a>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                    <div className="flex items-center justify-between mt-3">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="flex">{[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.floor(hotel.rating || 0) ? 'text-yellow-400' : 'text-gray-200'}`} />)}</div>
-                                                            <span className="text-sm text-gray-600">{(hotel.rating || 0).toFixed(1)}</span>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <div className="text-sm text-gray-500">From</div>
-                                                            <div className="text-lg font-bold text-gray-900">${hotel.pricePerNight || hotel.price || 0}</div>
-                                                        </div>
-                                                    </div>
-                                                    {hotel.amenities && hotel.amenities.length > 0 && (
-                                                        <div className="flex flex-wrap gap-2 mt-2">
-                                                            {hotel.amenities.map((amenity, idx) => {
-                                                                const IconComponent = getAmenityIcon(amenity)
-                                                                return (
-                                                                    <span key={idx} className="flex items-center gap-1 bg-rose-50 px-2 py-1 rounded-full text-xs text-rose-700"><IconComponent className="h-3 w-3 text-rose-600" />{amenity}</span>
-                                                                )
-                                                            })}
-                                                        </div>
-                                                    )}
-                                                </CardContent>
-                                            </Card>
-                                        ))
-                                    )}
+                                                <Button
+                                                    size="sm"
+                                                    className="bg-rose-600 hover:bg-rose-700 text-white rounded-lg h-10 px-5"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        navigate(`/hotel/${hotel._id}`)
+                                                    }}
+                                                >
+                                                    View Details
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => handlePageChange(filters.page - 1)}
+                                    disabled={filters.page === 1}
+                                    className="h-10 w-10 p-0 border-gray-300 disabled:opacity-50"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </Button>
+
+                                <div className="flex items-center gap-1">
+                                    {[...Array(totalPages)].map((_, i) => {
+                                        const page = i + 1
+                                        const isCurrentPage = page === filters.page
+                                        const showPage = page === 1 || page === totalPages || (page >= filters.page - 1 && page <= filters.page + 1)
+
+                                        if (!showPage && page === 2) {
+                                            return <span key={page} className="px-2 text-gray-400">...</span>
+                                        }
+                                        if (!showPage && page === totalPages - 1) {
+                                            return <span key={page} className="px-2 text-gray-400">...</span>
+                                        }
+                                        if (!showPage) return null
+
+                                        return (
+                                            <Button
+                                                key={page}
+                                                variant={isCurrentPage ? "default" : "outline"}
+                                                onClick={() => handlePageChange(page)}
+                                                className={`h-10 w-10 p-0 ${isCurrentPage
+                                                    ? 'bg-rose-600 text-white hover:bg-rose-700'
+                                                    : 'border-gray-300 hover:bg-gray-50'
+                                                    }`}
+                                            >
+                                                {page}
+                                            </Button>
+                                        )
+                                    })}
                                 </div>
-                            </motion.div>
-                        </div>
 
-                        <aside className="space-y-6">
-                            <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100">
-                                <h3 className="text-lg font-semibold mb-2">Why book with us?</h3>
-                                <ul className="space-y-3 text-sm text-gray-600">
-                                    <li className="flex items-start gap-3"><span className="text-rose-600 mt-1"><Users className="w-5 h-5" /></span><div><strong>Trusted hosts</strong><div className="text-xs">Verified stays & 24/7 support</div></div></li>
-                                    <li className="flex items-start gap-3"><span className="text-rose-600 mt-1"><Award className="w-5 h-5" /></span><div><strong>Best prices</strong><div className="text-xs">Exclusive offers & deals</div></div></li>
-                                    <li className="flex items-start gap-3"><span className="text-rose-600 mt-1"><Zap className="w-5 h-5" /></span><div><strong>Easy bookings</strong><div className="text-xs">Instant confirmation & flexible dates</div></div></li>
-                                </ul>
-                            </motion.div>
-
-
-                        </aside>
-                    </div>
-                </section>
-
-
-                {/* CTA */}
-                <section className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-8 text-white mb-16 shadow-2xl">
-                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div>
-                            <h3 className="text-3xl font-extrabold">Ready for your next trip?</h3>
-                            <p className="mt-2 text-white/90">Find unique stays and unforgettable experiences. Book now & get exclusive member discounts.</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Button onClick={() => navigate('/login')} className="bg-white text-rose-600 px-6 py-3 rounded-xl font-semibold">Join & Save</Button>
-                            <Button onClick={() => window.scrollTo({ top: 400, behavior: 'smooth' })} className="bg-white/20 border border-white text-white px-5 py-3 rounded-xl">Browse Stays</Button>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Footer spacing */}
-                <div className="h-24" />
+                                <Button
+                                    variant="outline"
+                                    onClick={() => handlePageChange(filters.page + 1)}
+                                    disabled={filters.page === totalPages}
+                                    className="h-10 w-10 p-0 border-gray-300 disabled:opacity-50"
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </Button>
+                            </div>
+                        )}
+                    </>
+                )}
             </main>
         </div>
     )

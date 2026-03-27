@@ -124,15 +124,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 userSchema.pre("save", async function (next) {
-  if (this.isModified("password")) {
+  if (this.isModified("password") && this.password) {
     this.password = await bcrypt.hash(this.password, 10);
   }
   next();
@@ -151,7 +150,7 @@ userSchema.methods.generateAccessToken = function () {
     process.env.ACCESS_TOKEN_SECRET,
     {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-    }
+    },
   );
 };
 
@@ -163,21 +162,19 @@ userSchema.methods.generateRefreshToken = function () {
     process.env.REFRESH_TOKEN_SECRET,
     {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-    }
+    },
   );
 };
 
 userSchema.methods.getOverallLevel = async function () {
-  const { UserAdventureExperience } = await import(
-    "./userAdventureExperience.model.js"
-  );
+  const { UserAdventureExperience } =
+    await import("./userAdventureExperience.model.js");
   return await UserAdventureExperience.calculateOverallLevel(this._id);
 };
 
 userSchema.methods.getAdventureExperiences = async function () {
-  const { UserAdventureExperience } = await import(
-    "./userAdventureExperience.model.js"
-  );
+  const { UserAdventureExperience } =
+    await import("./userAdventureExperience.model.js");
   return await UserAdventureExperience.find({ user: this._id })
     .populate("adventure", "name description medias thumbnail ")
     .sort({ experience: -1 });

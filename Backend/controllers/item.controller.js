@@ -44,7 +44,7 @@ export const discoverItems = asyncHandler(async (req, res) => {
     search,
     limit = 10,
     page = 1,
-    advenureId,
+    adventureId,
     priceMin,
     priceMax,
     availability,
@@ -64,8 +64,8 @@ export const discoverItems = asyncHandler(async (req, res) => {
     queryObj.category = category;
   }
 
-  if (advenureId) {
-    queryObj.adventures = advenureId; // Filter by adventure ID
+  if (adventureId) {
+    queryObj.adventures = adventureId; // Filter by adventure ID
   }
 
   // Price range

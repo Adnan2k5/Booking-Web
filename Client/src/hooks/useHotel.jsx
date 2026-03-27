@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getHotel } from "../Api/hotel.api";
 
 export function useHotels({
@@ -19,46 +19,52 @@ export function useHotels({
     const [error, setError] = useState(null);
     const [total, setTotal] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
+    const [refreshKey, setRefreshKey] = useState(0);
 
-    useEffect(() => {
-        const fetchHotels = async () => {
-            setIsLoading(true);
-            try {
-                const res = await getHotel({
-                    search,
-                    page,
-                    limit,
-                    verified,
-                    location,
-                    category,
-                    minPrice,
-                    maxPrice,
-                    minRating,
-                    sortBy,
-                    sortOrder
-                });
-                if (res && res.data) {
-                    let hotelsData = res.data.hotels || [];
-                    setHotels(hotelsData);
-                    setTotal(res.data.total || 0);
-                    setTotalPages(res.data.totalPages || 1);
-                } else {
-                    setHotels([]);
-                    setTotal(0);
-                    setTotalPages(1);
-                }
-                setError(null);
-            } catch (err) {
-                setError(err);
+    const fetchHotels = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const res = await getHotel({
+                search,
+                page,
+                limit,
+                verified,
+                location,
+                category,
+                minPrice,
+                maxPrice,
+                minRating,
+                sortBy,
+                sortOrder
+            });
+            if (res && res.data) {
+                let hotelsData = res.data.hotels || [];
+                setHotels(hotelsData);
+                setTotal(res.data.total || 0);
+                setTotalPages(res.data.totalPages || 1);
+            } else {
                 setHotels([]);
                 setTotal(0);
                 setTotalPages(1);
-            } finally {
-                setIsLoading(false);
             }
-        };
-        fetchHotels();
+            setError(null);
+        } catch (err) {
+            setError(err);
+            setHotels([]);
+            setTotal(0);
+            setTotalPages(1);
+        } finally {
+            setIsLoading(false);
+        }
     }, [search, page, limit, verified, location, category, minPrice, maxPrice, minRating, sortBy, sortOrder]);
 
-    return { hotels, isLoading, error, total, totalPages };
+    useEffect(() => {
+        fetchHotels();
+    }, [fetchHotels, refreshKey]);
+
+    const refetch = useCallback(() => {
+        setRefreshKey(prev => prev + 1);
+    }, []);
+
+    return { hotels, isLoading, error, total, totalPages, refetch };
 }

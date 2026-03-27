@@ -37,6 +37,7 @@ const NavResultsPage = lazy(() => import("./Pages/Shop/NavResultsPage"))
 const ComparisonPage = lazy(() => import("./Pages/Shop/ComparisonPage"))
 const FavoritesPage = lazy(() => import("./Pages/Shop/FavoritesPage"))
 const Hotel = lazy(() => import("./Pages/Hotel/Hotel"))
+const HotelDetail = lazy(() => import("./Pages/Hotel/HotelDetail"))
 const HotelCheckout = lazy(() => import("./Pages/Hotel/HotelCheckout"))
 const HotelBookingSuccess = lazy(() => import("./Pages/Hotel/HotelBookingSuccess"))
 const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
@@ -231,7 +232,13 @@ const App = () => {
                           <FeatureRoute feature="hotels">
                             <Hotel />
                           </FeatureRoute>
-                        } />                  <Route path="/cart" element={
+                        } />
+                        <Route path="/hotel/:id" element={
+                          <FeatureRoute feature="hotels">
+                            <HotelDetail />
+                          </FeatureRoute>
+                        } />
+                        <Route path="/cart" element={
                           <FeatureRoute feature="shop">
                             <Cart />
                           </FeatureRoute>

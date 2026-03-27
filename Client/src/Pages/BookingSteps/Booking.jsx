@@ -60,7 +60,7 @@ export default function BookingFlow() {
   const bookingSummaryRef = useRef(null)
 
   const { sessions, instructors } = useSessions({ adventure: query.get("id"), location: query.get("location"), session_date: query.get("session_date") })
-  const { items } = useBrowse({ adventureId: sessions.length > 0 ? sessions[0]?.adventureId : "" })
+  const { items } = useBrowse({ adventureId: sessions.length > 0 ? (sessions[0]?.adventureId?._id || sessions[0]?.adventureId) : "" })
 
   // Load group members from sessionStorage if available
   useEffect(() => {
@@ -250,29 +250,28 @@ export default function BookingFlow() {
   // Calculate total price
   const calculateTotal = () => {
     const itemsPrice = cartItems.reduce((sum, item) => {
-      const itemData = Array.isArray(items) ? items.find((i) => i._id === item._id) : null
+      const itemData = Array.isArray(items) ? items.find((i) => i._id == item._id) : null
       if (!itemData) return sum
 
-      const price = itemData.price;
+      const price = Number(itemData.price || 0)
       return sum + price * item.quantity
     }, 0)
 
-    // Calculate hotel price based on number of nights
     let hotelPrice = 0
     if (selectedHotel && Array.isArray(hotels)) {
-      const hotel = hotels.find((hotel) => hotel._id === selectedHotel)
-      const pricePerNight = hotel?.pricePerNight || hotel?.price || 0
+      const hotel = hotels.find((hotel) => hotel._id == selectedHotel || hotel.id == selectedHotel)
+      const pricePerNight = Number(hotel?.pricePerNight || hotel?.price || 0)
       const nights = calculateNights()
       hotelPrice = pricePerNight * nights
     }
 
-    // Calculate instructor price
     let instructorPrice = 0
     if (selectedInstructor) {
-      // If instructor is selected, use their base price plus additional fee for group members
-      instructorPrice = selectedInstructor.price + groupMembers.length * 30
+      const baseFee = Number(selectedInstructor.price || selectedInstructor.fee || 0) + groupMembers.length * 30
+      const commission = Number(selectedInstructor?.instructorId?.instructor?.commissionPercentage ?? 20)
+      const platformFeeAmount = Number((baseFee * commission / 100).toFixed(2))
+      instructorPrice = baseFee + platformFeeAmount
     } else if (groupMembers.length > 0) {
-      // If no instructor but there are group members, just charge for the additional members
       instructorPrice = groupMembers.length * 30
     }
 
@@ -329,12 +328,15 @@ export default function BookingFlow() {
 
     let currentStepNumber = 2;
 
-    if (isShopEnabled === true) {
+    const shouldShowShop = isShopEnabled === true;
+    const shouldShowHotels = isHotelsEnabled === true && Array.isArray(hotels) && hotels.length > 0;
+
+    if (shouldShowShop) {
       steps.push({ step: currentStepNumber, icon: <ShoppingCart size={18} />, label: "Shop" });
       currentStepNumber++;
     }
 
-    if (isHotelsEnabled === true) {
+    if (shouldShowHotels) {
       steps.push({ step: currentStepNumber, icon: <Building size={18} />, label: "Hotel" });
       currentStepNumber++;
     }
@@ -477,7 +479,7 @@ export default function BookingFlow() {
                 exit="exit"
                 className="w-full"
               >
-                {isShopEnabled ? (
+                {isShopEnabled === true ? (
                   <div className="space-y-8">
                     <ShopSelection
                       mockItems={Array.isArray(items) ? items : []}
@@ -487,7 +489,7 @@ export default function BookingFlow() {
                     />
 
                     {/* Show booking summary if this is the final step (shop enabled, hotels disabled) */}
-                    {!isHotelsEnabled && (
+                    {!(isHotelsEnabled === true && Array.isArray(hotels) && hotels.length > 0) && (
                       <div ref={bookingSummaryRef}>
                         <BookingSummary
                           user={user}
@@ -497,7 +499,7 @@ export default function BookingFlow() {
                           cartItems={cartItems}
                           mockItems={Array.isArray(items) ? items : []}
                           selectedHotel={selectedHotel}
-                          mockHotels={Array.isArray(hotels) ? hotels : []}
+                          hotels={Array.isArray(hotels) ? hotels : []}
                           calculateTotal={calculateTotal}
                           checkInDate={checkInDate}
                           checkOutDate={checkOutDate}
@@ -508,7 +510,7 @@ export default function BookingFlow() {
                   </div>
                 ) : (
                   /* If shop is disabled but hotels enabled, skip to hotels */
-                  isHotelsEnabled ? (
+                  (isHotelsEnabled === true && Array.isArray(hotels) && hotels.length > 0) ? (
                     <div className="space-y-8">
                       <HotelSelection
                         selectedHotel={selectedHotel}
@@ -548,7 +550,7 @@ export default function BookingFlow() {
                         cartItems={cartItems}
                         mockItems={Array.isArray(items) ? items : []}
                         selectedHotel={selectedHotel}
-                        mockHotels={Array.isArray(hotels) ? hotels : []}
+                        hotels={Array.isArray(hotels) ? hotels : []}
                         calculateTotal={calculateTotal}
                         checkInDate={checkInDate}
                         checkOutDate={checkOutDate}
@@ -561,7 +563,7 @@ export default function BookingFlow() {
             )}
 
             {/* Step 3: Hotels (only if both shop and hotels are enabled) */}
-            {currentStep === 3 && isShopEnabled && isHotelsEnabled && (
+            {currentStep === 3 && isShopEnabled === true && isHotelsEnabled === true && Array.isArray(hotels) && hotels.length > 0 && (
               <motion.div
                 key="step3"
                 custom={1}
@@ -591,7 +593,7 @@ export default function BookingFlow() {
                       cartItems={cartItems}
                       mockItems={Array.isArray(items) ? items : []}
                       selectedHotel={selectedHotel}
-                      mockHotels={Array.isArray(hotels) ? hotels : []}
+                      hotels={Array.isArray(hotels) ? hotels : []}
                       calculateTotal={calculateTotal}
                       checkInDate={checkInDate}
                       checkOutDate={checkOutDate}

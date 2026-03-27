@@ -53,10 +53,10 @@ export const getHotel = async ({
     if (verified && verified !== 'all') {
       params.verified = verified;
     }
-    if (location !== null) {
+    if (location !== null && location !== '') {
       params.location = location;
     }
-    if (category !== null) {
+    if (category !== null && category !== '') {
       params.category = category;
     }
     if (minPrice !== null) {
