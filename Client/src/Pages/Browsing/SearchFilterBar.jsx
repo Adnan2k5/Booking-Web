@@ -10,7 +10,6 @@ export function SearchFilterBar({
   date,
   setDate,
   clearFilter,
-  handleDateChange,
   onSearch,
   locations = [],
   allAdventures = [],

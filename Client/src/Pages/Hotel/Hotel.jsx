@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+import { useState, useEffect, useMemo } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
     MapPin,
     Star,
@@ -20,8 +20,8 @@ import { Card, CardContent } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
 import { useSearchParams, useNavigate } from "react-router-dom"
 import { useHotels } from "../../hooks/useHotel"
+import { useCountrySlider } from "../../hooks/useCountrySlider"
 import { Nav_Landing } from "../../components/Nav_Landing"
-import { fetchLocations } from "../../Api/location.api"
 
 const stayCategories = [
     { id: '', name: 'All Stays', icon: HotelIcon },
@@ -51,6 +51,18 @@ const getAmenityIcon = (amenityName) => {
     return HotelIcon
 }
 
+const extractCountryFromAddress = (address) => {
+    if (!address || typeof address !== "string") return ""
+    const segments = address.split(",").map((part) => part.trim()).filter(Boolean)
+    return segments[segments.length - 1] || ""
+}
+
+const extractCityFromAddress = (address) => {
+    if (!address || typeof address !== "string") return ""
+    const segments = address.split(",").map((part) => part.trim()).filter(Boolean)
+    return segments.length >= 2 ? segments[segments.length - 2] : segments[0] || ""
+}
+
 export default function HotelBrowsingPage() {
     const [searchParams, setSearchParams] = useSearchParams()
     const navigate = useNavigate()
@@ -64,7 +76,6 @@ export default function HotelBrowsingPage() {
         page: parseInt(searchParams.get('page') || '1')
     })
 
-    const [locations, setLocations] = useState([])
     const [limit] = useState(12)
 
     const { hotels, isLoading, total, totalPages } = useHotels({
@@ -73,18 +84,6 @@ export default function HotelBrowsingPage() {
         location: filters.location || null,
         category: filters.category || null
     })
-
-    useEffect(() => {
-        const getLocations = async () => {
-            try {
-                const res = await fetchLocations()
-                setLocations(res.data || [])
-            } catch (err) {
-                console.error(err)
-            }
-        }
-        getLocations()
-    }, [])
 
     useEffect(() => {
         const params = new URLSearchParams()
@@ -101,6 +100,36 @@ export default function HotelBrowsingPage() {
 
     const todayISO = new Date().toISOString().split('T')[0]
     const tomorrowISO = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+
+    const hotelsWithLocationMeta = useMemo(() => {
+        return hotels.map((hotel) => {
+            const locationName = typeof hotel.location === "object" ? hotel.location?.name : hotel.location
+            const locationAddress = hotel?.location?.address || ""
+            const city =
+                hotel?.city ||
+                hotel?.location?.city ||
+                extractCityFromAddress(locationAddress)
+            const country =
+                hotel?.country ||
+                hotel?.location?.country ||
+                extractCountryFromAddress(locationAddress) ||
+                "Other"
+            const countryLabel = city ? `${city}, ${country}` : country
+
+            return {
+                ...hotel,
+                city,
+                country,
+                countryLabel,
+                locationName
+            }
+        })
+    }, [hotels])
+
+    const featuredCountrySlider = useCountrySlider(hotelsWithLocationMeta.map((hotel) => ({
+        ...hotel,
+        country: hotel.countryLabel
+    })))
 
     const handleBookingSearch = (e) => {
         e.preventDefault()
@@ -163,8 +192,8 @@ export default function HotelBrowsingPage() {
                                                 className="h-12 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 px-4 pr-10 text-gray-700 bg-white appearance-none transition-all"
                                             >
                                                 <option value="">All Locations</option>
-                                                {locations.map(loc => (
-                                                    <option key={loc._id} value={loc.name}>{loc.name}</option>
+                                                {Array.from(new Set(hotelsWithLocationMeta.map((hotel) => hotel.locationName).filter(Boolean))).map((locationName) => (
+                                                    <option key={locationName} value={locationName}>{locationName}</option>
                                                 ))}
                                             </select>
                                             <MapPin className="w-5 h-5 text-gray-400 absolute right-3 top-3.5 pointer-events-none" />
@@ -221,6 +250,131 @@ export default function HotelBrowsingPage() {
             </header>
 
             <main className="max-w-7xl mx-auto px-6 sm:px-8 py-12">
+                {!isLoading && featuredCountrySlider.countriesFromEvents.length > 0 && (
+                    <section className="mb-14 rounded-3xl bg-slate-50 border border-slate-200/80 p-6 md:p-8">
+                        <div className="text-center mb-8 md:mb-10">
+                            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">Featured Stays</h2>
+                            <p className="mt-2 text-base md:text-lg text-gray-600">
+                                Curated picks by destination, crafted for comfort and style.
+                            </p>
+                        </div>
+
+                        <div className="relative mb-8 md:mb-10">
+                            <div className="flex items-center justify-center gap-2 md:gap-4">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={featuredCountrySlider.prevCountry}
+                                    className="rounded-full h-10 w-10 md:h-12 md:w-12 hover:bg-white hover:shadow-md transition-all duration-300 text-gray-800"
+                                >
+                                    <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
+                                </Button>
+
+                                <div className="flex-1 overflow-x-auto no-scrollbar">
+                                    <div className="flex items-center justify-center space-x-5 md:space-x-8 px-2 min-w-max mx-auto">
+                                        {featuredCountrySlider.countriesFromEvents.map((country, index) => (
+                                            <motion.button
+                                                key={country.name}
+                                                onClick={() => featuredCountrySlider.goToCountry(index)}
+                                                className={`cursor-pointer transition-all duration-300 whitespace-nowrap px-2 py-1 rounded-full ${index === featuredCountrySlider.currentCountryIndex
+                                                    ? "text-2xl md:text-3xl font-bold text-gray-900"
+                                                    : "text-lg md:text-xl font-medium text-gray-400 hover:text-gray-600"
+                                                    }`}
+                                                whileHover={{ scale: 1.04 }}
+                                            >
+                                                    <span className={index === featuredCountrySlider.currentCountryIndex ? "border-b-4 border-gray-900 pb-1" : ""}>
+                                                        {country.name}
+                                                    </span>
+                                                </motion.button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={featuredCountrySlider.nextCountry}
+                                    className="rounded-full h-10 w-10 md:h-12 md:w-12 hover:bg-white hover:shadow-md transition-all duration-300 text-gray-800"
+                                >
+                                    <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
+                                </Button>
+                            </div>
+
+                            <div className="flex justify-center space-x-2 mt-6">
+                                {featuredCountrySlider.countriesFromEvents.map((_, index) => (
+                                    <button
+                                        key={index}
+                                        className={`h-1.5 rounded-full transition-all duration-300 ${index === featuredCountrySlider.currentCountryIndex ? "w-10 bg-gray-900" : "w-1.5 bg-gray-300"
+                                            }`}
+                                        onClick={() => featuredCountrySlider.goToCountry(index)}
+                                        aria-label={`Show featured stays for country ${index + 1}`}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={featuredCountrySlider.currentCountryIndex}
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -12 }}
+                                transition={{ duration: 0.25 }}
+                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                            >
+                                {(featuredCountrySlider.currentCountry?.events || [])
+                                    .slice()
+                                    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                                    .slice(0, 3)
+                                    .map((hotel) => (
+                                        <Card
+                                            key={hotel._id}
+                                            className="group overflow-hidden rounded-2xl border border-gray-200 bg-white hover:shadow-xl transition-all duration-300 cursor-pointer"
+                                            onClick={() => navigate(`/hotel/${hotel._id}`)}
+                                        >
+                                            <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
+                                                <img
+                                                    src={hotel.logo || hotel.medias?.[0] || '/placeholder.svg'}
+                                                    alt={hotel.name}
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                />
+                                                <div className="absolute top-3 left-3">
+                                                    <Badge className="bg-white/95 text-gray-900 font-medium capitalize border-0 shadow-sm">
+                                                        {hotel.category}
+                                                    </Badge>
+                                                </div>
+                                                <div className="absolute top-3 right-3 bg-white/95 rounded-full px-3 py-1 flex items-center gap-1 shadow-sm">
+                                                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                                    <span className="text-sm font-semibold text-gray-900">
+                                                        {(hotel.rating || 0).toFixed(1)}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <CardContent className="p-4">
+                                                <h3 className="font-bold text-lg text-gray-900 line-clamp-1 mb-2">
+                                                    {hotel.name}
+                                                </h3>
+                                                <div className="flex items-center gap-1.5 text-gray-600 mb-3">
+                                                    <MapPin className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                                                    <span className="text-sm line-clamp-1">
+                                                        {hotel.locationName}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-2xl font-bold text-gray-900">
+                                                        ${hotel.pricePerNight || hotel.price || 0}
+                                                    </span>
+                                                    <span className="text-sm text-gray-600">/night</span>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                            </motion.div>
+                        </AnimatePresence>
+                    </section>
+                )}
+
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h2 className="text-3xl font-bold text-gray-900">
@@ -254,7 +408,7 @@ export default function HotelBrowsingPage() {
                 ) : (
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                            {hotels.map((hotel) => (
+                            {hotelsWithLocationMeta.map((hotel) => (
                                 <motion.div
                                     key={hotel._id}
                                     initial={{ opacity: 0, y: 20 }}

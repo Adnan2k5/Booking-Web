@@ -2,7 +2,7 @@ import { axiosClient } from '../AxiosClient/axios';
 
 export const getAllItems = async (page, limit, search, category) => {
   try {
-    const response = await axiosClient.get('api/items/', {
+    const response = await axiosClient.get('/api/items/', {
       params: {
         search,
         category,
@@ -18,9 +18,9 @@ export const getAllItems = async (page, limit, search, category) => {
 
 export const getItemById = async (id) => {
   try {
-    const res = await axiosClient.get(`api/items/${id}`);
+    const res = await axiosClient.get(`/api/items/${id}`);
     return res;
   } catch (err) {
-    return err;
+    throw new Error('Error fetching item');
   }
 };
