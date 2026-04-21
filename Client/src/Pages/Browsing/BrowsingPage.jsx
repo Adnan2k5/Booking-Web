@@ -1,12 +1,11 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { format } from "date-fns"
 import { useLocation, useNavigate } from "react-router-dom"
-import { MapPin, Compass } from "lucide-react"
+import { Compass } from "lucide-react"
 import { Badge } from "../../components/ui/badge"
-import { useAuth } from "../AuthProvider.jsx"
 import { SearchFilterBar } from "./SearchFilterBar"
 import { AdventureCard } from "./AdventureCard"
 import { AdventureCardSkeleton } from "./AdventureCardSkeleton"
@@ -16,31 +15,10 @@ import { useLocations } from "../../hooks/useLocation"
 import { useAdventures } from "../../hooks/useAdventure"
 import { containerVariants, itemVariants } from "../../assets/Animations"
 import { Nav_Landing } from "../../components/Nav_Landing"
-
-// Empty State Component
-const EmptyLocationState = () => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-    className="text-center py-16 px-6"
-  >
-    <div className="inline-block mb-6">
-      <div className="bg-gray-100 p-6 rounded-full">
-        <MapPin size={56} className="text-gray-900" strokeWidth={1.5} />
-      </div>
-    </div>
-    <h3 className="text-2xl font-bold text-gray-900 mb-3">Where would you like to explore?</h3>
-    <p className="text-gray-600 max-w-md mx-auto leading-relaxed">
-      Select a location above to discover amazing adventures waiting for you.
-    </p>
-  </motion.div>
-)
+import PaginationComponent from "../../components/ui/PaginationComponent"
 
 // Results Header Component
-const ResultsHeader = ({ count, hasLocation }) => {
-  if (!hasLocation) return null
-
+const ResultsHeader = ({ count }) => {
   return (
     <motion.div
       className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200"
@@ -76,9 +54,8 @@ export default function BrowsingPage() {
     const queryDate = query.get("date")
     return queryDate ? new Date(queryDate) : undefined
   })
-  const [activeCategory, setActiveCategory] = useState("")
-  const [showScrollIndicator, setShowScrollIndicator] = useState(true)
-  const categoriesRef = useRef(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const PAGE_SIZE = 9
 
   const { adventures, isLoading, filters, setFilters } = useBrowse()
   const { locations } = useLocations()
@@ -95,27 +72,6 @@ export default function BrowsingPage() {
     })
     navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true, ...options })
   }
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (categoriesRef.current) {
-        const { scrollWidth, scrollLeft, clientWidth } = categoriesRef.current
-        setShowScrollIndicator(scrollWidth > clientWidth && scrollLeft < scrollWidth - clientWidth - 20)
-      }
-    }
-
-    const categoryContainer = categoriesRef.current
-    if (categoryContainer) {
-      categoryContainer.addEventListener("scroll", handleScroll)
-      handleScroll()
-    }
-
-    return () => {
-      if (categoryContainer) {
-        categoryContainer.removeEventListener("scroll", handleScroll)
-      }
-    }
-  }, [])
 
   useEffect(() => {
     // Parse URL params and set filters
@@ -161,21 +117,11 @@ export default function BrowsingPage() {
         setAdventure("")
         setLoc("")
         setDate(undefined)
-        setActiveCategory("")
         setFilters({ adventure: "", location: "", session_date: "" })
         updateParams({ adventure: "", location: "", date: "" })
         break
       default:
         break
-    }
-  }
-
-  const handleDateChange = (value) => {
-    if (value) {
-      const selectedDate = new Date(value.format("YYYY-MM-DD"))
-      setDate(selectedDate)
-    } else {
-      setDate(undefined)
     }
   }
 
@@ -193,14 +139,21 @@ export default function BrowsingPage() {
   }
 
   // Determine what to display
-  const hasLocation = loc && loc.length > 0
   const hasResults = adventures && adventures.length > 0
-  const showEmptyLocationState = !hasLocation && !isLoading
-  const showNoResults = hasLocation && !hasResults && !isLoading
-  const showResults = hasLocation && hasResults && !isLoading
+  const showNoResults = !hasResults && !isLoading
+  const showResults = hasResults && !isLoading
+  const totalPages = Math.ceil((adventures?.length || 0) / PAGE_SIZE)
+  const paginatedAdventures = adventures.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  )
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [adventure, loc, date, adventures.length])
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
       <Nav_Landing />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 pb-16">
@@ -211,10 +164,10 @@ export default function BrowsingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-gray-900 leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4 text-slate-900 leading-tight">
             Discover Your Next Adventure
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
             Find unforgettable experiences and create lasting memories
           </p>
         </motion.div>
@@ -226,7 +179,7 @@ export default function BrowsingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
         >
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <SearchFilterBar
               adventure={adventure}
               setAdventure={setAdventure}
@@ -235,7 +188,6 @@ export default function BrowsingPage() {
               date={date}
               setDate={setDate}
               clearFilter={clearFilter}
-              handleDateChange={handleDateChange}
               locations={locations}
               allAdventures={allAdventures}
               onSearch={(newFilters) => {
@@ -252,7 +204,7 @@ export default function BrowsingPage() {
         </motion.div>
 
         {/* Results Section */}
-        <ResultsHeader count={adventures?.length || 0} hasLocation={hasLocation} />
+        <ResultsHeader count={adventures?.length || 0} />
 
         <AnimatePresence mode="wait">
           {isLoading ? (
@@ -271,15 +223,6 @@ export default function BrowsingPage() {
                     <AdventureCardSkeleton />
                   </motion.div>
                 ))}
-            </motion.div>
-          ) : showEmptyLocationState ? (
-            <motion.div
-              key="empty-location"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <EmptyLocationState />
             </motion.div>
           ) : showNoResults ? (
             <motion.div
@@ -300,7 +243,7 @@ export default function BrowsingPage() {
               animate="visible"
               exit="hidden"
             >
-              {adventures.map((adventure, index) => (
+              {paginatedAdventures.map((adventure, index) => (
                 <motion.div
                   key={adventure._id}
                   variants={itemVariants}
@@ -316,6 +259,14 @@ export default function BrowsingPage() {
             </motion.div>
           ) : null}
         </AnimatePresence>
+
+        {showResults && (
+          <PaginationComponent
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
     </div>
   )

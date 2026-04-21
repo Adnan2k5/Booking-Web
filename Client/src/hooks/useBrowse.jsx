@@ -1,4 +1,4 @@
-import { fetchFilteredAdventures } from "../Api/adventure.api";
+import { fetchAllAdventures, fetchFilteredAdventures } from "../Api/adventure.api";
 import { useState, useEffect } from "react";
 
 export function useBrowse() {
@@ -14,13 +14,18 @@ export function useBrowse() {
     const fetchAdventures = async () => {
         setIsLoading(true);
         try {
-            // Only return empty if all filters are empty
-            if (!filters.adventure && !filters.location && !filters.session_date) {
-                setAdventures([]);
-                return;
+            const hasFilters =
+                Boolean(filters.adventure?.trim()) ||
+                Boolean(filters.location?.trim()) ||
+                Boolean(filters.session_date?.trim());
+
+            if (hasFilters) {
+                const res = await fetchFilteredAdventures(filters);
+                setAdventures(res.data?.data || []);
+            } else {
+                const res = await fetchAllAdventures();
+                setAdventures(res.data?.adventures || []);
             }
-            const res = await fetchFilteredAdventures(filters);
-            setAdventures(res.data.data);
         } catch (err) {
             setError(err);
             setAdventures([]);

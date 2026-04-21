@@ -315,7 +315,7 @@ export const getHotelDetails = asyncHandler(async (req, res) => {
 
   const hotel = await Hotel.findById(id)
     .populate("owner", "name email")
-    .populate("location", "name");
+    .populate("location", "name address");
 
   if (!hotel) {
     throw new ApiError(404, "Hotel not found");
@@ -352,7 +352,7 @@ export const getHotelById = asyncHandler(async (req, res) => {
 
   const hotelData = await Hotel.find({ owner: id })
     .populate("owner", "name email")
-    .populate("location", "name");
+    .populate("location", "name address");
 
   if (!hotelData || hotelData.length === 0) {
     throw new ApiError(404, "Hotel not found");
@@ -442,7 +442,7 @@ export const getHotel = asyncHandler(async (req, res) => {
     .skip(skip)
     .limit(parseInt(limit))
     .populate("owner", "name email")
-    .populate("location", "name");
+    .populate("location", "name address");
 
   const plainHotels = hotels.map((hotel) => hotel.toJSON());
   const total = await Hotel.countDocuments(query);
@@ -631,7 +631,7 @@ export const updateHotel = asyncHandler(async (req, res) => {
     runValidators: true,
   })
     .populate("owner", "name email")
-    .populate("location", "name");
+    .populate("location", "name address");
 
   res
     .status(200)
