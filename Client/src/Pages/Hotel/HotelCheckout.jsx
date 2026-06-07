@@ -326,7 +326,7 @@ export default function HotelCheckout() {
                     <span className="text-gray-600">
                       Room Rate (${roomRate}/night)
                     </span>
-                    <span>${roomRate.toFixed(2)}</span>
+                    <span>€{roomRate.toFixed(2)}</span>
                   </div>
 
                   <div className="flex justify-between">
@@ -343,7 +343,7 @@ export default function HotelCheckout() {
 
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
-                    <span>${totalPrice.toFixed(2)}</span>
+                    <span>€{totalPrice.toFixed(2)}</span>
                   </div>
 
                   <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-800">

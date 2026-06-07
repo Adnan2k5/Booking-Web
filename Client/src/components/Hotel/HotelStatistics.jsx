@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrendingUp, DollarSign, Calendar, Users } from 'lucide-react';
+import { TrendingUp, Euro, Calendar, Users } from 'lucide-react';
 
 export const HotelStatistics = ({ bookings, bookingStats }) => {
     // Process data for charts
@@ -24,7 +24,7 @@ export const HotelStatistics = ({ bookings, bookingStats }) => {
                                     €{bookingStats?.totalRevenue?.toFixed(2) || 0}
                                 </p>
                             </div>
-                            <DollarSign className="h-8 w-8 text-green-600" />
+                            <Euro className="h-8 w-8 text-green-600" />
                         </div>
                     </CardContent>
                 </Card>

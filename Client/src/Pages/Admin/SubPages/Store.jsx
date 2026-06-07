@@ -242,7 +242,7 @@ export default function ItemsPage() {
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell>{item.category}</TableCell>
-                        <TableCell>${item.price.toFixed(2)}</TableCell>
+                        <TableCell>€{item.price.toFixed(2)}</TableCell>
                         <TableCell>{item.purchaseStock}</TableCell>
                         <TableCell>{item.rentalStock}</TableCell>
                         <TableCell>
@@ -321,8 +321,8 @@ export default function ItemsPage() {
                 </CardContent>
                 <CardFooter className="flex justify-between pt-2">
                   <div className="price">
-                    <div className="font-bold">${item.price.toFixed(2)} Buy</div>
-                    <div className="font-bold">${item?.rentalPrice.toFixed(2)} Rent</div>
+                    <div className="font-bold">€{item.price.toFixed(2)} Buy</div>
+                    <div className="font-bold">€{item?.rentalPrice?.toFixed(2) ?? '0.00'} Rent</div>
                   </div>
                   <div className="flex space-x-2">
                     <Button variant="ghost" size="sm">
@@ -429,7 +429,7 @@ export default function ItemsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price ($)</Label>
+                  <Label htmlFor="price">Price (€)</Label>
                   <Input
                     id="price"
                     type="number"

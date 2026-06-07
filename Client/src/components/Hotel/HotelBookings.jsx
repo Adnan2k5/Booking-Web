@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Loader } from '../Loader';
-import { Calendar, CreditCard, DollarSign, TrendingUp, Users, Phone, Mail } from 'lucide-react';
+import { Calendar, CreditCard, Euro, TrendingUp, Users, Phone, Mail } from 'lucide-react';
 
 export const HotelBookings = ({ 
     bookings, 
@@ -65,7 +65,7 @@ export const HotelBookings = ({
                             <Card>
                                 <CardContent className="pt-6">
                                     <div className="flex items-center gap-2">
-                                        <DollarSign className="h-4 w-4 text-green-600" />
+                                        <Euro className="h-4 w-4 text-green-600" />
                                         <div>
                                             <p className="text-xs text-muted-foreground">Total Revenue</p>
                                             <p className="text-lg font-bold">€{bookingStats.totalRevenue?.toFixed(2) || 0}</p>

@@ -72,7 +72,7 @@ const EventBookingConfirmation = () => {
                 },
                 paymentDetails: {
                     amount: booking.amount,
-                    currency: 'USD',
+                    currency: 'EUR',
                     paymentMethod: booking.paymentMethod,
                     transactionId: booking.paymentOrderId || booking.transactionId || `TXN-${Date.now()}`,
                     status: booking.paymentStatus
@@ -108,7 +108,7 @@ Email: ${confirmationData.bookingDetails.email}
 Phone: ${confirmationData.bookingDetails.phone}
 
 Payment Details:
-Amount: $${confirmationData.paymentDetails.amount.toFixed(2)}
+Amount: €${confirmationData.paymentDetails.amount.toFixed(2)}
 Transaction ID: ${confirmationData.paymentDetails.transactionId}
 Status: ${confirmationData.paymentDetails.status}
 
@@ -314,7 +314,7 @@ Thank you for your booking!
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600">Amount Paid:</span>
-                                        <span className="font-semibold text-lg">${confirmationData.paymentDetails.amount.toFixed(2)}</span>
+                                        <span className="font-semibold text-lg">€{confirmationData.paymentDetails.amount.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600">Payment Method:</span>

@@ -203,8 +203,8 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-2xl font-bold text-gray-900">${totalPrice.toFixed(2)}</div>
-                                    <div className="text-sm text-gray-500 font-medium">${price}/day</div>
+                                    <div className="text-2xl font-bold text-gray-900">€{totalPrice.toFixed(2)}</div>
+                                    <div className="text-sm text-gray-500 font-medium">€{price}/day</div>
                                 </div>
                             </div>
                         )
@@ -251,7 +251,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                 />
                                 <div>
                                     <h4 className="font-bold text-lg text-gray-900">{selectedRentalItem.name}</h4>
-                                    <p className="text-gray-900 font-bold text-xl">${selectedRentalItem.price}/day</p>
+                                    <p className="text-gray-900 font-bold text-xl">€{selectedRentalItem.price}/day</p>
                                 </div>
                             </div>
                         )}
@@ -279,7 +279,7 @@ export const ShopSelection = ({ mockItems, cartItems, handleAddToCart, handleRem
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600 font-medium">Daily Rate:</span>
-                                        <span className="font-bold text-gray-900">${selectedRentalItem?.price || 0}</span>
+                                        <span className="font-bold text-gray-900">€{selectedRentalItem?.price || 0}</span>
                                     </div>
                                     <div className="border-t-2 border-gray-300 pt-3 flex justify-between items-center">
                                         <span className="text-xl font-bold text-gray-900">Total Cost:</span>

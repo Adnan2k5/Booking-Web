@@ -211,12 +211,12 @@ export const BookingSummary = ({
                             </div>
                             <div className="flex justify-between items-center pt-3 mt-3 border-t border-gray-200">
                                 <span className="text-gray-600 font-medium">{t("instructorFee")}</span>
-                                <span className="font-bold text-gray-900">${selectedInstructor.price || selectedInstructor.fee || 0}</span>
+                                <span className="font-bold text-gray-900">€{selectedInstructor.price || selectedInstructor.fee || 0}</span>
                             </div>
                             {groupMembers.length > 0 && (
                                 <div className="flex justify-between items-center pt-2">
                                     <span className="text-gray-600 font-medium">{t("additionalGroupFee")}</span>
-                                    <span className="font-bold text-gray-900">${groupMembers.length * 30}</span>
+                                    <span className="font-bold text-gray-900">€{groupMembers.length * 30}</span>
                                 </div>
                             )}
                         </div>
@@ -291,14 +291,14 @@ export const BookingSummary = ({
                                                     {t("qty")}: {cartItem.quantity}
                                                 </p>
                                             </div>
-                                            <div className="font-bold text-gray-900">${((price || 0) * cartItem.quantity).toFixed(2)}</div>
+                                            <div className="font-bold text-gray-900">€{((price || 0) * cartItem.quantity).toFixed(2)}</div>
                                         </div>
                                     )
                                 })}
                                 <div className="flex justify-between items-center pt-3 border-t border-gray-200">
                                     <span className="text-gray-600 font-medium">{t("itemsTotal")}</span>
                                     <span className="font-bold text-gray-900">
-                                        $
+                                        €
                                         {cartItems
                                             .reduce((sum, cartItem) => {
                                                 const itemData = mockItems.find((i) => i._id === cartItem._id)
@@ -348,11 +348,11 @@ export const BookingSummary = ({
                                 </div>
                                 <div className="font-bold text-gray-900 text-right">
                                     <div>
-                                        ${Number(hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.pricePerNight || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.price || 0) * calculateNights()}
+                                        €{Number(hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.pricePerNight || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.price || 0) * calculateNights()}
                                         <span className="text-xs font-normal text-gray-500 block">total</span>
                                     </div>
                                     <div className="text-xs text-gray-500">
-                                        ${Number(hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.pricePerNight || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.price || 0)}/night
+                                        €{Number(hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.pricePerNight || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.price || 0)}/night
                                     </div>
                                 </div>
                             </div>
@@ -370,7 +370,7 @@ export const BookingSummary = ({
                             {selectedInstructor && (
                                 <div className="flex justify-between items-center">
                                     <span>{t("instructorPrice")}</span>
-                                    <span>${selectedInstructor.price || selectedInstructor.fee || 0}</span>
+                                    <span>€{selectedInstructor.price || selectedInstructor.fee || 0}</span>
                                 </div>
                             )}
                             {cartItems.length > 0 && (
@@ -379,7 +379,7 @@ export const BookingSummary = ({
                                         {t("items")} ({cartItems.reduce((sum, item) => sum + item.quantity, 0)})
                                     </span>
                                     <span>
-                                        $
+                                        €
                                         {cartItems
                                             .reduce((sum, cartItem) => {
                                                 const itemData = mockItems.find((i) => i._id === cartItem._id)
@@ -394,7 +394,7 @@ export const BookingSummary = ({
                                     <span>
                                         {t("hotel")} {checkInDate && checkOutDate && `(${calculateNights()} ${calculateNights() === 1 ? "night" : "nights"})`}
                                     </span>
-                                    <span>${(hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.pricePerNight || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.price || 0) * calculateNights()}</span>
+                                    <span>€{(hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.pricePerNight || hotels.find((h) => h._id == selectedHotel || h.id == selectedHotel)?.price || 0) * calculateNights()}</span>
                                 </div>
                             )}
 
@@ -403,7 +403,7 @@ export const BookingSummary = ({
                                     <span>
                                         {t("Group Fee")} ({groupMembers.length + 1} {t("Members")})
                                     </span>
-                                    <span>${(selectedInstructor.price || selectedInstructor.fee || 0) + groupMembers.length * 30}</span>
+                                    <span>€{(selectedInstructor.price || selectedInstructor.fee || 0) + groupMembers.length * 30}</span>
                                 </div>
                             )}
 
@@ -414,7 +414,7 @@ export const BookingSummary = ({
                                 return (
                                     <div className="flex justify-between items-center">
                                         <span>Platform Fee ({commission}%)</span>
-                                        <span>${platformFeeAmount}</span>
+                                        <span>€{platformFeeAmount}</span>
                                     </div>
                                 )
                             })()}
@@ -424,7 +424,7 @@ export const BookingSummary = ({
 
                         <div className="flex justify-between items-center text-2xl font-bold">
                             <span>{t("total")}</span>
-                            <span>${calculateTotal().toFixed(2)}</span>
+                            <span>€{calculateTotal().toFixed(2)}</span>
                         </div>
                         <Button
                             onClick={() => { setSelectedPaymentMethod("revolut"); handleProceedToPayment("revolut"); }}

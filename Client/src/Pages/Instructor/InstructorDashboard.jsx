@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../AuthProvider"
 import { motion } from "framer-motion"
 import { Separator } from "../../components/ui/separator"
-import { Award, Calendar, Users, Star, TrendingUp, Loader2, DollarSign, MessageCircle, X } from "lucide-react"
+import { Award, Calendar, Users, Star, TrendingUp, Loader2, Euro, MessageCircle, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
@@ -655,7 +655,7 @@ const InstructorDashboard = () => {
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <div className="p-3 bg-indigo-100 rounded-lg">
-                                                    <DollarSign className="h-5 w-5 text-indigo-600" />
+                                                    <Euro className="h-5 w-5 text-indigo-600" />
                                                 </div>
                                                 <div>
                                                     <p className="text-sm text-slate-600 flex items-center gap-1">

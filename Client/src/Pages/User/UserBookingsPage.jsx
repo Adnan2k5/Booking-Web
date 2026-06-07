@@ -78,7 +78,7 @@ export default function UserBookingsPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between items-center">
-                  <div className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">${priceDisplay}</div>
+                  <div className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">€{priceDisplay}</div>
                   <Button variant="outline" onClick={() => handleViewDetails(b)} className="rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300">View Details</Button>
                 </div>
               </CardContent>
