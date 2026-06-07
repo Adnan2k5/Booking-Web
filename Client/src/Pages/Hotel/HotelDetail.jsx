@@ -130,11 +130,11 @@ export default function HotelDetail() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+            <div className="min-h-screen bg-gray-50">
                 <Nav_Landing theme="dark" />
                 <div className="flex items-center justify-center min-h-[60vh]">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-600 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
                         <p className="text-gray-600">Loading hotel details...</p>
                     </div>
                 </div>
@@ -144,14 +144,14 @@ export default function HotelDetail() {
 
     if (!hotel) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+            <div className="min-h-screen bg-gray-50">
                 <Nav_Landing theme="dark" />
                 <div className="flex items-center justify-center min-h-[60vh]">
                     <div className="text-center">
                         <HotelIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Hotel Not Found</h2>
-                        <p className="text-gray-600 mb-6">The hotel you're looking for doesn't exist</p>
-                        <Button onClick={() => navigate('/book-hotel')} className="bg-rose-600 hover:bg-rose-700">
+                        <p className="text-gray-600 mb-6">The hotel you&apos;re looking for doesn&apos;t exist</p>
+                        <Button onClick={() => navigate('/book-hotel')} className="bg-gray-900 hover:bg-black text-white">
                             Browse Hotels
                         </Button>
                     </div>
@@ -161,7 +161,7 @@ export default function HotelDetail() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+        <div className="min-h-screen bg-gray-50">
             <Nav_Landing theme="dark" />
 
             <main className="max-w-7xl mx-auto px-6 sm:px-8 py-8 mt-20">
@@ -186,12 +186,12 @@ export default function HotelDetail() {
                                             className="w-full h-full object-cover"
                                         />
                                         <div className="absolute top-4 left-4">
-                                            <Badge className="bg-white/95 text-gray-900 font-medium capitalize border-0 shadow-sm">
+                                            <span className="bg-black text-white text-xs font-semibold px-2.5 py-1 rounded-md capitalize">
                                                 {hotel.category}
-                                            </Badge>
+                                            </span>
                                         </div>
-                                        <div className="absolute top-4 right-4 bg-white/95 rounded-full px-3 py-1.5 flex items-center gap-1.5 shadow-sm">
-                                            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                        <div className="absolute top-4 right-4 bg-white/95 rounded-lg px-2.5 py-1 flex items-center gap-1.5 shadow-sm">
+                                            <Star className="w-3.5 h-3.5 text-gray-900 fill-gray-900" />
                                             <span className="text-sm font-semibold text-gray-900">
                                                 {(hotel.rating || 0).toFixed(1)}
                                             </span>
@@ -248,7 +248,7 @@ export default function HotelDetail() {
                                                 {hotel.name}
                                             </h1>
                                             <div className="flex items-center gap-2 text-gray-600">
-                                                <MapPin className="w-5 h-5 text-rose-600" />
+                                                <MapPin className="w-5 h-5 text-gray-500" />
                                                 <span className="text-lg">
                                                     {typeof hotel.location === 'object' ? hotel.location?.name : hotel.location}
                                                 </span>
@@ -280,9 +280,9 @@ export default function HotelDetail() {
                                                     return (
                                                         <div
                                                             key={idx}
-                                                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                                                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100"
                                                         >
-                                                            <IconComponent className="w-5 h-5 text-rose-600" />
+                                                            <IconComponent className="w-5 h-5 text-gray-700" />
                                                             <span className="text-sm font-medium text-gray-900">{amenity}</span>
                                                         </div>
                                                     )
@@ -296,30 +296,30 @@ export default function HotelDetail() {
                                         <div className="space-y-3">
                                             {hotel.fullAddress && (
                                                 <div className="flex items-start gap-3">
-                                                    <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
+                                                    <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                                                     <span className="text-gray-700">{hotel.fullAddress}</span>
                                                 </div>
                                             )}
                                             {hotel.contactNo && (
                                                 <div className="flex items-center gap-3">
-                                                    <Phone className="w-5 h-5 text-gray-500" />
-                                                    <a href={`tel:${hotel.contactNo}`} className="text-rose-600 hover:underline">
+                                                    <Phone className="w-5 h-5 text-gray-400" />
+                                                    <a href={`tel:${hotel.contactNo}`} className="text-gray-900 font-medium hover:underline">
                                                         {hotel.contactNo}
                                                     </a>
                                                 </div>
                                             )}
                                             {hotel.owner?.email && (
                                                 <div className="flex items-center gap-3">
-                                                    <Mail className="w-5 h-5 text-gray-500" />
-                                                    <a href={`mailto:${hotel.owner.email}`} className="text-rose-600 hover:underline">
+                                                    <Mail className="w-5 h-5 text-gray-400" />
+                                                    <a href={`mailto:${hotel.owner.email}`} className="text-gray-900 font-medium hover:underline">
                                                         {hotel.owner.email}
                                                     </a>
                                                 </div>
                                             )}
                                             {hotel.website && (
                                                 <div className="flex items-center gap-3">
-                                                    <Globe className="w-5 h-5 text-gray-500" />
-                                                    <a href={hotel.website} target="_blank" rel="noopener noreferrer" className="text-rose-600 hover:underline">
+                                                    <Globe className="w-5 h-5 text-gray-400" />
+                                                    <a href={hotel.website} target="_blank" rel="noopener noreferrer" className="text-gray-900 font-medium hover:underline">
                                                         {hotel.website}
                                                     </a>
                                                 </div>
@@ -360,7 +360,7 @@ export default function HotelDetail() {
                                                 value={checkIn}
                                                 onChange={(e) => setCheckIn(e.target.value)}
                                                 min={todayISO}
-                                                className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                                                className="w-full h-12 px-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm"
                                             />
                                         </div>
 
@@ -373,7 +373,7 @@ export default function HotelDetail() {
                                                 value={checkOut}
                                                 onChange={(e) => setCheckOut(e.target.value)}
                                                 min={checkIn || tomorrowISO}
-                                                className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                                                className="w-full h-12 px-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm"
                                             />
                                         </div>
 
@@ -387,14 +387,14 @@ export default function HotelDetail() {
                                                 max={20}
                                                 value={guests}
                                                 onChange={(e) => setGuests(parseInt(e.target.value || '1'))}
-                                                className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                                                className="w-full h-12 px-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm"
                                             />
                                         </div>
                                     </div>
 
                                     <Button
                                         onClick={handleBookNow}
-                                        className="w-full h-12 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white rounded-xl shadow-lg font-semibold text-base transition-all"
+                                        className="w-full h-12 bg-gray-900 hover:bg-black text-white rounded-xl font-semibold text-base transition-colors duration-200"
                                     >
                                         {isLoggedIn ? "Book Now" : "Login to Book"}
                                     </Button>
