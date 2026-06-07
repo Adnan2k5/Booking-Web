@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 
 export const useCountrySlider = (events) => {
   const [currentCountryIndex, setCurrentCountryIndex] = useState(0)
+  // Track whether user has manually selected a country — pauses auto-slide
+  const isPausedRef = useRef(false)
 
   // Group events by country
   const countriesFromEvents = useMemo(() => {
@@ -26,12 +28,14 @@ export const useCountrySlider = (events) => {
     [countriesFromEvents, currentCountryIndex]
   )
 
-  // Auto-slide effect
+  // Auto-slide effect — stops permanently when user manually selects
   useEffect(() => {
     if (countriesFromEvents.length <= 1) return
 
     const interval = setInterval(() => {
-      setCurrentCountryIndex((prev) => (prev + 1) % countriesFromEvents.length)
+      if (!isPausedRef.current) {
+        setCurrentCountryIndex((prev) => (prev + 1) % countriesFromEvents.length)
+      }
     }, 8000)
 
     return () => clearInterval(interval)
@@ -41,18 +45,25 @@ export const useCountrySlider = (events) => {
   useEffect(() => {
     if (currentCountryIndex >= countriesFromEvents.length) {
       setCurrentCountryIndex(0)
+      isPausedRef.current = false
     }
   }, [countriesFromEvents.length, currentCountryIndex])
 
   const nextCountry = useCallback(() => {
+    isPausedRef.current = true
     setCurrentCountryIndex((prev) => (prev + 1) % countriesFromEvents.length)
   }, [countriesFromEvents.length])
 
   const prevCountry = useCallback(() => {
+    isPausedRef.current = true
     setCurrentCountryIndex((prev) => (prev - 1 + countriesFromEvents.length) % countriesFromEvents.length)
   }, [countriesFromEvents.length])
 
-  const goToCountry = useCallback((index) => {
+  // goToCountry pauses auto-scroll when called by user
+  const goToCountry = useCallback((index, userInitiated = false) => {
+    if (userInitiated) {
+      isPausedRef.current = true
+    }
     setCurrentCountryIndex(index)
   }, [])
 
