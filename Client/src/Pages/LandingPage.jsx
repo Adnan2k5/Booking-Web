@@ -308,7 +308,7 @@ export default function LandingPage() {
                     {countrySlider.countriesFromEvents.map((country, index) => (
                       <motion.div
                         key={country.name}
-                        onClick={() => countrySlider.goToCountry(index)}
+                        onClick={() => countrySlider.goToCountry(index, true)}
                         className={`cursor-pointer transition-all duration-500 whitespace-nowrap px-4 py-2 rounded-full ${index === countrySlider.currentCountryIndex
                           ? "text-3xl md:text-4xl font-bold text-gray-900 scale-100" // Highlighted
                           : "text-xl md:text-2xl text-gray-400 hover:text-gray-600 scale-95" // Dimmed
@@ -341,7 +341,7 @@ export default function LandingPage() {
                     key={index}
                     className={`h-1.5 rounded-full cursor-pointer transition-all duration-300 ${index === countrySlider.currentCountryIndex ? "w-12 bg-gray-900" : "w-1.5 bg-gray-300"
                       }`}
-                    onClick={() => countrySlider.goToCountry(index)}
+                    onClick={() => countrySlider.goToCountry(index, true)}
                     layoutId="activeIndicator"
                   />
                 ))}
@@ -703,7 +703,7 @@ export default function LandingPage() {
                         {eventBooking.selectedEvent?.price && (
                           <div>
                             <span className="text-gray-600">{t("price")}</span>
-                            <p className="font-medium text-gray-900">${eventBooking.selectedEvent.price}</p>
+                            <p className="font-medium text-gray-900">€{eventBooking.selectedEvent.price}</p>
                           </div>
                         )}
                         {eventBooking.selectedEvent?.maxParticipants && (

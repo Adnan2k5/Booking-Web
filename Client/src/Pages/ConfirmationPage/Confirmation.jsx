@@ -164,7 +164,7 @@ export default function Confirmation() {
                   </div>
                   <div>
                     <p className="font-medium text-gray-800">Total Amount</p>
-                    <p className="text-sm text-gray-500">${bookingData.totalAmount.toFixed(2)}</p>
+                    <p className="text-sm text-gray-500">€{bookingData.totalAmount.toFixed(2)}</p>
                   </div>
                 </div>
               )}

@@ -9,11 +9,10 @@ import {
     AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
 import {
-    TrendingUp, Users, DollarSign, CreditCard, RefreshCw, BarChart2, Compass,
+    TrendingUp, Users, Euro, CreditCard, RefreshCw, BarChart2, Compass,
 } from 'lucide-react'
 
-const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
-const currency = (v = 0) => fmt.format(Number.isFinite(Number(v)) ? Number(v) : 0)
+import { formatCurrency, formatCurrencyCompact } from '../../../utils/currency'
 
 const sessionColumns = [
     {
@@ -28,7 +27,7 @@ const sessionColumns = [
         title: 'Revenue',
         dataIndex: 'revenue',
         key: 'revenue',
-        render: (v) => currency(v),
+        render: (v) => formatCurrency(v),
     },
 ]
 
@@ -45,7 +44,7 @@ const recentColumns = [
         title: 'Amount',
         dataIndex: 'amount',
         key: 'amount',
-        render: (v) => currency(v),
+        render: (v) => formatCurrency(v),
     },
 ]
 
@@ -179,9 +178,9 @@ export default function AdventureInsights() {
                             color="bg-blue-500"
                         />
                         <KPICard
-                            icon={DollarSign}
+                            icon={Euro}
                             title="Total Revenue"
-                            value={currency(kpi.totalRevenue)}
+                            value={formatCurrency(kpi.totalRevenue)}
                             color="bg-green-500"
                         />
                         <KPICard
@@ -193,7 +192,7 @@ export default function AdventureInsights() {
                         <KPICard
                             icon={TrendingUp}
                             title="Avg Booking Value"
-                            value={currency(kpi.avgBookingValue)}
+                            value={formatCurrency(kpi.avgBookingValue)}
                             color="bg-orange-500"
                         />
                     </div>
@@ -224,9 +223,9 @@ export default function AdventureInsights() {
                                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                                         <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} />
                                         <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                                        <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
+                                        <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => formatCurrencyCompact(v)} />
                                         <Tooltip
-                                            formatter={(value, name) => name === 'revenue' ? [currency(value), 'Revenue'] : [value, 'Bookings']}
+                                            formatter={(value, name) => name === 'revenue' ? [formatCurrency(value), 'Revenue'] : [value, 'Bookings']}
                                             labelFormatter={(l) => l}
                                         />
                                         <Area yAxisId="left" type="monotone" dataKey="bookings" stroke="#3b82f6" strokeWidth={2} fill="url(#bookingGrad)" dot={false} name="bookings" />

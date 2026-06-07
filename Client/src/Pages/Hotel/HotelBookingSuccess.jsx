@@ -221,7 +221,7 @@ export default function HotelBookingSuccess() {
 
                     <div className="flex justify-between font-semibold">
                       <span>Total Amount</span>
-                      <span>${bookingDetails.amount?.toFixed(2) || "N/A"}</span>
+                      <span>€{bookingDetails.amount?.toFixed(2) || "N/A"}</span>
                     </div>
 
                     {bookingDetails.status && (

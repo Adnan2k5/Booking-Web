@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthProvider";
 import { motion } from "framer-motion";
-import { CreditCard, DollarSign, CheckCircle, AlertCircle, Link as LinkIcon, TrendingUp } from "lucide-react";
+import { CreditCard, Euro, CheckCircle, AlertCircle, Link as LinkIcon, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -313,11 +313,11 @@ export default function PayoutPage() {
                 <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
                   Total Earnings
                 </CardTitle>
-                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
+                <Euro className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
               </CardHeader>
               <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
                 <div className="text-lg sm:text-xl lg:text-2xl font-bold">
-                  ${totalEarnings.toFixed(2)}
+                  €{totalEarnings.toFixed(2)}
                 </div>
                 <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
                   <span className="flex items-center text-blue-500">
@@ -339,7 +339,7 @@ export default function PayoutPage() {
               </CardHeader>
               <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
                 <div className="text-lg sm:text-xl lg:text-2xl font-bold">
-                  ${nextPayoutAmount.toFixed(2)}
+                  €{nextPayoutAmount.toFixed(2)}
                 </div>
                 <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
                   <span className="text-green-500">Available</span>
@@ -360,7 +360,7 @@ export default function PayoutPage() {
               </CardHeader>
               <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
                 <div className="text-lg sm:text-xl lg:text-2xl font-bold">
-                  ${pendingPayouts.toFixed(2)}
+                  €{pendingPayouts.toFixed(2)}
                 </div>
                 <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
                   <span className="text-yellow-500">Processing</span>
@@ -448,13 +448,13 @@ export default function PayoutPage() {
                         disabled={loading || nextPayoutAmount < 10}
                         size="lg"
                       >
-                        {loading ? "Processing..." : nextPayoutAmount < 10 ? `Minimum $10 Required` : `Request Payout ($${nextPayoutAmount.toFixed(2)})`}
+                        {loading ? "Processing..." : nextPayoutAmount < 10 ? `Minimum €10 Required` : `Request Payout (€${nextPayoutAmount.toFixed(2)})`}
                       </Button>
 
                       {nextPayoutAmount < 10 && (
                         <p className="text-sm text-muted-foreground mt-2">
-                          You need at least $10 in confirmed bookings to request a payout.
-                          Current available: ${nextPayoutAmount.toFixed(2)}
+                          You need at least €10 in confirmed bookings to request a payout.
+                          Current available: €{nextPayoutAmount.toFixed(2)}
                         </p>
                       )}
                     </div>
@@ -484,19 +484,19 @@ export default function PayoutPage() {
                     <div key={payout.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-center space-x-4">
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <DollarSign className="h-5 w-5 text-blue-600" />
+                          <Euro className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
                           <p className="font-medium">{payout.note || `Payout ${payout.id.slice(-6)}`}</p>
                           <p className="text-sm text-muted-foreground">{payout.date}</p>
-                          {payout.currency && payout.currency !== 'USD' && (
+                          {payout.currency && payout.currency !== 'EUR' && (
                             <p className="text-xs text-muted-foreground">{payout.currency}</p>
                           )}
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">
                         <div className="text-right">
-                          <p className="font-medium">${payout.amount.toFixed(2)}</p>
+                          <p className="font-medium">€{payout.amount.toFixed(2)}</p>
                         </div>
                         {getStatusBadge(payout.status)}
                       </div>
@@ -546,7 +546,7 @@ export default function PayoutPage() {
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <h4 className="font-semibold text-sm text-blue-800 mb-2">Next Payout Preview</h4>
                   <div className="text-sm text-blue-700">
-                    <p>Available for next payout: <span className="font-semibold">${nextPayoutAmount.toFixed(2)}</span></p>
+                    <p>Available for next payout: <span className="font-semibold">€{nextPayoutAmount.toFixed(2)}</span></p>
                     <p>Based on {totalBookings} confirmed booking{totalBookings !== 1 ? 's' : ''}</p>
                     <p className="mt-1 text-xs">
                       {formatNextPayoutInfo()} • {nextPayoutDate?.toLocaleDateString()} at 2 AM UTC

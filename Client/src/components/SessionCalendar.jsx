@@ -863,7 +863,7 @@ const SessionCalendar = ({ adventureTypes, otherInstructorsSessions = [], otherS
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                         <div>
                                             <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Price</h3>
-                                            <p className="text-xs sm:text-sm">${selectedSession.price || 0}</p>
+                                            <p className="text-xs sm:text-sm">€{selectedSession.price || 0}</p>
                                         </div>
                                         <div>
                                             <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Unit</h3>

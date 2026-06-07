@@ -4,7 +4,7 @@ import {
   ArrowDown,
   ArrowUp,
   CreditCard,
-  DollarSign,
+  Euro,
   Globe,
   MapPin,
   Mountain,
@@ -39,14 +39,7 @@ import {
 import { useAdminDashboard } from "../../hooks/useAdminDashboard";
 import { getAdminDashboardLocations } from "../../Api/admin.api";
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
-
-const formatCurrency = (value = 0) =>
-  currencyFormatter.format(Number.isFinite(Number(value)) ? Number(value) : 0);
+import { formatCurrency } from "../../utils/currency";
 
 const defaultDashboardStats = {
   totalRevenue: 0,
@@ -307,7 +300,7 @@ export default function AdminDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Revenue"
-          icon={DollarSign}
+          icon={Euro}
           value={formatCurrency(stats.totalRevenue)}
           increase={stats.revenueIncrease}
           timeRange={timeRange}
@@ -376,9 +369,9 @@ export default function AdminDashboard() {
                     <div className="flex-1 space-y-1">
                       <p className="text-sm font-medium leading-none">{adventure.name}</p>
                       <div className="flex items-center text-xs text-muted-foreground">
-                        <span>{adventure.bookings.toLocaleString()} bookings</span>
+                        <span>{(adventure.bookings ?? 0).toLocaleString()} bookings</span>
                         <span className="mx-2">•</span>
-                        <span>{formatCurrency(adventure.revenue)}</span>
+                        <span>{formatCurrency(adventure.revenue ?? 0)}</span>
                       </div>
                       <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
                         <div
@@ -480,7 +473,7 @@ function RevenueChart({ data, isLoading }) {
       <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
         <XAxis dataKey="month" stroke="#000000" />
         <YAxis stroke="#000000" />
-        <Tooltip formatter={(value) => formatCurrency(value)} labelFormatter={(label) => label} />
+        <Tooltip formatter={(value) => [formatCurrency(value), "Revenue"]} labelFormatter={(label) => label} />
         <Line type="monotone" dataKey="revenue" stroke="#00bfa0" strokeWidth={2} dot={{ r: 4 }} />
       </LineChart>
     </ResponsiveContainer>

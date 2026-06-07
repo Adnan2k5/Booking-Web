@@ -3,7 +3,7 @@ import { Modal } from 'antd';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Star, DollarSign } from 'lucide-react';
+import { Star, Euro } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateHotelPrice, updateHotelRating } from '../Api/hotel.api.js';
 
@@ -74,7 +74,7 @@ export const HotelUpdateModal = ({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="price" className="flex items-center">
-          <DollarSign className="h-4 w-4 mr-2" />
+          <Euro className="h-4 w-4 mr-2" />
           Base Price
         </Label>
         <Input
@@ -90,7 +90,7 @@ export const HotelUpdateModal = ({
       
       <div className="space-y-2">
         <Label htmlFor="pricePerNight" className="flex items-center">
-          <DollarSign className="h-4 w-4 mr-2" />
+          <Euro className="h-4 w-4 mr-2" />
           Price Per Night
         </Label>
         <Input

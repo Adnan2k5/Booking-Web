@@ -22,6 +22,7 @@ import {
   deleteItemBooking
 } from "../../../Api/booking.api"
 import { getAllEventBookings, deleteEventBooking } from "../../../Api/eventBooking.api"
+import { formatCurrency } from "../../../utils/currency"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -566,7 +567,7 @@ export default function Dash_Bookings() {
       const commonCells = [
         <TableCell key="customer" className="font-medium">{userName}</TableCell>,
         <TableCell key="date">{formattedDate}</TableCell>,
-        <TableCell key="amount">${amount}</TableCell>,
+        <TableCell key="amount">{formatCurrency(amount)}</TableCell>,
         <TableCell key="status">
           <Badge variant={getStatusVariant(bookingStatus)}>
             {bookingStatus.charAt(0).toUpperCase() + bookingStatus.slice(1)}
