@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Calendar, Clock, MapPin, Users, ArrowLeft, Star } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Calendar, Clock, MapPin, Users, ArrowLeft, Star, X, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -9,6 +9,167 @@ import { toast } from "sonner";
 import { getEventById } from "../Api/event.api";
 import { createEventBooking } from "../Api/eventBooking.api";
 import { useAuth } from "./AuthProvider";
+
+function LightboxViewer({ images, initialIndex, onClose }) {
+    const [index, setIndex] = useState(initialIndex)
+    const [scale, setScale] = useState(1)
+    const [position, setPosition] = useState({ x: 0, y: 0 })
+    const [dragging, setDragging] = useState(false)
+    const dragStart = useRef(null)
+    const containerRef = useRef(null)
+
+    const go = useCallback((dir) => {
+        setIndex((i) => (i + dir + images.length) % images.length)
+        setScale(1)
+        setPosition({ x: 0, y: 0 })
+    }, [images.length])
+
+    useEffect(() => {
+        const onKey = (e) => {
+            if (e.key === "Escape") onClose()
+            if (e.key === "ArrowRight") go(1)
+            if (e.key === "ArrowLeft") go(-1)
+        }
+        window.addEventListener("keydown", onKey)
+        document.body.style.overflow = "hidden"
+        return () => {
+            window.removeEventListener("keydown", onKey)
+            document.body.style.overflow = "auto"
+        }
+    }, [onClose, go])
+
+    const handleWheel = useCallback((e) => {
+        e.preventDefault()
+        setScale((s) => Math.min(Math.max(s - e.deltaY * 0.001 * s, 0.5), 6))
+    }, [])
+
+    const handleMouseDown = (e) => {
+        if (scale <= 1) return
+        setDragging(true)
+        dragStart.current = { x: e.clientX - position.x, y: e.clientY - position.y }
+    }
+
+    const handleMouseMove = (e) => {
+        if (!dragging) return
+        setPosition({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y })
+    }
+
+    const handleMouseUp = () => setDragging(false)
+
+    useEffect(() => {
+        const el = containerRef.current
+        if (!el) return
+        el.addEventListener("wheel", handleWheel, { passive: false })
+        return () => el.removeEventListener("wheel", handleWheel)
+    }, [handleWheel])
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[200] flex flex-col"
+                style={{ background: "rgba(0,0,0,0.95)", backdropFilter: "blur(12px)" }}
+            >
+                <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                    <span className="text-white/60 text-sm font-medium">{index + 1} / {images.length}</span>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setScale((s) => Math.min(s + 0.5, 6))}
+                            className="w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                        >
+                            <ZoomIn className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => { setScale(1); setPosition({ x: 0, y: 0 }) }}
+                            className="px-3 h-9 flex items-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors text-sm font-mono"
+                        >
+                            {Math.round(scale * 100)}%
+                        </button>
+                        <button
+                            onClick={() => setScale((s) => Math.max(s - 0.5, 0.5))}
+                            className="w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                        >
+                            <ZoomOut className="w-5 h-5" />
+                        </button>
+                        <div className="w-px h-6 bg-white/10 mx-1" />
+                        <button
+                            onClick={onClose}
+                            className="w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    ref={containerRef}
+                    className="flex-1 flex items-center justify-center relative overflow-hidden select-none"
+                    style={{ cursor: scale > 1 ? (dragging ? "grabbing" : "grab") : "default" }}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) onClose()
+                    }}
+                >
+                    <motion.img
+                        key={index}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.2 }}
+                        src={images[index]}
+                        alt={`Photo ${index + 1}`}
+                        style={{
+                            transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+                            maxWidth: "90vw",
+                            maxHeight: "calc(100vh - 140px)",
+                            objectFit: "contain",
+                            userSelect: "none",
+                            transition: dragging ? "none" : "transform 0.15s ease",
+                        }}
+                        draggable={false}
+                    />
+
+                    {images.length > 1 && (
+                        <>
+                            <button
+                                onClick={() => go(-1)}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/10 transition-all"
+                            >
+                                <ChevronLeft className="w-6 h-6" />
+                            </button>
+                            <button
+                                onClick={() => go(1)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/10 transition-all"
+                            >
+                                <ChevronRight className="w-6 h-6" />
+                            </button>
+                        </>
+                    )}
+                </div>
+
+                {images.length > 1 && (
+                    <div className="flex-shrink-0 flex gap-2 justify-center py-3 px-4 overflow-x-auto" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                        {images.map((src, i) => (
+                            <button
+                                key={i}
+                                onClick={() => { setIndex(i); setScale(1); setPosition({ x: 0, y: 0 }) }}
+                                className={`flex-shrink-0 w-14 h-10 rounded overflow-hidden border-2 transition-all ${
+                                    i === index ? "border-white" : "border-transparent opacity-50 hover:opacity-80"
+                                }`}
+                            >
+                                <img src={src} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </motion.div>
+        </AnimatePresence>
+    )
+}
 
 export default function EventDetailPage() {
     const { id } = useParams();
@@ -18,6 +179,7 @@ export default function EventDetailPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState("revolut");
+    const [lightboxIndex, setLightboxIndex] = useState(null);
 
     useEffect(() => {
         const fetchEvent = async () => {
@@ -276,28 +438,29 @@ export default function EventDetailPage() {
                         {event.medias && event.medias.length > 0 && (
                             <Card>
                                 <CardContent className="p-0">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-5">
                                         {event.medias.map((imageUrl, index) => (
-                                            <div
+                                            <motion.div
                                                 key={index}
-                                                className="aspect-video rounded-lg overflow-hidden bg-gray-100"
+                                                className="aspect-video rounded-xl overflow-hidden bg-gray-100 cursor-pointer relative group"
+                                                whileHover={{ scale: 1.01 }}
+                                                transition={{ duration: 0.2 }}
+                                                onClick={() => setLightboxIndex(index)}
                                             >
                                                 <img
                                                     src={imageUrl || "/placeholder.svg"}
                                                     alt={`Event image ${index + 1}`}
-                                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                                    className="w-full h-full object-cover group-hover:brightness-90 transition-all duration-300"
                                                     onError={(e) => {
                                                         e.target.style.display = "none";
-                                                        e.target.nextSibling.style.display = "flex";
                                                     }}
                                                 />
-                                                <div
-                                                    className="hidden w-full h-full items-center justify-center bg-gray-100 text-gray-400 text-sm"
-                                                    style={{ display: "none" }}
-                                                >
-                                                    Image not available
+                                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                    <div className="bg-black/50 rounded-full p-2">
+                                                        <ZoomIn className="w-5 h-5 text-white" />
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </motion.div>
                                         ))}
                                     </div>
                                 </CardContent>
@@ -478,6 +641,14 @@ export default function EventDetailPage() {
                     </div>
                 </motion.div>
             </div>
+
+            {lightboxIndex !== null && event?.medias && (
+                <LightboxViewer
+                    images={event.medias}
+                    initialIndex={lightboxIndex}
+                    onClose={() => setLightboxIndex(null)}
+                />
+            )}
         </div>
     );
 }
