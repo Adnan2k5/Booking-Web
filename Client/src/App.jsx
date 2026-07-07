@@ -40,6 +40,7 @@ const Hotel = lazy(() => import("./Pages/Hotel/Hotel"))
 const HotelDetail = lazy(() => import("./Pages/Hotel/HotelDetail"))
 const HotelCheckout = lazy(() => import("./Pages/Hotel/HotelCheckout"))
 const HotelBookingSuccess = lazy(() => import("./Pages/Hotel/HotelBookingSuccess"))
+const HotelsAllPage = lazy(() => import("./Pages/Hotel/HotelsAllPage"))
 const LoginOptionsPage = lazy(() => import("./Pages/LoginOptionPage"))
 const AuthLayout = lazy(() => import("./Pages/Auth/AuthLayout"))
 const Terms = lazy(() => import("./Pages/Terms"))
@@ -231,6 +232,11 @@ const App = () => {
                         <Route path="/book-hotel" element={
                           <FeatureRoute feature="hotels">
                             <Hotel />
+                          </FeatureRoute>
+                        } />
+                        <Route path="/hotels/all" element={
+                          <FeatureRoute feature="hotels">
+                            <HotelsAllPage />
                           </FeatureRoute>
                         } />
                         <Route path="/hotel/:id" element={

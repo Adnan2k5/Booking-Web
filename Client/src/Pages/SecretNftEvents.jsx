@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import {
     MapPin, Calendar, Clock, Star, Award, Sparkles, ArrowLeft,
-    Trophy, Zap, X, ChevronRight,
+    Trophy, Zap, X, ChevronRight, ZoomIn, ChevronLeft,
 } from "lucide-react"
 import { Badge } from "../components/ui/badge"
 import { getEvents } from "../Api/event.api"
 import { Loader } from "../components/Loader"
+import { useAuth } from "./AuthProvider"
 
 const backdropVariants = {
     hidden: { opacity: 0 },
@@ -46,7 +47,47 @@ const formatTime = (t) => {
     })
 }
 
+function ImageLightbox({ src, onClose }) {
+    useEffect(() => {
+        const onKey = (e) => { if (e.key === "Escape") onClose() }
+        window.addEventListener("keydown", onKey)
+        document.body.style.overflow = "hidden"
+        return () => {
+            window.removeEventListener("keydown", onKey)
+            document.body.style.overflow = "auto"
+        }
+    }, [onClose])
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+            style={{ background: "rgba(0,0,0,0.97)", backdropFilter: "blur(16px)" }}
+            onClick={onClose}
+        >
+            <button
+                className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                onClick={onClose}
+            >
+                <X className="w-5 h-5" />
+            </button>
+            <motion.img
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.2 }}
+                src={src}
+                alt="Event photo"
+                style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain" }}
+                onClick={(e) => e.stopPropagation()}
+            />
+        </motion.div>
+    )
+}
+
 function EventDetailModal({ event, onClose, onNext }) {
+    const [lightboxOpen, setLightboxOpen] = useState(false)
     const handleOverlayClick = (e) => {
         if (e.target === e.currentTarget) onClose()
     }
@@ -81,13 +122,21 @@ function EventDetailModal({ event, onClose, onNext }) {
                     <X className="w-4 h-4" />
                 </button>
 
-                <div className="relative h-52 sm:h-64 overflow-hidden rounded-t-3xl">
+                <div
+                    className="relative h-52 sm:h-64 overflow-hidden rounded-t-3xl cursor-pointer group/hero"
+                    onClick={() => setLightboxOpen(true)}
+                >
                     <img
                         src={event.image || "/placeholder.svg?height=300&width=500"}
                         alt={event.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover/hero:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/hero:opacity-100 transition-opacity duration-200">
+                        <div className="bg-black/50 rounded-full p-3">
+                            <ZoomIn className="w-6 h-6 text-white" />
+                        </div>
+                    </div>
                     <div className="absolute top-4 left-4">
                         <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs text-white font-semibold tracking-wide">
                             <Award className="w-3 h-3 text-yellow-400" />
@@ -213,17 +262,24 @@ function EventDetailModal({ event, onClose, onNext }) {
                             transition={{ duration: 0.3 }}
                         />
                         <span className="relative z-10 flex items-center justify-center gap-2 group-hover:text-white transition-colors duration-300">
-                            Next
+                            Book Now
                             <ChevronRight className="w-4 h-4" />
                         </span>
                     </motion.button>
                 </div>
             </motion.div>
+
+            <AnimatePresence>
+                {lightboxOpen && event.image && (
+                    <ImageLightbox
+                        src={event.image}
+                        onClose={() => setLightboxOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
         </motion.div>
     )
 }
-
-
 
 const SecretNftEvents = () => {
     const [nftEvents, setNftEvents] = useState([])
@@ -231,7 +287,9 @@ const SecretNftEvents = () => {
     const [error, setError] = useState(null)
     const [showEasterEgg, setShowEasterEgg] = useState(true)
     const [selectedEvent, setSelectedEvent] = useState(null)
+    const [lightboxImage, setLightboxImage] = useState(null)
     const navigate = useNavigate()
+    const { user } = useAuth()
 
     const easterEggStars = useMemo(
         () =>
@@ -302,8 +360,13 @@ const SecretNftEvents = () => {
     }, [])
 
     const handleNext = useCallback((eventId) => {
-        window.open(`/event/${eventId}`, "_blank", "noopener,noreferrer")
-    }, [])
+        if (!user?.user) {
+            localStorage.setItem("redirectAfterLogin", `/event/${eventId}`)
+            navigate("/login")
+            return
+        }
+        navigate(`/event/${eventId}`)
+    }, [user, navigate])
 
     const handleBackToHome = () => navigate("/")
 
@@ -681,15 +744,26 @@ const SecretNftEvents = () => {
                                         </motion.div>
                                     </div>
 
-                                    <div className="relative h-32 sm:h-36 md:h-40 overflow-hidden">
+                                    <div
+                                        className="relative h-32 sm:h-36 md:h-40 overflow-hidden cursor-pointer group/img"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setLightboxImage(event.image || "/placeholder.svg?height=200&width=300")
+                                        }}
+                                    >
                                         <motion.img
                                             src={event.image || "/placeholder.svg?height=200&width=300"}
                                             alt={event.title}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500"
                                             whileHover={{ scale: 1.15 }}
                                             transition={{ duration: 0.6, ease: "easeOut" }}
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 bg-black/10">
+                                            <div className="bg-black/50 rounded-full p-2.5 shadow-xl">
+                                                <ZoomIn className="w-5 h-5 text-white" />
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="p-3.5 sm:p-4 space-y-3">
@@ -816,6 +890,15 @@ const SecretNftEvents = () => {
                     </div>
                 </motion.div>
             </div>
+
+            <AnimatePresence>
+                {lightboxImage && (
+                    <ImageLightbox
+                        src={lightboxImage}
+                        onClose={() => setLightboxImage(null)}
+                    />
+                )}
+            </AnimatePresence>
 
             <AnimatePresence>
                 {selectedEvent && (
