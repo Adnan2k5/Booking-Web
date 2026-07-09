@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback } from "./ui/avatar"
 import LanguageSelector from "./LanguageSelector"
 import { updateLanguageHeaders } from "../Api/language.api.js"
 import { toast } from "sonner"
+import logo from "../assets/logo.svg"
 
 export const Nav_Landing = ({ theme = "light" }) => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -117,7 +118,7 @@ export const Nav_Landing = ({ theme = "light" }) => {
                     transition={{ duration: 0.5 }}
                 >
                     <Link to="/" className={`text-2xl font-bold tracking-tighter transition-colors ${logoClass}`}>
-                        Adventure
+                        <img src={logo} alt="Logo" className="h-10 w-auto brightness-0 invert" />
                     </Link>
                 </motion.div>
 
@@ -174,11 +175,10 @@ export const Nav_Landing = ({ theme = "light" }) => {
                         ) : (
                             <Button
                                 onClick={() => navigate("/login-options")}
-                                className={`font-medium rounded-full px-6 transition-transform hover:scale-105 ${
-                                    isDark && !isScrolled && !isHovered 
-                                        ? "bg-black text-white hover:bg-gray-800" 
-                                        : "bg-white text-black hover:bg-gray-200"
-                                }`}
+                                className={`font-medium rounded-full px-6 transition-transform hover:scale-105 ${isDark && !isScrolled && !isHovered
+                                    ? "bg-black text-white hover:bg-gray-800"
+                                    : "bg-white text-black hover:bg-gray-200"
+                                    }`}
                             >
                                 {t("login")}
                             </Button>
@@ -189,11 +189,10 @@ export const Nav_Landing = ({ theme = "light" }) => {
                 <div className="lg:hidden">
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className={`p-2 focus:outline-none backdrop-blur-sm rounded-lg border transition-all ${
-                            isDark && !isScrolled && !isHovered
-                                ? "text-black bg-white/30 border-black/20 hover:bg-white/50"
-                                : "text-white bg-black/30 border-white/20 hover:bg-black/50"
-                        }`}
+                        className={`p-2 focus:outline-none backdrop-blur-sm rounded-lg border transition-all ${isDark && !isScrolled && !isHovered
+                            ? "text-black bg-white/30 border-black/20 hover:bg-white/50"
+                            : "text-white bg-black/30 border-white/20 hover:bg-black/50"
+                            }`}
                     >
                         {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                     </button>

@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     MapPin,
@@ -9,12 +9,23 @@ import {
     ChevronLeft,
     ChevronRight,
     ExternalLink,
+    Search,
+    Users,
+    ChevronDown,
+    ChevronUp,
 } from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { useNavigate } from "react-router-dom"
 import { useHotels } from "../../hooks/useHotel"
 import { useCountrySlider } from "../../hooks/useCountrySlider"
 import { Nav_Landing } from "../../components/Nav_Landing"
+
+const PROPERTY_TYPES = [
+    { id: "", label: "All", icon: HotelIcon },
+    { id: "hotel", label: "Hotels", icon: HotelIcon },
+    { id: "camping", label: "Camping", icon: Tent },
+    { id: "glamping", label: "Glamping", icon: TreePine },
+]
 
 const extractCountryFromAddress = (address) => {
     if (!address || typeof address !== "string") return ""
@@ -26,6 +37,149 @@ const extractCityFromAddress = (address) => {
     if (!address || typeof address !== "string") return ""
     const segments = address.split(",").map((p) => p.trim()).filter(Boolean)
     return segments.length >= 2 ? segments[segments.length - 2] : segments[0] || ""
+}
+
+function HeroSearchBar() {
+    const [location, setLocation] = useState("")
+    const [category, setCategory] = useState("")
+    const [guests, setGuests] = useState(1)
+    const [showGuestPicker, setShowGuestPicker] = useState(false)
+
+    const handleSearch = () => {
+        const params = new URLSearchParams()
+        if (location.trim()) params.set("location", location.trim())
+        if (category) params.set("category", category)
+        if (guests > 1) params.set("guests", guests.toString())
+        params.set("page", "1")
+        window.open(`/hotels/all?${params.toString()}`, "_blank", "noopener,noreferrer")
+    }
+
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter") handleSearch()
+    }
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="w-full max-w-5xl mt-10"
+        >
+            {/* Search Card — two rows */}
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-3 shadow-2xl flex flex-col gap-3">
+
+                {/* Row 1 — Location */}
+                <div className="flex items-center gap-4 bg-white rounded-2xl px-6 py-5">
+                    <MapPin className="w-6 h-6 text-gray-400 flex-shrink-0" />
+                    <input
+                        type="text"
+                        placeholder="Where are you going? City, region or property name…"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        className="flex-1 bg-transparent text-gray-800 placeholder-gray-400 text-base font-medium outline-none"
+                    />
+                    {location && (
+                        <button
+                            onClick={() => setLocation("")}
+                            className="text-gray-300 hover:text-gray-500 transition-colors text-lg leading-none"
+                        >
+                            ×
+                        </button>
+                    )}
+                </div>
+
+                {/* Row 2 — Type + Guests + Search */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+
+                    {/* Property Type */}
+                    <div className="flex flex-1 items-center gap-1.5 bg-white rounded-2xl px-4 py-3">
+                        {PROPERTY_TYPES.map((type) => {
+                            const Icon = type.icon
+                            const isActive = category === type.id
+                            return (
+                                <button
+                                    key={type.id}
+                                    onClick={() => setCategory(type.id)}
+                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
+                                        isActive
+                                            ? "bg-gray-900 text-white shadow-sm"
+                                            : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                                    }`}
+                                >
+                                    <Icon className="w-4 h-4" />
+                                    {type.label}
+                                </button>
+                            )
+                        })}
+                    </div>
+
+                    {/* Guest Picker */}
+                    <div className="relative flex-shrink-0">
+                        <button
+                            onClick={() => setShowGuestPicker((v) => !v)}
+                            className="flex items-center gap-3 bg-white rounded-2xl px-6 py-4 text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full sm:w-auto"
+                        >
+                            <Users className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                            <span className="whitespace-nowrap">
+                                {guests} {guests === 1 ? "Guest" : "Guests"}
+                            </span>
+                            {showGuestPicker ? (
+                                <ChevronUp className="w-4 h-4 text-gray-400" />
+                            ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                            )}
+                        </button>
+
+                        <AnimatePresence>
+                            {showGuestPicker && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="absolute top-full mt-2 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50 min-w-[200px]"
+                                >
+                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                                        Number of Guests
+                                    </p>
+                                    <div className="flex items-center justify-between gap-5">
+                                        <button
+                                            onClick={() => setGuests((g) => Math.max(1, g - 1))}
+                                            className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center text-xl font-semibold text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-all disabled:opacity-30"
+                                            disabled={guests <= 1}
+                                        >
+                                            −
+                                        </button>
+                                        <span className="text-3xl font-bold text-gray-900 w-10 text-center">
+                                            {guests}
+                                        </span>
+                                        <button
+                                            onClick={() => setGuests((g) => Math.min(30, g + 1))}
+                                            className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center text-xl font-semibold text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-all"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    {/* Search Button */}
+                    <motion.button
+                        onClick={handleSearch}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="flex items-center justify-center gap-2.5 px-8 py-4 bg-gray-900 hover:bg-black text-white text-base font-bold rounded-2xl transition-colors duration-200 shadow-lg flex-shrink-0"
+                    >
+                        <Search className="w-4 h-4" />
+                        <span>Search</span>
+                    </motion.button>
+                </div>
+            </div>
+        </motion.div>
+    )
 }
 
 export default function HotelBrowsingPage() {
@@ -69,7 +223,7 @@ export default function HotelBrowsingPage() {
             <Nav_Landing />
 
             <header
-                className="relative bg-cover bg-center min-h-[560px] rounded-b-3xl overflow-hidden shadow-inner z-10"
+                className="relative bg-cover bg-center min-h-[600px] rounded-b-3xl overflow-hidden shadow-inner z-10"
                 style={{
                     backgroundImage: `url('https://images.unsplash.com/photo-1719466419345-fdb12719ec29?ixlib=rb-4.1.0&auto=format&fit=crop&q=80&w=1470')`,
                 }}
@@ -88,6 +242,8 @@ export default function HotelBrowsingPage() {
                         <p className="mt-3 text-base sm:text-lg text-white/80 max-w-xl">
                             Handpicked hotels, camping spots, and glampings for every traveler.
                         </p>
+
+                        <HeroSearchBar />
                     </motion.div>
                 </div>
             </header>

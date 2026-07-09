@@ -3,12 +3,12 @@ import nodemailer from "nodemailer";
 class EmailService {
   constructor() {
     this.transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || process.env.SMTP_HOST,
-      port: process.env.EMAIL_PORT || process.env.SMTP_PORT || 587,
-      secure: (process.env.EMAIL_PORT || process.env.SMTP_PORT) == 465, // true for 465, false for other ports
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT || 587,
+      secure: (process.env.SMTP_PORT) == 465, // true for 465, false for other ports
       auth: {
-        user: process.env.EMAIL_USER || process.env.SMTP_EMAIL,
-        pass: process.env.EMAIL_PASSWORD || process.env.SMTP_PASSWORD,
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD,
       },
       tls: {
         rejectUnauthorized: false, // Allow connections from cloud servers
@@ -28,7 +28,7 @@ class EmailService {
     try {
       const mailOptions = {
         from:
-          process.env.EMAIL_FROM || '"Booking Platform" <noreply@booking.com>',
+          process.env.SMTP_EMAIL || '"Booking Platform" <noreply@booking.com>',
         to: Array.isArray(to) ? to.join(", ") : to,
         subject,
         html,
@@ -102,15 +102,14 @@ class EmailService {
                 <div class="detail-row">
                   <span class="label">Guests:</span> ${booking.guests}
                 </div>
-                ${
-                  booking.specialRequests
-                    ? `
+                ${booking.specialRequests
+          ? `
                 <div class="detail-row">
                   <span class="label">Special Requests:</span> ${booking.specialRequests}
                 </div>
                 `
-                    : ""
-                }
+          : ""
+        }
                 <div class="detail-row">
                   <span class="label">Total Amount:</span> £${booking.amount.toFixed(2)}
                 </div>
@@ -183,15 +182,14 @@ class EmailService {
                   <div class="detail-row">
                     <span class="label">Guests:</span> ${booking.guests}
                   </div>
-                  ${
-                    booking.specialRequests
-                      ? `
+                  ${booking.specialRequests
+            ? `
                   <div class="detail-row">
                     <span class="label">Special Requests:</span> ${booking.specialRequests}
                   </div>
                   `
-                      : ""
-                  }
+            : ""
+          }
                   <div class="detail-row">
                     <span class="label">Amount:</span> £${booking.amount.toFixed(2)}
                   </div>
@@ -415,39 +413,36 @@ class EmailService {
                 <div class="detail-row">
                   <span class="label">Booking ID:</span> ${booking._id}
                 </div>
-                ${
-                  booking.session?.adventureId?.name
-                    ? `
+                ${booking.session?.adventureId?.name
+          ? `
                 <div class="detail-row">
                   <span class="label">Adventure:</span> ${booking.session.adventureId.name}
                 </div>
                 `
-                    : ""
-                }
+          : ""
+        }
                 <div class="detail-row">
                   <span class="label">Session Date:</span> ${new Date(booking.session?.startTime).toLocaleDateString()}
                 </div>
                   <div class="detail-row">
                     <span class="label">Start Time:</span> ${booking.session?.startTime ? new Date(booking.session.startTime).toLocaleTimeString() : "N/A"}
                   </div>
-                ${
-                  booking.session?.instructorId?.name
-                    ? `
+                ${booking.session?.instructorId?.name
+          ? `
                 <div class="detail-row">
                   <span class="label">Instructor:</span> ${booking.session.instructorId.name}
                 </div>
                 `
-                    : ""
-                }
-                ${
-                  booking.session?.location
-                    ? `
+          : ""
+        }
+                ${booking.session?.location
+          ? `
                 <div class="detail-row">
                   <span class="label">Location:</span> ${booking.session.location.name || "TBD"}
                 </div>
                 `
-                    : ""
-                }
+          : ""
+        }
                 <div class="detail-row">
                   <span class="label">Total Amount:</span> £${(booking.session.price * (booking.groupMember ? booking.groupMember.length + 1 : 1)).toFixed(2)}
                 </div>
@@ -513,15 +508,14 @@ class EmailService {
                   <div class="detail-row">
                     <span class="label">Start Time:</span> ${new Date(booking.session?.startTime).toLocaleTimeString()}
                   </div>
-                  ${
-                    booking.groupMember && booking.groupMember.length > 0
-                      ? `
+                  ${booking.groupMember && booking.groupMember.length > 0
+            ? `
                   <div class="detail-row">
                     <span class="label">Group Size:</span> ${booking.groupMember.length + 1} people
                   </div>
                   `
-                      : ""
-                  }
+            : ""
+          }
                 </div>
               </div>
             </div>

@@ -3,6 +3,7 @@ import { MapPin, Loader2, ArrowRight, X, ExternalLink } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { axiosClient } from '../AxiosClient/axios'
+import logo from "../assets/logo.png"
 
 export const Footer = ({ className = "" }) => {
   const { t } = useTranslation()
@@ -23,7 +24,6 @@ export const Footer = ({ className = "" }) => {
       try {
         setLoadingSponsors(true)
         setSponsorError(null)
-        // const base = import.meta.env.VITE_API_URL || 'http://localhost:8080'
         const res = await axiosClient.get(`/api/sponsors`)
         if (!ignore) {
           const data = Array.isArray(res.data?.data) ? res.data.data : []
@@ -80,11 +80,12 @@ export const Footer = ({ className = "" }) => {
             <div className="pt-4">
               <button
                 onClick={handleLogoClick}
-                className="group flex items-center gap-3 bg-white text-black px-5 py-3 rounded-full font-medium transition-all hover:bg-neutral-200"
+                className="group flex items-center  gap-3 text-black px-5 py-3 rounded-full font-medium transition-all"
               >
-                <MapPin className="w-5 h-5" />
+                {/* <MapPin className="w-5 h-5" />
                 <span>{t("adventureBooking")}</span>
-                <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" /> */}
+                <img className='cursor-pointer' src={logo}></img>
               </button>
             </div>
           </div>
