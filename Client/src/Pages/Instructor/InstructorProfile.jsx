@@ -48,14 +48,27 @@ export const InstructorProfile = () => {
         return `${baseUrl}/uploads/${imagePath}`;
     };
 
+    // Helper function to safely parse a date string/value into an ISO date string
+    const safeDateString = (value, fallback = "N/A") => {
+        if (!value) return fallback;
+        try {
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return fallback;
+            return d.toISOString().split("T")[0];
+        } catch {
+            return fallback;
+        }
+    };
+
     // Helper function to detect video files
     const isVideoFile = (filename) => {
         if (!filename) return false;
         const videoExtensions = ['.mp4', '.webm', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.m4v'];
         return videoExtensions.some(ext => filename.toLowerCase().includes(ext));
     };
-    const formatGalleryItems = (medias = []) =>
-        medias
+    const formatGalleryItems = (medias = []) => {
+        if (!Array.isArray(medias)) return [];
+        return medias
             .filter(Boolean)
             .map((mediaUrl, index) => {
                 const resolvedUrl = getImageUrl(mediaUrl);
@@ -70,6 +83,7 @@ export const InstructorProfile = () => {
                     thumbnail: type === 'video' ? null : resolvedUrl,
                 };
             });
+    };
 
     const fetchAdventure = async (adventureId) => {
         try {
@@ -97,8 +111,10 @@ export const InstructorProfile = () => {
                 name: user.user.name || "",
                 email: user.user.email || "",
                 profilePicture: getImageUrl(user.user.profilePicture),
-                specialty: fetchedAdventure?.name || "",
-                experience: `0 years`,
+                specialty: fetchedAdventure?.name || prev.specialty || "",
+                experience: fetchedAdventure?.exp != null
+                    ? `${fetchedAdventure.exp} years`
+                    : prev.experience || "0 years",
                 rating: user.user.instructor?.avgReview || 0,
                 img: getImageUrl(fetchedAdventure?.thumbnail),
                 bio: user.user.instructor?.description?.join(", ") || "Certified instructor with expertise in adventure activities.",
@@ -116,7 +132,7 @@ export const InstructorProfile = () => {
                         type: "ID",
                         name: "Government ID",
                         status: user.user.instructor?.documentVerified || "pending",
-                        date: new Date(user.user.createdAt).toISOString().split("T")[0] || "2024-01-15",
+                        date: safeDateString(user.user.createdAt, "N/A"),
                         link: getImageUrl(user.user.instructor?.governmentId)
                     },
                 ],
@@ -131,7 +147,7 @@ export const InstructorProfile = () => {
         email: user?.user?.email || "",
         profilePicture: getImageUrl(user?.user?.profilePicture),
         specialty: fetchedAdventure?.name || "",
-        experience: `${fetchedAdventure?.exp || 0} years`,
+        experience: `${fetchedAdventure?.exp ?? 0} years`,
         rating: user?.user?.instructor?.avgReview || 0,
         img: getImageUrl(fetchedAdventure?.thumbnail),
         bio: user?.user?.instructor?.description?.join(", ") || "Certified instructor with expertise in adventure activities.",
@@ -145,7 +161,7 @@ export const InstructorProfile = () => {
                 type: "ID",
                 name: "Government ID",
                 status: user?.user?.instructor?.documentVerified || "pending",
-                date: new Date(user?.user?.createdAt).toISOString().split("T")[0] || "2024-01-15",
+                date: safeDateString(user?.user?.createdAt, "N/A"),
                 link: getImageUrl(user?.user?.instructor?.governmentId)
             },
         ],

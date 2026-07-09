@@ -25,9 +25,19 @@ export default function LoginPage() {
   const searchParams = new URLSearchParams(location.search);
   const paramAction = searchParams.get('action') || location?.state?.action;
   const paramRole = searchParams.get('role') || location?.state?.role || 'explorer';
+  // Capture redirect URL from query param and persist it so the post-login effect can use it
+  const paramRedirect = searchParams.get('redirect') || location?.state?.redirect;
 
   const [signup, setSignup] = useState(() => paramAction === 'signup');
   const [role, setRole] = useState(() => paramRole);
+
+  // Store redirect URL in localStorage as early as possible so AuthProvider's
+  // effect can pick it up even after a hard navigation (e.g. OAuth flow)
+  useEffect(() => {
+    if (paramRedirect) {
+      localStorage.setItem('redirectAfterLogin', paramRedirect);
+    }
+  }, [paramRedirect]);
   const { register, handleSubmit, reset } = useForm();
   const [openOtp, setopenOtp] = useState(false);
   const [value, setValue] = useState("");
@@ -251,14 +261,18 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user.user !== null && !loading) {
-      // Check if there's a redirect URL stored in localStorage
-      localStorage.setItem("accessToken", user.user.refreshToken)
-      const redirectAfterLogin = localStorage.getItem("redirectAfterLogin");
+      localStorage.setItem("accessToken", user.user.refreshToken);
 
+      // Admins always go to /admin — never follow redirectAfterLogin
+      if (user.user.role === "admin") {
+        Navigate("/admin");
+        return;
+      }
+
+      // For every other role, honour the redirect URL if one was stored
+      const redirectAfterLogin = localStorage.getItem("redirectAfterLogin");
       if (redirectAfterLogin) {
-        // Clear the stored redirect URL
         localStorage.removeItem("redirectAfterLogin");
-        // Navigate to the stored URL
         Navigate(redirectAfterLogin);
         return;
       }
@@ -266,19 +280,14 @@ export default function LoginPage() {
       // Default role-based navigation
       if (user.user.role === "hotel") {
         Navigate("/hotel");
-      }
-      else if (user.user.role === "instructor") {
+      } else if (user.user.role === "instructor") {
         Navigate("/instructor/dashboard");
-      }
-      else if (user.user.role === "admin") {
-        Navigate("/admin");
-      }
-      else {
+      } else {
+        // explorer and any other role
         Navigate("/browse");
       }
     }
-  }
-    , [user, loading, Navigate])
+  }, [user, loading, Navigate]);
 
   // If the page was opened with action=signup for instructor/hotel, redirect immediately to their registration pages
   useEffect(() => {
