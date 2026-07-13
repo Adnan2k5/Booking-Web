@@ -75,7 +75,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
     otp: otpCode,
   });
 
-  sendEmail({
+  await sendEmail({
     from: process.env.SMTP_EMAIL,
     to: email,
     subject: "Verify OTP",
@@ -599,7 +599,7 @@ const signInWithGoogle = asyncHandler(async (req, res) => {
     );
 });
 
-const signInWithApple = asyncHandler(async (req, res) => {});
+const signInWithApple = asyncHandler(async (req, res) => { });
 
 const signInWithLinkedin = asyncHandler(async (req, res) => {
   const { code } = req.body;
