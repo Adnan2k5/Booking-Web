@@ -118,7 +118,7 @@ export const Nav_Landing = ({ theme = "light" }) => {
                     transition={{ duration: 0.5 }}
                 >
                     <Link to="/" className={`text-2xl font-bold tracking-tighter transition-colors ${logoClass}`}>
-                        <img src={logo} alt="Logo" className="h-10 w-auto brightness-0 invert" />
+                        <img src={logo} alt="Logo" className="h-18 w-auto brightness-0 invert" />
                     </Link>
                 </motion.div>
 

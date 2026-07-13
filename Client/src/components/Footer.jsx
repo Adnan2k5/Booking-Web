@@ -77,17 +77,6 @@ export const Footer = ({ className = "" }) => {
             <p className="text-neutral-400 leading-relaxed max-w-md text-sm md:text-base">
               {t("footerDescription")}
             </p>
-            <div className="pt-4">
-              <button
-                onClick={handleLogoClick}
-                className="group flex items-center  gap-3 text-black px-5 py-3 rounded-full font-medium transition-all"
-              >
-                {/* <MapPin className="w-5 h-5" />
-                <span>{t("adventureBooking")}</span>
-                <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" /> */}
-                <img className='cursor-pointer' src={logo}></img>
-              </button>
-            </div>
           </div>
 
           {/* Navigation Links - Spans 3 columns */}
@@ -156,6 +145,22 @@ export const Footer = ({ className = "" }) => {
             </div>
           </div>
         </div>
+      </div>
+      <div className="pt-2 flex justify-center">
+        <button
+          onClick={handleLogoClick}
+          className="flex items-center justify-center bg-transparent border-none outline-none"
+          style={{ cursor: 'default' }}
+        >
+          {/* <MapPin className="w-5 h-5" />
+          <span>{t("adventureBooking")}</span>
+          <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" /> */}
+          <img
+            className="-mt-24 p-8 h-auto  md:w-96 lg:-mt-12 lg:h-auto object-contain cursor-pointer"
+            src={logo}
+            alt="Logo"
+          />
+        </button>
       </div>
 
       {/* Marquee Styles */}
